@@ -1,159 +1,154 @@
 package com.flixclusive.data.provider.repository.impl
 
-import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
-import com.flixclusive.core.datastore.model.user.ProviderPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
+import android.content.Context
+import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.database.dao.provider.InstalledProviderDao
+import com.flixclusive.core.database.entity.provider.InstalledProvider
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.data.provider.util.collections.CollectionsOperation
-import com.flixclusive.data.provider.util.collections.ReactiveList
-import com.flixclusive.data.provider.util.extensions.isNotUsable
+import com.flixclusive.data.provider.util.ProviderSortOrderManager
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class ProviderRepositoryImpl
-    @Inject
-    constructor(
-        private val dataStoreManager: DataStoreManager,
-    ) : ProviderRepository {
-        private val providerMetadata = HashMap<String, ProviderMetadata>()
-        private val providerPositions = ReactiveList<ProviderFromPreferences>()
+internal class ProviderRepositoryImpl @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val okHttpClient: OkHttpClient, // TODO: Remove this when we refactor `getApi` to remove the need for it in this class
+    private val installedProviderDao: InstalledProviderDao,
+    private val appDispatchers: AppDispatchers
+) : ProviderRepository {
+    private val providerSortOrderManager = ProviderSortOrderManager(installedProviderDao)
 
-        /** Map containing all loaded provider classes  */
-        private val providerInstances: MutableMap<String, Provider> =
-            Collections.synchronizedMap(LinkedHashMap())
+    private val metadataMap = HashMap<String, ProviderMetadata>()
 
-        // TODO: Make this public for crash log purposes
-        private val classLoaders: MutableMap<String, PathClassLoader> =
-            Collections.synchronizedMap(HashMap())
+    /** Map containing all loaded provider classes  */
+    private val pluginsMap: MutableMap<String, Provider> =
+        Collections.synchronizedMap(LinkedHashMap())
 
-        override suspend fun add(
-            provider: Provider,
-            classLoader: PathClassLoader,
-            metadata: ProviderMetadata,
-            preferenceItem: ProviderFromPreferences,
-        ) {
-            classLoaders[metadata.id] = classLoader
-            providerInstances[metadata.id] = provider
-            providerMetadata[metadata.id] = metadata
+    // TODO: Make this public for crash log purposes
+    private val classLoadersMap: MutableMap<String, PathClassLoader> =
+        Collections.synchronizedMap(HashMap())
 
-            addToPreferences(preferenceItem = preferenceItem)
+    override suspend fun load(
+        provider: Provider,
+        classLoader: PathClassLoader,
+        metadata: ProviderMetadata,
+    ) {
+        classLoadersMap[metadata.id] = classLoader
+        pluginsMap[metadata.id] = provider
+        metadataMap[metadata.id] = metadata
+    }
+
+    override suspend fun unload(id: String) {
+        withContext(appDispatchers.io) {
+            pluginsMap[id]?.onUnload(context)
         }
 
-        override suspend fun addToPreferences(preferenceItem: ProviderFromPreferences) {
-            if (providerPositions.contains(preferenceItem)) {
-                val indexOfProvider = providerPositions.indexOfFirst { it.id == preferenceItem.id }
+        metadataMap.remove(id)
+        classLoadersMap.remove(id)
+        pluginsMap.remove(id)
+    }
 
-                providerPositions.replaceAt(indexOfProvider, preferenceItem)
-            } else {
-                providerPositions.add(preferenceItem)
-            }
-
-            saveToPreferences {
-                if (!it.providers.contains(preferenceItem)) {
-                    return@saveToPreferences it.copy(providers = it.providers + preferenceItem)
-                }
-
-                val updatedPreferences = it.providers.toMutableList()
-                val indexOfProvider = updatedPreferences.indexOfFirst { provider ->
-                    provider.id == preferenceItem.id
-                }
-
-                updatedPreferences[indexOfProvider] = preferenceItem
-
-                return@saveToPreferences it.copy(providers = updatedPreferences.toList())
-            }
+    override suspend fun install(provider: InstalledProvider)
+        = withContext(appDispatchers.io) {
+            installedProviderDao.insert(provider)
         }
 
-        override fun getProviderMetadata(id: String): ProviderMetadata? = providerMetadata[id]
-
-        override fun getProvider(id: String): Provider? = providerInstances[id]
-
-        override fun getProviderFromPreferences(id: String): ProviderFromPreferences? =
-            providerPositions.find { it.id == id }
-
-        override fun getEnabledProviders(): List<ProviderMetadata> {
-            return providerMetadata.mapNotNull { (id, api) ->
-                val metadata = getProviderMetadata(id = id)
-                val preferenceItem = getProviderFromPreferences(id = id)
-                if (metadata == null) return@mapNotNull null
-                if (preferenceItem == null) return@mapNotNull null
-
-                if (!metadata.isNotUsable && !preferenceItem.isDisabled) {
-                    return@mapNotNull api
-                }
-
-                null
-            }
+    override suspend fun uninstall(provider: InstalledProvider)
+        = withContext(appDispatchers.io) {
+            unload(provider.id)
+            installedProviderDao.delete(provider)
         }
 
-        override fun getProviders(): List<ProviderMetadata> {
-            return providerMetadata.values.toList()
-        }
+    override fun getMetadata(id: String) = metadataMap[id]
 
-        override fun getOrderedProviders(): List<ProviderMetadata> {
-            return providerPositions.mapNotNull { item ->
-                providerMetadata[item.id]
-            }
-        }
+    override fun getPlugin(id: String) = pluginsMap[id]
 
-        override fun observe(): SharedFlow<CollectionsOperation.List<ProviderFromPreferences>> =
-            providerPositions.operations
-
-        override suspend fun moveProvider(
-            fromIndex: Int,
-            toIndex: Int,
-        ) {
-            providerPositions.move(fromIndex, toIndex)
-            saveToPreferences { it.copy(providers = providerPositions) }
-        }
-
-        override suspend fun remove(id: String) {
-            providerInstances.remove(id)
-            classLoaders.remove(id)
-            providerMetadata.remove(id)
-            removeFromPreferences(id)
-        }
-
-        override suspend fun clearAll() {
-            providerInstances.clear()
-            classLoaders.clear()
-            providerMetadata.clear()
-            providerPositions.clear()
-        }
-
-        override suspend fun removeFromPreferences(id: String) {
-            if (providerPositions.removeIf { it.id == id }) {
-                saveToPreferences { it.copy(providers = providerPositions) }
-            }
-        }
-
-        override suspend fun toggleProvider(id: String) {
-            val indexOfProvider =
-                providerPositions.indexOfFirst { provider ->
-                    provider.id == id
-                }
-
-            val provider = providerPositions[indexOfProvider]
-            providerPositions.replaceAt(
-                index = indexOfProvider,
-                item = provider.copy(isDisabled = !provider.isDisabled),
-            )
-
-            saveToPreferences { it.copy(providers = providerPositions) }
-        }
-
-        private suspend fun saveToPreferences(transform: suspend (t: ProviderPreferences) -> ProviderPreferences) {
-            dataStoreManager.updateUserPrefs<ProviderPreferences>(
-                key = UserPreferences.PROVIDER_PREFS_KEY,
-                type = ProviderPreferences::class,
-                transform = transform,
-            )
+    override suspend fun getConfig(
+        id: String,
+        ownerId: Int
+    ): InstalledProvider? {
+        return withContext(appDispatchers.io) {
+            installedProviderDao.get(id, ownerId)
         }
     }
+
+    override suspend fun getApi(id: String, ownerId: Int): ProviderApi? = withContext(appDispatchers.io) {
+        val provider = pluginsMap[id] ?: return@withContext null
+        try {
+            provider.getApi(context, okHttpClient)
+        } catch (e: Exception) {
+            errorLog(e)
+            installedProviderDao.setEnabled(
+                id = id,
+                ownerId = ownerId,
+                isEnabled = false
+            )
+            null
+        }
+    }
+
+    override suspend fun isEnabled(id: String, ownerId: Int)
+        = withContext(appDispatchers.io) {
+            installedProviderDao.isEnabled(id = id, ownerId = ownerId)
+        }
+
+    override fun getEnabledProvidersAsFlow(ownerId: Int): Flow<List<InstalledProvider>> {
+        return installedProviderDao.getEnabledAsFlow(ownerId)
+    }
+
+    override suspend fun getEnabledProviders(ownerId: Int): List<InstalledProvider> {
+        return withContext(appDispatchers.io) {
+            installedProviderDao.getEnabled(ownerId)
+        }
+    }
+
+    override suspend fun getInstalledProviders(ownerId: Int)
+        = withContext(appDispatchers.io) {
+            installedProviderDao.getAll(ownerId)
+        }
+
+    override fun getInstalledProvidersAsFlow(ownerId: Int) = installedProviderDao.getAllAsFlow(ownerId)
+
+    override suspend fun getMaxSortOrder(ownerId: Int): Double {
+        return withContext(appDispatchers.io) {
+            providerSortOrderManager.getNextSortOrder(ownerId)
+        }
+    }
+
+    override suspend fun moveProvider(
+        from: Int,
+        to: Int,
+        ownerId: Int
+    ) {
+        providerSortOrderManager.reorder(
+            ownerId = ownerId,
+            from = from,
+            to = to
+        )
+    }
+
+    override suspend fun clearAll() {
+        pluginsMap.clear()
+        classLoadersMap.clear()
+        metadataMap.clear()
+    }
+
+    override suspend fun toggleProvider(id: String, ownerId: Int) {
+        val isEnabled = installedProviderDao.isEnabled(id, ownerId)
+        installedProviderDao.setEnabled(
+            id = id,
+            ownerId = ownerId,
+            isEnabled = !isEnabled
+        )
+    }
+}

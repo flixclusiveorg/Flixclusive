@@ -8,7 +8,6 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.provider.repository.CacheKey
 import com.flixclusive.data.provider.repository.CachedLinks
 import com.flixclusive.data.provider.repository.CachedLinksRepository
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.repository.TMDBWatchProvidersRepository
 import com.flixclusive.domain.provider.util.extensions.getWatchId
@@ -188,7 +187,7 @@ class GetMediaLinksUseCaseImplTest {
             )
             val providerApi = mockk<ProviderApi>(relaxed = true)
 
-            every { providerRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
+            every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
             every { providerApiRepository.getApi("test-provider") } returns providerApi
             every { cachedLinksRepository.getCache(cacheKey) } returns testCachedLinks
             every { cachedLinksRepository.currentCache } returns MutableStateFlow(testCachedLinks)
@@ -214,7 +213,7 @@ class GetMediaLinksUseCaseImplTest {
             )
             val providerApi = mockk<ProviderApi>(relaxed = true)
 
-            every { providerRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
+            every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
             every { providerApiRepository.getApi("test-provider") } returns providerApi
             every { cachedLinksRepository.getCache(cacheKey) } returns testCachedLinks
             every { cachedLinksRepository.currentCache } returns MutableStateFlow(testCachedLinks)
@@ -237,7 +236,7 @@ class GetMediaLinksUseCaseImplTest {
                 episode = null,
             )
 
-            every { providerRepository.getOrderedProviders() } returns emptyList()
+            every { providerRepository.getInstalledProvidersAsFlow() } returns emptyList()
             every { cachedLinksRepository.getCache(cacheKey) } returns null
             coEvery {
                 tmdbWatchProvidersRepository.getWatchProviders(
@@ -276,7 +275,7 @@ class GetMediaLinksUseCaseImplTest {
                 episode = null,
             )
 
-            every { providerRepository.getOrderedProviders() } returns emptyList()
+            every { providerRepository.getInstalledProvidersAsFlow() } returns emptyList()
             every { cachedLinksRepository.getCache(cacheKey) } returns null
             coEvery {
                 tmdbWatchProvidersRepository.getWatchProviders(
@@ -299,7 +298,7 @@ class GetMediaLinksUseCaseImplTest {
         runTest(testDispatcher) {
             val nonTmdbMovie = testMovie.copy(tmdbId = null, providerId = "missing-provider")
 
-            every { providerRepository.getOrderedProviders() } returns emptyList()
+            every { providerRepository.getInstalledProvidersAsFlow() } returns emptyList()
             every { providerApiRepository.getApi("missing-provider") } returns null
 
             getMediaLinksUseCase(
@@ -324,8 +323,8 @@ class GetMediaLinksUseCaseImplTest {
                 episode = null,
             )
 
-            every { providerRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { providerRepository.getProviderMetadata("test-provider") } returns testProviderMetadata
+            every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { providerRepository.getMetadata("test-provider") } returns testProviderMetadata
             every { providerApiRepository.getApi("test-provider") } returns providerApi
             every { cachedLinksRepository.getCache(cacheKey) } returns null
             every { cachedLinksRepository.currentCache } returns MutableStateFlow(testCachedLinks)
@@ -386,8 +385,8 @@ class GetMediaLinksUseCaseImplTest {
                 episode = null,
             )
 
-            every { providerRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { providerRepository.getProviderMetadata("test-provider") } returns testProviderMetadata
+            every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { providerRepository.getMetadata("test-provider") } returns testProviderMetadata
             every { providerApiRepository.getApi("test-provider") } returns providerApi
             every { cachedLinksRepository.getCache(cacheKey) } returns null
             coEvery { providerApi.getWatchId(testMovie) } returns Resource.Failure(errorMessage)
@@ -417,8 +416,8 @@ class GetMediaLinksUseCaseImplTest {
                 episode = null,
             )
 
-            every { providerRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { providerRepository.getProviderMetadata("test-provider") } returns testProviderMetadata
+            every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { providerRepository.getMetadata("test-provider") } returns testProviderMetadata
             every { providerApiRepository.getApi("test-provider") } returns providerApi
             every { cachedLinksRepository.getCache(cacheKey) } returns null
 
@@ -446,8 +445,8 @@ class GetMediaLinksUseCaseImplTest {
                 episode = null,
             )
 
-            every { providerRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { providerRepository.getProviderMetadata("test-provider") } returns testProviderMetadata
+            every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { providerRepository.getMetadata("test-provider") } returns testProviderMetadata
             every { providerApiRepository.getApi("test-provider") } returns providerApi
             every { cachedLinksRepository.getCache(cacheKey) } returns null
             every { cachedLinksRepository.currentCache } returns MutableStateFlow(testCachedLinks)
@@ -499,8 +498,8 @@ class GetMediaLinksUseCaseImplTest {
                 streams = emptyList(),
             )
 
-            every { providerRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { providerRepository.getProviderMetadata("test-provider") } returns testProviderMetadata
+            every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { providerRepository.getMetadata("test-provider") } returns testProviderMetadata
             every { providerApiRepository.getApi("test-provider") } returns providerApi
             every { cachedLinksRepository.getCache(cacheKey) } returns null
             every { cachedLinksRepository.currentCache } returns MutableStateFlow(emptyCache)

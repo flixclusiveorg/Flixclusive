@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.stubs.model.film)
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
+    implementation(projects.coreDatabase)
 
     testImplementation(libs.stubs.model.provider)
     testImplementation(projects.coreTesting)

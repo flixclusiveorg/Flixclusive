@@ -2,19 +2,14 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.datastore.model.user.ProviderPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.util.rmrf
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.util.Constants
-import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
@@ -22,58 +17,43 @@ import javax.inject.Inject
 internal class UnloadProviderUseCaseImpl
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
-        private val dataStoreManager: DataStoreManager,
+        @param:ApplicationContext private val context: Context,
         private val providerRepository: ProviderRepository,
-        private val providerApiRepository: ProviderApiRepository,
         private val appDispatchers: AppDispatchers,
     ) : UnloadProviderUseCase {
-        private suspend fun getProviderPrefs() =
-            dataStoreManager
-                .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
-                .first()
-
         override suspend operator fun invoke(
-            metadata: ProviderMetadata,
-            unloadFromPrefs: Boolean,
+            provider: InstalledProvider,
+            uninstall: Boolean,
         ) {
-            val providers = getProviderPrefs().providers
-            val providerFromPreferences = providers.find { it.id == metadata.id }
+            val metadata = providerRepository.getMetadata(provider.id)
+                ?: error(context.getString(R.string.provider_not_even_installed, provider.id))
 
-            if (providerFromPreferences == null) {
-                error(context.getString(R.string.provider_not_found_on_prefs, metadata.name))
-            }
-
-            val provider = providerRepository.getProvider(metadata.id)
-            val file = File(providerFromPreferences.filePath)
-
-            if (provider == null || !file.exists()) {
+            val file = provider.file
+            if (!file.exists()) {
                 error(context.getString(R.string.provider_not_found, metadata.name, metadata.id))
             }
 
-            infoLog("Unloading provider: ${provider.name}")
+            infoLog("Unloading provider: ${metadata.name}")
             try {
-                provider.onUnload(context)
+                if (uninstall) {
+                    providerRepository.uninstall(provider = provider)
+                } else {
+                    providerRepository.unload(id = metadata.id)
+                }
             } catch (e: Throwable) {
                 throw Throwable(
                     cause = e,
                     message = context.getString(
                         R.string.unload_exception_message,
-                        provider.name,
+                        metadata.name,
                         metadata.id,
                         e.localizedMessage,
                     ),
                 )
             }
 
-            providerRepository.remove(id = metadata.id)
-            providerApiRepository.removeApi(id = metadata.id)
             withContext(appDispatchers.io) {
                 deleteProviderRelatedFiles(file = file)
-            }
-
-            if (unloadFromPrefs) {
-                providerRepository.removeFromPreferences(id = metadata.id)
             }
         }
 

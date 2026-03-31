@@ -102,7 +102,7 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema6to7,
                         Schema7to8,
                         Schema8to9,
-                        Schema9to10,
+                        Schema9to10(context),
                     ).build()
                     .also { INSTANCE = it }
             }

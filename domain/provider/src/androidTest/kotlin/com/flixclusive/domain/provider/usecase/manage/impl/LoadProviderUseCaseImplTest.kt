@@ -15,7 +15,6 @@ import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.provider.ProviderTestDefaults
 import com.flixclusive.data.downloads.model.DownloadState
 import com.flixclusive.data.downloads.model.DownloadStatus
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
@@ -78,7 +77,6 @@ class LoadProviderUseCaseImplTest {
             providerRepository = mockProviderRepository,
             providerApiRepository = mockProviderApiRepository,
             appDispatchers = appDispatchers,
-            downloadFile = downloadFileUseCase,
         )
 
         every { mockUserSessionDataStore.currentUserId } returns flowOf(testUserId)
@@ -87,7 +85,7 @@ class LoadProviderUseCaseImplTest {
             mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
         } returns flowOf(ProviderPreferences())
 
-        every { mockProviderRepository.getProvider(any()) } returns null
+        every { mockProviderRepository.getPlugin(any()) } returns null
     }
 
     @After
@@ -120,7 +118,7 @@ class LoadProviderUseCaseImplTest {
     @Test
     fun shouldSkipLoadingWhenProviderAlreadyExists() =
         runTest(testDispatcher) {
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockk()
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockk()
 
             loadProviderUseCase(testProviderMetadata).test {
                 expectThat(awaitItem()).isA<LoadProviderResult.Failure>().and {

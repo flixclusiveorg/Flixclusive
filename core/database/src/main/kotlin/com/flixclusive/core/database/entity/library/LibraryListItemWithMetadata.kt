@@ -10,12 +10,33 @@ import com.flixclusive.core.database.entity.film.DBFilm
  * */
 @DatabaseView(
     viewName = "library_list_item_with_metadata",
-    value = "SELECT library_list_items.*, films.* FROM library_list_items " +
-        "INNER JOIN films ON library_list_items.filmId = films.id",
+    value = """
+        SELECT
+            library_list_items.id AS item_id,
+            library_list_items.filmId AS item_filmId,
+            library_list_items.listId AS item_listId,
+            library_list_items.createdAt AS item_createdAt,
+            library_list_items.updatedAt AS item_updatedAt,
+
+            films.id AS film_id,
+            films.title AS film_title,
+            films.providerId AS film_providerId,
+            films.filmType AS film_filmType,
+            films.overview AS film_overview,
+            films.posterImage AS film_posterImage,
+            films.createdAt AS film_createdAt,
+            films.updatedAt AS film_updatedAt
+
+        FROM library_list_items
+        INNER JOIN films
+        ON library_list_items.filmId = films.id
+    """
 )
 data class LibraryListItemWithMetadata(
-    @Embedded val item: LibraryListItem,
-    @Embedded val metadata: DBFilm,
+    @Embedded(prefix = "item_")
+    val item: LibraryListItem,
+    @Embedded(prefix = "film_")
+    val metadata: DBFilm,
 ) {
     @get:Ignore
     val itemId: Long get() = item.id

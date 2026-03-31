@@ -13,15 +13,15 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LibraryListItemDao {
     @Transaction
-    @Query("SELECT * FROM library_list_item_with_metadata WHERE id = :id")
+    @Query("SELECT * FROM library_list_item_with_metadata WHERE item_id = :id")
     suspend fun get(id: Long): LibraryListItemWithMetadata?
 
     @Transaction
-    @Query("SELECT * FROM library_list_item_with_metadata WHERE id = :id")
+    @Query("SELECT * FROM library_list_item_with_metadata WHERE item_id = :id")
     fun getAsFlow(id: Long): Flow<LibraryListItemWithMetadata?>
 
     @Transaction
-    @Query("SELECT * FROM library_list_item_with_metadata WHERE listId = :listId ORDER BY createdAt DESC")
+    @Query("SELECT * FROM library_list_item_with_metadata WHERE item_listId = :listId ORDER BY item_createdAt DESC")
     fun getByListId(listId: Int): Flow<List<LibraryListItemWithMetadata>>
 
     @Transaction

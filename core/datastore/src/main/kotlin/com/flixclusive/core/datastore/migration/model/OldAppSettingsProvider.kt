@@ -27,7 +27,7 @@ internal data class ProviderPreferencesV213(
 
 @Deprecated("Provider preferences have been migrated to Room. Only preference flags remain in DataStore.")
 @Serializable
-internal data class OldProviderFromPreferences(
+data class OldProviderFromPreferences(
     val id: String = "",
     val name: String,
     val filePath: String,

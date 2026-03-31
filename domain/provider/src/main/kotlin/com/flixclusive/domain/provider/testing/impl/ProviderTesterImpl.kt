@@ -3,7 +3,6 @@ package com.flixclusive.domain.provider.testing.impl
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.testing.ProviderTester
@@ -32,7 +31,6 @@ internal class ProviderTesterImpl
     @Inject
     constructor(
         @param:ApplicationContext private val context: Context,
-        private val providerApiRepository: ProviderApiRepository,
         private val providerRepository: ProviderRepository,
         private val appDispatchers: AppDispatchers,
         private val client: OkHttpClient,
@@ -151,12 +149,11 @@ internal class ProviderTesterImpl
                     ),
                 )
 
-                val provider = providerRepository.getProvider(metadata.id)
-                val api = providerApiRepository.getApi(metadata.id)
-                    ?: provider!!.getApi(
-                        context = context,
-                        client = client,
-                    )
+                val provider = providerRepository.getPlugin(metadata.id)
+                val api = provider!!.getApi(
+                    context = context,
+                    client = client,
+                )
 
                 updateOutput(
                     ProviderTestCaseResult(

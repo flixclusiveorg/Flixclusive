@@ -9,7 +9,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
-import com.flixclusive.core.database.dao.provider.RepositoryDao
+import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.datastore.migration.MigrationV220
 import com.flixclusive.core.datastore.migration.SystemPreferencesMigration
 import com.flixclusive.core.datastore.migration.UserPreferencesMigration
@@ -56,7 +56,7 @@ internal class DataStoreManagerImpl @Inject constructor(
     private val systemPreferences: DataStore<SystemPreferences>,
     private val appDispatchers: AppDispatchers,
     private val providerDao: InstalledProviderDao,
-    private val repositoryDao: RepositoryDao,
+    private val repositoryDao: InstalledRepositoryDao,
 ) : DataStoreManager {
     val lock = Any()
 
@@ -86,6 +86,7 @@ internal class DataStoreManagerImpl @Inject constructor(
                         MigrationV220(
                             providerDao = providerDao,
                             repositoryDao = repositoryDao,
+                            userId = userId
                         )
                     )
                 },

@@ -65,7 +65,7 @@ class CheckOutdatedProviderUseCaseImplTest {
     @Test
     fun `should return empty list when no providers exist`() =
         runTest(testDispatcher) {
-            every { mockProviderRepository.getOrderedProviders() } returns emptyList()
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns emptyList()
 
             val result = checkOutdatedProviderUseCase()
 
@@ -80,8 +80,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -99,8 +99,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -118,8 +118,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -132,8 +132,8 @@ class CheckOutdatedProviderUseCaseImplTest {
     @Test
     fun `should return error when provider not found in repository`() =
         runTest(testDispatcher) {
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns null
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns null
 
             val result = checkOutdatedProviderUseCase()
 
@@ -149,8 +149,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = null,
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -166,8 +166,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "",
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(testProviderMetadata)
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(testProviderMetadata)
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -186,8 +186,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(debugMetadata)
-            every { mockProviderRepository.getProvider(debugMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(debugMetadata)
+            every { mockProviderRepository.getPlugin(debugMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -209,9 +209,9 @@ class CheckOutdatedProviderUseCaseImplTest {
 
             val providers = listOf(testProviderMetadata, webViewProviderMetadata)
 
-            every { mockProviderRepository.getOrderedProviders() } returns providers
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns provider1
-            every { mockProviderRepository.getProvider(webViewProviderMetadata.id) } returns provider2
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns providers
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns provider1
+            every { mockProviderRepository.getPlugin(webViewProviderMetadata.id) } returns provider2
 
             val result = checkOutdatedProviderUseCase()
 
@@ -231,8 +231,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/nonexistent/repository/builds/updater.json",
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(invalidMetadata)
-            every { mockProviderRepository.getProvider(invalidMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(invalidMetadata)
+            every { mockProviderRepository.getPlugin(invalidMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -251,8 +251,8 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getOrderedProviders() } returns listOf(nonExistentMetadata)
-            every { mockProviderRepository.getProvider(nonExistentMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getInstalledProvidersAsFlow() } returns listOf(nonExistentMetadata)
+            every { mockProviderRepository.getPlugin(nonExistentMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase()
 
@@ -268,7 +268,7 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase(testProviderMetadata)
 
@@ -283,7 +283,7 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase(testProviderMetadata)
 
@@ -301,7 +301,7 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getProvider(debugMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(debugMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase(debugMetadata)
 
@@ -311,7 +311,7 @@ class CheckOutdatedProviderUseCaseImplTest {
     @Test
     fun `single provider check should return false when provider not found`() =
         runTest(testDispatcher) {
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns null
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns null
 
             val result = checkOutdatedProviderUseCase(testProviderMetadata)
 
@@ -329,7 +329,7 @@ class CheckOutdatedProviderUseCaseImplTest {
                 updateUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
             )
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = checkOutdatedProviderUseCase(testProviderMetadata)
 

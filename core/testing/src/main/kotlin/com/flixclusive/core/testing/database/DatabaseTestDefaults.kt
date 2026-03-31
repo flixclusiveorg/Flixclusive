@@ -130,38 +130,28 @@ object DatabaseTestDefaults {
         url: String = "https://example.com/repo",
         owner: String = "testowner",
         name: String = "testrepo",
+        userId: Int = TEST_USER_ID,
         rawLinkFormat: String = "https://raw.example.com/%s",
     ) = InstalledRepository(
         url = url,
         owner = owner,
         name = name,
         rawLinkFormat = rawLinkFormat,
+        userId = userId,
     )
 
     fun getInstalledProviderEntity(
         id: String = "test-provider",
         repositoryUrl: String = "https://example.com/repo",
-        name: String = "Test Provider",
-        status: String = "active",
-        providerType: String = "movie",
-        language: String = "en",
-        adult: Boolean = false,
-        versionName: String = "1.0.0",
-        versionCode: Long = 1,
-        buildUrl: String = "https://example.com/build.flx",
+        filePath: String = "provider.json",
+        ownerId: Int = TEST_USER_ID,
         sortOrder: Double = 1.0,
     ) = InstalledProvider(
         id = id,
         repositoryUrl = repositoryUrl,
-        name = name,
-        status = status,
-        providerType = providerType,
-        language = language,
-        adult = adult,
-        versionName = versionName,
-        versionCode = versionCode,
-        buildUrl = buildUrl,
         sortOrder = sortOrder,
+        ownerId = ownerId,
+        filePath = filePath,
     )
 
     fun createDatabase(context: Context) =

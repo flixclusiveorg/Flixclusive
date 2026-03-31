@@ -2,19 +2,15 @@ package com.flixclusive.domain.provider.usecase.updater.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
-import com.flixclusive.core.datastore.model.user.ProviderPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
-import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
+import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.ProviderUpdateResult
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
@@ -24,7 +20,6 @@ import com.flixclusive.domain.provider.util.extensions.downloadProvider
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -35,242 +30,211 @@ import javax.inject.Inject
 
 // TODO: Remove the usecase dependencies from the implementation.
 //       It's a pain in the ass to test this class
-internal class UpdateProviderUseCaseImpl
-    @Inject
-    constructor(
-        @param:ApplicationContext private val context: Context,
-        private val dataStoreManager: DataStoreManager,
-        private val userSessionDataStore: UserSessionDataStore,
-        private val providerRepository: ProviderRepository,
-        private val loadProviderUseCase: LoadProviderUseCase,
-        private val unloadProviderUseCase: UnloadProviderUseCase,
-        private val downloadFileUseCase: DownloadFileUseCase,
-        private val getProviderFromRemoteUseCase: GetProviderFromRemoteUseCase,
-        private val appDispatchers: AppDispatchers,
-    ) : UpdateProviderUseCase {
-        private suspend fun getProviderPrefs() =
-            dataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class).first()
+internal class UpdateProviderUseCaseImpl @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val userSessionDataStore: UserSessionDataStore,
+    private val providerRepository: ProviderRepository,
+    private val loadProviderUseCase: LoadProviderUseCase,
+    private val unloadProviderUseCase: UnloadProviderUseCase,
+    private val downloadFileUseCase: DownloadFileUseCase,
+    private val getProviderFromRemoteUseCase: GetProviderFromRemoteUseCase,
+    private val appDispatchers: AppDispatchers,
+) : UpdateProviderUseCase {
 
-        @Throws(Throwable::class)
-        override suspend fun invoke(provider: ProviderMetadata) {
-            if (providerRepository.getProvider(provider.id) == null) {
-                error(context.getString(R.string.provider_not_found, provider.name, provider.id))
-            }
+    @Throws(Throwable::class)
+    override suspend fun invoke(provider: ProviderMetadata) {
+        if (providerRepository.getPlugin(provider.id) == null) {
+            error(context.getString(R.string.provider_not_found, provider.name, provider.id))
+        }
 
-            val repository = provider.repositoryUrl.toValidRepositoryLink()
-            val updatedMetadata = getProviderFromRemoteUseCase(
-                repository = repository,
-                id = provider.id,
-            ).getOrThrow()
+        val repository = provider.repositoryUrl.toValidRepositoryLink()
+        val updatedMetadata = getProviderFromRemoteUseCase(
+            repository = repository,
+            id = provider.id,
+        ).getOrThrow()
 
-            val oldPreference = getOldPreferenceItem(provider.id)
-            createBackup(oldPreference)
+        val old = getOldProviderConfig(provider.id)
+        createBackup(old)
 
-            val newPreference = getNewPreferenceItem(
-                oldPreference = oldPreference,
-                newMetadata = updatedMetadata,
+        val new = getNewPreferenceItem(
+            oldPreference = old,
+            newMetadata = updatedMetadata,
+        )
+
+
+        val oldFile = File(old.filePath)
+        val newFile = File(new.filePath)
+
+        withContext(appDispatchers.io) {
+            oldFile.delete()
+            downloadFileUseCase.downloadProvider(
+                metadata = updatedMetadata,
+                file = newFile,
             )
+        }
 
-            val success = withContext(appDispatchers.io) {
-                val oldFile = File(oldPreference.filePath)
-                val newFile = File(newPreference.filePath)
-
-                oldFile.delete()
-
-                downloadFileUseCase.downloadProvider(
-                    metadata = updatedMetadata,
-                    file = newFile,
-                ).catch {
-                    errorLog("Failed to update provider: ${provider.name}")
-                    errorLog(it)
-                }.collect()
-
-                newFile.exists()
-            }
-
-            if (!success) {
-                restoreBackup(oldPreference)
-                throw DownloadException(
-                    Throwable(
-                        message = context.getString(
-                            R.string.failed_to_download_provider,
-                            provider.name,
-                            provider.id,
-                        )
+        if (!newFile.exists()) {
+            withContext(appDispatchers.io) { restoreBackup(old) }
+            throw DownloadException(
+                Throwable(
+                    message = context.getString(
+                        R.string.failed_to_download_provider,
+                        provider.name,
+                        provider.id,
                     )
                 )
+            )
+        }
+
+        try {
+            unloadProviderUseCase(provider = old)
+        } catch (e: Throwable) {
+            throw UnloadException(e)
+        }
+
+        providerRepository.install(new)
+        loadProviderUseCase(installedProvider = new).onEach {
+            // If the provider failed to load, but it was
+            // previously loaded, just log the exception
+            if (it is ProviderResult.Failure && providerRepository.getPlugin(provider.id) != null) {
+                // If the provider is loaded, just log the exception and continue
+                infoLog("Provider ${provider.name} updated but failed to load with exception: ${it.error}")
+                return@onEach
             }
 
-            try {
-                unloadProviderUseCase(
-                    metadata = provider,
-                    unloadFromPrefs = false,
+            // If the provider failed to load, and it wasn't previously
+            // loaded, restore the backup and throw an exception
+            if (it is ProviderResult.Failure) {
+                restoreBackup(old)
+                providerRepository.install(old)
+                loadProviderUseCase(installedProvider = old).collect()
+                throw LoadException(it.error)
+            }
+        }.collect()
+    }
+
+    override suspend fun invoke(providers: List<ProviderMetadata>): ProviderUpdateResult {
+        val updatedProviders = mutableListOf<ProviderMetadata>()
+        val failedToUpdateProviders = mutableListOf<Pair<ProviderMetadata, Throwable>>()
+
+        for (provider in providers) {
+            val error = try {
+                invoke(provider)
+                updatedProviders.add(provider)
+                null
+            } catch (e: DownloadException) {
+                Throwable(
+                    message = context.getString(
+                        R.string.failed_to_download_provider,
+                        provider.name,
+                        provider.id,
+                    ),
+                    cause = e.cause!!,
+                )
+            } catch (e: UnloadException) {
+                Throwable(
+                    cause = e.cause!!,
+                    message = context.getString(
+                        R.string.unload_exception_message,
+                        provider.name,
+                        provider.id,
+                        e.cause?.localizedMessage ?: "Unknown cause",
+                    ),
+                )
+            } catch (e: LoadException) {
+                Throwable(
+                    message = context.getString(
+                        R.string.failed_to_load_provider,
+                        provider.name,
+                        provider.id,
+                    ),
+                    cause = e.cause!!,
                 )
             } catch (e: Throwable) {
-                throw UnloadException(e)
+                e
             }
 
-            providerRepository.addToPreferences(preferenceItem = newPreference)
-            loadProviderUseCase(
-                metadata = updatedMetadata,
-                filePath = newPreference.filePath,
-            ).onEach {
-                // If the provider failed to load, but it was
-                // previously loaded, just log the exception
-                if (it is LoadProviderResult.Failure &&
-                    providerRepository.getProvider(provider.id) != null
-                ) {
-                    // If the provider is loaded, just log the exception and continue
-                    infoLog("Provider ${provider.name} updated but failed to load with exception: ${it.error}")
-                    return@onEach
-                }
-
-                // If the provider failed to load, and it wasn't previously
-                // loaded, restore the backup and throw an exception
-                if (it is LoadProviderResult.Failure) {
-                    restoreBackup(oldPreference)
-                    providerRepository.addToPreferences(oldPreference)
-
-                    loadProviderUseCase(
-                        metadata = provider,
-                        filePath = oldPreference.filePath,
-                    ).collect()
-                    throw LoadException(it.error)
-                }
-            }.collect()
+            if (error != null) {
+                failedToUpdateProviders.add(provider to error)
+            }
         }
 
-        override suspend fun invoke(providers: List<ProviderMetadata>): ProviderUpdateResult {
-            val updatedProviders = mutableListOf<ProviderMetadata>()
-            val failedToUpdateProviders = mutableListOf<Pair<ProviderMetadata, Throwable>>()
+        return ProviderUpdateResult(
+            success = updatedProviders,
+            failed = failedToUpdateProviders,
+        )
+    }
 
-            for (provider in providers) {
-                val error = try {
-                    invoke(provider)
-                    updatedProviders.add(provider)
-                    null
-                } catch (e: DownloadException) {
-                    Throwable(
-                        message = context.getString(
-                            R.string.failed_to_download_provider,
-                            provider.name,
-                            provider.id,
-                        ),
-                        cause = e.cause!!,
-                    )
-                } catch (e: UnloadException) {
-                    Throwable(
-                        cause = e.cause!!,
-                        message = context.getString(
-                            R.string.unload_exception_message,
-                            provider.name,
-                            provider.id,
-                            e.cause?.localizedMessage ?: "Unknown cause",
-                        ),
-                    )
-                } catch (e: LoadException) {
-                    Throwable(
-                        message = context.getString(
-                            R.string.failed_to_load_provider,
-                            provider.name,
-                            provider.id,
-                        ),
-                        cause = e.cause!!,
-                    )
-                } catch (e: Throwable) {
-                    e
-                }
+    private suspend fun getOldProviderConfig(id: String): InstalledProvider {
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-                if (error != null) {
-                    failedToUpdateProviders.add(provider to error)
-                }
-            }
-
-            return ProviderUpdateResult(
-                success = updatedProviders,
-                failed = failedToUpdateProviders,
+        val old = providerRepository.getConfig(id, userId) ?: error(
+            context.getString(
+                R.string.provider_not_even_installed,
+                id
             )
-        }
+        )
 
-        private suspend fun getOldPreferenceItem(id: String): ProviderFromPreferences {
-            val providers = getProviderPrefs().providers
-            val oldPreference = providers.find { it.id == id }
+        return old
+    }
 
-            if (oldPreference == null) {
-                error(context.getString(R.string.provider_not_found_on_prefs, id))
-            }
+    private suspend fun getNewPreferenceItem(
+        oldPreference: InstalledProvider,
+        newMetadata: ProviderMetadata,
+    ): InstalledProvider {
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            return oldPreference
-        }
+        val file = context.createFileForProvider(
+            userId = userId,
+            provider = newMetadata,
+        )
 
-        /**
-         * Creates a new [ProviderFromPreferences] item with updated metadata and a new file path.
-         *
-         * This is necessary because the new metadata might not have the same name as the old one,
-         *
-         * @param oldPreference The old provider preference item.
-         * @param newMetadata The new provider metadata.
-         *
-         * @return A new [ProviderFromPreferences] item with updated information.
-         * */
-        private suspend fun getNewPreferenceItem(
-            oldPreference: ProviderFromPreferences,
-            newMetadata: ProviderMetadata,
-        ): ProviderFromPreferences {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        return oldPreference.copy(
+            filePath = file.absolutePath,
+        )
+    }
 
-            val file = context.createFileForProvider(
-                userId = userId,
-                provider = newMetadata,
+    private suspend fun createBackup(provider: InstalledProvider) {
+        val file = File(provider.filePath)
+        val directory = file.parentFile ?: return
+        val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
+
+        withContext(appDispatchers.io) {
+            // Backup provider file
+            file.copyTo(
+                target = File(directory, "${file.name}.bak"),
+                overwrite = true,
             )
 
-            return oldPreference.copy(
-                name = newMetadata.name,
-                filePath = file.absolutePath,
+            // Backup updater.json
+            updaterJsonFile.copyTo(
+                target = File(directory, "${updaterJsonFile.name}.bak"),
+                overwrite = true,
             )
         }
+    }
 
-        private suspend fun createBackup(preference: ProviderFromPreferences) {
-            val file = File(preference.filePath)
-            val directory = file.parentFile ?: return
-            val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
+    private suspend fun restoreBackup(backup: InstalledProvider) {
+        val file = File(backup.filePath)
+        val directory = file.parentFile ?: return
+        val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
 
-            withContext(appDispatchers.io) {
-                // Backup provider file
-                file.copyTo(
-                    target = File(directory, "${file.name}.bak"),
-                    overwrite = true,
-                )
+        val backupFile = File(directory, "${file.name}.bak")
+        val backupUpdaterJsonFile = File(directory, "${updaterJsonFile.name}.bak")
 
-                // Backup updater.json
-                updaterJsonFile.copyTo(
-                    target = File(directory, "${updaterJsonFile.name}.bak"),
-                    overwrite = true,
-                )
+        withContext(appDispatchers.io) {
+            if (backupFile.exists()) {
+                backupFile.copyTo(target = file, overwrite = true)
+                backupFile.delete()
             }
-        }
 
-        private suspend fun restoreBackup(backup: ProviderFromPreferences) {
-            val file = File(backup.filePath)
-            val directory = file.parentFile ?: return
-            val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
-
-            val backupFile = File(directory, "${file.name}.bak")
-            val backupUpdaterJsonFile = File(directory, "${updaterJsonFile.name}.bak")
-
-            withContext(appDispatchers.io) {
-                if (backupFile.exists()) {
-                    backupFile.copyTo(target = file, overwrite = true)
-                    backupFile.delete()
-                }
-
-                if (backupUpdaterJsonFile.exists()) {
-                    backupUpdaterJsonFile.copyTo(target = updaterJsonFile, overwrite = true)
-                    backupUpdaterJsonFile.delete()
-                }
+            if (backupUpdaterJsonFile.exists()) {
+                backupUpdaterJsonFile.copyTo(target = updaterJsonFile, overwrite = true)
+                backupUpdaterJsonFile.delete()
             }
         }
     }
+}
 
 internal class DownloadException(
     cause: Throwable,

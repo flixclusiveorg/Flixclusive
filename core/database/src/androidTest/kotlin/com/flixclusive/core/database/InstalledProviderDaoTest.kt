@@ -52,7 +52,7 @@ class InstalledProviderDaoTest {
         versionName = "1.0.0",
         versionCode = 1,
         buildUrl = "https://example.com/$id.flx",
-        isDisabled = isDisabled,
+        isEnabled = isDisabled,
         sortOrder = sortOrder,
     )
 
@@ -98,25 +98,25 @@ class InstalledProviderDaoTest {
         }
 
     @Test
-    fun shouldGetAllOrderedBySortOrder() =
+    fun shouldGetAll() =
         runTest {
             dao.insert(provider("p3", sortOrder = 3.0))
             dao.insert(provider("p1", sortOrder = 1.0))
             dao.insert(provider("p2", sortOrder = 2.0))
 
-            val all = dao.getAllOrderedBySortOrder().first()
+            val all = dao.getAll().first()
             expectThat(all).hasSize(3)
             expectThat(all.map { it.id }).isEqualTo(listOf("p1", "p2", "p3"))
         }
 
     @Test
-    fun shouldGetEnabledOnly() =
+    fun shouldGetEnabledAsFlowOnly() =
         runTest {
             dao.insert(provider("p1", sortOrder = 1.0, isDisabled = false))
             dao.insert(provider("p2", sortOrder = 2.0, isDisabled = true))
             dao.insert(provider("p3", sortOrder = 3.0, isDisabled = false))
 
-            val enabled = dao.getEnabled().first()
+            val enabled = dao.getEnabledAsFlow().first()
             expectThat(enabled).hasSize(2)
             expectThat(enabled.map { it.id }).isEqualTo(listOf("p1", "p3"))
         }
@@ -154,22 +154,22 @@ class InstalledProviderDaoTest {
         }
 
     @Test
-    fun shouldSetDisabled() =
+    fun shouldSetEnabled() =
         runTest {
             dao.insert(provider("p1", isDisabled = false))
 
-            dao.setDisabled("p1", true)
+            dao.setEnabled("p1", true)
 
             val result = dao.get("p1")
             expectThat(result).isNotNull().and {
-                get { isDisabled }.isTrue()
+                get { isEnabled }.isTrue()
             }
 
-            dao.setDisabled("p1", false)
+            dao.setEnabled("p1", false)
 
             val result2 = dao.get("p1")
             expectThat(result2).isNotNull().and {
-                get { isDisabled }.isFalse()
+                get { isEnabled }.isFalse()
             }
         }
 
@@ -206,7 +206,7 @@ class InstalledProviderDaoTest {
 
             dao.deleteAll()
 
-            val all = dao.getAllOrderedBySortOrder().first()
+            val all = dao.getAll().first()
             expectThat(all).isEmpty()
         }
 
@@ -223,7 +223,7 @@ class InstalledProviderDaoTest {
     @Test
     fun shouldReturnEmptyFlowWhenNoProviders() =
         runTest {
-            val all = dao.getAllOrderedBySortOrder().first()
+            val all = dao.getAll().first()
             expectThat(all).isEmpty()
         }
 }

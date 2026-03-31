@@ -8,7 +8,6 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.core.testing.provider.ProviderTestDefaults
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.testing.TestJobState
 import com.flixclusive.domain.provider.testing.TestStage
@@ -124,7 +123,7 @@ class ProviderTesterImplTest {
 
         runTest(testDispatcher) {
             // Mock successful provider loading
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
 
@@ -146,7 +145,7 @@ class ProviderTesterImplTest {
             val providers = arrayListOf(testMetadata)
 
             // Mock successful provider loading
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
 
@@ -166,7 +165,7 @@ class ProviderTesterImplTest {
             val providers = arrayListOf(testMetadata)
 
             // Mock successful provider loading
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
 
@@ -187,7 +186,7 @@ class ProviderTesterImplTest {
             val providers = arrayListOf(testMetadata)
 
             // Mock successful provider loading
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
 
@@ -208,7 +207,7 @@ class ProviderTesterImplTest {
             val providers = arrayListOf(testMetadata)
 
             // Mock successful provider loading
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
 
@@ -241,7 +240,7 @@ class ProviderTesterImplTest {
             val providers = arrayListOf(testMetadata)
 
             // Mock failed provider loading - repository returns null
-            every { providerRepository.getProvider(testMetadata.id) } returns null
+            every { providerRepository.getPlugin(testMetadata.id) } returns null
             every { providerApiRepository.getApi(testMetadata.id) } returns null
 
             turbineScope {
@@ -282,7 +281,7 @@ class ProviderTesterImplTest {
             val testException = RuntimeException("Test exception")
 
             // Mock exception during provider loading
-            every { providerRepository.getProvider(testMetadata.id) } throws testException
+            every { providerRepository.getPlugin(testMetadata.id) } throws testException
             every { providerApiRepository.getApi(testMetadata.id) } returns null
 
             turbineScope {
@@ -322,7 +321,7 @@ class ProviderTesterImplTest {
             val testBackdropUrl = "https://example.com/backdrop.jpg"
 
             // Mock successful provider loading with backdrop image
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
             every { testApi.testFilm.backdropImage } returns testBackdropUrl
@@ -344,7 +343,7 @@ class ProviderTesterImplTest {
             val testPosterUrl = "https://example.com/poster.jpg"
 
             // Mock successful provider loading with poster image (no backdrop)
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
             every { testApi.testFilm.backdropImage } returns null
@@ -370,11 +369,11 @@ class ProviderTesterImplTest {
             val testApi2 = mockk<ProviderApi>(relaxed = true)
 
             // Mock successful loading for both providers
-            every { providerRepository.getProvider(testMetadata1.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata1.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata1.id) } returns testApi
             every { testProvider.getApi(context, client) } returns testApi
 
-            every { providerRepository.getProvider(testMetadata2.id) } returns testProvider2
+            every { providerRepository.getPlugin(testMetadata2.id) } returns testProvider2
             every { providerApiRepository.getApi(testMetadata2.id) } returns testApi2
             every { testProvider2.getApi(context, client) } returns testApi2
             every { testApi2.testFilm } returns testFilm
@@ -404,7 +403,7 @@ class ProviderTesterImplTest {
             val providers = arrayListOf(testMetadata)
 
             // Mock successful provider loading
-            every { providerRepository.getProvider(testMetadata.id) } returns testProvider
+            every { providerRepository.getPlugin(testMetadata.id) } returns testProvider
             every { providerApiRepository.getApi(testMetadata.id) } returns null
             every { testProvider.getApi(context, client) } returns testApi
 
@@ -412,7 +411,7 @@ class ProviderTesterImplTest {
             advanceUntilIdle()
 
             // Verify the correct sequence of repository calls
-            verify { providerRepository.getProvider(testMetadata.id) }
+            verify { providerRepository.getPlugin(testMetadata.id) }
             verify { providerApiRepository.getApi(testMetadata.id) }
             verify { testProvider.getApi(context, client) }
         }

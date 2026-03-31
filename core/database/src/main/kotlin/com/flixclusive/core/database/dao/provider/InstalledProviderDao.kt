@@ -1,6 +1,7 @@
 package com.flixclusive.core.database.dao.provider
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -10,20 +11,26 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface InstalledProviderDao {
-    @Query("SELECT * FROM installed_providers ORDER BY sortOrder ASC")
-    fun getAllOrderedBySortOrder(): Flow<List<InstalledProvider>>
+    @Query("SELECT * FROM installed_providers WHERE ownerId = :ownerId ORDER BY sortOrder ASC")
+    fun getAllAsFlow(ownerId: Int): Flow<List<InstalledProvider>>
 
-    @Query("SELECT * FROM installed_providers WHERE isDisabled = 0 ORDER BY sortOrder ASC")
-    fun getEnabled(): Flow<List<InstalledProvider>>
+    @Query("SELECT * FROM installed_providers WHERE ownerId = :ownerId ORDER BY sortOrder ASC")
+    suspend fun getAll(ownerId: Int): List<InstalledProvider>
 
-    @Query("SELECT * FROM installed_providers WHERE id = :id")
-    suspend fun get(id: String): InstalledProvider?
+    @Query("SELECT * FROM installed_providers WHERE isEnabled = 1 AND ownerId = :ownerId ORDER BY sortOrder ASC")
+    fun getEnabledAsFlow(ownerId: Int): Flow<List<InstalledProvider>>
 
-    @Query("SELECT * FROM installed_providers WHERE id = :id")
-    fun getAsFlow(id: String): Flow<InstalledProvider?>
+    @Query("SELECT * FROM installed_providers WHERE isEnabled = 1 AND ownerId = :ownerId ORDER BY sortOrder ASC")
+    suspend fun getEnabled(ownerId: Int): List<InstalledProvider>
 
-    @Query("SELECT * FROM installed_providers WHERE repositoryUrl = :repositoryUrl ORDER BY sortOrder ASC")
-    fun getByRepositoryUrl(repositoryUrl: String): Flow<List<InstalledProvider>>
+    @Query("SELECT * FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
+    suspend fun get(id: String, ownerId: Int): InstalledProvider?
+
+    @Query("SELECT * FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
+    fun getAsFlow(id: String, ownerId: Int): Flow<InstalledProvider?>
+
+    @Query("SELECT * FROM installed_providers WHERE repositoryUrl = :repositoryUrl AND ownerId = :ownerId ORDER BY sortOrder ASC")
+    fun getByRepositoryUrl(repositoryUrl: String, ownerId: Int): Flow<List<InstalledProvider>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(provider: InstalledProvider)
@@ -34,18 +41,34 @@ interface InstalledProviderDao {
     @Update
     suspend fun update(provider: InstalledProvider)
 
-    @Query("DELETE FROM installed_providers WHERE id = :id")
-    suspend fun delete(id: String)
+    @Delete
+    suspend fun delete(provider: InstalledProvider)
 
-    @Query("DELETE FROM installed_providers")
-    suspend fun deleteAll()
+    @Query("DELETE FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
+    suspend fun delete(id: String, ownerId: Int)
 
-    @Query("UPDATE installed_providers SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id")
-    suspend fun updateSortOrder(id: String, sortOrder: Double, updatedAt: Long = System.currentTimeMillis())
+    @Query("DELETE FROM installed_providers WHERE ownerId = :ownerId")
+    suspend fun deleteAll(ownerId: Int)
 
-    @Query("UPDATE installed_providers SET isDisabled = :isDisabled, updatedAt = :updatedAt WHERE id = :id")
-    suspend fun setDisabled(id: String, isDisabled: Boolean, updatedAt: Long = System.currentTimeMillis())
+    @Query("UPDATE installed_providers SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    suspend fun updateSortOrder(
+        id: String,
+        ownerId: Int,
+        sortOrder: Double,
+        updatedAt: Long = System.currentTimeMillis()
+    )
 
-    @Query("SELECT MAX(sortOrder) FROM installed_providers")
-    suspend fun getMaxSortOrder(): Double?
+    @Query("UPDATE installed_providers SET isEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    suspend fun setEnabled(
+        id: String,
+        ownerId: Int,
+        isEnabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    @Query("SELECT isEnabled FROM installed_providers WHERE id = :id")
+    suspend fun isEnabled(id: String, ownerId: Int): Boolean
+
+    @Query("SELECT MAX(sortOrder) FROM installed_providers WHERE ownerId = :ownerId")
+    suspend fun getMaxSortOrder(ownerId: Int): Double?
 }

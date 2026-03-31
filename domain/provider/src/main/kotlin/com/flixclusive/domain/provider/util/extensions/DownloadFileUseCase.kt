@@ -2,20 +2,19 @@ package com.flixclusive.domain.provider.util.extensions
 
 import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.data.downloads.model.DownloadState
 import com.flixclusive.domain.downloads.model.DownloadRequest
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.model.provider.ProviderMetadata
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.takeWhile
 import java.io.File
 
-fun DownloadFileUseCase.downloadProvider(
+suspend fun DownloadFileUseCase.downloadProvider(
     file: File,
     metadata: ProviderMetadata,
-): Flow<Pair<DownloadState, DownloadState>> {
+) {
     val providerDownloadRequest = DownloadRequest.from(
         url = metadata.buildUrl,
         destinationPath = file.parent!!,
@@ -35,7 +34,7 @@ fun DownloadFileUseCase.downloadProvider(
         fileName = Constants.UPDATER_FILE,
     )
 
-    return combine(
+    combine(
         invoke(providerDownloadRequest),
         invoke(updaterJsonDownloadRequest)
     ) { provider, updaterJson ->
@@ -45,14 +44,10 @@ fun DownloadFileUseCase.downloadProvider(
         val isFinished = provider.status.isFinished && updaterJson.status.isFinished
 
         when {
-            isFinished && exception != null -> {
-                throw ExceptionWithUiText(exception)
-            }
-            isFinished -> {
-                infoLog("Successfully downloaded provider: ${metadata.name} [${file.name}]")
-            }
+            isFinished && exception != null -> throw ExceptionWithUiText(exception)
+            isFinished -> infoLog("Successfully downloaded provider: ${metadata.name} [${file.name}]")
         }
 
         !isFinished
-    }
+    }.collect()
 }

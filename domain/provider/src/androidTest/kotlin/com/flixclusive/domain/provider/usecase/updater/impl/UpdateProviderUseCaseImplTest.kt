@@ -30,7 +30,6 @@ import io.mockk.runs
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import org.junit.After
@@ -99,7 +98,6 @@ class UpdateProviderUseCaseImplTest {
 
         updateProviderUseCase = UpdateProviderUseCaseImpl(
             context = context,
-            dataStoreManager = mockDataStoreManager,
             userSessionDataStore = mockUserSessionDataStore,
             providerRepository = mockProviderRepository,
             loadProviderUseCase = mockLoadProviderUseCase,
@@ -137,7 +135,7 @@ class UpdateProviderUseCaseImplTest {
     @Test
     fun shouldFailWhenProviderDoesNotExistInRepository() =
         runTest(testDispatcher) {
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns null
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns null
 
             val result = runCatching {
                 updateProviderUseCase(testProviderMetadata)
@@ -155,7 +153,7 @@ class UpdateProviderUseCaseImplTest {
             )
             val originalProviderFile = createOriginalProviderFile()
 
-            every { mockProviderRepository.getProvider(nonExistentMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(nonExistentMetadata.id) } returns mockProvider
             setupProviderPreferences(nonExistentMetadata, originalProviderFile)
 
             coEvery {
@@ -177,7 +175,7 @@ class UpdateProviderUseCaseImplTest {
             )
             val originalProviderFile = createOriginalProviderFile()
 
-            every { mockProviderRepository.getProvider(invalidMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(invalidMetadata.id) } returns mockProvider
             setupProviderPreferences(invalidMetadata, originalProviderFile)
 
             coEvery {
@@ -197,7 +195,7 @@ class UpdateProviderUseCaseImplTest {
         runTest(testDispatcher) {
             val providerFile = createOriginalProviderFile()
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider andThen null
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider andThen null
             setupProviderPreferences(testProviderMetadata, providerFile)
 
             coEvery {
@@ -234,7 +232,7 @@ class UpdateProviderUseCaseImplTest {
         runTest(testDispatcher) {
             val providerFile = createOriginalProviderFile()
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
             setupProviderPreferences(testProviderMetadata, providerFile)
 
             coEvery {
@@ -255,7 +253,7 @@ class UpdateProviderUseCaseImplTest {
             )
 
             // Provider is already loaded, so should just log and continue
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
 
             val result = runCatching {
                 updateProviderUseCase(testProviderMetadata)
@@ -277,7 +275,7 @@ class UpdateProviderUseCaseImplTest {
                 versionCode = 10000L,
             )
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
             setupProviderPreferences(testProviderMetadata, providerFile)
 
             coEvery {
@@ -317,7 +315,7 @@ class UpdateProviderUseCaseImplTest {
             )
 
             // Setup valid provider
-            every { mockProviderRepository.getProvider(validProvider.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(validProvider.id) } returns mockProvider
             coEvery {
                 mockGetProviderFromRemoteUseCase(any(), validProvider.id)
             } returns Resource.Success(validProvider.copy(versionCode = 10000L))
@@ -326,7 +324,7 @@ class UpdateProviderUseCaseImplTest {
 
             // Setup invalid provider with download failure
             val mockInvalidProvider = mockk<Provider>(relaxed = true)
-            every { mockProviderRepository.getProvider(invalidProvider.id) } returns mockInvalidProvider
+            every { mockProviderRepository.getPlugin(invalidProvider.id) } returns mockInvalidProvider
             coEvery {
                 mockGetProviderFromRemoteUseCase(any(), invalidProvider.id)
             } returns Resource.Success(invalidProvider.copy(versionCode = 10000L))
@@ -365,7 +363,7 @@ class UpdateProviderUseCaseImplTest {
         runTest(testDispatcher) {
             val providerFile = createOriginalProviderFile()
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
             setupProviderPreferences(testProviderMetadata, providerFile)
 
             coEvery {
@@ -392,7 +390,7 @@ class UpdateProviderUseCaseImplTest {
         runTest(testDispatcher) {
             val providerFile = createOriginalProviderFile()
 
-            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider andThen null
+            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider andThen null
             setupProviderPreferences(testProviderMetadata, providerFile)
 
             coEvery {
@@ -454,11 +452,11 @@ class UpdateProviderUseCaseImplTest {
             )
         } returns Unit
 
-        every { mockProviderRepository.getProvider(any()) } returns null
+        every { mockProviderRepository.getPlugin(any()) } returns null
     }
 
     private fun setupSuccessfulUpdateScenario(providerFile: File) {
-        every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+        every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockProvider
         setupProviderPreferences(testProviderMetadata, providerFile)
 
         coEvery {
