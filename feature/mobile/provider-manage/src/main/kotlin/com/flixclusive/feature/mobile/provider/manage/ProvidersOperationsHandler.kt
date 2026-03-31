@@ -22,14 +22,14 @@ internal class ProvidersOperationsHandler(
                 providers.add(operation.to, providers.removeAt(operation.from))
             }
             is CollectionsOperation.List.Replace -> {
-                val provider = repository.getProviderMetadata(operation.item.id) ?: return
+                val provider = repository.getMetadata(operation.item.id) ?: return
                 providers[operation.index] = provider
             }
         }
     }
 
     private fun handleAdd(id: String) {
-        val provider = repository.getProviderMetadata(id)!!
+        val provider = repository.getMetadata(id)!!
         if (!providers.contains(provider)) {
             providers.add(provider)
         }

@@ -8,7 +8,10 @@ import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.flow.Flow
 
 interface WatchProgressRepository {
-    fun getAllAsFlow(ownerId: Int): Flow<List<WatchProgressWithMetadata>>
+    fun getAllAsFlow(
+        ownerId: Int,
+        sort: LibrarySort
+    ): Flow<List<WatchProgressWithMetadata>>
 
     suspend fun get(
         id: Long,

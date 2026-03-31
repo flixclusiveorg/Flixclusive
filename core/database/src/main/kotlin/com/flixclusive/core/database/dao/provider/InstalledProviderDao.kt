@@ -66,7 +66,7 @@ interface InstalledProviderDao {
         updatedAt: Long = System.currentTimeMillis()
     )
 
-    @Query("SELECT isEnabled FROM installed_providers WHERE id = :id")
+    @Query("SELECT isEnabled FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
     suspend fun isEnabled(id: String, ownerId: Int): Boolean
 
     @Query("SELECT MAX(sortOrder) FROM installed_providers WHERE ownerId = :ownerId")

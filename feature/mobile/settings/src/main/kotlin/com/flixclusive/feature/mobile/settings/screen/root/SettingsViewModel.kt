@@ -135,7 +135,7 @@ internal class SettingsViewModel
 
         fun deleteProviders() {
             appDispatchers.ioScope.launch {
-                providerRepository.getProviders().forEach {
+                providerRepository.getInstalledProviders().forEach {
                     unloadProviderUseCase(it)
                 }
             }

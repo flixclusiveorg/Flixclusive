@@ -15,7 +15,6 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult

@@ -46,12 +46,11 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.reme
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.CreateLibraryDialog
 import com.flixclusive.feature.mobile.library.common.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil.isCustom
-import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.manage.component.DefaultLibraryCardShape
@@ -134,7 +133,7 @@ private fun ManageLibraryScreen(
     onToggleSelect: (LibraryListWithPreview) -> Unit,
     onToggleOptionsSheet: (Boolean) -> Unit,
     onLongClickItem: (LibraryListWithPreview) -> Unit,
-    onUpdateFilter: (LibrarySortFilter) -> Unit,
+    onUpdateFilter: (LibrarySort) -> Unit,
 ) {
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(false) }
@@ -223,9 +222,7 @@ private fun ManageLibraryScreen(
             ) {
                 LibraryFilterRow(
                     isListEditable = !isListEmpty && !uiState.isMultiSelecting,
-                    filters = defaultManageLibraryFilters,
                     selected = uiState.selectedFilter,
-                    ascending = uiState.isSortingAscending,
                     onUpdate = onUpdateFilter,
                     onStartSelecting = onStartMultiSelecting,
                     modifier = Modifier
@@ -367,14 +364,12 @@ private fun ManageLibraryScreenBasePreview() {
             val sortedList =
                 list.sortedWith(
                     SortUtils.compareBy<LibraryListWithPreview>(
-                        ascending = uiState.isSortingAscending,
+                        ascending = uiState.selectedFilter.ascending,
                         selector = {
                             when (uiState.selectedFilter) {
-                                LibrarySortFilter.Name -> it.list.name
-                                LibrarySortFilter.AddedAt -> it.list.createdAt.time
-                                LibrarySortFilter.ModifiedAt -> it.list.updatedAt.time
-                                ItemCount -> it.itemsCount
-                                else -> throw Error()
+                                is LibrarySort.Name -> it.list.name
+                                is LibrarySort.Added -> it.list.createdAt.time
+                                is LibrarySort.Modified -> it.list.updatedAt.time
                             }
                         },
                     ),
@@ -432,7 +427,9 @@ private fun ManageLibraryScreenBasePreview() {
                     onUpdateFilter = {
                         uiState =
                             if (uiState.selectedFilter == it) {
-                                uiState.copy(isSortingAscending = !uiState.isSortingAscending)
+                                uiState.copy(
+                                    selectedFilter = uiState.selectedFilter.toggleAscending(),
+                                )
                             } else {
                                 uiState.copy(selectedFilter = it)
                             }

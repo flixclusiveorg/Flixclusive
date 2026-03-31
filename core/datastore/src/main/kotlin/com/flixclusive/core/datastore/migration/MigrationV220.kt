@@ -59,6 +59,7 @@ internal class MigrationV220(
     ) {
         val dbRepositories = oldProviderPrefs.repositories.map { repository ->
             InstalledRepository(
+                userId = userId,
                 url = repository.url,
                 owner = repository.owner,
                 name = repository.name,

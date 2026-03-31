@@ -130,8 +130,8 @@ class AddProviderViewModelTest {
 
     private fun setupDefaultBehavior() {
         coEvery { getProviderFromRemote(any()) } returns Resource.Success(listOf(testProvider1, testProvider2))
-        every { providerRepository.getProviderMetadata(any()) } returns null
-        every { providerRepository.getProvider(any()) } returns null
+        every { providerRepository.getMetadata(any()) } returns null
+        every { providerRepository.getPlugin(any()) } returns null
         coEvery { loadProvider(any()) } returns flow { emit(LoadProviderResult.Success(testProvider1)) }
         coEvery { unloadProvider(any()) } just runs
         coEvery { updateProvider(provider = any()) } just runs
@@ -290,7 +290,7 @@ class AddProviderViewModelTest {
     @Test
     fun `onToggleInstallation uninstalls installed provider`() =
         runTest(testDispatcher) {
-            every { providerRepository.getProviderMetadata(testProvider1.id) } returns testProvider1
+            every { providerRepository.getMetadata(testProvider1.id) } returns testProvider1
 
             createViewModel()
             advanceUntilIdle()
@@ -310,8 +310,8 @@ class AddProviderViewModelTest {
             val mockProvider = mockk<Provider>(relaxed = true)
             val mockManifest = mockk<ProviderManifest>(relaxed = true)
 
-            every { providerRepository.getProviderMetadata(testProvider1.id) } returns installedProvider
-            every { providerRepository.getProvider(testProvider1.id) } returns mockProvider
+            every { providerRepository.getMetadata(testProvider1.id) } returns installedProvider
+            every { providerRepository.getPlugin(testProvider1.id) } returns mockProvider
             every { mockProvider.manifest } returns mockManifest
             every { mockManifest.updateUrl } returns "https://example.com/update"
             every { mockManifest.versionCode } returns 5000L
@@ -432,8 +432,8 @@ class AddProviderViewModelTest {
             val mockProvider = mockk<Provider>(relaxed = true)
             val mockManifest = mockk<ProviderManifest>(relaxed = true)
 
-            every { providerRepository.getProviderMetadata(testProvider1.id) } returns installedProvider
-            every { providerRepository.getProvider(testProvider1.id) } returns mockProvider
+            every { providerRepository.getMetadata(testProvider1.id) } returns installedProvider
+            every { providerRepository.getPlugin(testProvider1.id) } returns mockProvider
             every { mockProvider.manifest } returns mockManifest
             every { mockManifest.updateUrl } returns "https://example.com/update"
             every { mockManifest.versionCode } returns 5000L
@@ -456,7 +456,7 @@ class AddProviderViewModelTest {
     fun `uninstall provider handles errors gracefully`() =
         runTest(testDispatcher) {
             val exception = RuntimeException("Uninstall failed")
-            every { providerRepository.getProviderMetadata(testProvider1.id) } returns testProvider1
+            every { providerRepository.getMetadata(testProvider1.id) } returns testProvider1
             coEvery { unloadProvider(testProvider1) } throws exception
 
             createViewModel()

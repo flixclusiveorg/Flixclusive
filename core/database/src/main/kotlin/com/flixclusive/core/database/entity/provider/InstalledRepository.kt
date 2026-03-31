@@ -2,6 +2,7 @@ package com.flixclusive.core.database.entity.provider
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flixclusive.core.database.entity.user.User
 import java.io.Serializable
@@ -16,6 +17,9 @@ import java.util.Date
             childColumns = ["userId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["userId"])
     ]
 )
 data class InstalledRepository(

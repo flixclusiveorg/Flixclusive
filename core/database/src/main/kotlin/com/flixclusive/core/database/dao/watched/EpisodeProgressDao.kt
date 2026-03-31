@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryListItem
@@ -14,14 +16,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EpisodeProgressDao {
-    /**
-     * Gets the latest watched episode for each series.
-     *
-     * This only returns the furthest episode watched in each series, not all episodes.
-     * */
-    @Transaction
-    @Query(
-        """
+    fun getAllAsFlow(
+        ownerId: Int,
+        column: String,
+        ascending: Boolean,
+    ): Flow<List<EpisodeProgressWithMetadata>> {
+        val query = """
         SELECT * FROM series_watch_history s1
         WHERE ownerId = :ownerId
         AND (seasonNumber, episodeNumber) = (
@@ -32,10 +32,22 @@ interface EpisodeProgressDao {
             ORDER BY seasonNumber DESC, episodeNumber DESC
             LIMIT 1
         )
-        ORDER BY createdAt DESC
-        """,
-    )
-    fun getAllAsFlow(ownerId: Int): Flow<List<EpisodeProgressWithMetadata>>
+        ORDER BY $column ${if (ascending) "ASC" else "DESC"}
+        """.trimIndent()
+
+        return getAllAsFlowRaw(
+            RoomRawQuery(
+                sql = query,
+                onBindStatement = { statement ->
+                    statement.bindInt(1, ownerId)
+                    statement.bindInt(2, ownerId)
+                }
+            )
+        )
+    }
+
+    @RawQuery
+    fun getAllAsFlowRaw(query: RoomRawQuery): Flow<List<EpisodeProgressWithMetadata>>
 
     @Transaction
     @Query(

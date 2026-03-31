@@ -21,7 +21,6 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.SearchHistoryRepository
 import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.data.tmdb.util.TMDBFilters.Companion.getDefaultTMDBFilters
@@ -60,7 +59,6 @@ internal class SearchExpandedScreenViewModel
         private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
         private val searchHistoryRepository: SearchHistoryRepository,
         private val userSessionManager: UserSessionManager,
-        private val providerApiRepository: ProviderApiRepository,
         private val appDispatchers: AppDispatchers,
         providerRepository: ProviderRepository,
         dataStoreManager: DataStoreManager,
@@ -68,7 +66,7 @@ internal class SearchExpandedScreenViewModel
         private var searchingJob: Job? = null
         private var paginatingJob: Job? = null
 
-        val providerMetadataList = providerRepository.getEnabledProviders().toImmutableList()
+        val providerMetadataList = providerRepository.getEnabledProvidersAsFlow().toImmutableList()
 
         private val providerApis = mutableStateListOf<ProviderApi>()
         private val apisChangesHandler = ApiListChangesHandler(providerApis)

@@ -11,7 +11,6 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
@@ -83,7 +82,7 @@ internal class ProviderManagerViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            providers.addAll(providerRepository.getOrderedProviders())
+            providers.addAll(providerRepository.getInstalledProvidersAsFlow())
 
             providerRepository.observe().collect { operation ->
                 providersChangesHandler.handleOperations(operation)
@@ -119,7 +118,7 @@ internal class ProviderManagerViewModel @Inject constructor(
                         providerApiRepository.addApiFromId(id = id)
                     } catch (e: Throwable) {
                         providerRepository.toggleProvider(id = id)
-                        val metadata = providerRepository.getProviderMetadata(id)!!
+                        val metadata = providerRepository.getMetadata(id)!!
                         val error = ProviderWithThrowable(provider = metadata, throwable = e)
                         _uiState.update { it.copy(error = error) }
                     }

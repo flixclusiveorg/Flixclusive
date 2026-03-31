@@ -1,13 +1,18 @@
 package com.flixclusive.data.database.repository.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.database.dao.library.LibraryListDao
+import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
 import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
+import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.util.FilmType
@@ -20,14 +25,42 @@ import javax.inject.Inject
 internal class WatchProgressRepositoryImpl @Inject constructor(
     private val movieProgressDao: MovieProgressDao,
     private val episodeProgressDao: EpisodeProgressDao,
+    private val libraryListItemDao: LibraryListItemDao,
+    private val libraryListDao: LibraryListDao,
     private val appDispatchers: AppDispatchers
 ) : WatchProgressRepository {
-    override fun getAllAsFlow(ownerId: Int): Flow<List<WatchProgressWithMetadata>> {
-        return movieProgressDao.getAllAsFlow(ownerId)
-            .combine(episodeProgressDao.getAllAsFlow(ownerId)) { movies, episodes ->
-                (movies + episodes).sortedByDescending { it.watchData.createdAt }
-            }
-            .distinctUntilChanged()
+    override fun getAllAsFlow(ownerId: Int, sort: LibrarySort): Flow<List<WatchProgressWithMetadata>> {
+        val column = when (sort) {
+            is LibrarySort.Added -> "createdAt"
+            is LibrarySort.Modified -> "updatedAt"
+            is LibrarySort.Name -> "createdAt" // Name sorting will be done in-memory after merging the lists
+        }
+
+        return combine(
+            flow = movieProgressDao.getAllAsFlow(
+                ownerId = ownerId,
+                column = column,
+                ascending = sort.ascending
+            ),
+            flow2 = episodeProgressDao.getAllAsFlow(
+                ownerId = ownerId,
+                column = column,
+                ascending = sort.ascending
+            ),
+        ) { movies, episodes ->
+            mergeSortedLists(
+                a = movies,
+                b = episodes,
+                comparator = compareBy {
+                    when (sort) {
+                        is LibrarySort.Added -> it.watchData.createdAt
+                        is LibrarySort.Modified -> it.watchData.updatedAt
+                        is LibrarySort.Name -> it.film.title
+                    }
+                }
+            )
+        }
+        .distinctUntilChanged()
     }
 
     override suspend fun get(id: Long, type: FilmType): WatchProgressWithMetadata? {
@@ -110,19 +143,18 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
     override suspend fun insert(item: WatchProgress, film: Film?): Long {
         return withContext(appDispatchers.io) {
             val dbFilm = film?.toDBFilm()
+            val watchedList = libraryListDao.getWatchedList(item.ownerId)
+            libraryListItemDao.insert(
+                film = film,
+                item = LibraryListItem(
+                    filmId = item.filmId,
+                    listId = watchedList.id,
+                ),
+            )
 
             when (item) {
                 is MovieProgress -> movieProgressDao.insert(item = item, film = dbFilm)
                 is EpisodeProgress -> episodeProgressDao.insert(item = item, film = dbFilm)
-            }
-        }
-    }
-
-    override suspend fun delete(item: Long, type: FilmType) {
-        withContext(appDispatchers.io) {
-            when (type) {
-                FilmType.MOVIE -> movieProgressDao.delete(item)
-                FilmType.TV_SHOW -> episodeProgressDao.delete(item)
             }
         }
     }
@@ -132,5 +164,79 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
             movieProgressDao.deleteAll(ownerId)
             episodeProgressDao.deleteAll(ownerId)
         }
+    }
+
+    override suspend fun delete(item: Long, type: FilmType) {
+        withContext(appDispatchers.io) {
+            val ownerId = when (type) {
+                FilmType.MOVIE -> movieProgressDao.get(item)?.watchData?.ownerId
+                FilmType.TV_SHOW -> episodeProgressDao.get(item)?.watchData?.ownerId
+            }
+
+            if (ownerId == null) {
+                errorLog("WatchProgressRepository.delete - no watch progress found for id: $item and type: $type")
+                return@withContext
+            }
+
+            var canDeleteOnLibrary = type == FilmType.MOVIE
+            val watchedList = libraryListDao.getWatchedList(ownerId)
+            if (type == FilmType.TV_SHOW) {
+                val episodeProgress = episodeProgressDao.get(item)
+                if (episodeProgress != null) {
+                    val season = episodeProgressDao.getSeasonProgress(
+                        filmId = episodeProgress.filmId,
+                        season = episodeProgress.watchData.seasonNumber,
+                        ownerId = ownerId
+                    )
+
+                    canDeleteOnLibrary = season.size == 1
+                }
+            }
+
+            if (canDeleteOnLibrary) {
+                val filmId = when (type) {
+                    FilmType.MOVIE -> movieProgressDao.get(item)?.filmId
+                    FilmType.TV_SHOW -> episodeProgressDao.get(item)?.filmId
+                }
+
+                if (filmId == null) {
+                    errorLog("WatchProgressRepository.delete - no watch progress found for id: $item and type: $type")
+                    return@withContext
+                }
+
+                libraryListItemDao.deleteByListIdAndFilmId(
+                    filmId = filmId,
+                    listId = watchedList.id
+                )
+            }
+
+            when (type) {
+                FilmType.MOVIE -> movieProgressDao.delete(item)
+                FilmType.TV_SHOW -> episodeProgressDao.delete(item)
+            }
+        }
+    }
+
+    private fun mergeSortedLists(
+        a: List<WatchProgressWithMetadata>,
+        b: List<WatchProgressWithMetadata>,
+        comparator: Comparator<in WatchProgressWithMetadata>
+    ): List<WatchProgressWithMetadata> {
+        val merged = mutableListOf<WatchProgressWithMetadata>()
+        var i = 0
+        var j = 0
+
+        while (i < a.size && j < b.size) {
+            if (comparator.compare(a[i], b[j]) <= 0) {
+                merged.add(a[i++])
+            } else {
+                merged.add(b[j++])
+            }
+        }
+
+        merged.addAll(a.subList(i, a.size))
+        merged.addAll(b.subList(j, b.size))
+
+        return merged
     }
 }

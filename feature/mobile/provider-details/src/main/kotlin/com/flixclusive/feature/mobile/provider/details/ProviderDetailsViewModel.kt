@@ -80,7 +80,7 @@ internal class ProviderDetailsViewModel
             onInstallationStatusChange(ProviderInstallationStatus.NotInstalled)
 
             try {
-                val isInstalledAlready = providerRepository.getProviderMetadata(navArgs.metadata.id) != null
+                val isInstalledAlready = providerRepository.getMetadata(navArgs.metadata.id) != null
                 if (isInstalledAlready && isOutdated(navArgs.metadata)) {
                     onInstallationStatusChange(ProviderInstallationStatus.Outdated)
                 } else if (isInstalledAlready) {
@@ -127,7 +127,7 @@ internal class ProviderDetailsViewModel
                     // There is a good case that the provider was installed successfully,
                     // but an error was thrown after the installation.
                     // So we check if the provider is installed or not.
-                    val isInstalled = providerRepository.getProviderMetadata(provider.id) != null
+                    val isInstalled = providerRepository.getMetadata(provider.id) != null
                     val status = when (isInstalled) {
                         true -> ProviderInstallationStatus.Installed
                         false -> ProviderInstallationStatus.NotInstalled
@@ -184,7 +184,7 @@ internal class ProviderDetailsViewModel
         }
 
         private suspend fun isOutdated(old: ProviderMetadata): Boolean {
-            val provider = providerRepository.getProvider(old.id) ?: return false
+            val provider = providerRepository.getPlugin(old.id) ?: return false
 
             val oldManifest = provider.manifest
             if (oldManifest.updateUrl == null || oldManifest.updateUrl.equals("")) {

@@ -26,12 +26,10 @@ import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
-import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.model.film.Film
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -104,11 +102,11 @@ class FilmScreenViewModelTest {
         every { dataStoreManager.getUserPrefs(any<Preferences.Key<String>>(), UiPreferences::class) } returns
             flowOf(UiPreferences())
         every { watchProgressRepository.getAsFlow(any(), any(), any()) } returns flowOf(null)
-        every { libraryListRepository.getUserWithListsAndItems(any()) } returns
+        every { libraryListRepository.getListsAndItems(any()) } returns
             flowOf(UserWithLibraryListsAndItems(testUser, emptyList()))
         every { watchProgressRepository.getAllAsFlow(any()) } returns flowOf(emptyList())
         every { watchlistRepository.getAllAsFlow(any()) } returns flowOf(emptyList())
-        every { providerRepository.getProviderMetadata(any()) } returns testProviderMetadata
+        every { providerRepository.getMetadata(any()) } returns testProviderMetadata
         coEvery { getFilmMetadata(any()) } returns Resource.Success(testMovie)
     }
 
@@ -459,7 +457,7 @@ class FilmScreenViewModelTest {
                 items = emptyList(),
             )
 
-            every { libraryListRepository.getUserWithListsAndItems(testUser.id) } returns
+            every { libraryListRepository.getListsAndItems(testUser.id) } returns
                 flowOf(UserWithLibraryListsAndItems(testUser, listOf(userList)))
 
             createViewModel()
@@ -501,7 +499,7 @@ class FilmScreenViewModelTest {
                     items = emptyList(),
                 )
 
-                every { libraryListRepository.getUserWithListsAndItems(testUser.id) } returns
+                every { libraryListRepository.getListsAndItems(testUser.id) } returns
                     flowOf(UserWithLibraryListsAndItems(testUser, listOf(userList1, userList2)))
 
                 createViewModel()

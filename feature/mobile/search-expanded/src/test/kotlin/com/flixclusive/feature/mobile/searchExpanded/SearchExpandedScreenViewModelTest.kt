@@ -15,7 +15,6 @@ import com.flixclusive.core.testing.provider.ProviderTestDefaults
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.data.database.repository.SearchHistoryRepository
 import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.provider.util.collections.CollectionsOperation
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
@@ -139,7 +138,7 @@ class SearchExpandedScreenViewModelTest {
                 UiPreferences::class,
             )
         } returns flowOf(testUiPreferences)
-        every { providerRepository.getEnabledProviders() } returns listOf(testProvider1, testProvider2)
+        every { providerRepository.getEnabledProvidersAsFlow() } returns listOf(testProvider1, testProvider2)
         every { providerApiRepository.getApis() } returns listOf(testProviderApi)
         // Fix the observe() method to return a properly typed SharedFlow
         every { providerApiRepository.observe() } returns

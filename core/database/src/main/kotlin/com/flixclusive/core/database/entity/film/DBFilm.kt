@@ -1,6 +1,7 @@
 package com.flixclusive.core.database.entity.film
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.util.FilmType
@@ -16,28 +17,43 @@ import java.util.Date
 @Entity(tableName = "films")
 data class DBFilm(
     @PrimaryKey
-    val id: String,
-    val title: String,
-    val providerId: String,
-    val filmType: FilmType = FilmType.MOVIE,
-    val overview: String? = null,
-    val posterImage: String? = null,
+    override val id: String,
+    override val title: String,
+    override val providerId: String,
+    override val adult: Boolean,
+    override val filmType: FilmType,
+    override val overview: String?,
+    override val posterImage: String?,
+    override val language: String?,
+    override val rating: Double?,
+    override val backdropImage: String?,
+    override val releaseDate: String?,
+    override val year: Int?,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
-) : Serializable {
+) : Serializable, Film() {
+    override val homePage get() = null
+    override val customProperties: Map<String, String?> get() = emptyMap()
+
     companion object {
         fun Film.toDBFilm(): DBFilm = DBFilm(
             id = identifier,
+            adult = adult,
             overview = overview,
             providerId = providerId,
             filmType = filmType,
             title = title,
             posterImage = posterImage,
+            language = language,
+            rating = rating,
+            backdropImage = backdropImage,
+            releaseDate = releaseDate,
+            year = year,
         )
     }
 }
 
-/** Deprecated */
+@Deprecated("Only used for migration from v2.1.3, should be removed after migration is complete")
 internal data class DBFilmV213(
     @PrimaryKey
     override val id: String,

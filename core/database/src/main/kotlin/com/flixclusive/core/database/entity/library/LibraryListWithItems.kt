@@ -14,5 +14,6 @@ data class LibraryListWithItems(
 ) {
     val id get() = list.id
     val ownerId get() = list.ownerId
-    val listType get() = list.listType
+    val name get() = list.name
+    val description get() = list.description
 }

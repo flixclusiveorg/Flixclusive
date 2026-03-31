@@ -11,12 +11,12 @@ import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
-import com.flixclusive.core.database.dao.films.DBFilmDao
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.film.DBFilmExternalId
+import com.flixclusive.core.database.entity.film.DBFilmFts
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
@@ -43,6 +43,7 @@ internal const val APP_DATABASE = "app_database"
     entities = [
         DBFilm::class,
         DBFilmExternalId::class,
+        DBFilmFts::class,
         LibraryList::class,
         LibraryListItem::class,
         SearchHistory::class,
@@ -67,8 +68,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun libraryListDao(): LibraryListDao
 
     abstract fun libraryListItemDao(): LibraryListItemDao
-
-    abstract fun filmsDao(): DBFilmDao
 
     abstract fun episodeProgressDao(): EpisodeProgressDao
 

@@ -21,7 +21,7 @@ import java.util.Date
         ),
         ForeignKey(
             entity = User::class,
-            parentColumns = ["id"],
+            parentColumns = ["userId"],
             childColumns = ["ownerId"],
             onDelete = ForeignKey.CASCADE,
         ),

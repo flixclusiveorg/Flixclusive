@@ -35,4 +35,6 @@ data class LibraryList(
     val listType: LibraryListType = LibraryListType.CUSTOM,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
-) : Serializable
+) : Serializable {
+    val isCustom get() = listType == LibraryListType.CUSTOM
+}

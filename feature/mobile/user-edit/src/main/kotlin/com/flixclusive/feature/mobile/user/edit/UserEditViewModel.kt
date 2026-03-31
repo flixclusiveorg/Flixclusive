@@ -118,7 +118,7 @@ internal class UserEditViewModel
 
         private suspend fun clearProviders(userId: Int) {
             if (!isUserLoggedIn(userId)) return
-            providerRepository.getProviders().forEach {
+            providerRepository.getInstalledProviders().forEach {
                 unloadProvider(it)
             }
         }
@@ -152,11 +152,11 @@ internal sealed class Library {
     abstract val name: UiText
 
     data object Watchlist : Library() {
-        override val name: UiText = UiText.StringResource(LocaleR.string.watchlist)
+        override val name: UiText = UiText.StringResource(LocaleR.string.seeded_watchlist)
     }
 
     data object WatchHistory : Library() {
-        override val name: UiText = UiText.StringResource(LocaleR.string.recently_watched)
+        override val name: UiText = UiText.StringResource(LocaleR.string.seeded_recently_watched)
     }
 
     data class CustomList(

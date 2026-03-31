@@ -8,7 +8,6 @@ import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.provider.util.collections.CollectionsOperation
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
@@ -125,10 +124,10 @@ class ProviderManagerViewModelTest {
     }
 
     private fun setupDefaultBehavior() {
-        every { providerRepository.getOrderedProviders() } returns listOf(testProvider1, testProvider2)
+        every { providerRepository.getInstalledProvidersAsFlow() } returns listOf(testProvider1, testProvider2)
         every { providerRepository.observe() } returns providerRepositoryObserveFlow
-        every { providerRepository.getProviderMetadata(testProvider1.id) } returns testProvider1
-        every { providerRepository.getProviderMetadata(testProvider2.id) } returns testProvider2
+        every { providerRepository.getMetadata(testProvider1.id) } returns testProvider1
+        every { providerRepository.getMetadata(testProvider2.id) } returns testProvider2
         every { providerRepository.getProviderFromPreferences(any()) } returns testProviderFromPrefs1
         coEvery { providerRepository.moveProvider(any(), any()) } just runs
         coEvery { providerRepository.toggleProvider(any()) } just runs
@@ -370,7 +369,7 @@ class ProviderManagerViewModelTest {
                 filePath = "",
             )
 
-            every { providerRepository.getProviderMetadata(newProvider.id) } returns newProvider
+            every { providerRepository.getMetadata(newProvider.id) } returns newProvider
 
             createViewModel()
             advanceUntilIdle()
