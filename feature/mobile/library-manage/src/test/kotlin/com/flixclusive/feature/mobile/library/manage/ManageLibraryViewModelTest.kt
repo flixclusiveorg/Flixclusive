@@ -182,7 +182,7 @@ class ManageLibraryViewModelTest {
         }
 
         every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
-        every { libraryListRepository.getUserWithListsAndItems(testUser.id) } returns
+        every { libraryListRepository.getListsAndItems(testUser.id) } returns
             flowOf(testUserWithLibraryListsAndItems)
         every { watchProgressRepository.getAllAsFlow(testUser.id) } returns
             flowOf(emptyList<WatchProgressWithMetadata>())
@@ -197,9 +197,7 @@ class ManageLibraryViewModelTest {
 
     private fun createViewModel() {
         viewModel = ManageLibraryViewModel(
-            context = context,
             libraryListRepository = libraryListRepository,
-            watchProgressRepository = watchProgressRepository,
             watchlistRepository = watchlistRepository,
             userSessionManager = userSessionManager,
             appDispatchers = appDispatchers,

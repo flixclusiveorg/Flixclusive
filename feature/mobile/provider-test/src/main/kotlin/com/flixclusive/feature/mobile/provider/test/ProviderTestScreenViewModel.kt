@@ -44,7 +44,7 @@ internal class ProviderTestScreenViewModel
             val providersToTest = providers.let {
                 // If no providers were selected, test all providers
                 if (it.isEmpty()) {
-                    ArrayList(providerRepository.getProviders())
+                    ArrayList(providerRepository.getInstalledProviders())
                 } else if (skipTestedProviders) {
                     it
                         .fastFilter { metadata -> !isAlreadyBeenTested(metadata) }

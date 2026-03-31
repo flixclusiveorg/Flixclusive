@@ -124,8 +124,8 @@ class ProviderDetailsViewModelTest {
                 it.toByteArray()
             }
         }
-        every { providerRepository.getProviderMetadata(any()) } returns null
-        every { providerRepository.getProvider(any()) } returns null
+        every { providerRepository.getMetadata(any()) } returns null
+        every { providerRepository.getPlugin(any()) } returns null
         coEvery { loadProvider(any()) } returns flow { emit(LoadProviderResult.Success(testProvider)) }
         coEvery { unloadProvider(any()) } just runs
         coEvery { updateProvider(provider = any()) } just runs
@@ -170,7 +170,7 @@ class ProviderDetailsViewModelTest {
     @Test
     fun `initial state should be correct for installed provider`() =
         runTest(testDispatcher) {
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns testProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns testProvider
 
             createViewModel()
             advanceUntilIdle()
@@ -189,8 +189,8 @@ class ProviderDetailsViewModelTest {
             val mockManifest = mockk<ProviderManifest>(relaxed = true)
             val newerProvider = testProvider.copy(versionCode = 15000)
 
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns installedProvider
-            every { providerRepository.getProvider(testProvider.id) } returns mockProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns installedProvider
+            every { providerRepository.getPlugin(testProvider.id) } returns mockProvider
             every { mockProvider.manifest } returns mockManifest
             every { mockManifest.updateUrl } returns "https://example.com/update"
             every { mockManifest.versionCode } returns 5000L
@@ -236,7 +236,7 @@ class ProviderDetailsViewModelTest {
     @Test
     fun `onToggleInstallation uninstalls installed provider`() =
         runTest(testDispatcher) {
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns testProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns testProvider
 
             createViewModel()
             advanceUntilIdle()
@@ -260,8 +260,8 @@ class ProviderDetailsViewModelTest {
             val mockManifest = mockk<ProviderManifest>(relaxed = true)
             val newerProvider = testProvider.copy(versionCode = 15000)
 
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns installedProvider
-            every { providerRepository.getProvider(testProvider.id) } returns mockProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns installedProvider
+            every { providerRepository.getPlugin(testProvider.id) } returns mockProvider
             every { mockProvider.manifest } returns mockManifest
             every { mockManifest.updateUrl } returns "https://example.com/update"
             every { mockManifest.versionCode } returns 5000L
@@ -319,7 +319,7 @@ class ProviderDetailsViewModelTest {
     fun `uninstallation handles errors gracefully`() =
         runTest(testDispatcher) {
             val exception = RuntimeException("Uninstall failed")
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns testProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns testProvider
             coEvery { unloadProvider(testProvider) } throws exception
 
             createViewModel()
@@ -343,8 +343,8 @@ class ProviderDetailsViewModelTest {
             val mockManifest = mockk<ProviderManifest>(relaxed = true)
             val newerProvider = testProvider.copy(versionCode = 15000)
 
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns installedProvider
-            every { providerRepository.getProvider(testProvider.id) } returns mockProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns installedProvider
+            every { providerRepository.getPlugin(testProvider.id) } returns mockProvider
             every { mockProvider.manifest } returns mockManifest
             every { mockManifest.updateUrl } returns "https://example.com/update"
             every { mockManifest.versionCode } returns 5000L
@@ -384,7 +384,7 @@ class ProviderDetailsViewModelTest {
     fun `initialization handles errors gracefully`() =
         runTest(testDispatcher) {
             val exception = RuntimeException("Initialization failed")
-            every { providerRepository.getProviderMetadata(testProvider.id) } throws exception
+            every { providerRepository.getMetadata(testProvider.id) } throws exception
 
             createViewModel()
             advanceUntilIdle()
@@ -420,8 +420,8 @@ class ProviderDetailsViewModelTest {
             val mockProvider = mockk<Provider>(relaxed = true)
             val mockManifest = mockk<ProviderManifest>(relaxed = true)
 
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns installedProvider
-            every { providerRepository.getProvider(testProvider.id) } returns mockProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns installedProvider
+            every { providerRepository.getPlugin(testProvider.id) } returns mockProvider
             every { mockProvider.manifest } returns mockManifest
             every { mockManifest.updateUrl } returns null
 
@@ -441,8 +441,8 @@ class ProviderDetailsViewModelTest {
             val mockProvider = mockk<Provider>(relaxed = true)
             val mockManifest = mockk<ProviderManifest>(relaxed = true)
 
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns installedProvider
-            every { providerRepository.getProvider(testProvider.id) } returns mockProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns installedProvider
+            every { providerRepository.getPlugin(testProvider.id) } returns mockProvider
             every { mockProvider.manifest } returns mockManifest
             every { mockManifest.updateUrl } returns "https://example.com/update"
             every { mockManifest.versionCode } returns 5000L
@@ -488,13 +488,13 @@ class ProviderDetailsViewModelTest {
     fun `installation success updates status correctly when provider is found after installation`() =
         runTest(testDispatcher) {
             // Initially provider not installed
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns null
+            every { providerRepository.getMetadata(testProvider.id) } returns null
 
             createViewModel()
             advanceUntilIdle()
 
             // During installation completion, simulate provider being found
-            every { providerRepository.getProviderMetadata(testProvider.id) } returns testProvider
+            every { providerRepository.getMetadata(testProvider.id) } returns testProvider
 
             viewModel.onToggleInstallation()
             advanceUntilIdle()

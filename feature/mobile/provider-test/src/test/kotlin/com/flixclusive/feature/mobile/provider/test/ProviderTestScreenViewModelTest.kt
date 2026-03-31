@@ -123,7 +123,7 @@ class ProviderTestScreenViewModelTest {
     @Test
     fun `startTests with empty providers list should use all providers from repository`() {
         val allProviders = listOf(dummyProvider1, dummyProvider2, dummyProvider3)
-        every { providerRepository.getProviders() } returns allProviders
+        every { providerRepository.getInstalledProviders() } returns allProviders
 
         val result = viewModel.startTests(arrayListOf())
 

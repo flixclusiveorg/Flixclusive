@@ -4,7 +4,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.domain.catalog.model.DiscoverCards
 import com.flixclusive.domain.catalog.usecase.GetDiscoverCardsUseCase
 import com.flixclusive.model.provider.ProviderCatalog

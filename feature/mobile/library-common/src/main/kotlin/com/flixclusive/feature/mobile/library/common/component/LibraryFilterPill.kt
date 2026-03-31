@@ -13,9 +13,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,18 +26,26 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun LibraryFilterPill(
     isSelected: Boolean,
-    filter: LibrarySortFilter,
-    ascending: Boolean,
+    filter: LibrarySort,
     onToggleDirection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val resources = LocalResources.current
+    val displayName = remember {
+        when (filter) {
+            is LibrarySort.Name -> resources.getString(LocaleR.string.name)
+            is LibrarySort.Modified -> resources.getString(LocaleR.string.modified_at)
+            is LibrarySort.Added -> resources.getString(LocaleR.string.created_at)
+        }
+    }
+
     OutlinedButton(
         onClick = onToggleDirection,
         modifier =
@@ -57,7 +67,7 @@ fun LibraryFilterPill(
         ) {
             AnimatedVisibility(isSelected) {
                 AnimatedContent(
-                    targetState = ascending,
+                    targetState = filter.ascending,
                     label = "FilterDirection",
                 ) { state ->
                     val iconId = if (state) {
@@ -76,7 +86,7 @@ fun LibraryFilterPill(
             }
 
             Text(
-                text = filter.displayName.asString(),
+                text = displayName,
                 style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                 color = MaterialTheme.colorScheme.onSurface.copy(0.8f),
             )
@@ -91,8 +101,7 @@ private fun LibraryFilterPillPreview() {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterPill(
                 isSelected = false,
-                filter = LibrarySortFilter.Name,
-                ascending = true,
+                filter = LibrarySort.Name(),
                 onToggleDirection = {},
             )
         }
@@ -106,8 +115,7 @@ private fun LibraryFilterPillDescendingPreview() {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterPill(
                 isSelected = true,
-                filter = LibrarySortFilter.ModifiedAt,
-                ascending = true,
+                filter = LibrarySort.Modified(),
                 onToggleDirection = {},
             )
         }

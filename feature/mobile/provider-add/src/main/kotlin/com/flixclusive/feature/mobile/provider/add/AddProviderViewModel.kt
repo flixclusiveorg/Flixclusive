@@ -284,7 +284,7 @@ internal class AddProviderViewModel @Inject constructor(
                 // There is a good case that the provider was installed successfully
                 // even if an error was thrown after the installation.
                 // So we check if the provider is installed or not.
-                val isInstalled = providerRepository.getProviderMetadata(provider.id) != null
+                val isInstalled = providerRepository.getMetadata(provider.id) != null
                 val status = when (isInstalled) {
                     true -> ProviderInstallationStatus.Installed
                     false -> ProviderInstallationStatus.NotInstalled
@@ -367,7 +367,7 @@ internal class AddProviderViewModel @Inject constructor(
                         val provider = SearchableProvider.from(it)
                         var status = ProviderInstallationStatus.NotInstalled
 
-                        val metadata = providerRepository.getProviderMetadata(provider.id)
+                        val metadata = providerRepository.getMetadata(provider.id)
                         val isInstalled = metadata != null
 
                         if (isInstalled && isOutdated(old = metadata!!, new = provider.metadata)) {
@@ -389,7 +389,7 @@ internal class AddProviderViewModel @Inject constructor(
         old: ProviderMetadata,
         new: ProviderMetadata,
     ): Boolean {
-        val provider = providerRepository.getProvider(old.id) ?: return false
+        val provider = providerRepository.getPlugin(old.id) ?: return false
 
         val manifest = provider.manifest
         if (manifest.updateUrl == null || manifest.updateUrl.equals("")) {

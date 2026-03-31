@@ -122,7 +122,7 @@ class UserEditViewModelTest {
 
             every { userSessionManager.currentUser } returns MutableStateFlow(loggedInUser)
             every { userRepository.observeUser(any()) } returns flowOf(loggedInUser)
-            every { providerRepository.getProviders() } returns listOf(providerMetadata)
+            every { providerRepository.getInstalledProviders() } returns listOf(providerMetadata)
             coEvery { unloadProvider(any(), any()) } returns Unit
             coEvery { userSessionManager.signOut() } returns Unit
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
@@ -138,7 +138,7 @@ class UserEditViewModelTest {
                 expectThat(awaitItem()).isEqualTo(OnRemoveNavigationState.PopToRoot)
             }
 
-            coVerify { providerRepository.getProviders() }
+            coVerify { providerRepository.getInstalledProviders() }
             coVerify { unloadProvider(providerMetadata, true) }
             coVerify { userSessionManager.signOut() }
             coVerify { dataStoreManager.deleteAllUserRelatedFiles(loggedInUser.id) }
@@ -309,7 +309,7 @@ class UserEditViewModelTest {
             viewModel.onRemoveUser(testUser.id)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            coVerify(exactly = 0) { providerRepository.getProviders() }
+            coVerify(exactly = 0) { providerRepository.getInstalledProviders() }
             coVerify(exactly = 0) { unloadProvider(any(), any()) }
         }
 

@@ -161,7 +161,7 @@ class PlayerScreenViewModelTest {
     private fun setupDefaultBehavior() {
         every { userSessionManager.currentUser } returns MutableStateFlow(testUser)
         every { cachedLinksRepository.currentCache } returns MutableStateFlow(testCachedLinks)
-        every { providerRepository.getEnabledProviders() } returns listOf(
+        every { providerRepository.getEnabledProvidersAsFlow() } returns listOf(
             ProviderTestDefaults.getProviderMetadata(id = testProviderId),
         )
         every { player.release() } just Runs
@@ -323,7 +323,7 @@ class PlayerScreenViewModelTest {
             val providers = viewModel.providers
 
             expectThat(providers).isEqualTo(listOf(ProviderTestDefaults.getProviderMetadata(id = testProviderId)))
-            verify { providerRepository.getEnabledProviders() }
+            verify { providerRepository.getEnabledProvidersAsFlow() }
         }
 
     @Test

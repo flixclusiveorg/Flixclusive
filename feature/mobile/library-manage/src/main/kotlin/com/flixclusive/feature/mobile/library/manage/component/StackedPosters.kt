@@ -46,6 +46,7 @@ import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.extensions.boxShadow
@@ -275,7 +276,10 @@ private fun StackedPostersBasePreview() {
                         StackedPosters(
                             previews =
                                 List(3) {
-                                    DBFilm(id = "$it", title = "Film #$it").toPreviewPoster()
+                                    DummyDataForPreview.getFilm(
+                                        id = "$it",
+                                        title = "Film #$it",
+                                    ).toPreviewPoster()
                                 },
                         )
                     }

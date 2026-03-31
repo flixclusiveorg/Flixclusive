@@ -14,7 +14,6 @@ import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watchlist.WatchlistWithMetadata
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.model.film.util.FilmType
 import io.mockk.coVerify
@@ -122,14 +121,12 @@ class LibraryDetailsViewModelTest {
         savedStateHandle = SavedStateHandle()
         savedStateHandle["library"] = testLibrary
 
-        every { libraryListRepository.getListWithItems(any()) } returns flowOf(testLibraryWithItems)
+        every { libraryListRepository.getItems(any()) } returns flowOf(testLibraryWithItems)
     }
 
     private fun createViewModel() {
         viewModel = LibraryDetailsViewModel(
-            context = context,
             libraryListRepository = libraryListRepository,
-            watchProgressRepository = watchProgressRepository,
             watchlistRepository = watchlistRepository,
             appDispatchers = appDispatchers,
             savedStateHandle = savedStateHandle,
@@ -431,7 +428,7 @@ class LibraryDetailsViewModelTest {
 
             createViewModel()
 
-            coVerify { libraryListRepository.getListWithItems(listId = customLibrary.id) }
+            coVerify { libraryListRepository.getItems(listId = customLibrary.id) }
         }
 
     @Test

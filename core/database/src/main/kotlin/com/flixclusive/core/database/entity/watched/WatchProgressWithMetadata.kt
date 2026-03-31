@@ -1,5 +1,6 @@
 package com.flixclusive.core.database.entity.watched
 
+import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.film.DBFilmWithExternalIds
 
 /**
@@ -7,8 +8,10 @@ import com.flixclusive.core.database.entity.film.DBFilmWithExternalIds
  * */
 sealed interface WatchProgressWithMetadata {
     val watchData: WatchProgress
-    val film: DBFilmWithExternalIds
+    val film: DBFilm
 
     val id get() = watchData.id
     val filmId get() = film.id
+    val createdAt get() = watchData.createdAt
+    val updatedAt get() = watchData.updatedAt
 }

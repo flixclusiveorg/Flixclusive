@@ -4,13 +4,14 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Update
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.library.SystemListDeletionException
-import com.flixclusive.core.database.entity.library.UserWithLibraryListsAndItems
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -34,13 +35,32 @@ interface LibraryListDao {
     """)
     fun getListsContainingFilmAsFlow(filmId: String, ownerId: Int): Flow<List<LibraryList>>
 
-    @Transaction
-    @Query("SELECT * FROM library_lists WHERE id = :id")
-    fun getListWithItemsAsFlow(id: Int): Flow<LibraryListWithItems?>
+    @RawQuery
+    fun getListsRaw(query: RoomRawQuery): Flow<List<LibraryListWithItems>>
 
-    @Transaction
-    @Query("SELECT * FROM User WHERE userId = :userId")
-    fun getUserWithListsAndItemsAsFlow(userId: Int): Flow<UserWithLibraryListsAndItems>
+    @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")
+    suspend fun getWatchedList(ownerId: Int): LibraryList
+
+    fun getLists(
+        userId: Int,
+        columnSort: String,
+        ascending: Boolean,
+    ): Flow<List<LibraryListWithItems>> {
+        val query = """
+            SELECT * FROM library_lists
+            WHERE ownerId = ?
+            ORDER BY ${if (ascending) "$columnSort ASC" else "$columnSort DESC"}
+        """.trimIndent()
+
+        return getListsRaw(
+            RoomRawQuery(
+                sql = query,
+                onBindStatement = { statement ->
+                    statement.bindInt(1, userId)
+                }
+            )
+        )
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(list: LibraryList): Long
@@ -69,24 +89,6 @@ interface LibraryListDao {
 
     @Query("DELETE FROM library_lists WHERE id = :listId")
     suspend fun deleteInternal(listId: Int)
-
-    /**
-     * Seeds system lists (WATCHLIST and CONTINUE_WATCHING) for the given user.
-     * Skips insertion if they already exist.
-     * */
-    @Transaction
-    suspend fun seedWatchedList(userId: Int) {
-        val existingCW = getByType(userId, LibraryListType.WATCHED)
-        if (existingCW.isNotEmpty()) return
-
-        insert(
-            LibraryList(
-                ownerId = userId,
-                name = "Continue Watching",
-                listType = LibraryListType.WATCHED,
-            )
-        )
-    }
 
     @Query("SELECT * FROM library_lists WHERE ownerId = :ownerId AND listType = :listType")
     suspend fun getByType(ownerId: Int, listType: LibraryListType): List<LibraryList>

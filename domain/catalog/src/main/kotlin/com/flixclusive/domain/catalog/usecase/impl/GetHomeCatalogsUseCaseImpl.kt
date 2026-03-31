@@ -1,7 +1,6 @@
 package com.flixclusive.domain.catalog.usecase.impl
 
-import com.flixclusive.core.database.entity.film.DBFilmWithExternalIds
-import com.flixclusive.core.database.entity.film.ExternalMetadataSource
+import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
@@ -81,7 +80,7 @@ internal class GetHomeCatalogsUseCaseImpl @Inject constructor(
         }
     }
 
-    private fun buildUserRecommendations(watchHistories: List<DBFilmWithExternalIds>): List<TMDBHomeCatalog> {
+    private fun buildUserRecommendations(watchHistories: List<DBFilm>): List<TMDBHomeCatalog> {
         return watchHistories.mapNotNull { item ->
             with(item) {
                 if (isFromTmdb) {
@@ -95,9 +94,5 @@ internal class GetHomeCatalogsUseCaseImpl @Inject constructor(
                 }
             }
         }
-    }
-
-    private val DBFilmWithExternalIds.isFromTmdb get() = externalIds.any {
-        it.source == ExternalMetadataSource.TMDB
     }
 }

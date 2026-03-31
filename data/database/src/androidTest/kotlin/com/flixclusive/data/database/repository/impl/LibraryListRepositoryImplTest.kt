@@ -166,7 +166,7 @@ class LibraryListRepositoryImplTest {
             repository.insertItem(testLibraryItem, testFilm)
 
             // Verify list with items
-            repository.getListWithItems(itemId).test {
+            repository.getItems(itemId).test {
                 val result = awaitItem()
                 expectThat(result).isNotNull().and {
                     get { list.id }.isEqualTo(itemId)
@@ -225,7 +225,7 @@ class LibraryListRepositoryImplTest {
             repository.insertItem(testLibraryItem, testFilm)
 
             // Verify user with lists and items
-            repository.getUserWithListsAndItems(testUser.id).test {
+            repository.getListsAndItems(testUser.id).test {
                 val result = awaitItem()
                 expectThat(result).and {
                     get { user.id }.isEqualTo(testUser.id)

@@ -4,7 +4,6 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
-import com.flixclusive.core.database.entity.library.UserWithLibraryListsAndItems
 import com.flixclusive.model.film.Film
 import kotlinx.coroutines.flow.Flow
 
@@ -34,7 +33,9 @@ interface LibraryListRepository {
 
     suspend fun deleteItem(itemId: Long)
 
-    fun getListWithItems(listId: Int): Flow<LibraryListWithItems?>
+    fun getItems(listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
 
-    fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems>
+    fun getListsAndItems(userId: Int, sort: LibrarySort): Flow<List<LibraryListWithItems>>
+
+    fun searchItems(query: String, listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
 }

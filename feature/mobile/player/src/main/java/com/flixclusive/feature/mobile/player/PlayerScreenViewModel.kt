@@ -144,7 +144,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     // Only using non-suspend function since we don't need to observe changes here
     val providers by lazy {
-        providerRepository.getEnabledProviders()
+        providerRepository.getEnabledProvidersAsFlow()
             .fastFilter {
                 if (!filmMetadata.isFromTmdb) {
                     return@fastFilter filmMetadata.providerId == it.id

@@ -139,7 +139,7 @@ class SettingsViewModelTest {
         every { dataStoreManager.getSystemPrefs() } returns flowOf(testSystemPreferences)
         every { searchHistoryRepository.getAllItemsInFlow(testUser.id) } returns flowOf(testSearchHistory)
         every { cachedLinksRepository.caches } returns MutableStateFlow(testCachedLinks)
-        every { providerRepository.getProviders() } returns listOf(testProviderMetadata1, testProviderMetadata2)
+        every { providerRepository.getInstalledProviders() } returns listOf(testProviderMetadata1, testProviderMetadata2)
 
         coEvery { dataStoreManager.updateSystemPrefs(any()) } returns Unit
         coEvery { dataStoreManager.updateUserPrefs<UiPreferences>(any(), any(), any()) } returns Unit

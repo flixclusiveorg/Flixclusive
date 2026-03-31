@@ -24,14 +24,10 @@ import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.util.TMDBProviderUtils
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
-import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
-import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchProgressLibraryList
-import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchlistLibraryList
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
@@ -173,7 +169,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         .flatMapLatest { user ->
             combine(
                 libraryListRepository
-                    .getUserWithListsAndItems(user.id)
+                    .getListsAndItems(user.id)
                     .mapLatest { it.lists }
                     .distinctUntilChanged(),
                 watchProgressRepository.getAllAsFlow(user.id),
@@ -257,7 +253,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         val providerUsed = if (providerId == DEFAULT_FILM_SOURCE_NAME) {
             TMDBProviderUtils.tmdbProviderMetadata
         } else {
-            providerId?.let { providerRepository.getProviderMetadata(it) }
+            providerId?.let { providerRepository.getMetadata(it) }
         }
 
         if (providerUsed == null) {

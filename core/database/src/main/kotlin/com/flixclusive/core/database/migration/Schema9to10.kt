@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flixclusive.core.database.R
+import com.flixclusive.model.film.util.FilmType
 
 /**
  * Major migration from schema version 9 to 10.
@@ -80,6 +81,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         createRepositoriesTable(db)
         createInstalledProvidersTable(db)
         recreateView(db)
+        createDbFilmsFstTable(db)
     }
 
     private fun migrateUserTable(db: SupportSQLiteDatabase, now: Long) {
@@ -111,10 +113,17 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
             """
             CREATE TABLE IF NOT EXISTS `films_new` (
                 `id` TEXT NOT NULL PRIMARY KEY,
-                `providerId` TEXT NOT NULL DEFAULT '',
-                `filmType` TEXT NOT NULL DEFAULT 'MOVIE',
-                `title` TEXT NOT NULL DEFAULT '',
+                `providerId` TEXT NOT NULL,
+                `filmType` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
                 `posterImage` TEXT,
+                `language` TEXT,
+                `adult` INTEGER NOT NULL,
+                `overview` TEXT,
+                `rating` REAL,
+                `backdropImage` TEXT,
+                `releaseDate` TEXT,
+                `year` INTEGER,
                 `createdAt` INTEGER NOT NULL,
                 `updatedAt` INTEGER NOT NULL
             )
@@ -124,11 +133,13 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         db.execSQL(
             """
             INSERT INTO `films_new` (
-                `id`, `providerId`, `filmType`, `title`,
-                `posterImage`, `year`, `createdAt`, `updatedAt`
+                `id`, `providerId`, `filmType`, `title`, `posterImage`, `language`,
+                `adult`, `overview`, `rating`, `backdropImage`, `releaseDate`, `year`,
+                `createdAt`, `updatedAt`
             )
-            SELECT `id`, `providerId`, `filmType`, `title`,
-            `posterImage`, `year`, `createdAt`, `updatedAt`
+            SELECT `id`, `providerId`, `filmType`, `title`, `posterImage`, `language`,
+                `adult`, `overview`, `rating`, `backdropImage`, `releaseDate`,
+                COALESCE(strftime('%Y', `releaseDate`), 0), `createdAt`, `updatedAt`
             FROM `films`
             """.trimIndent()
         )
@@ -430,6 +441,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
             )
             """.trimIndent()
         )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_repositories_userId` ON `repositories` (`userId`)")
     }
 
     private fun createInstalledProvidersTable(db: SupportSQLiteDatabase) {
@@ -466,5 +478,22 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
             INNER JOIN films ON library_list_items.filmId = films.id
             """.trimIndent()
         )
+    }
+
+    private fun createDbFilmsFstTable(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS `films_fts`
+            USING fts3(
+                `filmId` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                `overview` TEXT NOT NULL
+            )
+        """)
+
+        // Optional backfill for existing data
+        db.execSQL("""
+            INSERT INTO films_fts (filmId, title, overview)
+            SELECT id, title, COALESCE(overview, '') FROM films
+        """)
     }
 }

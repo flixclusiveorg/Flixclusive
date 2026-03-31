@@ -4,9 +4,12 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
@@ -14,9 +17,28 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MovieProgressDao {
-    @Transaction
-    @Query("SELECT * FROM movies_watch_history WHERE ownerId = :ownerId ORDER BY createdAt DESC")
-    fun getAllAsFlow(ownerId: Int): Flow<List<MovieProgressWithMetadata>>
+    fun getAllAsFlow(
+        ownerId: Int,
+        column: String,
+        ascending: Boolean,
+    ): Flow<List<MovieProgressWithMetadata>> {
+        val query = """
+            SELECT * FROM movies_watch_history WHERE ownerId = ?
+            ORDER BY $column ${if (ascending) "ASC" else "DESC"}
+        """.trimIndent()
+
+        return getAllAsFlowRaw(
+            RoomRawQuery(
+                sql = query,
+                onBindStatement = { statement ->
+                    statement.bindInt(1, ownerId)
+                }
+            )
+        )
+    }
+
+    @RawQuery
+    fun getAllAsFlowRaw(query: RoomRawQuery): Flow<List<MovieProgressWithMetadata>>
 
     @Transaction
     @Query("SELECT * FROM movies_watch_history WHERE ownerId = :ownerId ORDER BY RANDOM() LIMIT :count")
