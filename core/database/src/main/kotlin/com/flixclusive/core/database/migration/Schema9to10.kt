@@ -418,8 +418,11 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
                 """.trimIndent(),
                 arrayOf<Any>(userId, now, now)
             )
-            val watchlistIdCursor = db.query("SELECT last_insert_rowid()")
-            watchlistIdCursor.moveToLast()
+            val watchlistIdCursor = db.query(
+                "SELECT id FROM library_lists WHERE ownerId = ? AND name = ?",
+                arrayOf<Any>(userId.toString(), watchlist)
+            )
+            watchlistIdCursor.moveToFirst()
             val watchlistId = watchlistIdCursor.getInt(0)
             watchlistIdCursor.close()
 
