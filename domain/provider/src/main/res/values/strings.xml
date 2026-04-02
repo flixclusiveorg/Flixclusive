@@ -11,7 +11,7 @@
     <string name="film_not_found">Film not found</string>
     <string name="invalid_provider_file_msg_format">Invalid provider file detected for %1$s</string>
     <string name="invalid_repo_link">Could not parse url link.</string>
-    <string name="invalid_repository">Repository does not have an `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
+    <string name="invalid_repository">Invalid repository</string>
     <string name="invalid_repository_url">Repository URL is invalid</string>
     <string name="invalid_watch_id_for_non_tmdb_film">Media did not came from TMDB but has no ID.</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
