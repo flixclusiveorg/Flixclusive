@@ -15,6 +15,7 @@ import com.flixclusive.model.film.Film
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 import com.flixclusive.core.database.R as DatabaseR
 
@@ -34,13 +35,13 @@ internal class LibraryListRepositoryImpl @Inject constructor(
 
     override suspend fun insertList(list: LibraryList): Int {
         return withContext(appDispatchers.io) {
-            listDao.insert(list).toInt()
+            listDao.insert(list.copy(updatedAt = Date())).toInt()
         }
     }
 
     override suspend fun updateList(list: LibraryList) {
         return withContext(appDispatchers.io) {
-            listDao.update(list)
+            listDao.update(list.copy(updatedAt = Date()))
         }
     }
 
