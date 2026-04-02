@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flixclusive.core.database.R
-import com.flixclusive.model.film.util.FilmType
 
 /**
  * Major migration from schema version 9 to 10.
@@ -75,6 +74,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         migrateFilmsTable(db, now)
         migrateSearchHistory(db)
         migrateLibraryLists(db)
+        migrateLibraryListItems(db)
         seedSystemListsAndMigrateWatchlist(db, now)
         migrateMoviesWatchHistory(db)
         migrateSeriesWatchHistory(db)
@@ -109,6 +109,54 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
     }
 
     private fun migrateFilmsTable(db: SupportSQLiteDatabase, now: Long) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `film_external_ids` (
+                filmId TEXT NOT NULL,
+                providerId TEXT NOT NULL,
+                source TEXT NOT NULL,
+                externalId TEXT NOT NULL,
+                createdAt INTEGER NOT NULL,
+                updatedAt INTEGER NOT NULL,
+                PRIMARY KEY (filmId, providerId, source),
+                FOREIGN KEY (filmId) REFERENCES films(id) ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS `index_film_external_ids_filmId`
+            ON `film_external_ids` (`filmId`)
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS `index_film_external_ids_providerId`
+            ON `film_external_ids` (`providerId`)
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            INSERT OR IGNORE INTO `film_external_ids`
+                (`filmId`, `providerId`, `source`, `externalId`, `createdAt`, `updatedAt`)
+            SELECT `id`, `providerId`, 'imdb', `imdbId`, $now, $now
+            FROM `films`
+            WHERE `imdbId` IS NOT NULL
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            INSERT OR IGNORE INTO `film_external_ids`
+                (`filmId`, `providerId`, `source`, `externalId`, `createdAt`, `updatedAt`)
+            SELECT `id`, `providerId`, 'tmdb', CAST(`tmdbId` AS TEXT), $now, $now
+            FROM `films`
+            WHERE `tmdbId` IS NOT NULL
+            """.trimIndent()
+        )
+
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `films_new` (
@@ -146,60 +194,6 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
 
         db.execSQL("DROP TABLE `films`")
         db.execSQL("ALTER TABLE `films_new` RENAME TO `films`")
-
-        db.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS `film_external_ids` (
-                `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                `filmId` TEXT NOT NULL,
-                `providerId` TEXT NOT NULL,
-                `source` TEXT NOT NULL,
-                `externalId` TEXT NOT NULL,
-                `createdAt` INTEGER NOT NULL,
-                `updatedAt` INTEGER NOT NULL,
-                FOREIGN KEY(`filmId`) REFERENCES `films`(`id`) ON DELETE CASCADE
-            )
-            """.trimIndent()
-        )
-
-        db.execSQL(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS `film_external_ids_index_0`
-            ON `film_external_ids` (`filmId`, `providerId`, `source`)
-            """.trimIndent()
-        )
-        db.execSQL(
-            """
-            CREATE INDEX IF NOT EXISTS `film_external_ids_index_1`
-            ON `film_external_ids` (`filmId`)
-            """.trimIndent()
-        )
-        db.execSQL(
-            """
-            CREATE INDEX IF NOT EXISTS `film_external_ids_index_2`
-            ON `film_external_ids` (`providerId`)
-            """.trimIndent()
-        )
-
-        db.execSQL(
-            """
-            INSERT OR IGNORE INTO `film_external_ids`
-                (`filmId`, `providerId`, `source`, `externalId`, `createdAt`, `updatedAt`)
-            SELECT `id`, `providerId`, 'imdb', `imdbId`, $now, $now
-            FROM `films`
-            WHERE `imdbId` IS NOT NULL
-            """.trimIndent()
-        )
-
-        db.execSQL(
-            """
-            INSERT OR IGNORE INTO `film_external_ids`
-                (`filmId`, `providerId`, `source`, `externalId`, `createdAt`, `updatedAt`)
-            SELECT `id`, `providerId`, 'tmdb', CAST(`tmdbId` AS TEXT), $now, $now
-            FROM `films`
-            WHERE `tmdbId` IS NOT NULL
-            """.trimIndent()
-        )
     }
 
     private fun migrateSearchHistory(db: SupportSQLiteDatabase) {
@@ -231,7 +225,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `library_lists_new` (
-                `listId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 `ownerId` INTEGER NOT NULL,
                 `name` TEXT NOT NULL,
                 `description` TEXT,
@@ -244,13 +238,40 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         )
         db.execSQL(
             """
-            INSERT INTO `library_lists_new` (`listId`, `ownerId`, `name`, `description`, `listType`, `createdAt`, `updatedAt`)
+            INSERT INTO `library_lists_new` (`id`, `ownerId`, `name`, `description`, `listType`, `createdAt`, `updatedAt`)
             SELECT `listId`, `ownerId`, `name`, `description`, 'CUSTOM', `createdAt`, `updatedAt` FROM `library_lists`
             """.trimIndent()
         )
         db.execSQL("DROP TABLE `library_lists`")
         db.execSQL("ALTER TABLE `library_lists_new` RENAME TO `library_lists`")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_lists_ownerId` ON `library_lists` (`ownerId`)")
+    }
+
+    private fun migrateLibraryListItems(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `library_list_items_new` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `filmId` TEXT NOT NULL,
+                `listId` INTEGER NOT NULL,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL,
+                FOREIGN KEY(`listId`) REFERENCES `library_lists`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                FOREIGN KEY(`filmId`) REFERENCES `films`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            INSERT INTO `library_list_items_new` (`id`, `filmId`, `listId`, `createdAt`, `updatedAt`)
+            SELECT `itemId`, `filmId`, `listId`, `addedAt`, `addedAt` FROM `library_list_items`
+            """.trimIndent()
+        )
+        db.execSQL("DROP TABLE `library_list_items`")
+        db.execSQL("ALTER TABLE `library_list_items_new` RENAME TO `library_list_items`")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_library_list_items_filmId_listId` ON `library_list_items` (`filmId`, `listId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_list_items_filmId` ON `library_list_items` (`filmId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_list_items_listId` ON `library_list_items` (`listId`)")
     }
 
     private fun migrateMoviesWatchHistory(db: SupportSQLiteDatabase) {
@@ -281,8 +302,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
                 `id`, `filmId`, `ownerId`, `progress`,
                 COALESCE(`duration`, 0),
                 `status`,
-                `watchedAt`,
-                `watchedAt`
+                `watchedAt`, `watchedAt`
             FROM `movies_watch_history`
             """.trimIndent()
         )
@@ -340,8 +360,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
                 `id`, `filmId`, `ownerId`, `progress`,
                 COALESCE(`duration`, 0),
                 `status`, `seasonNumber`, `episodeNumber`,
-                `createdAt`,
-                `updatedAt`
+                `watchedAt`, `watchedAt`
             FROM `series_watch_history`
             """.trimIndent()
         )
@@ -470,14 +489,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
 
     private fun recreateView(db: SupportSQLiteDatabase) {
         db.execSQL("DROP VIEW IF EXISTS `library_list_item_with_metadata`")
-        db.execSQL(
-            """
-            CREATE VIEW `library_list_item_with_metadata` AS
-            SELECT library_list_items.*, films.*
-            FROM library_list_items
-            INNER JOIN films ON library_list_items.filmId = films.id
-            """.trimIndent()
-        )
+        db.execSQL("CREATE VIEW `library_list_item_with_metadata` AS SELECT library_list_items.id AS item_id, library_list_items.filmId AS item_filmId, library_list_items.listId AS item_listId, library_list_items.createdAt AS item_createdAt, library_list_items.updatedAt AS item_updatedAt, films.id AS film_id, films.title AS film_title, films.providerId AS film_providerId, films.filmType AS film_filmType, films.overview AS film_overview, films.posterImage AS film_posterImage, films.adult AS film_adult, films.language AS film_language, films.rating AS film_rating, films.backdropImage AS film_backdropImage, films.releaseDate AS film_releaseDate, films.year AS film_year, films.createdAt AS film_createdAt, films.updatedAt AS film_updatedAt FROM library_list_items INNER JOIN films ON library_list_items.filmId = films.id")
     }
 
     private fun createDbFilmsFstTable(db: SupportSQLiteDatabase) {
