@@ -32,16 +32,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -127,36 +121,36 @@ internal class ProviderDetailsViewModel @Inject constructor(
     }
 
     private suspend fun installAndLoadProvider(provider: ProviderMetadata) {
-        installProvider(provider)
-            .flatMapConcat {
-                val installedProvider = getInstalledProvider(provider.id)
-                    ?: throw IllegalStateException("Provider ${provider.name} was not found after installation.")
+        try {
+            onInstallationStatusChange(ProviderInstallationStatus.Installing)
+            infoLog("Downloading and installing provider: ${provider.name}")
 
-                loadProvider(installedProvider)
+            installProvider(provider).collect {
+                if (it is ProviderResult.Failure) throw it.error
             }
-            .onStart {
-                infoLog("Downloading and installing provider: ${provider.name}")
-                onInstallationStatusChange(ProviderInstallationStatus.Installing)
-            }
-            .onEach {
-                if (it is ProviderResult.Failure) {
-                    throw it.error
-                }
-            }.catch { e ->
-                val error = ProviderWithThrowable(provider = provider, throwable = e)
-                _uiState.update { it.copy(installationError = error) }
-            }.onCompletion {
-                // There is a good case that the provider was installed successfully,
-                // but an error was thrown after the installation.
-                // So we check if the provider is installed or not.
-                val isInstalled = providerRepository.getMetadata(provider.id) != null
-                val status = when (isInstalled) {
-                    true -> ProviderInstallationStatus.Installed
-                    false -> ProviderInstallationStatus.NotInstalled
-                }
 
-                onInstallationStatusChange(status)
-            }.collect()
+            val installedProvider = getInstalledProvider(provider.id)
+                ?: error("Provider ${provider.name} not found after installation")
+
+            loadProvider(installedProvider).collect {
+                if (it is ProviderResult.Failure) throw it.error
+            }
+
+            onInstallationStatusChange(ProviderInstallationStatus.Installed)
+
+        } catch (e: Throwable) {
+            val error = ProviderWithThrowable(provider = provider, throwable = e)
+            _uiState.update { it.copy(installationError = error) }
+
+            val isInstalled = providerRepository.getMetadata(provider.id) != null
+            val status = if (isInstalled) {
+                ProviderInstallationStatus.Installed
+            } else {
+                ProviderInstallationStatus.NotInstalled
+            }
+
+            onInstallationStatusChange(status)
+        }
     }
 
     private suspend fun uninstallProvider(provider: ProviderMetadata) {

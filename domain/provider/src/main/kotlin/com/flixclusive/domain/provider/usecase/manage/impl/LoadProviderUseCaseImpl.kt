@@ -11,10 +11,11 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
+import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
-import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
+import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.domain.provider.util.DynamicResourceLoader
 import com.flixclusive.domain.provider.util.ProviderMigrator
@@ -55,7 +56,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
     //       since `InitializeProvidersUseCase` also needs to load providers
     override fun invoke(installedProvider: InstalledProvider): Flow<ProviderResult> =
         flow {
-            val metadata = providerRepository.getMetadata(installedProvider.id)
+            val metadata = getMetadata(installedProvider)
             requireNotNull(metadata) { "Metadata not found for provider with id: ${installedProvider.id}" }
 
             if (isProviderAlreadyLoaded(metadata)) {
@@ -207,5 +208,33 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
             errorLog(e)
             return false
         }
+    }
+
+    /**
+     * Retrieves the metadata from the `updater.json` file for the given provider ID.
+     *
+     * All online metadata are stored in the `updater.json` file
+     *
+     * @param id The unique identifier for the provider.
+     * @param file The file representing the provider.
+     * */
+    private fun getMetadata(provider: InstalledProvider): ProviderMetadata? {
+        val updaterFilePath = provider.file.parent?.plus("/${Constants.UPDATER_FILE}")
+
+        if (updaterFilePath == null) {
+            errorLog("Provider's file path must not be null!")
+            return null
+        }
+
+        val updaterFile = File(updaterFilePath)
+
+        if (!updaterFile.exists()) {
+            errorLog("Provider's updater.json could not be found!")
+            return null
+        }
+
+        val updaterJsonList = fromJson<List<ProviderMetadata>>(updaterFile.reader())
+
+        return updaterJsonList.find { it.id == provider.id }
     }
 }

@@ -76,7 +76,7 @@ internal class HomeScreenViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             scope = appDispatchers.defaultScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = false,
         )
 
@@ -116,7 +116,7 @@ internal class HomeScreenViewModel @Inject constructor(
             }
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,
             initialValue = emptyList(),
         )
 
@@ -132,7 +132,7 @@ internal class HomeScreenViewModel @Inject constructor(
             list.mapNotNull { item -> filterContinueWatching(item) }
         }.stateIn(
             scope = appDispatchers.ioScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = emptyList(),
         )
 
