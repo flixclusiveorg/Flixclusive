@@ -158,13 +158,13 @@ internal object Schema8to9 : Migration(8, 9) {
 
             try {
                 val dbFilm = filmJson.toDBFilm()
-                if (dbFilm.id.isNotEmpty()) {
+                if (dbFilm.identifier.isNotEmpty()) {
                     // Check if this is a movie or series based on filmType
                     if (dbFilm.filmType.name == "MOVIE") {
                         // Migrate as MovieProgress
                         migrateMovieProgress(
                             db = db,
-                            filmId = dbFilm.id,
+                            filmId = dbFilm.identifier,
                             ownerId = ownerId,
                             episodesWatchedJson = episodesWatchedJson,
                             dateWatched = dateWatched,
@@ -173,7 +173,7 @@ internal object Schema8to9 : Migration(8, 9) {
                         // Migrate as EpisodeProgress for series
                         migrateEpisodeProgress(
                             db = db,
-                            filmId = dbFilm.id,
+                            filmId = dbFilm.identifier,
                             ownerId = ownerId,
                             episodesWatchedJson = episodesWatchedJson,
                             dateWatched = dateWatched,
@@ -353,11 +353,11 @@ internal object Schema8to9 : Migration(8, 9) {
 
             try {
                 val dbFilm = filmJson.toDBFilm()
-                if (dbFilm.id.isNotEmpty()) {
+                if (dbFilm.identifier.isNotEmpty()) {
                     // Insert into new table structure with ownerId
                     db.execSQL(
                         "INSERT OR IGNORE INTO library_list_items_new (filmId) VALUES (?)",
-                        arrayOf(dbFilm.id),
+                        arrayOf(dbFilm.identifier),
                     )
                 }
             } catch (e: Exception) {
@@ -404,11 +404,11 @@ internal object Schema8to9 : Migration(8, 9) {
 
             try {
                 val dbFilm = filmJson.toDBFilm()
-                if (dbFilm.id.isNotEmpty()) {
+                if (dbFilm.identifier.isNotEmpty()) {
                     // Insert into new table structure
                     db.execSQL(
                         "INSERT OR IGNORE INTO watchlist_new (filmId, ownerId, addedAt) VALUES (?, ?, ?)",
-                        arrayOf<Any>(dbFilm.id, ownerId, addedOn),
+                        arrayOf<Any>(dbFilm.identifier, ownerId, addedOn),
                     )
                 }
             } catch (e: Exception) {
@@ -434,9 +434,9 @@ internal object Schema8to9 : Migration(8, 9) {
             if (filmJson.isNotEmpty()) {
                 try {
                     val dbFilm = filmJson.toDBFilm()
-                    if (dbFilm.id.isNotEmpty() && !processedFilmIds.contains(dbFilm.id)) {
+                    if (dbFilm.identifier.isNotEmpty() && !processedFilmIds.contains(dbFilm.identifier)) {
                         insertDBFilm(db, dbFilm)
-                        processedFilmIds.add(dbFilm.id)
+                        processedFilmIds.add(dbFilm.identifier)
                     }
                 } catch (e: Exception) {
                     errorLog("Error parsing film from $tableName: ${e.message}")
@@ -461,7 +461,7 @@ internal object Schema8to9 : Migration(8, 9) {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             arrayOf<Any?>(
-                dbFilm.id,
+                dbFilm.identifier,
                 dbFilm.providerId,
                 dbFilm.imdbId,
                 dbFilm.tmdbId,
