@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.flixclusive.core.datastore.migration
 
 import androidx.datastore.core.DataMigration
@@ -31,8 +33,8 @@ internal class MigrationV220(
 
         val providerData = mutablePrefs[UserPreferences.PROVIDER_PREFS_KEY] ?: return currentData
         val oldProviderPrefs = Json.decodeFromString<ProviderPreferencesV213>(providerData)
-        migrateProvidersToDatabase(oldProviderPrefs)
         migrateRepositoriesToDatabase(oldProviderPrefs)
+        migrateProvidersToDatabase(oldProviderPrefs)
 
         mutablePrefs[UserPreferences.PROVIDER_PREFS_KEY] = Json.encodeToString(
             ProviderPreferences(
@@ -50,8 +52,7 @@ internal class MigrationV220(
         val data = currentData[UserPreferences.PROVIDER_PREFS_KEY] ?: return false
         val providerSettings = Json.decodeFromString<ProviderPreferencesV213>(data)
 
-        return providerSettings.providers.isNotEmpty()
-            || providerSettings.repositories.isNotEmpty()
+        return providerSettings.repositories.isNotEmpty()
     }
 
     private suspend fun migrateRepositoriesToDatabase(
