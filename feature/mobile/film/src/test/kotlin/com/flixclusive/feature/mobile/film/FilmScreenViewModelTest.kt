@@ -121,7 +121,6 @@ class FilmScreenViewModelTest {
         }
 
         viewModel = FilmScreenViewModel(
-            context = context,
             dataStoreManager = dataStoreManager,
             getSeasonWithWatchProgress = getSeasonWithWatchProgress,
             savedStateHandle = savedStateHandle,

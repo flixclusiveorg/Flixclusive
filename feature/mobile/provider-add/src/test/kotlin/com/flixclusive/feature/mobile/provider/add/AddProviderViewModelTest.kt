@@ -139,7 +139,6 @@ class AddProviderViewModelTest {
 
     private fun createViewModel() {
         viewModel = AddProviderViewModel(
-            dataStoreManager = dataStoreManager,
             providerRepository = providerRepository,
             getProviderFromRemote = getProviderFromRemote,
             _updateProvider = updateProvider,

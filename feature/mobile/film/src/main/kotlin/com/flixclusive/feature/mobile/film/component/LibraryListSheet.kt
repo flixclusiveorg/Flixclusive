@@ -52,6 +52,7 @@ import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
@@ -77,7 +78,7 @@ internal fun LibraryListSheet(
     libraryListStates: () -> List<LibraryListAndState>,
     query: () -> String,
     onQueryChange: (String) -> Unit,
-    toggleOnLibrary: (Int) -> Unit,
+    toggleOnLibrary: (Int, LibraryListType) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -128,7 +129,9 @@ internal fun LibraryListSheet(
             ) { listAndState ->
                 ItemContent(
                     listAndState = listAndState,
-                    toggleOnLibrary = { toggleOnLibrary(listAndState.list.id) },
+                    toggleOnLibrary = {
+                        toggleOnLibrary(listAndState.list.id, listAndState.list.listType)
+                    },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -368,6 +371,7 @@ private fun LibraryListSheetPreview() {
                 LibraryListItemWithMetadata(
                     item = LibraryListItem(listId = 1, filmId = metadata.id),
                     metadata = metadata,
+                    externalIds = emptyList(),
                 ),
             )
         } else {
@@ -398,7 +402,7 @@ private fun LibraryListSheetPreview() {
                 libraryListStates = { lists },
                 query = { query },
                 onQueryChange = { query = it },
-                toggleOnLibrary = {},
+                toggleOnLibrary = { _, _ -> },
                 onDismissRequest = {},
                 createLibrary = { name, description ->
                     lists = lists + LibraryListAndState(

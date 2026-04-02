@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.film
 
-import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
@@ -11,6 +10,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
@@ -19,6 +19,7 @@ import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.LibraryListRepository
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
@@ -37,7 +38,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,7 +61,6 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel(assistedFactory = FilmScreenViewModel.Factory::class)
 internal class FilmScreenViewModel @AssistedInject constructor(
-    @ApplicationContext context: Context,
     dataStoreManager: DataStoreManager,
     getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val appDispatchers: AppDispatchers,
@@ -70,10 +69,8 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     private val libraryListRepository: LibraryListRepository,
     private val providerRepository: ProviderRepository,
     private val toggleWatchProgressStatus: ToggleWatchProgressStatusUseCase,
-    private val toggleWatchlistStatus: ToggleWatchlistStatusUseCase,
     private val userSessionManager: UserSessionManager,
     private val watchProgressRepository: WatchProgressRepository,
-    private val watchlistRepository: WatchlistRepository,
     @Assisted private val navArgFilm: Film,
 ) : ViewModel() {
     @AssistedFactory
@@ -167,39 +164,22 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     val libraryLists = userSessionManager.currentUser
         .filterNotNull()
         .flatMapLatest { user ->
-            combine(
-                libraryListRepository
-                    .getListsAndItems(user.id)
-                    .mapLatest { it.lists }
-                    .distinctUntilChanged(),
-                watchProgressRepository.getAllAsFlow(user.id),
-                watchlistRepository.getAllAsFlow(user.id),
-            ) { lists, watchProgressList, watchlist ->
-                val filmId = navArgFilm.identifier
+            libraryListRepository
+                .getListsAndItems(user.id, sort = LibrarySort.Modified())
+                .mapLatest { lists ->
+                    val filmId = navArgFilm.identifier
 
-                // Pre-process watch progress list
-                val preProcessedWatchProgress = watchProgressList.toWatchProgressLibraryList(
-                    context = context, ownerId = user.id
-                )
+                    lists.fastMap { listAndItems ->
+                        val containsFilm = listAndItems.items.fastAny { item ->
+                            item.filmId == filmId
+                        }
 
-                // Pre-process watchlist
-                val preProcessedWatchlist = watchlist.toWatchlistLibraryList(
-                    context = context, ownerId = user.id
-                )
-
-                val combinedLists = lists + preProcessedWatchProgress + preProcessedWatchlist
-
-                combinedLists.fastMap { list ->
-                    val containsFilm = list.items.fastAny { item ->
-                        item.filmId == filmId
+                        LibraryListAndState(
+                            listWithItems = listAndItems,
+                            containsFilm = containsFilm,
+                        )
                     }
-
-                    LibraryListAndState(
-                        listWithItems = list,
-                        containsFilm = containsFilm,
-                    )
                 }
-            }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -301,19 +281,14 @@ internal class FilmScreenViewModel @AssistedInject constructor(
      *
      * @param id The ID of the library list to toggle the film in.
      * */
-    fun toggleOnLibrary(id: Int) {
+    fun toggleOnLibrary(id: Int, type: LibraryListType) {
         appDispatchers.ioScope.launch {
             val film = _metadata.value
             requireNotNull(film) {
                 "Film metadata must be loaded before toggling watch progress"
             }
 
-            if (id == LibraryListUtil.WATCHLIST_LIB_ID) {
-                toggleWatchlistStatus(film = film)
-                return@launch
-            }
-
-            if (id == LibraryListUtil.WATCH_PROGRESS_LIB_ID) {
+            if (type.isWatched) {
                 toggleWatchProgressStatus(film = film)
                 return@launch
             }

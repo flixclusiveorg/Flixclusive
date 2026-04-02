@@ -16,7 +16,7 @@ import javax.inject.Inject
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = USER_SESSION_FILE_NAME)
 
 internal class UserSessionDataStoreImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : UserSessionDataStore {
     override val currentUserId: Flow<Int?> = context.dataStore.data.map { preferences ->
         preferences[CURRENT_USER_ID_PREF_KEY]

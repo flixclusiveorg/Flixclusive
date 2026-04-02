@@ -23,18 +23,26 @@ internal class InstalledRepoRepositoryImpl @Inject constructor(
     }
 
     override suspend fun isInstalled(url: String, ownerId: Int): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun insert(installedRepository: InstalledRepository) {
-        withContext(appDispatchers.io) {
-            repositoryDao.insert(installedRepository)
+        return withContext(appDispatchers.io) {
+            repositoryDao.isInstalled(url, ownerId)
         }
     }
 
-    override suspend fun delete(installedRepository: InstalledRepository) {
+    override suspend fun insert(item: InstalledRepository) {
         withContext(appDispatchers.io) {
-            repositoryDao.delete(installedRepository.url, installedRepository.userId)
+            repositoryDao.insert(item)
+        }
+    }
+
+    override suspend fun delete(item: InstalledRepository) {
+        withContext(appDispatchers.io) {
+            repositoryDao.delete(item.url, item.userId)
+        }
+    }
+
+    override suspend fun deleteAll(ownerId: Int) {
+        withContext(appDispatchers.io) {
+            repositoryDao.deleteAll(ownerId)
         }
     }
 }

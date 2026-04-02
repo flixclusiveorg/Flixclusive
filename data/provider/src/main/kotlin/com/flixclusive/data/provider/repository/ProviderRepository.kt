@@ -26,7 +26,7 @@ interface ProviderRepository {
 
     fun getPlugin(id: String): Provider?
 
-    suspend fun getConfig(id: String, ownerId: Int): InstalledProvider?
+    suspend fun getInstalledProvider(id: String, ownerId: Int): InstalledProvider?
 
     fun getEnabledProvidersAsFlow(ownerId: Int): Flow<List<InstalledProvider>>
 

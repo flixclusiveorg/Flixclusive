@@ -56,5 +56,5 @@ interface WatchProgressRepository {
 
     suspend fun delete(item: Long, type: FilmType)
 
-    suspend fun removeAll(ownerId: Int)
+    suspend fun deleteAll(ownerId: Int)
 }

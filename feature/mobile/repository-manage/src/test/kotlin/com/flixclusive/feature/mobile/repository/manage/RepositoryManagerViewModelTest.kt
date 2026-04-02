@@ -100,7 +100,6 @@ class RepositoryManagerViewModelTest {
 
         viewModel = RepositoryManagerViewModel(
             getRepository = getRepository,
-            dataStoreManager = dataStoreManager,
             appDispatchers = appDispatchers,
         )
     }

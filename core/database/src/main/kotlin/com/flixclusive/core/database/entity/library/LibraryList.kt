@@ -10,7 +10,9 @@ import java.util.Date
 
 enum class LibraryListType {
     WATCHED,
-    CUSTOM,
+    CUSTOM;
+
+    val isWatched get() = this == WATCHED
 }
 
 @Entity(

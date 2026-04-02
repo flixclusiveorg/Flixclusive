@@ -45,6 +45,7 @@ import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -152,7 +153,7 @@ private fun FilmScreenContent(
     searchResults: () -> List<LibraryListAndState>,
     onQueryChange: (String) -> Unit,
     onSeasonChange: (Int) -> Unit,
-    toggleOnLibrary: (Int) -> Unit,
+    toggleOnLibrary: (Int, LibraryListType) -> Unit,
     toggleEpisodeOnLibrary: (EpisodeWithProgress) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onRetry: () -> Unit,
@@ -478,6 +479,7 @@ private fun FilmScreenBasePreview() {
                 LibraryListItemWithMetadata(
                     item = LibraryListItem(listId = 1, filmId = film.id),
                     metadata = film,
+                    externalIds = emptyList()
                 ),
             )
         } else {
@@ -536,7 +538,7 @@ private fun FilmScreenBasePreview() {
                 onRetry = {},
                 navigator = navigator,
                 showFilmTitles = false,
-                toggleOnLibrary = {},
+                toggleOnLibrary = { _, _ -> },
                 libraryListStates = { lists },
                 searchResults = {
                     lists.filter { it.list.name.contains(query, ignoreCase = true) }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="provider_api_not_found_format_message">Provider API not found for provider: %1$s</string>
     <string name="failed_to_fetch_catalog_items_format_message">Failed to fetch catalog items: %1$s</string>
     <string name="failure_looking_for_header_item">Failed to find a suitable header item after multiple attempts.</string>
 </resources>

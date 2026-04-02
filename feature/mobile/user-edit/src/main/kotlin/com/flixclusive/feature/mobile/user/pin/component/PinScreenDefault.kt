@@ -19,11 +19,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.database.entity.user.MAX_USER_PIN_LENGTH
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -70,7 +70,7 @@ internal fun PinScreenDefault(
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 25.dp),
             ) {
-                repeat(MAX_USER_PIN_LENGTH) {
+                repeat(User.MAX_USER_PIN_LENGTH) {
                     PinPlaceholder(
                         showPin = it == pin.value.length - 1 && isTyping.value,
                         hasErrors = hasErrors.value,
@@ -115,10 +115,10 @@ internal fun PinScreenDefault(
 
                         MAX_NUMBER_LENGTH + 2 -> {
                             PinButton(
-                                enabled = pin.value.length == MAX_USER_PIN_LENGTH,
+                                enabled = pin.value.length == User.MAX_USER_PIN_LENGTH,
                                 noEmphasis = true,
                                 onClick = {
-                                    if (pin.value.length == MAX_USER_PIN_LENGTH) {
+                                    if (pin.value.length == User.MAX_USER_PIN_LENGTH) {
                                         onConfirm()
                                     }
                                 },
@@ -136,7 +136,7 @@ internal fun PinScreenDefault(
                             PinButton(
                                 digit = coercedDigit % MAX_NUMBER_LENGTH,
                                 onClick = {
-                                    if (pin.value.length < MAX_USER_PIN_LENGTH) {
+                                    if (pin.value.length < User.MAX_USER_PIN_LENGTH) {
                                         isTyping.value = true
                                         hasErrors.value = false
                                         pin.value += "${coercedDigit % MAX_NUMBER_LENGTH}"

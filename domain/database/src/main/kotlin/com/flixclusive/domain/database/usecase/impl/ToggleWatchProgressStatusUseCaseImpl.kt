@@ -35,6 +35,8 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
             type = film.filmType,
         )
 
+        // TODO: Improve this as soon as TvShows starts containing list of seasons / episodes
+        //  and not just total number of seasons / episodes, so we can check if all episodes are completed or not
         if (progress == null || (progress.watchData as EpisodeProgress).episodeNumber < film.totalEpisodes) {
             watchProgressRepository.insert(
                 film = film,

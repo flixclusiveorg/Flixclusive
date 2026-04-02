@@ -17,7 +17,7 @@ import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
-import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
+import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.updater.ProviderUpdateResult
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
@@ -40,180 +40,176 @@ import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
-internal class UserProfilesViewModel
-    @Inject
-    constructor(
-        @ApplicationContext private val context: Context,
-        private val userSessionManager: UserSessionManager,
-        private val initializeProviders: InitializeProvidersUseCase,
-        private val updateProvider: UpdateProviderUseCase,
-        private val providerRepository: ProviderRepository,
-        private val providerApiRepository: ProviderApiRepository,
-        private val appDispatchers: AppDispatchers,
-        private val dataStoreManager: DataStoreManager,
-        userRepository: UserRepository,
-    ) : ViewModel() {
-        private val _uiState = MutableStateFlow(ProfilesScreenUiState())
-        val uiState = _uiState.asStateFlow()
+internal class UserProfilesViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val userSessionManager: UserSessionManager,
+    private val initializeProviders: InitializeProvidersUseCase,
+    private val updateProvider: UpdateProviderUseCase,
+    private val providerRepository: ProviderRepository,
+    private val appDispatchers: AppDispatchers,
+    private val dataStoreManager: DataStoreManager,
+    userRepository: UserRepository,
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(ProfilesScreenUiState())
+    val uiState = _uiState.asStateFlow()
 
-        private var loginJob: Job? = null
+    private var loginJob: Job? = null
 
-        val profiles = userRepository
-            .observeUsers()
-            .mapLatest { it.filterOutCurrentLoggedInUser() }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = emptyList(),
-            )
+    val profiles = userRepository
+        .observeUsers()
+        .mapLatest { it.filterOutCurrentLoggedInUser() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList(),
+        )
 
-        fun onUseProfile(user: User) {
-            if (loginJob?.isActive == true) return
+    fun onUseProfile(user: User) {
+        if (loginJob?.isActive == true) return
 
-            loginJob = appDispatchers.ioScope.launch {
-                _uiState.update { it.copy(isLoading = true, errors = emptyMap()) }
+        loginJob = appDispatchers.ioScope.launch {
+            _uiState.update { it.copy(isLoading = true, errors = emptyMap()) }
 
-                userSessionManager.signOut()
-                providerRepository.clearAll()
-                providerApiRepository.clearAll()
-                userSessionManager.signIn(user)
+            userSessionManager.signOut()
+            providerRepository.clearAll()
+            userSessionManager.signIn(user)
 
-                loadProviders()
-            }
-        }
-
-        /**
-         * Initializes the providers when the user logs in for the first time.
-         *
-         * This is to ensure that the providers are loaded and ready to use.
-         * */
-        private suspend fun loadProviders() {
-            val providers = mutableListOf<ProviderMetadata>()
-
-            initializeProviders()
-                .onEach { result ->
-                    when (result) {
-                        is LoadProviderResult.Success -> {
-                            providers += result.provider
-                        }
-
-                        is LoadProviderResult.Failure -> {
-                            // still collect the provider so it can be passed to updateProvider
-                            providers += result.provider
-
-                            _uiState.update { state ->
-                                val pair = result.provider.id to ProviderWithThrowable(
-                                    provider = result.provider,
-                                    throwable = result.error,
-                                )
-
-                                state.copy(errors = state.errors + pair)
-                            }
-                        }
-                    }
-                }.onCompletion {
-                    val providerPrefs =
-                        dataStoreManager.getUserPrefs(
-                            key = UserPreferences.PROVIDER_PREFS_KEY,
-                            type = ProviderPreferences::class
-                        ).first()
-
-                    if (providerPrefs.isAutoUpdateEnabled) {
-                        updateProviders(providers)
-                    }
-
-                    _uiState.update {
-                        it.copy(
-                            isLoggedIn = true,
-                            isLoading = false,
-                        )
-                    }
-                }.collect()
-        }
-
-        /**
-         * Updates the providers if the auto-update is enabled in the settings.
-         *
-         * This is called after the providers are initialized in [loadProviders].
-         * */
-        private suspend fun updateProviders(providers: List<ProviderMetadata>) {
-            val providerPrefs = dataStoreManager
-                .getUserPrefs(
-                    UserPreferences.PROVIDER_PREFS_KEY,
-                    ProviderPreferences::class,
-                ).first()
-
-            val isAutoUpdateEnabled = providerPrefs.isAutoUpdateEnabled
-
-            if (isAutoUpdateEnabled && providers.isNotEmpty()) {
-                val results = updateProvider(providers)
-
-                // Remove providers that were updated successfully from the errors list in the ui state
-                results.success.forEach {
-                    _uiState.update { state ->
-                        state.copy(errors = state.errors - it.id)
-                    }
-                }
-
-                // Add providers that failed to update to the errors list in the ui state
-                results.failed.forEach { (provider, throwable) ->
-                    val pair = provider.id to ProviderWithThrowable(
-                        provider = provider,
-                        throwable = throwable ?: Error("Failed to update provider"),
-                    )
-
-                    _uiState.update { state ->
-                        state.copy(errors = state.errors + pair)
-                    }
-                }
-
-                if (results.success.isNotEmpty()) {
-                    notifyUpdates(results)
-                }
-            }
-        }
-
-        /**
-         * Creates a notification to inform the user about the updated providers.
-         *
-         * This is only called when the auto-update is enabled in the settings.
-         * */
-        private fun notifyUpdates(results: ProviderUpdateResult) {
-            val updatedProviders = results.success.joinToString(", ") { it.name }
-            val message = "The following providers have been updated: $updatedProviders"
-
-            context.notify(
-                id = (System.currentTimeMillis() / 1000).toInt(),
-                channelId = UpdateProviderUseCase.NOTIFICATION_ID,
-                channelName = UpdateProviderUseCase.NOTIFICATION_NAME,
-                shouldInitializeChannel = true,
-            ) {
-                setContentTitle(context.getString(LocaleR.string.flixclusive_providers))
-                setContentText(message)
-                setSmallIcon(UiCommonR.drawable.provider_logo)
-                setOnlyAlertOnce(false)
-                setAutoCancel(true)
-                setColorized(true)
-                setSilent(true)
-                setStyle(
-                    NotificationCompat
-                        .BigTextStyle()
-                        .bigText(message),
-                )
-            }
-        }
-
-        private fun List<User>.filterOutCurrentLoggedInUser() =
-            fastFilter { it.id != userSessionManager.currentUser.value?.id }
-
-        fun onHoverProfile(user: User) {
-            _uiState.update { it.copy(focusedProfile = user) }
-        }
-
-        fun onConsumeErrors() {
-            _uiState.update { it.copy(errors = emptyMap()) }
+            loadProviders()
         }
     }
+
+    /**
+     * Initializes the providers when the user logs in for the first time.
+     *
+     * This is to ensure that the providers are loaded and ready to use.
+     * */
+    private suspend fun loadProviders() {
+        val providers = mutableListOf<ProviderMetadata>()
+
+        initializeProviders()
+            .onEach { result ->
+                when (result) {
+                    is ProviderResult.Success -> {
+                        providers += result.provider
+                    }
+
+                    is ProviderResult.Failure -> {
+                        // still collect the provider so it can be passed to updateProvider
+                        providers += result.provider
+
+                        _uiState.update { state ->
+                            val pair = result.provider.id to ProviderWithThrowable(
+                                provider = result.provider,
+                                throwable = result.error,
+                            )
+
+                            state.copy(errors = state.errors + pair)
+                        }
+                    }
+                }
+            }.onCompletion {
+                val providerPrefs =
+                    dataStoreManager.getUserPrefs(
+                        key = UserPreferences.PROVIDER_PREFS_KEY,
+                        type = ProviderPreferences::class
+                    ).first()
+
+                if (providerPrefs.isAutoUpdateEnabled) {
+                    updateProviders(providers)
+                }
+
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = true,
+                        isLoading = false,
+                    )
+                }
+            }.collect()
+    }
+
+    /**
+     * Updates the providers if the auto-update is enabled in the settings.
+     *
+     * This is called after the providers are initialized in [loadProviders].
+     * */
+    private suspend fun updateProviders(providers: List<ProviderMetadata>) {
+        val providerPrefs = dataStoreManager
+            .getUserPrefs(
+                UserPreferences.PROVIDER_PREFS_KEY,
+                ProviderPreferences::class,
+            ).first()
+
+        val isAutoUpdateEnabled = providerPrefs.isAutoUpdateEnabled
+
+        if (isAutoUpdateEnabled && providers.isNotEmpty()) {
+            val results = updateProvider(providers)
+
+            // Remove providers that were updated successfully from the errors list in the ui state
+            results.success.forEach {
+                _uiState.update { state ->
+                    state.copy(errors = state.errors - it.id)
+                }
+            }
+
+            // Add providers that failed to update to the errors list in the ui state
+            results.failed.forEach { (provider, throwable) ->
+                val pair = provider.id to ProviderWithThrowable(
+                    provider = provider,
+                    throwable = throwable ?: Error("Failed to update provider"),
+                )
+
+                _uiState.update { state ->
+                    state.copy(errors = state.errors + pair)
+                }
+            }
+
+            if (results.success.isNotEmpty()) {
+                notifyUpdates(results)
+            }
+        }
+    }
+
+    /**
+     * Creates a notification to inform the user about the updated providers.
+     *
+     * This is only called when the auto-update is enabled in the settings.
+     * */
+    private fun notifyUpdates(results: ProviderUpdateResult) {
+        val updatedProviders = results.success.joinToString(", ") { it.name }
+        val message = "The following providers have been updated: $updatedProviders"
+
+        context.notify(
+            id = (System.currentTimeMillis() / 1000).toInt(),
+            channelId = UpdateProviderUseCase.NOTIFICATION_ID,
+            channelName = UpdateProviderUseCase.NOTIFICATION_NAME,
+            shouldInitializeChannel = true,
+        ) {
+            setContentTitle(context.getString(LocaleR.string.flixclusive_providers))
+            setContentText(message)
+            setSmallIcon(UiCommonR.drawable.provider_logo)
+            setOnlyAlertOnce(false)
+            setAutoCancel(true)
+            setColorized(true)
+            setSilent(true)
+            setStyle(
+                NotificationCompat
+                    .BigTextStyle()
+                    .bigText(message),
+            )
+        }
+    }
+
+    private fun List<User>.filterOutCurrentLoggedInUser() =
+        fastFilter { it.id != userSessionManager.currentUser.value?.id }
+
+    fun onHoverProfile(user: User) {
+        _uiState.update { it.copy(focusedProfile = user) }
+    }
+
+    fun onConsumeErrors() {
+        _uiState.update { it.copy(errors = emptyMap()) }
+    }
+}
 
 @Immutable
 internal data class ProfilesScreenUiState(

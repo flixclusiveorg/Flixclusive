@@ -5,6 +5,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.provider.util.ProviderSortOrderManager
 import com.flixclusive.model.provider.ProviderMetadata
@@ -73,7 +74,7 @@ internal class ProviderRepositoryImpl @Inject constructor(
 
     override fun getPlugin(id: String) = pluginsMap[id]
 
-    override suspend fun getConfig(
+    override suspend fun getInstalledProvider(
         id: String,
         ownerId: Int
     ): InstalledProvider? {
@@ -87,6 +88,7 @@ internal class ProviderRepositoryImpl @Inject constructor(
         try {
             provider.getApi(context, okHttpClient)
         } catch (e: Exception) {
+            warnLog("API for provider [$id] failed to instantiate. This provider will be disabled.")
             errorLog(e)
             installedProviderDao.setEnabled(
                 id = id,

@@ -10,7 +10,9 @@ interface InstalledRepoRepository {
 
     suspend fun isInstalled(url: String, ownerId: Int): Boolean
 
-    suspend fun insert(installedRepository: InstalledRepository)
+    suspend fun insert(item: InstalledRepository)
 
-    suspend fun delete(installedRepository: InstalledRepository)
+    suspend fun delete(item: InstalledRepository)
+
+    suspend fun deleteAll(ownerId: Int)
 }

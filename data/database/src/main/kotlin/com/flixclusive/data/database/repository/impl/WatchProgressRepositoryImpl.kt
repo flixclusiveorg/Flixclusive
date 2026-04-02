@@ -159,10 +159,11 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun removeAll(ownerId: Int) {
+    override suspend fun deleteAll(ownerId: Int) {
         withContext(appDispatchers.io) {
             movieProgressDao.deleteAll(ownerId)
             episodeProgressDao.deleteAll(ownerId)
+            libraryListDao.deleteWatched(ownerId)
         }
     }
 

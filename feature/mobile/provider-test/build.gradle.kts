@@ -10,12 +10,14 @@ android {
 }
 
 dependencies {
+    implementation(projects.coreDatabase)
     implementation(projects.coreCommon)
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
     implementation(projects.coreNavigation)
     implementation(projects.coreStrings)
     implementation(projects.coreDrawables)
+    implementation(projects.dataDatabase)
     implementation(projects.dataProvider)
     implementation(projects.domainProvider)
 

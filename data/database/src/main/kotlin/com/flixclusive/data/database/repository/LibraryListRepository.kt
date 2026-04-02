@@ -38,4 +38,6 @@ interface LibraryListRepository {
     fun getListsAndItems(userId: Int, sort: LibrarySort): Flow<List<LibraryListWithItems>>
 
     fun searchItems(query: String, listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
+
+    suspend fun deleteAllExceptWatched(ownerId: Int)
 }

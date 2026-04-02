@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.player
 import android.content.Context
 import androidx.annotation.MainThread
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -143,16 +142,28 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
 
     // Only using non-suspend function since we don't need to observe changes here
-    val providers by lazy {
-        providerRepository.getEnabledProvidersAsFlow()
-            .fastFilter {
-                if (!filmMetadata.isFromTmdb) {
-                    return@fastFilter filmMetadata.providerId == it.id
-                }
+    val providers = userSessionManager.currentUser
+        .filterNotNull()
+        .flatMapLatest { user ->
+            if (!filmMetadata.isFromTmdb) {
+                val metadata = providerRepository.getMetadata(filmMetadata.providerId)
+                    ?: return@flatMapLatest flowOf(emptyList())
 
-                true
+                return@flatMapLatest flowOf(listOf(metadata))
             }
-    }
+
+            providerRepository.getEnabledProvidersAsFlow(ownerId = user.id)
+                .map { list ->
+                    list.mapNotNull { provider ->
+                        providerRepository.getMetadata(provider.id)
+                    }
+                }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList(),
+        )
 
     private val _uiState = MutableStateFlow(
         value = PlayerUiState(

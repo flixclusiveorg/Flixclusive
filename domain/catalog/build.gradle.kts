@@ -11,6 +11,7 @@ android {
 dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreNetwork)
+    implementation(projects.coreDatastore)
     implementation(projects.coreDatabase)
     implementation(projects.dataDatabase)
     implementation(projects.dataProvider)

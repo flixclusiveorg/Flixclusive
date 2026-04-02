@@ -168,7 +168,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
     private suspend fun getOldProviderConfig(id: String): InstalledProvider {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-        val old = providerRepository.getConfig(id, userId) ?: error(
+        val old = providerRepository.getInstalledProvider(id, userId) ?: error(
             context.getString(
                 R.string.provider_not_even_installed,
                 id
