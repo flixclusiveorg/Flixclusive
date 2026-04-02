@@ -43,8 +43,10 @@ internal class GetFilmMetadataUseCaseImpl @Inject constructor(
                     }
                 }
             }
-
-            film.isFromTmdb -> getFromTmdb(tmdbId = film.tmdbId, filmType = film.filmType)
+            film.isFromTmdb -> getFromTmdb(
+                tmdbId = film.tmdbId ?: film.identifier.toIntOrNull(), // TODO: Migrate to external IDs soon
+                filmType = film.filmType
+            )
             else -> Resource.Failure(UiText.from(R.string.film_not_found))
         }
     }
