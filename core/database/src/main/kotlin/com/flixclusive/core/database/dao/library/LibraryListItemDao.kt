@@ -8,19 +8,17 @@ import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.film.DBFilmExternalId
 import com.flixclusive.core.database.entity.film.DBFilmExternalId.Companion.toDBFilmExternalIds
 import com.flixclusive.core.database.entity.film.DBFilmFts
 import com.flixclusive.core.database.entity.film.DBFilmFts.Companion.toDBFilmFts
-import com.flixclusive.core.database.entity.film.DBFilmWithExternalIds
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.model.film.Film
 import kotlinx.coroutines.flow.Flow
+import java.util.Date
 
 @Dao
 interface LibraryListItemDao {
@@ -93,12 +91,12 @@ interface LibraryListItemDao {
         film: Film? = null,
     ): Long {
         if (film != null) {
-            upsertFilm(film.toDBFilm())
+            upsertFilm(film.toDBFilm().copy(updatedAt = Date()))
             upsertFilmFts(film.toDBFilmFts())
             upsertIds(film.toDBFilmExternalIds())
         }
 
-        return insertItem(item)
+        return insertItem(item.copy(updatedAt = Date()))
     }
 
     @Query("DELETE FROM library_list_items WHERE id = :id")
