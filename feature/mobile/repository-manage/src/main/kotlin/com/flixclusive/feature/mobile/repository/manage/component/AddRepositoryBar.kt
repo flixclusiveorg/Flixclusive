@@ -146,7 +146,12 @@ internal fun AddRepositoryBar(
                     enter = scaleIn(),
                     exit = scaleOut(),
                 ) {
-                    IconButton(onClick = { onUrlQueryChange("") }) {
+                    IconButton(
+                        onClick = {
+                            textFieldValue = "".toTextFieldValue()
+                            onUrlQueryChange("")
+                        }
+                    ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.round_close_24),
                             contentDescription = stringResource(LocaleR.string.clear_text_button),
