@@ -196,7 +196,7 @@ class WatchProgressRepositoryImplTest {
             repository.insert(item2, testMovieDbFilm)
             repository.insert(item3, testMovieDbFilm)
 
-            repository.removeAll(testMovieProgress.ownerId)
+            repository.deleteAll(testMovieProgress.ownerId)
 
             turbineScope {
                 val firstOwner = repository.getAllAsFlow(testMovieProgress.ownerId).testIn(this)

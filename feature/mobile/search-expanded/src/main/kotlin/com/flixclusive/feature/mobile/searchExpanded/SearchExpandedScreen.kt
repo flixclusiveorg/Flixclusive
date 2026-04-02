@@ -61,7 +61,7 @@ internal fun SearchExpandedScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
     val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
-    val providerMetadataList = viewModel.providerMetadataList
+    val providerMetadataList by viewModel.providerMetadataList.collectAsStateWithLifecycle()
 
     SearchExpandedScreenContent(
         uiState = uiState,

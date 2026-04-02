@@ -97,7 +97,7 @@ class UserEditViewModelTest {
             every { userRepository.observeUser(any()) } returns flowOf(testUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
-            coEvery { watchProgressRepository.removeAll(any()) } returns Unit
+            coEvery { watchProgressRepository.deleteAll(any()) } returns Unit
             coEvery { watchlistRepository.removeAll(any()) } returns Unit
             coEvery { userRepository.deleteUser(any()) } returns Unit
 
@@ -110,7 +110,7 @@ class UserEditViewModelTest {
 
             coVerify { dataStoreManager.deleteAllUserRelatedFiles(testUser.id) }
             coVerify { searchHistoryRepository.clearAll(testUser.id) }
-            coVerify { watchProgressRepository.removeAll(testUser.id) }
+            coVerify { watchProgressRepository.deleteAll(testUser.id) }
             coVerify { watchlistRepository.removeAll(testUser.id) }
             coVerify { userRepository.deleteUser(testUser.id) }
         }
@@ -127,7 +127,7 @@ class UserEditViewModelTest {
             coEvery { userSessionManager.signOut() } returns Unit
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
-            coEvery { watchProgressRepository.removeAll(any()) } returns Unit
+            coEvery { watchProgressRepository.deleteAll(any()) } returns Unit
             coEvery { watchlistRepository.removeAll(any()) } returns Unit
             coEvery { userRepository.deleteUser(any()) } returns Unit
 
@@ -143,7 +143,7 @@ class UserEditViewModelTest {
             coVerify { userSessionManager.signOut() }
             coVerify { dataStoreManager.deleteAllUserRelatedFiles(loggedInUser.id) }
             coVerify { searchHistoryRepository.clearAll(loggedInUser.id) }
-            coVerify { watchProgressRepository.removeAll(loggedInUser.id) }
+            coVerify { watchProgressRepository.deleteAll(loggedInUser.id) }
             coVerify { watchlistRepository.removeAll(loggedInUser.id) }
             coVerify { userRepository.deleteUser(loggedInUser.id) }
         }
@@ -155,7 +155,7 @@ class UserEditViewModelTest {
             every { userRepository.observeUser(any()) } returns flowOf(loggedInUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
-            coEvery { watchProgressRepository.removeAll(any()) } returns Unit
+            coEvery { watchProgressRepository.deleteAll(any()) } returns Unit
             coEvery { watchlistRepository.removeAll(any()) } returns Unit
             coEvery { userRepository.deleteUser(any()) } returns Unit
 
@@ -241,19 +241,19 @@ class UserEditViewModelTest {
     @Test
     fun `onClearLibraries should clear watch history when Library WatchHistory is provided`() =
         runTest(testDispatcher) {
-            coEvery { watchProgressRepository.removeAll(any()) } returns Unit
+            coEvery { watchProgressRepository.deleteAll(any()) } returns Unit
 
             viewModel.onClearLibraries(testUser.id, listOf(Library.WatchHistory))
             testDispatcher.scheduler.advanceUntilIdle()
 
-            coVerify { watchProgressRepository.removeAll(testUser.id) }
+            coVerify { watchProgressRepository.deleteAll(testUser.id) }
         }
 
     @Test
     fun `onClearLibraries should clear multiple libraries when multiple types provided`() =
         runTest(testDispatcher) {
             coEvery { watchlistRepository.removeAll(any()) } returns Unit
-            coEvery { watchProgressRepository.removeAll(any()) } returns Unit
+            coEvery { watchProgressRepository.deleteAll(any()) } returns Unit
 
             viewModel.onClearLibraries(
                 testUser.id,
@@ -262,7 +262,7 @@ class UserEditViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             coVerify { watchlistRepository.removeAll(testUser.id) }
-            coVerify { watchProgressRepository.removeAll(testUser.id) }
+            coVerify { watchProgressRepository.deleteAll(testUser.id) }
         }
 
     @Test
@@ -302,7 +302,7 @@ class UserEditViewModelTest {
             every { userRepository.observeUser(any()) } returns flowOf(testUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
-            coEvery { watchProgressRepository.removeAll(any()) } returns Unit
+            coEvery { watchProgressRepository.deleteAll(any()) } returns Unit
             coEvery { watchlistRepository.removeAll(any()) } returns Unit
             coEvery { userRepository.deleteUser(any()) } returns Unit
 
@@ -320,7 +320,7 @@ class UserEditViewModelTest {
             every { userRepository.observeUser(any()) } returns flowOf(testUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
-            coEvery { watchProgressRepository.removeAll(any()) } returns Unit
+            coEvery { watchProgressRepository.deleteAll(any()) } returns Unit
             coEvery { watchlistRepository.removeAll(any()) } returns Unit
             coEvery { userRepository.deleteUser(any()) } returns Unit
 

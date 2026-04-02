@@ -15,7 +15,7 @@ import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
-import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
+import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
@@ -115,11 +115,11 @@ internal class SplashScreenViewModel
             initializeProviders()
                 .onEach { result ->
                     when (result) {
-                        is LoadProviderResult.Success -> {
+                        is ProviderResult.Success -> {
                             providers += result.provider
                         }
 
-                        is LoadProviderResult.Failure -> {
+                        is ProviderResult.Failure -> {
                             // still collect the provider so it can be passed to updateProvider
                             providers += result.provider
 

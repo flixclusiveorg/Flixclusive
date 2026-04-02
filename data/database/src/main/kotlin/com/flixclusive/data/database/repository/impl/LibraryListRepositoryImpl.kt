@@ -121,4 +121,10 @@ internal class LibraryListRepositoryImpl @Inject constructor(
             ascending = sort.ascending,
         )
     }
+
+    override suspend fun deleteAllExceptWatched(ownerId: Int) {
+        return withContext(appDispatchers.io) {
+            listDao.deleteAllExceptWatched(ownerId)
+        }
+    }
 }

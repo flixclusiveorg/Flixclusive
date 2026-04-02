@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -161,6 +162,7 @@ private fun UserProfilesScreenContent(
     onConsumeErrors: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     val (pageCount, initialPage) = remember(profiles.size) {
         val pageCount = if (profiles.size <= 2) {
@@ -308,7 +310,7 @@ private fun UserProfilesScreenContent(
             errors = listOfErrors,
             onDismissRequest = {
                 if (uiState.isLoading) {
-                    context.showToast(context.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading))
+                    context.showToast(resources.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading))
                     return@ProviderCrashBottomSheet
                 }
 

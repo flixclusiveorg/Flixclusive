@@ -1,16 +1,18 @@
 package com.flixclusive.feature.mobile.provider.manage
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
@@ -20,8 +22,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -33,17 +39,10 @@ import javax.inject.Inject
 internal class ProviderManagerViewModel @Inject constructor(
     private val unloadProvider: UnloadProviderUseCase,
     private val dataStoreManager: DataStoreManager,
+    private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
-    private val providerApiRepository: ProviderApiRepository,
     private val appDispatchers: AppDispatchers,
 ) : ViewModel() {
-    val providers = mutableStateListOf<ProviderMetadata>()
-
-    val providersChangesHandler = ProvidersOperationsHandler(
-        repository = providerRepository,
-        providers = providers,
-    )
-
     private var uninstallJob: Job? = null
     private var toggleJob: Job? = null
 
@@ -59,6 +58,36 @@ internal class ProviderManagerViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = _searchQuery.value,
         )
+
+
+    val providers = combine(
+        userSessionDataStore.currentUserId.filterNotNull(),
+        _uiState.map { it.isSearching }.distinctUntilChanged(),
+        searchQuery,
+    ) { userId, isSearching, query ->
+        Triple(userId, isSearching, query)
+    }.flatMapLatest { (userId, isSearching, query) ->
+        providerRepository
+            .getInstalledProvidersAsFlow(ownerId = userId)
+            .map { list ->
+                list.mapNotNull { provider ->
+                    providerRepository.getMetadata(provider.id)
+                }.run {
+                    if (isSearching) {
+                        return@run this@run
+                    }
+
+                    fastFilter { metadata ->
+                        metadata.name.contains(query, ignoreCase = true)
+                    }
+                }
+            }
+    }
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = emptyList(),
+    )
 
     val isFirstTimeOnProvidersScreen = dataStoreManager
         .getUserPrefs(UserPreferences.USER_ON_BOARDING_PREFS_KEY, UserOnBoarding::class)
@@ -80,16 +109,6 @@ internal class ProviderManagerViewModel @Inject constructor(
             initialValue = emptyList(),
         )
 
-    init {
-        viewModelScope.launch {
-            providers.addAll(providerRepository.getInstalledProvidersAsFlow())
-
-            providerRepository.observe().collect { operation ->
-                providersChangesHandler.handleOperations(operation)
-            }
-        }
-    }
-
     fun onQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
     }
@@ -98,7 +117,12 @@ internal class ProviderManagerViewModel @Inject constructor(
         fromIndex: Int,
         toIndex: Int,
     ) {
-        providerRepository.moveProvider(fromIndex, toIndex)
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        providerRepository.moveProvider(
+            from = fromIndex,
+            to = toIndex,
+            ownerId = userId
+        )
     }
 
     fun toggleProvider(id: String) {
@@ -106,21 +130,27 @@ internal class ProviderManagerViewModel @Inject constructor(
 
         toggleJob =
             appDispatchers.ioScope.launch {
-                providerRepository.toggleProvider(id = id)
-                val isDisabled = providerRepository
-                    .getProviderFromPreferences(id = id)
-                    ?.isDisabled == true
+                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-                if (isDisabled) {
-                    providerApiRepository.removeApi(id)
-                } else {
-                    try {
-                        providerApiRepository.addApiFromId(id = id)
-                    } catch (e: Throwable) {
-                        providerRepository.toggleProvider(id = id)
-                        val metadata = providerRepository.getMetadata(id)!!
-                        val error = ProviderWithThrowable(provider = metadata, throwable = e)
-                        _uiState.update { it.copy(error = error) }
+                providerRepository.toggleProvider(id = id, ownerId = userId)
+                val isEnabled = providerRepository.isEnabled(id = id, ownerId = userId)
+
+                if (!isEnabled) return@launch
+
+                try {
+                    providerRepository.getApi(
+                        id = id,
+                        ownerId = userId,
+                    )
+                } catch (e: Exception) {
+                    warnLog("Failed to load provider with id $id after toggling it on, disabling it again.")
+                    _uiState.update {
+                        it.copy(
+                            error = ProviderWithThrowable(
+                                provider = providerRepository.getMetadata(id)!!,
+                                throwable = e
+                            )
+                        )
                     }
                 }
             }
@@ -130,7 +160,18 @@ internal class ProviderManagerViewModel @Inject constructor(
         if (uninstallJob?.isActive == true) return
 
         uninstallJob = appDispatchers.ioScope.launch {
-            unloadProvider(metadata)
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val provider = providerRepository.getInstalledProvider(
+                id = metadata.id,
+                ownerId = userId
+            )
+
+            if (provider == null) {
+                warnLog("Failed to get provider config for provider with id ${metadata.id}, aborting uninstall.")
+                return@launch
+            }
+
+            unloadProvider(provider)
         }
     }
 

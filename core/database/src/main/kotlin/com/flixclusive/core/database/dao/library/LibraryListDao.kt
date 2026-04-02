@@ -92,4 +92,10 @@ interface LibraryListDao {
 
     @Query("SELECT * FROM library_lists WHERE ownerId = :ownerId AND listType = :listType")
     suspend fun getByType(ownerId: Int, listType: LibraryListType): List<LibraryList>
+
+    @Query("DELETE FROM library_lists WHERE ownerId = :ownerId AND listType != 'WATCHED'")
+    suspend fun deleteAllExceptWatched(ownerId: Int)
+
+    @Query("DELETE FROM library_lists WHERE ownerId = :ownerId AND listType = 'WATCHED'")
+    suspend fun deleteWatched(ownerId: Int)
 }

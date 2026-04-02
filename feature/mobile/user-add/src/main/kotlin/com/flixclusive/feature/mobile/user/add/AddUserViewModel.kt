@@ -83,7 +83,7 @@ internal class AddUserViewModel
             }
         }
 
-        val user = mutableStateOf(User.EMPTY)
+        val user = mutableStateOf(User.Empty)
 
         private var addJob: Job? = null
 

@@ -23,12 +23,12 @@ interface EpisodeProgressDao {
     ): Flow<List<EpisodeProgressWithMetadata>> {
         val query = """
         SELECT * FROM series_watch_history s1
-        WHERE ownerId = :ownerId
+        WHERE ownerId = ?
         AND (seasonNumber, episodeNumber) = (
             SELECT seasonNumber, episodeNumber
             FROM series_watch_history s2
             WHERE s2.filmId = s1.filmId
-            AND s2.ownerId = :ownerId
+            AND s2.ownerId = ?
             ORDER BY seasonNumber DESC, episodeNumber DESC
             LIMIT 1
         )

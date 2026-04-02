@@ -50,7 +50,6 @@ internal class MobileAppViewModel @Inject constructor(
     private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val watchProgressRepository: WatchProgressRepository,
-    private val watchlistRepository: WatchlistRepository,
     private val dataStoreManager: DataStoreManager,
     private val userSessionManager: UserSessionManager,
     private val libraryListRepository: LibraryListRepository,
@@ -110,18 +109,8 @@ internal class MobileAppViewModel @Inject constructor(
         if (onFilmLongClickJob?.isActive == true) return
 
         onFilmLongClickJob = viewModelScope.launch {
-            val watchlistItem = watchlistRepository.get(filmId = film.identifier, ownerId = userId)
-            val libraryItem =
-                libraryListRepository.getListsContainingFilm(filmId = film.identifier, ownerId = userId).first()
-            val watchProgressItem = watchProgressRepository.get(
-                id = film.identifier,
-                ownerId = userId,
-                type = film.filmType,
-            )
-
-            val isInLibrary = libraryItem.isNotEmpty() ||
-                watchProgressItem != null ||
-                watchlistItem != null
+            val libraryItem = libraryListRepository.getListsContainingFilm(filmId = film.identifier, ownerId = userId).first()
+            val isInLibrary = libraryItem.isNotEmpty()
 
             _uiState.update {
                 it.copy(
