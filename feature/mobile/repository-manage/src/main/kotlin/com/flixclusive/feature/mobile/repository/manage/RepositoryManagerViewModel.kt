@@ -68,7 +68,7 @@ internal class RepositoryManagerViewModel @Inject constructor(
 
     val repositories = combine(
         userSessionDataStore.currentUserId.filterNotNull(),
-        searchQuery.debounce(800)
+        searchQuery.debounce { if (it.isEmpty()) 0 else 800 }
     ) { userId, query ->
         userId to query
     }.flatMapLatest { (userId, query) ->
