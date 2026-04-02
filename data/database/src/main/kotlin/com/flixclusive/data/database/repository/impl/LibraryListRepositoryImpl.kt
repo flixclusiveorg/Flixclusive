@@ -1,20 +1,25 @@
 package com.flixclusive.data.database.repository.impl
 
+import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.model.film.Film
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.flixclusive.core.database.R as DatabaseR
 
 internal class LibraryListRepositoryImpl @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val listDao: LibraryListDao,
     private val itemDao: LibraryListItemDao,
     private val appDispatchers: AppDispatchers,
@@ -120,6 +125,22 @@ internal class LibraryListRepositoryImpl @Inject constructor(
             columnSort = column,
             ascending = sort.ascending,
         )
+    }
+
+    override suspend fun seedLists(userId: Int) {
+        val watchedListName = context.getString(DatabaseR.string.seeded_recently_watched)
+        val watchedListDesc = context.getString(DatabaseR.string.seeded_recently_watched_description)
+
+        withContext(appDispatchers.io) {
+            listDao.insert(
+                LibraryList(
+                    name = watchedListName,
+                    description = watchedListDesc,
+                    ownerId = userId,
+                    listType = LibraryListType.WATCHED,
+                )
+            )
+        }
     }
 
     override suspend fun deleteAllExceptWatched(ownerId: Int) {

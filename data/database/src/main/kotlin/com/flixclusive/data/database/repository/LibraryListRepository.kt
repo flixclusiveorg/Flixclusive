@@ -40,4 +40,6 @@ interface LibraryListRepository {
     fun searchItems(query: String, listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
 
     suspend fun deleteAllExceptWatched(ownerId: Int)
+
+    suspend fun seedLists(userId: Int)
 }
