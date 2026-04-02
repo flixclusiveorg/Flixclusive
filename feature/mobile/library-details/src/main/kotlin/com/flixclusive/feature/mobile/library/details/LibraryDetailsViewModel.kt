@@ -55,7 +55,7 @@ internal class LibraryDetailsViewModel @Inject constructor(
         .filterNotNull()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = navArgs.library,
         )
 
@@ -69,7 +69,7 @@ internal class LibraryDetailsViewModel @Inject constructor(
             ).map { list -> list.toPersistentList() }
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = persistentListOf(),
         )
 

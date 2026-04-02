@@ -30,7 +30,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 fun LibraryFilterRow(
     isListEditable: Boolean,
-    selected: LibrarySort,
+    selected: () -> LibrarySort,
     onUpdate: (LibrarySort) -> Unit,
     onStartSelecting: () -> Unit,
     modifier: Modifier = Modifier,
@@ -86,7 +86,7 @@ fun LibraryFilterRow(
             }
 
             LibraryFilterPill(
-                isSelected = selected == filter,
+                selected = selected,
                 filter = filter,
                 onToggleDirection = { onUpdate(filter) },
             )
@@ -104,7 +104,7 @@ private fun LibraryFilterRowPreview() {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterRow(
                 isListEditable = true,
-                selected = currentFilter,
+                selected = { currentFilter },
                 onStartSelecting = { },
                 onUpdate = { filter ->
                     if (currentFilter == filter) {

@@ -32,7 +32,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun LibraryFilterPill(
-    isSelected: Boolean,
+    selected: () -> LibrarySort,
     filter: LibrarySort,
     onToggleDirection: () -> Unit,
     modifier: Modifier = Modifier,
@@ -53,6 +53,12 @@ fun LibraryFilterPill(
                 .height(getAdaptiveDp(29.dp))
                 .widthIn(min = getAdaptiveDp(55.dp))
                 .graphicsLayer {
+                    val isSelected = when (filter) {
+                        is LibrarySort.Name -> selected() is LibrarySort.Name
+                        is LibrarySort.Modified -> selected() is LibrarySort.Modified
+                        is LibrarySort.Added -> selected() is LibrarySort.Added
+                    }
+
                     alpha = if (isSelected) 1f else 0.6f
                 },
         contentPadding = PaddingValues(
@@ -65,9 +71,15 @@ fun LibraryFilterPill(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AnimatedVisibility(isSelected) {
+            AnimatedVisibility(
+                when (filter) {
+                    is LibrarySort.Name -> selected() is LibrarySort.Name
+                    is LibrarySort.Modified -> selected() is LibrarySort.Modified
+                    is LibrarySort.Added -> selected() is LibrarySort.Added
+                }
+            ) {
                 AnimatedContent(
-                    targetState = filter.ascending,
+                    targetState = selected().ascending,
                     label = "FilterDirection",
                 ) { state ->
                     val iconId = if (state) {
@@ -100,7 +112,7 @@ private fun LibraryFilterPillPreview() {
     FlixclusiveTheme {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterPill(
-                isSelected = false,
+                selected = { LibrarySort.Name(ascending = false) },
                 filter = LibrarySort.Name(),
                 onToggleDirection = {},
             )
@@ -114,7 +126,7 @@ private fun LibraryFilterPillDescendingPreview() {
     FlixclusiveTheme {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterPill(
-                isSelected = true,
+                selected = { LibrarySort.Modified(ascending = false) },
                 filter = LibrarySort.Modified(),
                 onToggleDirection = {},
             )

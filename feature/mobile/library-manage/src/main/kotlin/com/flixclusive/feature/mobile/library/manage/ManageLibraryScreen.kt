@@ -222,7 +222,7 @@ private fun ManageLibraryScreen(
             ) {
                 LibraryFilterRow(
                     isListEditable = !isListEmpty && !uiState.isMultiSelecting,
-                    selected = uiState.selectedFilter,
+                    selected = { uiState.selectedFilter },
                     onUpdate = onUpdateFilter,
                     onStartSelecting = onStartMultiSelecting,
                     modifier = Modifier
@@ -425,14 +425,12 @@ private fun ManageLibraryScreenBasePreview() {
                     selectedLibraries = { selectedLibraries },
                     searchQuery = { searchQuery },
                     onUpdateFilter = {
-                        uiState =
-                            if (uiState.selectedFilter == it) {
-                                uiState.copy(
-                                    selectedFilter = uiState.selectedFilter.toggleAscending(),
-                                )
-                            } else {
-                                uiState.copy(selectedFilter = it)
-                            }
+                        if (uiState.selectedFilter == it) {
+                            uiState.selectedFilter.toggleAscending()
+                            return@ManageLibraryScreen
+                        }
+
+                        uiState = uiState.copy(selectedFilter = it)
                     },
                     onViewLibraryContent = {},
                     onStartMultiSelecting = { uiState = uiState.copy(isMultiSelecting = true) },
