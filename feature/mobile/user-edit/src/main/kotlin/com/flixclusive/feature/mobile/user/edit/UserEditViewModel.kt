@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.strings.R as LocaleR
+import com.flixclusive.core.database.R as DatabaseR
 
 @HiltViewModel
 internal class UserEditViewModel @Inject constructor(
@@ -150,7 +150,7 @@ internal sealed class Library {
     abstract val name: UiText
 
     data object WatchHistory : Library() {
-        override val name: UiText = UiText.from(LocaleR.string.recently_watched)
+        override val name: UiText = UiText.from(DatabaseR.string.seeded_recently_watched)
     }
 
     data object CustomList : Library() {

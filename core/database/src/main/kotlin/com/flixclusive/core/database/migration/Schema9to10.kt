@@ -75,7 +75,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         migrateSearchHistory(db)
         migrateLibraryLists(db)
         migrateLibraryListItems(db)
-        seedSystemListsAndMigrateWatchlist(db, now)
+        seedAndMigrateSystemLists(db, now)
         migrateMoviesWatchHistory(db)
         migrateSeriesWatchHistory(db)
         createRepositoriesTable(db)
@@ -388,7 +388,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         )
     }
 
-    private fun seedSystemListsAndMigrateWatchlist(db: SupportSQLiteDatabase, now: Long) {
+    private fun seedAndMigrateSystemLists(db: SupportSQLiteDatabase, now: Long) {
         val userCursor = db.query("SELECT userId FROM User")
         val userIds = mutableListOf<Int>()
         while (userCursor.moveToNext()) {
@@ -406,22 +406,22 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
             db.execSQL(
                 """
                 INSERT INTO `library_lists` (`ownerId`, `name`, `description`, `listType`, `createdAt`, `updatedAt`)
+                VALUES (?, '$recentlyWatched', '$recentlyWatchedDescription', 'WATCHED', ?, ?)
+                """.trimIndent(),
+                arrayOf<Any>(userId, now, now)
+            )
+
+            db.execSQL(
+                """
+                INSERT INTO `library_lists` (`ownerId`, `name`, `description`, `listType`, `createdAt`, `updatedAt`)
                 VALUES (?, '$watchlist', '$watchlistDescription', 'CUSTOM', ?, ?)
                 """.trimIndent(),
                 arrayOf<Any>(userId, now, now)
             )
             val watchlistIdCursor = db.query("SELECT last_insert_rowid()")
-            watchlistIdCursor.moveToFirst()
+            watchlistIdCursor.moveToLast()
             val watchlistId = watchlistIdCursor.getInt(0)
             watchlistIdCursor.close()
-
-            db.execSQL(
-                """
-                INSERT INTO `library_lists` (`ownerId`, `name`, `description`, `listType`, `createdAt`, `updatedAt`)
-                VALUES (?, '$recentlyWatched', '$recentlyWatchedDescription', 'WATCHED', ?, ?)
-                """.trimIndent(),
-                arrayOf<Any>(userId, now, now)
-            )
 
             // Migrate watchlist items for this user into the new watchlist library list
             val watchlistCursor = db.query(
@@ -439,7 +439,50 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
                     arrayOf<Any>(filmId, watchlistId, addedAt, addedAt)
                 )
             }
+
+            // Migrate movies watch history entries for this user into the recently watched library list
+            val recentlyWatchedListIdCursor = db.query(
+                "SELECT id FROM library_lists WHERE ownerId = ? AND listType = 'WATCHED'",
+                arrayOf<Any>(userId.toString())
+            )
+            recentlyWatchedListIdCursor.moveToFirst()
+            val recentlyWatchedListId = recentlyWatchedListIdCursor.getInt(0)
+            recentlyWatchedListIdCursor.close()
+
+            val moviesWatchHistoryCursor = db.query(
+                "SELECT filmId, watchedAt FROM movies_watch_history WHERE ownerId = ?",
+                arrayOf<Any>(userId.toString())
+            )
+            while (moviesWatchHistoryCursor.moveToNext()) {
+                val filmId = moviesWatchHistoryCursor.getString(0)
+                val watchedAt = moviesWatchHistoryCursor.getLong(1)
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO `library_list_items` (`filmId`, `listId`, `createdAt`, `updatedAt`)
+                    VALUES (?, ?, ?, ?)
+                    """.trimIndent(),
+                    arrayOf<Any>(filmId, recentlyWatchedListId, watchedAt, watchedAt)
+                )
+            }
             watchlistCursor.close()
+
+            // Migrate series watch history entries for this user into the recently watched library list
+            val seriesWatchHistoryCursor = db.query(
+                "SELECT filmId, watchedAt FROM series_watch_history WHERE ownerId = ?",
+                arrayOf<Any>(userId.toString())
+            )
+
+            while (seriesWatchHistoryCursor.moveToNext()) {
+                val filmId = seriesWatchHistoryCursor.getString(0)
+                val watchedAt = seriesWatchHistoryCursor.getLong(1)
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO `library_list_items` (`filmId`, `listId`, `createdAt`, `updatedAt`)
+                    VALUES (?, ?, ?, ?)
+                    """.trimIndent(),
+                    arrayOf<Any>(filmId, recentlyWatchedListId, watchedAt, watchedAt)
+                )
+            }
         }
 
         db.execSQL("DROP TABLE IF EXISTS `watchlist`")
