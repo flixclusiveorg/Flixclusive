@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 10,
-    "identityHash": "ddf6fa6bb2470bbca87a1c4c18138af9",
+    "identityHash": "21dfeb82179bb3a2ae3baa1192cf83db",
     "entities": [
       {
         "tableName": "films",
@@ -95,7 +95,7 @@
       },
       {
         "tableName": "film_external_ids",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`filmId` TEXT NOT NULL, `providerId` TEXT NOT NULL, `source` TEXT NOT NULL, `externalId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`filmId`, `providerId`, `externalId`), FOREIGN KEY(`filmId`) REFERENCES `films`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`filmId` TEXT NOT NULL, `providerId` TEXT NOT NULL, `source` TEXT NOT NULL, `externalId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`filmId`, `providerId`, `source`), FOREIGN KEY(`filmId`) REFERENCES `films`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "filmId",
@@ -139,7 +139,7 @@
           "columnNames": [
             "filmId",
             "providerId",
-            "externalId"
+            "source"
           ]
         },
         "indices": [
@@ -969,12 +969,12 @@
     "views": [
       {
         "viewName": "library_list_item_with_metadata",
-        "createSql": "CREATE VIEW `${VIEW_NAME}` AS SELECT\n            library_list_items.id AS item_id,\n            library_list_items.filmId AS item_filmId,\n            library_list_items.listId AS item_listId,\n            library_list_items.createdAt AS item_createdAt,\n            library_list_items.updatedAt AS item_updatedAt,\n\n            films.id AS film_id,\n            films.title AS film_title,\n            films.providerId AS film_providerId,\n            films.filmType AS film_filmType,\n            films.overview AS film_overview,\n            films.posterImage AS film_posterImage,\n            films.adult AS film_adult,\n            films.language AS film_language,\n            films.rating AS film_rating,\n            films.backdropImage AS film_backdropImage,\n            films.releaseDate AS film_releaseDate,\n            films.year AS film_year,\n            films.createdAt AS film_createdAt,\n            films.updatedAt AS film_updatedAt\n        FROM library_list_items\n        INNER JOIN films\n        ON library_list_items.filmId = films.id"
+        "createSql": "CREATE VIEW `${VIEW_NAME}` AS SELECT library_list_items.id AS item_id, library_list_items.filmId AS item_filmId, library_list_items.listId AS item_listId, library_list_items.createdAt AS item_createdAt, library_list_items.updatedAt AS item_updatedAt, films.id AS film_id, films.title AS film_title, films.providerId AS film_providerId, films.filmType AS film_filmType, films.overview AS film_overview, films.posterImage AS film_posterImage, films.adult AS film_adult, films.language AS film_language, films.rating AS film_rating, films.backdropImage AS film_backdropImage, films.releaseDate AS film_releaseDate, films.year AS film_year, films.createdAt AS film_createdAt, films.updatedAt AS film_updatedAt FROM library_list_items INNER JOIN films ON library_list_items.filmId = films.id"
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ddf6fa6bb2470bbca87a1c4c18138af9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '21dfeb82179bb3a2ae3baa1192cf83db')"
     ]
   }
 }

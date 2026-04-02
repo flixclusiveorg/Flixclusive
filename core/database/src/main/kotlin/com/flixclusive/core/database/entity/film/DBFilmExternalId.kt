@@ -3,7 +3,6 @@ package com.flixclusive.core.database.entity.film
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import androidx.room.PrimaryKey
 import com.flixclusive.model.film.Film
 import java.util.Date
 
@@ -18,7 +17,7 @@ object ExternalMetadataSource {
 
 @Entity(
     tableName = "film_external_ids",
-    primaryKeys = ["filmId", "providerId", "externalId"],
+    primaryKeys = ["filmId", "providerId", "source"],
     foreignKeys = [
         ForeignKey(
             entity = DBFilm::class,

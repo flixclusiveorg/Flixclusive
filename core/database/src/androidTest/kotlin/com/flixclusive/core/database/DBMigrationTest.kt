@@ -146,6 +146,7 @@ class DBMigrationTest {
     @Test
     @Throws(IOException::class)
     fun migrate9To10() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
         testMigrate(
             initialVersion = 9,
             migrateVersion = 10,
@@ -157,7 +158,7 @@ class DBMigrationTest {
             Schema6to7,
             Schema7to8,
             Schema8to9,
-            Schema9to10,
+            Schema9to10(context),
         )
     }
 }
