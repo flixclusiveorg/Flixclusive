@@ -214,7 +214,7 @@ internal fun LibraryDetailsScreen(
 
                         LibraryFilterRow(
                             isListEditable = items().isNotEmpty() && !uiState.isMultiSelecting,
-                            selected = uiState.selectedFilter,
+                            selected = { uiState.selectedFilter },
                             onUpdate = onUpdateFilter,
                             onStartSelecting = onStartMultiSelecting,
                         )
