@@ -120,7 +120,7 @@ internal fun PlayerGestureHandler(
             }
     ) {
         GestureBox(
-            interactionSource = rightInteractionSource,
+            interactionSource = leftInteractionSource,
             screenWidth = screenWidth,
             onSingleTap = onSingleTap,
             onDoubleTap = { offset ->
@@ -128,12 +128,12 @@ internal fun PlayerGestureHandler(
                     seekAnimationJob?.cancel()
                     seekAnimationJob = launch {
                         val press = PressInteraction.Press(offset)
-                        rightInteractionSource.emit(press)
+                        leftInteractionSource.emit(press)
 
-                        gestureState.onDoubleTap(isForward = true)
-                        onSeekForward()
+                        gestureState.onDoubleTap(isForward = false)
+                        onSeekBackward()
 
-                        rightInteractionSource.emit(PressInteraction.Release(press))
+                        leftInteractionSource.emit(PressInteraction.Release(press))
                     }
                 }
             },
@@ -159,7 +159,7 @@ internal fun PlayerGestureHandler(
         )
 
         GestureBox(
-            interactionSource = leftInteractionSource,
+            interactionSource = rightInteractionSource,
             screenWidth = screenWidth,
             onSingleTap = onSingleTap,
             onDoubleTap = { offset ->
@@ -167,12 +167,12 @@ internal fun PlayerGestureHandler(
                     seekAnimationJob?.cancel()
                     seekAnimationJob = launch {
                         val press = PressInteraction.Press(offset)
-                        leftInteractionSource.emit(press)
+                        rightInteractionSource.emit(press)
 
-                        gestureState.onDoubleTap(isForward = false)
-                        onSeekBackward()
+                        gestureState.onDoubleTap(isForward = true)
+                        onSeekForward()
 
-                        leftInteractionSource.emit(PressInteraction.Release(press))
+                        rightInteractionSource.emit(PressInteraction.Release(press))
                     }
                 }
             },
