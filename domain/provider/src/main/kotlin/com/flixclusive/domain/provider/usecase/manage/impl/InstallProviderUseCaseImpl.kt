@@ -78,6 +78,6 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 sortOrder = providerRepository.getInstalledProviders(userId).size.toDouble()
             )
 
-            providerRepository.install(installedProvider)
+            providerRepository.install(installedProvider, metadata)
         }.flowOn(appDispatchers.io)
 }

@@ -47,6 +47,8 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
 ) : LoadProviderUseCase {
     private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
+    private val cacheLocalMetadataMap = HashMap<String, ProviderMetadata>()
+
     private suspend fun getProviderPrefs() =
         dataStoreManager
             .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
@@ -56,7 +58,8 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
     //       since `InitializeProvidersUseCase` also needs to load providers
     override fun invoke(installedProvider: InstalledProvider): Flow<ProviderResult> =
         flow {
-            val metadata = getMetadata(installedProvider)
+            val metadata = providerRepository.getMetadata(installedProvider.id)
+                ?: getMetadataFromFile(installedProvider)
             requireNotNull(metadata) { "Metadata not found for provider with id: ${installedProvider.id}" }
 
             if (isProviderAlreadyLoaded(metadata)) {
@@ -214,11 +217,12 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
      * Retrieves the metadata from the `updater.json` file for the given provider ID.
      *
      * All online metadata are stored in the `updater.json` file
-     *
-     * @param id The unique identifier for the provider.
-     * @param file The file representing the provider.
      * */
-    private fun getMetadata(provider: InstalledProvider): ProviderMetadata? {
+    private fun getMetadataFromFile(provider: InstalledProvider): ProviderMetadata? {
+        if (cacheLocalMetadataMap.containsKey(provider.id)) {
+            return cacheLocalMetadataMap[provider.id]
+        }
+
         val updaterFilePath = provider.file.parent?.plus("/${Constants.UPDATER_FILE}")
 
         if (updaterFilePath == null) {
@@ -234,7 +238,10 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         }
 
         val updaterJsonList = fromJson<List<ProviderMetadata>>(updaterFile.reader())
+        updaterJsonList.forEach { metadata ->
+            cacheLocalMetadataMap[metadata.id] = metadata
+        }
 
-        return updaterJsonList.find { it.id == provider.id }
+        return cacheLocalMetadataMap[provider.id]
     }
 }

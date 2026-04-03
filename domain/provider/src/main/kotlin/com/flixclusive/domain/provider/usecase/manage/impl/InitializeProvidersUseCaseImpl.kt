@@ -7,7 +7,6 @@ import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.json.fromJson
-import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
@@ -103,14 +102,15 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     } ?: return@subDirectory
 
                 providerRepository.install(
-                    InstalledProvider(
+                    metadata = metadata,
+                    provider = InstalledProvider(
                         ownerId = userId,
                         id = metadata.id,
                         repositoryUrl = metadata.repositoryUrl,
                         filePath = providerFile.absolutePath,
                         sortOrder = providerRepository.getMaxSortOrder(userId),
                         isDebug = true,
-                    )
+                    ),
                 )
             }
         }
