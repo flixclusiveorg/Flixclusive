@@ -80,7 +80,9 @@ internal fun EpisodesScreen(
             ) {
                 currentSeason()?.let {
                     Text(
-                        text = it.title,
+                        text = it.name.ifEmpty {
+                            stringResource(LocaleR.string.untitled_season, it.season.number)
+                        },
                         style = MaterialTheme.typography.headlineSmall
                             .asAdaptiveTextStyle(size = 22.sp)
                             .copy(fontWeight = FontWeight.Bold),

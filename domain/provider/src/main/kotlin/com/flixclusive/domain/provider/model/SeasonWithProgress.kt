@@ -10,6 +10,6 @@ data class SeasonWithProgress(
     val episodes: List<EpisodeWithProgress>,
 ) {
     val number get() = season.number
-    val title get() = season.name
+    val name get() = season.name
     val overview get() = season.overview
 }
