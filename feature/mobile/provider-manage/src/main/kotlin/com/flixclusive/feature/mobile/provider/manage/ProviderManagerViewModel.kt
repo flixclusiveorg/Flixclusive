@@ -2,14 +2,12 @@ package com.flixclusive.feature.mobile.provider.manage
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastFilter
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.warnLog
@@ -29,6 +27,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -69,15 +68,21 @@ internal class ProviderManagerViewModel @Inject constructor(
     }.flatMapLatest { (userId, isSearching, query) ->
         providerRepository
             .getInstalledProvidersAsFlow(ownerId = userId)
-            .map { list ->
+            .mapLatest { list ->
                 list.mapNotNull { provider ->
-                    providerRepository.getMetadata(provider.id)
-                }.run {
+                    val metadata = providerRepository.getMetadata(provider.id)
+                        ?: return@mapNotNull null
+
+                    EnabledProvider(
+                        metadata = metadata,
+                        isEnabled = provider.isEnabled,
+                    )
+                }.let { metadataList ->
                     if (isSearching) {
-                        return@run this@run
+                        return@let metadataList
                     }
 
-                    fastFilter { metadata ->
+                    metadataList.fastFilter { metadata ->
                         metadata.name.contains(query, ignoreCase = true)
                     }
                 }
@@ -95,18 +100,8 @@ internal class ProviderManagerViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = false,
-        )
-
-    val providerToggles = dataStoreManager
-        .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
-        .map { prefs -> prefs.providers.fastMap { it.isDisabled } }
-        .distinctUntilChanged()
-        .stateIn(
-            viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = emptyList(),
         )
 
     fun onQueryChange(newQuery: String) {
@@ -200,3 +195,12 @@ internal data class ProviderManageUiState(
     val isSearching: Boolean = false,
     val error: ProviderWithThrowable? = null,
 )
+
+@Immutable
+internal data class EnabledProvider(
+    val metadata: ProviderMetadata,
+    val isEnabled: Boolean,
+) {
+    val id: String get() = metadata.id
+    val name get() = metadata.name
+}

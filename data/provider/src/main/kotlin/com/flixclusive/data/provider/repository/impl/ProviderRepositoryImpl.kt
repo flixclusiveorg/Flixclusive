@@ -59,10 +59,13 @@ internal class ProviderRepositoryImpl @Inject constructor(
         pluginsMap.remove(id)
     }
 
-    override suspend fun install(provider: InstalledProvider)
-        = withContext(appDispatchers.io) {
-            installedProviderDao.insert(provider)
-        }
+    override suspend fun install(
+        provider: InstalledProvider,
+        metadata: ProviderMetadata
+    ) = withContext(appDispatchers.io) {
+        installedProviderDao.insert(provider)
+        metadataMap[provider.id] = metadata
+    }
 
     override suspend fun uninstall(provider: InstalledProvider)
         = withContext(appDispatchers.io) {

@@ -92,7 +92,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
             throw UnloadException(e)
         }
 
-        providerRepository.install(new)
+        providerRepository.install(new, updatedMetadata)
         loadProviderUseCase(installedProvider = new).onEach {
             // If the provider failed to load, but it was
             // previously loaded, just log the exception
@@ -106,7 +106,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
             // loaded, restore the backup and throw an exception
             if (it is ProviderResult.Failure) {
                 restoreBackup(old)
-                providerRepository.install(old)
+                providerRepository.install(old, provider)
                 loadProviderUseCase(installedProvider = old).collect()
                 throw LoadException(it.error)
             }

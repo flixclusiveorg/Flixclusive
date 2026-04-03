@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -94,7 +94,6 @@ internal fun ProviderManagerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-    val providerToggles by viewModel.providerToggles.collectAsStateWithLifecycle()
     val isFirstTimeOnProvidersScreen by viewModel.isFirstTimeOnProvidersScreen.collectAsStateWithLifecycle()
     val providers by viewModel.providers.collectAsStateWithLifecycle()
 
@@ -102,7 +101,6 @@ internal fun ProviderManagerScreen(
         uiState = uiState,
         providers = { providers },
         isFirstTimeOnProvidersScreen = isFirstTimeOnProvidersScreen,
-        providerToggles = { providerToggles },
         searchQuery = { searchQuery },
         onQueryChange = viewModel::onQueryChange,
         onMove = viewModel::onMove,
@@ -125,8 +123,7 @@ internal fun ProviderManagerScreen(
 internal fun ProviderManagerScreenContent(
     uiState: ProviderManageUiState,
     isFirstTimeOnProvidersScreen: Boolean,
-    providers: () -> List<ProviderMetadata>,
-    providerToggles: () -> List<Boolean>,
+    providers: () -> List<EnabledProvider>,
     searchQuery: () -> String,
     onQueryChange: (String) -> Unit,
     onMove: suspend (Int, Int) -> Unit,
@@ -259,10 +256,12 @@ internal fun ProviderManagerScreenContent(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(15.dp),
                     ) {
-                        itemsIndexed(
+                        items(
                             items = providers(),
-                            key = { _, item -> item.id },
-                        ) { index, metadata ->
+                            key = { item -> item.id },
+                        ) { provider ->
+                            val metadata = provider.metadata
+
                             ReorderableItem(reorderableLazyListState, metadata.id) { isDragging ->
                                 val interactionSource = remember { MutableInteractionSource() }
 
@@ -274,11 +273,7 @@ internal fun ProviderManagerScreenContent(
                                     onClick = { openProviderDetails(metadata) },
                                     uninstallProvider = { providerToUninstall = metadata },
                                     onToggleProvider = { toggleProvider(metadata.id) },
-                                    enabledProvider = {
-                                        val isDisabled = providerToggles().getOrNull(index)
-
-                                        !metadata.isNotUsable && isDisabled == false
-                                    },
+                                    enabledProvider = { !metadata.isNotUsable && provider.isEnabled },
                                     isDraggingProvider = { isDragging },
                                     dragModifier =
                                         Modifier.draggableHandle(
@@ -390,21 +385,18 @@ private fun ProviderManagerScreenBasePreview() {
     var uiState by remember(error) { mutableStateOf(ProviderManageUiState(error = error)) }
 
     val list = remember {
-        mutableStateListOf<ProviderMetadata>().also {
+        mutableStateListOf<EnabledProvider>().also {
             it.addAll(
                 List(20) {
-                    DummyDataForPreview.getProviderMetadata(
-                        id = it.toString(),
-                        name = "Provider #$it",
+                    EnabledProvider(
+                        metadata = DummyDataForPreview.getProviderMetadata(
+                            id = it.toString(),
+                            name = "Provider #$it",
+                        ),
+                        isEnabled = it % 3 == 0,
                     )
                 },
             )
-        }
-    }
-
-    val toggles = remember {
-        mutableStateListOf<Boolean>().also {
-            it.addAll(List(list.size) { it % 3 == 0 })
         }
     }
 
@@ -420,12 +412,10 @@ private fun ProviderManagerScreenBasePreview() {
                         list
                     }
                 },
-                providerToggles = { toggles },
                 searchQuery = { query },
                 onQueryChange = { query = it },
                 onMove = { from, to ->
                     list.add(to, list.removeAt(from))
-                    toggles.add(to, toggles.removeAt(from))
                 },
                 goBack = {},
                 toggleProvider = { id ->
@@ -434,14 +424,12 @@ private fun ProviderManagerScreenBasePreview() {
                     if (index > -1) {
                         if (Random.nextBoolean()) {
                             error = ProviderWithThrowable(
-                                provider = list[index],
+                                provider = list[index].metadata,
                                 throwable = Throwable("This is a dummy error for $id"),
                             )
 
                             return@ProviderManagerScreenContent
                         }
-
-                        toggles[index] = !toggles[index]
                     }
                 },
                 onConsumeError = { error = null },

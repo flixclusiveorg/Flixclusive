@@ -8,7 +8,10 @@ import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
 
 interface ProviderRepository {
-    suspend fun install(provider: InstalledProvider)
+    suspend fun install(
+        provider: InstalledProvider,
+        metadata: ProviderMetadata
+    )
 
     suspend fun uninstall(provider: InstalledProvider)
 
