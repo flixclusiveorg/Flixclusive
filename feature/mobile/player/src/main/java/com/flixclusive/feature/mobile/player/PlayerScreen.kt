@@ -1,5 +1,7 @@
 package com.flixclusive.feature.mobile.player
 
+import android.content.pm.ActivityInfo
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.presentation.player.AppPlayer
@@ -66,10 +69,17 @@ internal fun PlayerScreen(
 
     val snackbarState = rememberPlayerSnackbarState()
 
+    fun showErrorAndGoBack() {
+        context.showToast(resources.getString(R.string.no_servers_error))
+        navigator.goBack()
+
+        val activity = context.getActivity<ComponentActivity>()
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    }
+
     LaunchedEffect(Unit) {
         if (servers.isEmpty()) {
-            context.showToast(resources.getString(R.string.no_servers_error))
-            navigator.goBack()
+            showErrorAndGoBack()
             return@LaunchedEffect
         }
 
@@ -82,8 +92,7 @@ internal fun PlayerScreen(
         if (providers.isNotEmpty()) {
             LaunchedEffect(Unit) {
                 warnLog("Current provider with id ${uiState.currentProvider} not found in providers list")
-                context.showToast(resources.getString(R.string.no_servers_error))
-                navigator.goBack()
+                showErrorAndGoBack()
             }
         }
         return
