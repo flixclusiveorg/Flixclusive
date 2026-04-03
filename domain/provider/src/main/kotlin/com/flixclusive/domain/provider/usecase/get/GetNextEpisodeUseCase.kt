@@ -6,7 +6,7 @@ import com.flixclusive.model.film.common.tv.Episode
 /**
  * Use case for fetching the next episode of a TV show based on the current season and episode numbers.
  * */
-interface GetEpisodeUseCase {
+interface GetNextEpisodeUseCase {
     /**
      * Fetches the next episode of a TV show.
      *

@@ -3,7 +3,7 @@ package com.flixclusive.domain.provider.usecase.get.impl
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.data.tmdb.repository.TMDBMetadataRepository
-import com.flixclusive.domain.provider.usecase.get.GetEpisodeUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -14,14 +14,14 @@ import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNull
 
-class GetEpisodeUseCaseImplTest {
+class GetNextEpisodeUseCaseImplTest {
     private val tmdbMetadataRepository = mockk<TMDBMetadataRepository>()
 
-    private lateinit var useCase: GetEpisodeUseCase
+    private lateinit var useCase: GetNextEpisodeUseCase
 
     @Before
     fun setUp() {
-        useCase = GetEpisodeUseCaseImpl(
+        useCase = GetNextEpisodeUseCaseImpl(
             tmdbMetadataRepository = tmdbMetadataRepository,
         )
     }
