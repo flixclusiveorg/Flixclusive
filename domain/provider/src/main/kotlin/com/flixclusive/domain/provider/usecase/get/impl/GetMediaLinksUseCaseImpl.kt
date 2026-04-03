@@ -8,7 +8,6 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.CacheKey
 import com.flixclusive.data.provider.repository.CachedLinks
 import com.flixclusive.data.provider.repository.CachedLinksRepository
@@ -148,15 +147,6 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 return true
             }
 
-            if (watchId == null && !film.isFromTmdb) {
-                send(
-                    LoadLinksState.Error(
-                        UiText.from(R.string.invalid_watch_id_for_non_tmdb_film),
-                    ),
-                )
-                return false
-            }
-
             val watchIdTouse = if (
                 watchId == null
                 && film.isFromTmdb
@@ -172,12 +162,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
                 response.data!!
             } else {
-                watchId ?: cache.watchId.takeIf { it.isNotEmpty() }
-            }
-
-            if (watchIdTouse == null) {
-                send(LoadLinksState.Error(UiText.from(R.string.no_watch_id_message)))
-                return false
+                watchId
+                    ?: cache.watchId.takeIf { it.isNotEmpty() }
+                    ?: film.identifier
             }
 
             cachedLinksRepository.storeCache(
