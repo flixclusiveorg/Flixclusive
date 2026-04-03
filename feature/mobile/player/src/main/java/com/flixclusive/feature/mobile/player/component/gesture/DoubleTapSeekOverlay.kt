@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component.gesture
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -11,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,14 +61,40 @@ internal fun DoubleTapSeekOverlay(
                 AnimatedSeekArrows(isForward = isForward)
 
                 if (seekSeconds > 0) {
-                    Text(
-                        text = "${if (isForward) "+" else "-"}$seekSeconds",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        ),
-                        color = Color.White
-                    )
+                    AnimatedContent(
+                        targetState = seekSeconds,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(durationMillis = 300)
+                                ) + fadeIn(animationSpec = tween(durationMillis = 300)) togetherWith
+                                        slideOutHorizontally(
+                                            targetOffsetX = { -it },
+                                            animationSpec = tween(durationMillis = 300)
+                                        ) + fadeOut(animationSpec = tween(durationMillis = 300))
+                            } else {
+                                slideInHorizontally(
+                                    initialOffsetX = { -it },
+                                    animationSpec = tween(durationMillis = 300)
+                                ) + fadeIn(animationSpec = tween(durationMillis = 300)) togetherWith
+                                        slideOutHorizontally(
+                                            targetOffsetX = { it },
+                                            animationSpec = tween(durationMillis = 300)
+                                        ) + fadeOut(animationSpec = tween(durationMillis = 300))
+                            }
+                        },
+                        label = "seek_seconds"
+                    ) { seconds ->
+                        Text(
+                            text = "${if (isForward) "+" else "-"}$seconds",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            ),
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
