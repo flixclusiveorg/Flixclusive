@@ -31,12 +31,13 @@ import com.flixclusive.data.provider.repository.CachedLinks
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
-import com.flixclusive.domain.provider.usecase.get.GetEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.cleanDuplicates
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerServer
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerSubtitle
+import com.flixclusive.feature.mobile.player.util.extensions.isSameEpisode
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
@@ -56,7 +57,6 @@ import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -66,13 +66,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
 internal class PlayerScreenViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
     private val cachedLinksRepository: CachedLinksRepository,
-    private val getEpisode: GetEpisodeUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val providerRepository: ProviderRepository,
@@ -288,18 +289,33 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     val watchProgress = combine(
         selectedEpisode, // For triggers only
-        userSessionManager.currentUser,
-    ) { _, user ->
-        requireNotNull(user) { "User must be logged in to fetch watch progress inside the Player" }
-
+        userSessionManager.currentUser.filterNotNull(),
+    ) { episode, user ->
+        episode to user
+    }.flatMapLatest { (episode, user) ->
         watchProgressRepository
             .getAsFlow(
                 id = filmMetadata.identifier,
                 type = filmMetadata.filmType,
                 ownerId = user.id,
             ).filterNotNull()
-            .map { it.watchData }
-    }.flattenConcat().stateIn(
+            .map {
+                val progress = it.watchData
+                if (progress is EpisodeProgress) {
+                    val isSameEpisode = progress.isSameEpisode(
+                        otherEpisode = episode?.number ?: -1,
+                        otherSeason = episode?.season ?: -1,
+                        otherFilmId = filmMetadata.identifier,
+                    )
+
+                    if (!isSameEpisode) {
+                        return@map createDefaultWatchProgress()
+                    }
+                }
+
+                progress
+            }
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = createDefaultWatchProgress(),
@@ -490,17 +506,17 @@ internal class PlayerScreenViewModel @Inject constructor(
 
             if (cache != null) {
                 cachedLinksRepository.setCurrentCache(key)
-                _uiState.update {
-                    it.copy(
-                        currentEpisode = episode,
-                        nextEpisode = getNextEpisode(episode)
-                    )
-                }
-
                 withContext(appDispatchers.main) {
                     player.prepare(
                         cache = cache,
                         startPositionMs = startPositionMs,
+                    )
+                }
+
+                _uiState.update {
+                    it.copy(
+                        currentEpisode = episode,
+                        nextEpisode = getNextEpisode(episode)
                     )
                 }
             }
@@ -595,7 +611,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             _uiState.update { it.copy(currentServer = currentServer) }
         }
 
-        player.prepare(
+        prepare(
             server = servers[currentServer],
             subtitles = subtitles,
             startPositionMs = startPositionMs,
@@ -609,10 +625,10 @@ internal class PlayerScreenViewModel @Inject constructor(
     private suspend fun getNextEpisode(episode: Episode?): Episode? {
         if (episode == null) return null
 
-        return getEpisode(
+        return getNextEpisode(
             tvShow = filmMetadata as TvShow,
             season = episode.season,
-            episode = episode.number + 1,
+            episode = episode.number,
         )
     }
 
@@ -630,7 +646,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
-                seasonNumber = selectedEpisode.value!!.number,
+                seasonNumber = selectedEpisode.value!!.season,
                 episodeNumber = selectedEpisode.value!!.number,
             )
 
@@ -682,11 +698,15 @@ internal class PlayerScreenViewModel @Inject constructor(
                     is EpisodeProgress -> progress.copy(
                         progress = currentPosition,
                         duration = duration,
+                        status = WatchStatus.WATCHING,
+                        updatedAt = Date()
                     )
 
                     is MovieProgress -> progress.copy(
                         progress = currentPosition,
                         duration = duration,
+                        status = WatchStatus.WATCHING,
+                        updatedAt = Date()
                     )
                 },
             )
@@ -703,19 +723,22 @@ internal class PlayerScreenViewModel @Inject constructor(
      * */
     private suspend fun getSavedStartPositionMs(episode: Episode? = null): Long {
         val watchProgress = if (episode == null) {
-            watchProgressRepository
-                .get(
-                    id = filmMetadata.identifier,
-                    type = filmMetadata.filmType,
-                    ownerId = userId,
-                )?.watchData
+            watchProgressRepository.get(
+                id = filmMetadata.identifier,
+                type = filmMetadata.filmType,
+                ownerId = userId,
+            )?.watchData
         } else {
-            watchProgressRepository
-                .getSeasonProgress(
-                    tvShowId = filmMetadata.identifier,
-                    ownerId = userId,
-                    seasonNumber = episode.season,
-                ).lastOrNull()
+            watchProgressRepository.getEpisodeProgress(
+                tvShowId = filmMetadata.identifier,
+                seasonNumber = episode.season,
+                episodeNumber = episode.number,
+                ownerId = userId,
+            )
+        }
+
+        if (watchProgress?.status == WatchStatus.COMPLETED) {
+            return 0L
         }
 
         return watchProgress?.progress ?: 0L
@@ -730,7 +753,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             )
 
             val cache = cachedLinksRepository.getCache(cacheKey)
-            if (cache == null || cache.hasStreamableLinks == false) {
+            if (cache == null || !cache.hasStreamableLinks) {
                 return@launch
             }
 

@@ -1,12 +1,11 @@
 package com.flixclusive.core.database.dao.watched
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -79,13 +78,13 @@ interface MovieProgressDao {
         return insertProgress(item)
     }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertProgress(item: MovieProgress): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertFilm(film: DBFilm)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertListItem(item: LibraryListItem)
 
     @Query("DELETE FROM movies_watch_history WHERE id = :id")

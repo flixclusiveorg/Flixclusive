@@ -101,6 +101,22 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getEpisodeProgress(
+        tvShowId: String,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        ownerId: Int
+    ): EpisodeProgress? {
+        return withContext(appDispatchers.io) {
+            episodeProgressDao.getEpisodeProgress(
+                filmId = tvShowId,
+                season = seasonNumber,
+                episode = episodeNumber,
+                ownerId = ownerId
+            )
+        }
+    }
+
     override fun getSeasonProgressAsFlow(
         tvShowId: String,
         seasonNumber: Int,

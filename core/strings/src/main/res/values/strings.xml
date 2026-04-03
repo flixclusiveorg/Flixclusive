@@ -361,6 +361,7 @@
     <string name="skip_loading_message">Skip loading links</string>
     <string name="tooltip_providers_screen_help_guide">This guide contains all the useful information about the providers system. Check it out for more details!</string>
     <string name="unavailable_episode">Episode is not yet available</string>
+    <string name="failed_to_load_episode">Failed to load episode</string>
     <string name="unknown_provider_type">Unknown provider type</string>
     <string name="up_to_date">Version is up to date!</string>
     <string name="watchlist_empty_message">Start adding now!</string>

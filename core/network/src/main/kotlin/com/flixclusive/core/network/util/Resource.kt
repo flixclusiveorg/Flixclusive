@@ -67,7 +67,7 @@ sealed class Resource<out T>(
                         errorLog(errorMessage)
                         errorLog("Headers: ${this.response()?.headers()}")
                         errorLog("Body: ${this.response()?.errorBody()?.string()}")
-                        Resource.Failure(errorMessage)
+                        Failure(errorMessage)
                     }
                     is SSLException -> {
                         val errorMessage = "SSL error: $localizedMessage; Check if your system date is correct."

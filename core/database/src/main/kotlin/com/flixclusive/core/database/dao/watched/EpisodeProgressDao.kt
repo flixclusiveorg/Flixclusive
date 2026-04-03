@@ -1,12 +1,11 @@
 package com.flixclusive.core.database.dao.watched
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
@@ -110,6 +109,15 @@ interface EpisodeProgressDao {
     @Query(
         """
         SELECT * FROM series_watch_history
+        WHERE filmId = :filmId AND ownerId = :ownerId AND seasonNumber = :season AND episodeNumber = :episode
+        LIMIT 1
+        """,
+    )
+    suspend fun getEpisodeProgress(filmId: String, season: Int, episode: Int, ownerId: Int): EpisodeProgress?
+
+    @Query(
+        """
+        SELECT * FROM series_watch_history
         WHERE filmId = :filmId AND ownerId = :ownerId AND seasonNumber = :season
         ORDER BY episodeNumber ASC
         """,
@@ -133,13 +141,13 @@ interface EpisodeProgressDao {
         return insertProgress(item)
     }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertProgress(item: EpisodeProgress): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertFilm(film: DBFilm)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertListItem(item: LibraryListItem)
 
     @Query("DELETE FROM series_watch_history WHERE id = :id")

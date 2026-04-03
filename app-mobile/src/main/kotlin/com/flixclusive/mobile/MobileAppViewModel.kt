@@ -1,13 +1,10 @@
 package com.flixclusive.mobile
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.util.fastFirstOrNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.BuildConfig
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.datastore.DataStoreManager
@@ -22,7 +19,8 @@ import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
+import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Movie
@@ -35,7 +33,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -47,7 +44,8 @@ import com.flixclusive.core.strings.R as LocaleR
 @HiltViewModel
 internal class MobileAppViewModel @Inject constructor(
     private val _getFilmMetadata: GetFilmMetadataUseCase,
-    private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
+    private val getSeason: GetSeasonUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val watchProgressRepository: WatchProgressRepository,
     private val dataStoreManager: DataStoreManager,
@@ -148,21 +146,20 @@ internal class MobileAppViewModel @Inject constructor(
                 is Movie -> getMediaLinks(movie = metadata)
                 is TvShow -> {
                     var episodeToLoad = episode
-
                     if (episode == null) {
-                        getLastWatchedEpisode(tvShow = metadata)
-                            .onSuccess { episodeToLoad = it }
-                            .onFailure { e ->
-                                updateLoadLinksState(LoadLinksState.Error(e))
-                                return@launch
-                            }
+                        episodeToLoad = getEpisodeToWatch(tvShow = metadata)
+                    }
+
+                    if (episodeToLoad == null) {
+                        updateLoadLinksState(LoadLinksState.Error(LocaleR.string.failed_to_load_episode))
+                        return@launch
                     }
 
                     playerData = playerData.copy(episode = episodeToLoad)
 
                     getMediaLinks(
                         tvShow = metadata,
-                        episode = episodeToLoad!!,
+                        episode = episodeToLoad,
                     )
                 }
 
@@ -192,39 +189,40 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getLastWatchedEpisode(tvShow: TvShow): Result<Episode> {
-        val episodeProgress = watchProgressRepository.get(
+    private suspend fun getEpisodeToWatch(tvShow: TvShow): Episode? {
+        val progress = watchProgressRepository.get(
             id = tvShow.identifier,
             ownerId = userId,
             type = tvShow.filmType,
         ) as? EpisodeProgressWithMetadata
 
-        // Default to 1 if this has not been saved yet
-        val seasonNumber = episodeProgress?.watchData?.seasonNumber ?: 1
-        val episodeNumber = episodeProgress?.watchData?.episodeNumber ?: 1
-
-        val response = getSeasonWithWatchProgress(tvShow = tvShow, number = seasonNumber)
-            .dropWhile { it is Resource.Loading }
-            .first()
-
-        when (response) {
-            is Resource.Failure -> {
-                return Result.failure(ExceptionWithUiText(response.error))
-            }
-
-            is Resource.Success -> {
-                val season = response.data!!
-                val episodeWithProgress = season.episodes.fastFirstOrNull { it.number == episodeNumber }
-
-                if (episodeWithProgress == null) {
-                    return Result.failure(ExceptionWithUiText(UiText.from(LocaleR.string.unavailable_episode)))
-                }
-
-                return Result.success(episodeWithProgress.episode)
-            }
-
-            else -> error("Fetching seasons for load links state is still loading!")
+        if (progress?.watchData?.isCompleted == true) {
+            return getNextEpisode(
+                tvShow = tvShow,
+                season = progress.watchData.seasonNumber,
+                episode = progress.watchData.episodeNumber,
+            )
         }
+
+        // Default to 1 if this has not been saved yet
+        val seasonNumber = progress?.watchData?.seasonNumber ?: 1
+        val episodeNumber = progress?.watchData?.episodeNumber ?: 1
+
+        val season = getSeason(
+            tvShow = tvShow,
+            number = seasonNumber,
+        ).let { response ->
+            when (response) {
+                is Resource.Success -> response.data
+                else -> null
+            }
+        }
+
+        val episode = season?.episodes?.binarySearch {
+            it.number.compareTo(episodeNumber)
+        }?.let { index -> season.episodes.getOrNull(index) }
+
+        return episode
     }
 
     fun hideWebViewDriver() {
