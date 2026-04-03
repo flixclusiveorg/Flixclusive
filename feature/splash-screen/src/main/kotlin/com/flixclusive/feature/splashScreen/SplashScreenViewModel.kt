@@ -35,134 +35,132 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class SplashScreenViewModel
-    @Inject
-    constructor(
-        userSessionManager: UserSessionManager,
-        userRepository: UserRepository,
-        private val appUpdatesRepository: AppUpdatesRepository,
-        private val dataStoreManager: DataStoreManager,
-        private val appDispatchers: AppDispatchers,
-        private val initializeProviders: InitializeProvidersUseCase,
-        private val checkOutdatedProviders: CheckOutdatedProviderUseCase,
-        private val updateProvider: UpdateProviderUseCase
-    ) : ViewModel() {
-        private var saveSettingsJob: Job? = null
+internal class SplashScreenViewModel @Inject constructor(
+    userSessionManager: UserSessionManager,
+    userRepository: UserRepository,
+    private val appUpdatesRepository: AppUpdatesRepository,
+    private val dataStoreManager: DataStoreManager,
+    private val appDispatchers: AppDispatchers,
+    private val initializeProviders: InitializeProvidersUseCase,
+    private val checkOutdatedProviders: CheckOutdatedProviderUseCase,
+    private val updateProvider: UpdateProviderUseCase
+) : ViewModel() {
+    private var saveSettingsJob: Job? = null
 
-        private val _uiState = MutableStateFlow(SplashScreenUiState(isLoading = true))
-        val uiState = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(SplashScreenUiState(isLoading = true))
+    val uiState = _uiState.asStateFlow()
 
-        val systemPreferences = dataStoreManager
-            .getSystemPrefs()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = SystemPreferences(),
-            )
+    val systemPreferences = dataStoreManager
+        .getSystemPrefs()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
+        )
 
-        val noUsersFound = userRepository
-            .observeUsers()
-            .map { it.isEmpty() }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
+    val noUsersFound = userRepository
+        .observeUsers()
+        .map { it.isEmpty() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
             initialValue = false,
         )
 
-        val userLoggedIn = userSessionManager.currentUser
+    val userLoggedIn = userSessionManager.currentUser
 
-        fun updateSettings(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
-            if (saveSettingsJob?.isActive == true) return
+    fun updateSettings(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
+        if (saveSettingsJob?.isActive == true) return
 
-            saveSettingsJob = appDispatchers.ioScope.launch {
-                dataStoreManager.updateSystemPrefs(transform)
-            }
-        }
-
-        fun onConsumeProviderErrors() {
-            _uiState.update { it.copy(providerErrors = emptyMap()) }
-        }
-
-        fun onConsumeAppUpdateError() {
-            _uiState.update { it.copy(appUpdateError = null) }
-        }
-
-        private suspend fun checkForUpdates() {
-            _uiState.update { SplashScreenUiState(isLoading = true) }
-
-            appUpdatesRepository
-                .getLatestUpdate()
-                .onSuccess { appUpdateInfo ->
-                    _uiState.update {
-                        it.copy(
-                            newAppUpdateInfo = appUpdateInfo,
-                            appUpdateError = null,
-                        )
-                    }
-                }.onFailure { error ->
-                    _uiState.update { it.copy(appUpdateError = error as ExceptionWithUiText) }
-                }
-        }
-
-        /**
-         * Initializes the providers when the user logs in for the first time.
-         *
-         * This is to ensure that the providers are loaded and ready to use.
-         * */
-        private suspend fun loadProviders() {
-            val providers = mutableListOf<ProviderMetadata>()
-
-            initializeProviders()
-                .onEach { result ->
-                    when (result) {
-                        is ProviderResult.Success -> {
-                            providers += result.provider
-                        }
-
-                        is ProviderResult.Failure -> {
-                            // still collect the provider so it can be passed to updateProvider
-                            providers += result.provider
-
-                            _uiState.update { state ->
-                                val pair = result.provider.id to ProviderWithThrowable(
-                                    provider = result.provider,
-                                    throwable = result.error,
-                                )
-
-                                state.copy(providerErrors = state.providerErrors + pair)
-                            }
-                        }
-                    }
-                }.collect()
-
-            val providerPrefs =
-                dataStoreManager.getUserPrefs(
-                    key = UserPreferences.PROVIDER_PREFS_KEY,
-                    type = ProviderPreferences::class
-                ).first()
-
-            if (providerPrefs.isAutoUpdateEnabled) {
-                val outdatedProviders = checkOutdatedProviders()
-                outdatedProviders
-                    .filterIsInstance<CheckOutdatedProviderResult.Outdated>()
-                    .forEach {
-                        updateProvider(it.metadata)
-                    }
-            }
-        }
-
-        init {
-            appDispatchers.ioScope.launch {
-                checkForUpdates()
-
-                if (userLoggedIn.value != null) {
-                    loadProviders()
-                }
-
-                _uiState.update { it.copy(isLoading = false) }
-            }
+        saveSettingsJob = appDispatchers.ioScope.launch {
+            dataStoreManager.updateSystemPrefs(transform)
         }
     }
+
+    fun onConsumeProviderErrors() {
+        _uiState.update { it.copy(providerErrors = emptyMap()) }
+    }
+
+    fun onConsumeAppUpdateError() {
+        _uiState.update { it.copy(appUpdateError = null) }
+    }
+
+    private suspend fun checkForUpdates() {
+        _uiState.update { SplashScreenUiState(isLoading = true) }
+
+        appUpdatesRepository
+            .getLatestUpdate()
+            .onSuccess { appUpdateInfo ->
+                _uiState.update {
+                    it.copy(
+                        newAppUpdateInfo = appUpdateInfo,
+                        appUpdateError = null,
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update { it.copy(appUpdateError = error as ExceptionWithUiText) }
+            }
+    }
+
+    /**
+     * Initializes the providers when the user logs in for the first time.
+     *
+     * This is to ensure that the providers are loaded and ready to use.
+     * */
+    private suspend fun loadProviders() {
+        val providers = mutableListOf<ProviderMetadata>()
+
+        initializeProviders()
+            .onEach { result ->
+                when (result) {
+                    is ProviderResult.Success -> {
+                        providers += result.provider
+                    }
+
+                    is ProviderResult.Failure -> {
+                        // still collect the provider so it can be passed to updateProvider
+                        providers += result.provider
+
+                        _uiState.update { state ->
+                            val pair = result.provider.id to ProviderWithThrowable(
+                                provider = result.provider,
+                                throwable = result.error,
+                            )
+
+                            state.copy(providerErrors = state.providerErrors + pair)
+                        }
+                    }
+                }
+            }.collect()
+
+        val providerPrefs =
+            dataStoreManager.getUserPrefs(
+                key = UserPreferences.PROVIDER_PREFS_KEY,
+                type = ProviderPreferences::class
+            ).first()
+
+        if (providerPrefs.isAutoUpdateEnabled) {
+            val outdatedProviders = checkOutdatedProviders()
+            outdatedProviders
+                .filterIsInstance<CheckOutdatedProviderResult.Outdated>()
+                .forEach {
+                    updateProvider(it.metadata)
+                }
+        }
+    }
+
+    init {
+        appDispatchers.ioScope.launch {
+            checkForUpdates()
+
+            if (userLoggedIn.value != null) {
+                loadProviders()
+            }
+
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+}
 
 @Immutable
 internal data class SplashScreenUiState(
