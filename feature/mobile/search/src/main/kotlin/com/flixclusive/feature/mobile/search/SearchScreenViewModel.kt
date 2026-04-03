@@ -20,43 +20,45 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class SearchScreenViewModel
-    @Inject
-    constructor(
-        private val getDiscoverCards: GetDiscoverCardsUseCase,
-        private val providerRepository: ProviderRepository,
-        userSessionDataStore: UserSessionDataStore,
-    ) : ViewModel() {
-        private val _cards = MutableStateFlow<Resource<DiscoverCards>>(Resource.Loading)
-        val cards = _cards.asStateFlow()
+internal class SearchScreenViewModel @Inject constructor(
+    private val getDiscoverCards: GetDiscoverCardsUseCase,
+    private val providerRepository: ProviderRepository,
+    userSessionDataStore: UserSessionDataStore,
+) : ViewModel() {
+    private val _cards = MutableStateFlow<Resource<DiscoverCards>>(Resource.Loading)
+    val cards = _cards.asStateFlow()
 
-        val providersCatalogsCards = userSessionDataStore.currentUserId
-            .filterNotNull()
-            .flatMapLatest { userId ->
-                providerRepository
-                    .getEnabledProvidersAsFlow(ownerId = userId)
-                    .mapLatest { list ->
-                        list.mapNotNull { provider ->
-                            val api = safeCall {
-                                providerRepository.getApi(
-                                    id = provider.id,
-                                    ownerId = userId,
-                                )
-                            }
+    val providersCatalogsCards = userSessionDataStore.currentUserId
+        .filterNotNull()
+        .flatMapLatest { userId ->
+            providerRepository
+                .getEnabledProvidersAsFlow(ownerId = userId)
+                .mapLatest { list ->
+                    list.mapNotNull { provider ->
+                        val api = safeCall {
+                            providerRepository.getApi(
+                                id = provider.id,
+                                ownerId = userId,
+                            )
+                        }
 
-                            api?.catalogs
-                        }.flatten()
-                    }
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Lazily,
-                initialValue = emptyList(),
-            )
+                        api?.catalogs
+                    }.flatten()
+                }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = emptyList(),
+        )
 
-        fun initializeCards() {
-            viewModelScope.launch {
-                _cards.value = getDiscoverCards()
+    init {
+        initializeCards()
+    }
+
+    fun initializeCards() {
+        viewModelScope.launch {
+            _cards.value = getDiscoverCards()
         }
     }
 }
