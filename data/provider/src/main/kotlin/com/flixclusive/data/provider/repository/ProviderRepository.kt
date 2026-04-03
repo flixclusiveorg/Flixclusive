@@ -43,11 +43,13 @@ interface ProviderRepository {
 
     suspend fun getMaxSortOrder(ownerId: Int): Double
 
-    suspend fun moveProvider(
-        from: Int,
-        to: Int,
-        ownerId: Int,
+    suspend fun reorderPosition(
+        moved: InstalledProvider,
+        before: InstalledProvider?,
+        after: InstalledProvider?,
     )
+
+    suspend fun renormalizePositions(ownerId: Int)
 
     suspend fun clearAll()
 
