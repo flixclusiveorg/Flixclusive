@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,8 +66,10 @@ internal fun SplashScreen(
     val userLoggedIn by viewModel.userLoggedIn.collectAsStateWithLifecycle()
     val noUsersFound by viewModel.noUsersFound.collectAsStateWithLifecycle()
 
+    if (systemPreferences == null) return
+
     SplashScreenContent(
-        systemPreferences = systemPreferences,
+        systemPreferences = systemPreferences!!,
         uiState = uiState,
         userLoggedIn = userLoggedIn,
         noUsersFound = noUsersFound,
@@ -104,6 +107,7 @@ private fun SplashScreenContent(
     openHomeScreen: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     Column(
         modifier = Modifier
@@ -188,7 +192,7 @@ private fun SplashScreenContent(
                             onDismissRequest = {
                                 if (uiState.isInitializingProviders) {
                                     context.showToast(
-                                        context.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading),
+                                        resources.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading),
                                     )
                                     return@ProviderCrashBottomSheet
                                 }
