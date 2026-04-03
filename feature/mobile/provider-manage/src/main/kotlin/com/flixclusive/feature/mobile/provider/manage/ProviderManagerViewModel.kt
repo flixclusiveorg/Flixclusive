@@ -58,16 +58,26 @@ internal class ProviderManagerViewModel @Inject constructor(
             initialValue = _searchQuery.value,
         )
 
+    private val installedProviders
+        = userSessionDataStore
+            .currentUserId
+            .filterNotNull()
+            .flatMapLatest { userId ->
+                providerRepository.getInstalledProvidersAsFlow(ownerId = userId)
+            }
+        .stateIn(
+            viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList(),
+        )
 
     val providers = combine(
-        userSessionDataStore.currentUserId.filterNotNull(),
         _uiState.map { it.isSearching }.distinctUntilChanged(),
         searchQuery,
-    ) { userId, isSearching, query ->
-        Triple(userId, isSearching, query)
-    }.flatMapLatest { (userId, isSearching, query) ->
-        providerRepository
-            .getInstalledProvidersAsFlow(ownerId = userId)
+    ) { isSearching, query ->
+        isSearching to query
+    }.flatMapLatest { (isSearching, query) ->
+        installedProviders
             .mapLatest { list ->
                 list.mapNotNull { provider ->
                     val metadata = providerRepository.getMetadata(provider.id)
@@ -104,51 +114,68 @@ internal class ProviderManagerViewModel @Inject constructor(
             initialValue = false,
         )
 
+
+    init {
+        renormalizeIfNeeded()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        renormalizeIfNeeded()
+    }
+
     fun onQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
     }
 
     suspend fun onMove(
-        fromIndex: Int,
-        toIndex: Int,
+        from: Int,
+        to: Int,
     ) {
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        providerRepository.moveProvider(
-            from = fromIndex,
-            to = toIndex,
-            ownerId = userId
+        val list = installedProviders.value
+        val moved = list[from]
+
+        val (before, after) = if (from < to) {
+            list[to] to list.getOrNull(to + 1)
+        } else {
+            list.getOrNull(to - 1) to list[to]
+        }
+
+        providerRepository.reorderPosition(
+            moved = moved,
+            before = before,
+            after = after,
         )
     }
 
     fun toggleProvider(id: String) {
         if (toggleJob?.isActive == true) return
 
-        toggleJob =
-            appDispatchers.ioScope.launch {
-                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        toggleJob = appDispatchers.ioScope.launch {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-                providerRepository.toggleProvider(id = id, ownerId = userId)
-                val isEnabled = providerRepository.isEnabled(id = id, ownerId = userId)
+            providerRepository.toggleProvider(id = id, ownerId = userId)
+            val isEnabled = providerRepository.isEnabled(id = id, ownerId = userId)
 
-                if (!isEnabled) return@launch
+            if (!isEnabled) return@launch
 
-                try {
-                    providerRepository.getApi(
-                        id = id,
-                        ownerId = userId,
-                    )
-                } catch (e: Exception) {
-                    warnLog("Failed to load provider with id $id after toggling it on, disabling it again.")
-                    _uiState.update {
-                        it.copy(
-                            error = ProviderWithThrowable(
-                                provider = providerRepository.getMetadata(id)!!,
-                                throwable = e
-                            )
+            try {
+                providerRepository.getApi(
+                    id = id,
+                    ownerId = userId,
+                )
+            } catch (e: Exception) {
+                warnLog("Failed to load provider with id $id after toggling it on, disabling it again.")
+                _uiState.update {
+                    it.copy(
+                        error = ProviderWithThrowable(
+                            provider = providerRepository.getMetadata(id)!!,
+                            throwable = e
                         )
-                    }
+                    )
                 }
             }
+        }
     }
 
     fun uninstallProvider(metadata: ProviderMetadata) {
@@ -187,6 +214,14 @@ internal class ProviderManagerViewModel @Inject constructor(
 
     fun onToggleSearchBar(state: Boolean) {
         _uiState.update { it.copy(isSearching = state) }
+    }
+
+    private fun renormalizeIfNeeded() {
+        appDispatchers.ioScope.launch {
+            providerRepository.renormalizePositions(
+                ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
+            )
+        }
     }
 }
 

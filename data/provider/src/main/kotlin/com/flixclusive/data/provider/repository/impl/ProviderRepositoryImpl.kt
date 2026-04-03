@@ -130,16 +130,23 @@ internal class ProviderRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun moveProvider(
-        from: Int,
-        to: Int,
-        ownerId: Int
+    override suspend fun reorderPosition(
+        moved: InstalledProvider,
+        before: InstalledProvider?,
+        after: InstalledProvider?,
     ) {
         providerSortOrderManager.reorder(
-            ownerId = ownerId,
-            from = from,
-            to = to
+            moved = moved,
+            before = before,
+            after = after
         )
+    }
+
+    override suspend fun renormalizePositions(ownerId: Int) {
+        val all = installedProviderDao.getAll(ownerId)
+        if (providerSortOrderManager.needsRenormalization(all)) {
+            providerSortOrderManager.renormalize(all, ownerId)
+        }
     }
 
     override suspend fun clearAll() {

@@ -2,6 +2,7 @@ package com.flixclusive.data.provider.util
 
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.entity.provider.InstalledProvider
+import com.flixclusive.data.provider.util.ProviderSortOrderManager.Companion.MIN_GAP
 
 /**
  * Manages provider sort ordering using a midpoint / Lexorank-style approach.
@@ -24,13 +25,14 @@ internal class ProviderSortOrderManager(
         return (low + high) / 2.0
     }
 
-    private fun needsRenormalization(before: Double?, after: Double?): Boolean {
-        val low = before ?: 0.0
-        val high = after ?: (low + NORMALIZATION_STEP)
-        return (high - low) < MIN_GAP
+    fun needsRenormalization(all: List<InstalledProvider>): Boolean {
+        if (all.size < 2) return false
+        return all.zipWithNext().any { (a, b) ->
+            b.sortOrder - a.sortOrder < MIN_GAP
+        }
     }
 
-    private suspend fun renormalize(orderedIds: List<InstalledProvider>, ownerId: Int) {
+    suspend fun renormalize(orderedIds: List<InstalledProvider>, ownerId: Int) {
         orderedIds.forEachIndexed { index, provider ->
             val newOrder = (index + 1) * NORMALIZATION_STEP
             installedProviderDao.updateSortOrder(
@@ -42,34 +44,19 @@ internal class ProviderSortOrderManager(
     }
 
     suspend fun reorder(
-        from: Int,
-        to: Int,
-        ownerId: Int,
+        moved: InstalledProvider,
+        before: InstalledProvider?,
+        after: InstalledProvider?,
     ) {
-        if (from == to) return
-        val currentOrderedList = installedProviderDao.getAll(ownerId = ownerId)
-
-        val mutableOrders = currentOrderedList.toMutableList()
-        val movedItem = mutableOrders.removeAt(from)
-        mutableOrders.add(to, movedItem)
-
-        val before = if (to > 0) mutableOrders[to - 1] else null
-        val after = if (to < mutableOrders.size) mutableOrders[to] else null
-
-        if (needsRenormalization(before?.sortOrder, after?.sortOrder)) {
-            renormalize(mutableOrders, movedItem.ownerId)
-        } else {
-            val newOrder = computeMidpoint(before?.sortOrder, after?.sortOrder)
-            installedProviderDao.updateSortOrder(
-                id = movedItem.id,
-                ownerId = movedItem.ownerId,
-                sortOrder = newOrder
-            )
-        }
+        installedProviderDao.updateSortOrder(
+            id = moved.id,
+            ownerId = moved.ownerId,
+            sortOrder = computeMidpoint(before?.sortOrder, after?.sortOrder)
+        )
     }
 
     companion object {
-        const val MIN_GAP = 0.001
+        const val MIN_GAP = 1e-10
         const val NORMALIZATION_STEP = 1.0
     }
 }

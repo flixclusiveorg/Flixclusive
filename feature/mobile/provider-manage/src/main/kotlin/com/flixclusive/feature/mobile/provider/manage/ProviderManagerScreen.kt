@@ -118,7 +118,6 @@ internal fun ProviderManagerScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Destination<ExternalModuleGraph>
 @Composable
 internal fun ProviderManagerScreenContent(
     uiState: ProviderManageUiState,

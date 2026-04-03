@@ -206,7 +206,7 @@ class ProviderRepositoryImplTest {
     }
 
     @Test
-    fun shouldMoveProvider() = runTest(testDispatcher) {
+    fun shouldReorder() = runTest(testDispatcher) {
         val firstPreference = testPreferenceItem.copy(id = "first-provider")
         val secondPreference = testPreferenceItem.copy(id = "second-provider")
 
@@ -222,7 +222,7 @@ class ProviderRepositoryImplTest {
         repository.addToPreferences(firstPreference)
         repository.addToPreferences(secondPreference)
 
-        repository.moveProvider(from = 0, to = 1)
+        repository.reorderPosition(from = 0, to = 1)
 
         coVerify(atLeast = 1) {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(

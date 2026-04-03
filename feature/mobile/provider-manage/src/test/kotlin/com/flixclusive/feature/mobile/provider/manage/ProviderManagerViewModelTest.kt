@@ -129,7 +129,7 @@ class ProviderManagerViewModelTest {
         every { providerRepository.getMetadata(testProvider1.id) } returns testProvider1
         every { providerRepository.getMetadata(testProvider2.id) } returns testProvider2
         every { providerRepository.getProviderFromPreferences(any()) } returns testProviderFromPrefs1
-        coEvery { providerRepository.moveProvider(any(), any()) } just runs
+        coEvery { providerRepository.reorderPosition(any(), any()) } just runs
         coEvery { providerRepository.toggleProvider(any()) } just runs
         coEvery { unloadProvider(any()) } just runs
         coEvery { providerApiRepository.removeApi(any()) } just runs
@@ -222,7 +222,7 @@ class ProviderManagerViewModelTest {
             viewModel.onMove(0, 1)
             advanceUntilIdle()
 
-            coVerify { providerRepository.moveProvider(0, 1) }
+            coVerify { providerRepository.reorderPosition(0, 1) }
         }
 
     @Test
