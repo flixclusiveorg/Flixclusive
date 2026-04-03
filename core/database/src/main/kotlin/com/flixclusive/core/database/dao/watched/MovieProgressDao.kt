@@ -9,7 +9,6 @@ import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryListItem
-import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus

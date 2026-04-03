@@ -33,6 +33,13 @@ interface LibraryListItemDao {
     @RawQuery
     fun getByListIdRaw(query: RoomRawQuery): Flow<List<LibraryListItemWithMetadata>>
 
+    @Query("""
+        SELECT * FROM library_list_item_with_metadata
+        WHERE item_listId = :listId AND item_filmId = :filmId
+        LIMIT 1
+    """)
+    fun getByListIdAndFilmId(listId: Int, filmId: String): LibraryListItemWithMetadata?
+
     fun getByListId(
         listId: Int,
         columnSort: String,
