@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,13 +71,13 @@ internal class PlayerTweakScreen(
     @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     @Composable
     private fun getGeneralTweaks(playerPreferences: () -> PlayerPreferences): TweakGroup {
-        val context = LocalContext.current
+        val resources = LocalResources.current
         val navigator = LocalScaffoldNavigator.current!!
 
         val scope = rememberCoroutineScope()
 
         val formatInSeconds = fun(amount: Long): String {
-            return context.getString(LocaleR.string.n_seconds_format, amount)
+            return resources.getString(LocaleR.string.n_seconds_format, amount)
         }
 
         val selectedSeekAmount = remember { mutableLongStateOf(playerPreferences().seekAmount) }
@@ -90,7 +91,7 @@ internal class PlayerTweakScreen(
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.resize_mode),
                         descriptionProvider = {
-                            selectedResizeMode.uiText.asString(context)
+                            selectedResizeMode.value.uiText.asString(resources)
                         },
                         value = selectedResizeMode,
                         onTweaked = {
@@ -99,12 +100,12 @@ internal class PlayerTweakScreen(
                             }
                         },
                         options = ResizeMode.entries
-                            .associateWith { it.uiText.asString(context) }
+                            .associateWith { it.uiText.asString(resources) }
                             .toImmutableMap(),
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.preferred_quality),
-                        descriptionProvider = { selectedQuality.value.uiText.asString(context) },
+                        descriptionProvider = { selectedQuality.value.uiText.asString(resources) },
                         value = selectedQuality,
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
@@ -112,7 +113,7 @@ internal class PlayerTweakScreen(
                             }
                         },
                         options = PlayerQuality.entries
-                            .associateWith { it.uiText.asString(context) }
+                            .associateWith { it.uiText.asString(resources) }
                             .toImmutableMap(),
                     ),
                     TweakUI.ListTweak(
@@ -136,7 +137,7 @@ internal class PlayerTweakScreen(
                     ),
                     TweakUI.ClickableTweak(
                         title = stringResource(LocaleR.string.subtitle),
-                        descriptionProvider = { context.getString(LocaleR.string.subtitles_settings_content_desc) },
+                        descriptionProvider = { resources.getString(LocaleR.string.subtitles_settings_content_desc) },
                         onClick = {
                             scope.launch {
                                 navigator.navigateTo(
@@ -152,14 +153,14 @@ internal class PlayerTweakScreen(
 
     @Composable
     private fun getUiTweaks(playerPreferences: () -> PlayerPreferences): TweakGroup {
-        val context = LocalContext.current
+        val resources = LocalResources.current
         return TweakGroup(
             title = stringResource(LocaleR.string.user_interface),
             tweaks =
                 persistentListOf(
                     TweakUI.SwitchTweak(
                         title = stringResource(LocaleR.string.reverse_player_time),
-                        descriptionProvider = { context.getString(LocaleR.string.reverse_player_time_desc) },
+                        descriptionProvider = { resources.getString(LocaleR.string.reverse_player_time_desc) },
                         value = remember { mutableStateOf(playerPreferences().isDurationReversed) },
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
@@ -169,7 +170,7 @@ internal class PlayerTweakScreen(
                     ),
                     TweakUI.SwitchTweak(
                         title = stringResource(LocaleR.string.pip_mode),
-                        descriptionProvider = { context.getString(LocaleR.string.pip_mode_desc) },
+                        descriptionProvider = { resources.getString(LocaleR.string.pip_mode_desc) },
                         value = remember { mutableStateOf(playerPreferences().isPiPModeEnabled) },
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
@@ -183,7 +184,7 @@ internal class PlayerTweakScreen(
 
     @Composable
     private fun getAudioTweaks(playerPreferences: () -> PlayerPreferences): TweakGroup {
-        val context = LocalContext.current
+        val resources = LocalResources.current
 
         val selectedAudioLanguage = remember { mutableStateOf(playerPreferences().audioLanguage) }
 
@@ -193,7 +194,7 @@ internal class PlayerTweakScreen(
                 persistentListOf(
                     TweakUI.SwitchTweak(
                         title = stringResource(LocaleR.string.volume_booster),
-                        descriptionProvider = { context.getString(LocaleR.string.volume_booster_desc) },
+                        descriptionProvider = { resources.getString(LocaleR.string.volume_booster_desc) },
                         value = remember { mutableStateOf(playerPreferences().isUsingVolumeBoost) },
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
@@ -229,12 +230,13 @@ internal class PlayerTweakScreen(
 
     @Composable
     private fun getAdvancedTweaks(playerPreferences: () -> PlayerPreferences): TweakGroup {
+        val resources = LocalResources.current
         val context = LocalContext.current
 
         val availableDecoders =
             remember {
                 DecoderPriority.entries
-                    .associateWith { it.uiText.asString(context) }
+                    .associateWith { it.uiText.asString(resources) }
                     .toPersistentMap()
             }
 
@@ -244,7 +246,7 @@ internal class PlayerTweakScreen(
                 persistentListOf(
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.decoder_priority),
-                        descriptionProvider = { context.getString(LocaleR.string.decoder_priority_description) },
+                        descriptionProvider = { resources.getString(LocaleR.string.decoder_priority_description) },
                         value = remember { mutableStateOf(playerPreferences().decoderPriority) },
                         options = availableDecoders,
                         onTweaked = {
@@ -255,7 +257,7 @@ internal class PlayerTweakScreen(
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.video_cache_size),
-                        descriptionProvider = { context.getString(LocaleR.string.video_cache_size_label) },
+                        descriptionProvider = { resources.getString(LocaleR.string.video_cache_size_label) },
                         value = remember { mutableLongStateOf(playerPreferences().diskCacheSize) },
                         options = getAvailableCacheSizes(context),
                         onTweaked = {
@@ -266,7 +268,7 @@ internal class PlayerTweakScreen(
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.video_buffer_size),
-                        descriptionProvider = { context.getString(LocaleR.string.video_buffer_size_label) },
+                        descriptionProvider = { resources.getString(LocaleR.string.video_buffer_size_label) },
                         value = remember { mutableLongStateOf(playerPreferences().bufferCacheSize) },
                         options = getAvailableBufferSizes(context),
                         onTweaked = {
@@ -277,7 +279,7 @@ internal class PlayerTweakScreen(
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.video_buffer_max_length),
-                        descriptionProvider = { context.getString(LocaleR.string.video_buffer_max_length_desc) },
+                        descriptionProvider = { resources.getString(LocaleR.string.video_buffer_max_length_desc) },
                         value = remember { mutableLongStateOf(playerPreferences().videoBufferMs) },
                         options = playerBufferLengths,
                         onTweaked = {
