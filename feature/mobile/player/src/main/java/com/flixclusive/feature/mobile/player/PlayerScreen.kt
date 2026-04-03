@@ -24,6 +24,7 @@ import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.ui.ComposePlayer
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState.Companion.rememberPlayerSnackbarState
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.PlayerControls
 import com.flixclusive.feature.mobile.player.component.effect.ToggleOrientationEffect
@@ -59,7 +60,7 @@ internal fun PlayerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val canSkipLoading by viewModel.canSkipLoading.collectAsStateWithLifecycle()
     val providers by viewModel.providers.collectAsStateWithLifecycle()
-    val currentProvider = remember(uiState.currentProvider) {
+    val currentProvider = remember(uiState.currentProvider, providers) {
         providers.find { it.id == uiState.currentProvider }
     }
 
@@ -78,9 +79,12 @@ internal fun PlayerScreen(
     }
 
     if (currentProvider == null) {
-        LaunchedEffect(Unit) {
-            context.showToast(resources.getString(R.string.no_servers_error))
-            navigator.goBack()
+        if (providers.isNotEmpty()) {
+            LaunchedEffect(Unit) {
+                warnLog("Current provider with id ${uiState.currentProvider} not found in providers list")
+                context.showToast(resources.getString(R.string.no_servers_error))
+                navigator.goBack()
+            }
         }
         return
     }
