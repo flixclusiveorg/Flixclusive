@@ -46,7 +46,7 @@ android {
             buildConfigField("int", "BUILD_TYPE", "1") // 1 for stable
         }
 
-        create("preview") {
+        getByName("preview") {
             applicationIdSuffix = ".preview"
 
             resValue("string", "app_name", "PRE-$appName")
