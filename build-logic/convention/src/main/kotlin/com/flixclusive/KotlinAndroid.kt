@@ -30,6 +30,12 @@ internal fun Project.configureKotlinAndroid(
                     targetCompatibility = JavaVersion.VERSION_17
                     isCoreLibraryDesugaringEnabled = true
                 }
+
+                buildTypes {
+                    create("preview") {
+                        matchingFallbacks.addAll(listOf("release", "debug"))
+                    }
+                }
             }
             is ApplicationExtension -> {
                 defaultConfig {
@@ -41,6 +47,12 @@ internal fun Project.configureKotlinAndroid(
                     sourceCompatibility = JavaVersion.VERSION_17
                     targetCompatibility = JavaVersion.VERSION_17
                     isCoreLibraryDesugaringEnabled = true
+                }
+
+                buildTypes {
+                    create("preview") {
+                        matchingFallbacks.addAll(listOf("release", "debug"))
+                    }
                 }
             }
         }
