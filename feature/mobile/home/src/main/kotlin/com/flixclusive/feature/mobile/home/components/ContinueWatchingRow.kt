@@ -87,7 +87,7 @@ internal fun ContinueWatchingRow(
         LazyRow {
             items(
                 items = items,
-                key = { it.id }
+                key = { "${it.filmId}-${it.id}" }
             ) { item ->
                 ContinueWatchingCard(
                     showTitle = showCardTitle,
