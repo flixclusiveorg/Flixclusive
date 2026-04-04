@@ -1,8 +1,19 @@
+# .github/workflows/unit-tests.yml
 name: Unit Tests
 
 on:
   workflow_call:
+    inputs:
+      variant:
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      variant:
+        required: true
+        type: choice
+        options: [ debug, preview, release ]
+        description: "Select the build variant for which to run the tests."
 
 permissions:
   contents: read
@@ -14,20 +25,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: temurin
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
-        run: ./gradlew test
+        run: |
+          VARIANT=${{ inputs.variant }}
+          echo "Running unit tests for variant: $VARIANT"
+          ./gradlew test${VARIANT^}UnitTest
 
       - name: Unit test results
         uses: dorny/test-reporter@v1

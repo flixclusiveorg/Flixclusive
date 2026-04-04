@@ -2,7 +2,17 @@ name: Instrumented Tests
 
 on:
   workflow_call:
+    inputs:
+      variant:
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      variant:
+        required: true
+        type: choice
+        options: [ debug, preview, release ]
+        description: "Select the build variant for which to run the tests."
 
 permissions:
   contents: read
@@ -62,7 +72,10 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest
+          script: |
+            VARIANT=${{ inputs.variant }}
+            echo "Running instrumented tests for variant: $VARIANT"
+            ./gradlew connected${VARIANT^}AndroidTest
 
       - name: Instrumented test results
         uses: dorny/test-reporter@v1
