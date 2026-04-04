@@ -151,7 +151,10 @@ internal fun PlayerControls(
         isScrubbing = { scrubState.isScrubbing }
     )
 
-    val volumeManager = rememberVolumeManager(player = player)
+    val volumeManager = rememberVolumeManager(
+        player = player,
+        isVolumeBoosted = playerPrefs.isUsingVolumeBoost
+    )
     val brightnessManager = rememberBrightnessManager()
     val gestureState = rememberPlayerGestureState(seekAmountMs = seekButtonState.seekForwardAmountMs)
 
