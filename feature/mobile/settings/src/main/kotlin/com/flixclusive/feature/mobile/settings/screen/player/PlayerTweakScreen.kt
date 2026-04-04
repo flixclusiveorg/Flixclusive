@@ -198,7 +198,7 @@ internal class PlayerTweakScreen(
                         value = remember { mutableStateOf(playerPreferences().isUsingVolumeBoost) },
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
-                                oldValue.copy(isPiPModeEnabled = it)
+                                oldValue.copy(isUsingVolumeBoost = it)
                             }
                         },
                     ),
