@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.player.component.gesture
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -18,12 +20,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
@@ -40,16 +47,17 @@ import com.flixclusive.feature.mobile.player.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PlayerVerticalSlider(
-    modifier: Modifier = Modifier,
     isVisible: Boolean,
     iconPainter: @Composable () -> Painter,
     value: Float,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
+    modifier: Modifier = Modifier,
+    track: (@Composable (SliderState) -> Unit)? = null,
 ) {
     val sliderColors = SliderDefaults.colors(
         thumbColor = Color.White,
-        activeTrackColor = Color.White,
+        activeTrackColor = MaterialTheme.colorScheme.primary,
         inactiveTrackColor = Color.White.copy(alpha = 0.4F)
     )
 
@@ -97,17 +105,63 @@ internal fun PlayerVerticalSlider(
                 value = value,
                 onValueChange = onValueChange,
                 colors = sliderColors,
-                track = {
-                     SliderDefaults.Track(
-                         sliderState = it,
-                         drawStopIndicator = {},
-                         drawTick = { _, _ -> },
-                         thumbTrackGapSize = 0.dp,
-                         modifier = Modifier
-                             .height(5.dp)
+                track = track ?: {
+                    SliderDefaults.Track(
+                        sliderState = it,
+                        drawStopIndicator = {},
+                        drawTick = { _, _ -> },
+                        thumbTrackGapSize = 0.dp,
+                        colors = sliderColors,
+                        modifier = Modifier
+                            .height(5.dp)
                     )
                 },
                 thumb = {}
+            )
+        }
+    }
+}
+
+@Composable
+internal fun VolumeBoostedGradientTrack(
+    sliderState: SliderState,
+    colorStops: Array<Pair<Float, Color>>,
+    inactiveColor: Color,
+) {
+    val fraction by remember {
+        derivedStateOf {
+            (sliderState.value - sliderState.valueRange.start) /
+                (sliderState.valueRange.endInclusive - sliderState.valueRange.start)
+        }
+    }
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(5.dp)
+    ) {
+        val trackWidth = size.width
+        val trackHeight = size.height
+        val activeWidth = trackWidth * fraction
+
+        // Inactive track
+        drawRoundRect(
+            color = inactiveColor,
+            size = Size(trackWidth, trackHeight),
+            cornerRadius = CornerRadius(trackHeight / 2),
+        )
+
+        // Active track — gradient anchored to the full range
+        // so the Primary→onSurface transition always starts at the 0.7 mark
+        if (activeWidth > 0f) {
+            drawRoundRect(
+                brush = Brush.horizontalGradient(
+                    colorStops = colorStops,
+                    startX = 0f,
+                    endX = trackWidth, // gradient spans the full track
+                ),
+                size = Size(activeWidth, trackHeight),
+                cornerRadius = CornerRadius(trackHeight / 2),
             )
         }
     }
