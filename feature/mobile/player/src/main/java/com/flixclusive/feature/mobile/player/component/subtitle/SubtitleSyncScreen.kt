@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -46,14 +47,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastAny
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.player.model.CueWithTiming
 import com.flixclusive.core.presentation.player.ui.state.ScrubState
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
@@ -203,6 +208,7 @@ internal fun SubtitleSyncScreen(
     }
 }
 
+@OptIn(FlowPreview::class)
 @Composable
 private fun SubtitleCuesList(
     cues: List<CueWithTiming>,
@@ -210,27 +216,34 @@ private fun SubtitleCuesList(
     onCueClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scope = rememberCoroutineScope()
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = activeIndex())
     var hasScrolled by remember { mutableStateOf(false) }
     val isAutoScrolling = remember { mutableStateOf(false) }
 
-    LaunchedEffect(listState, hasScrolled) {
-        if (hasScrolled) return@LaunchedEffect
-
+    LaunchedEffect(listState) {
         snapshotFlow { listState.isScrollInProgress }
-            .collect { scrolling ->
-                if (scrolling && !isAutoScrolling.value) {
+            .debounce(300) // Add a small debounce to avoid rapid state changes
+            .collectLatest { scrolling ->
+                val isActiveIndexVisible = listState.layoutInfo.visibleItemsInfo.fastAny { it.index == activeIndex() }
+                if (hasScrolled && isActiveIndexVisible) {
+                    hasScrolled = false
+                    return@collectLatest
+                }
+
+                if (hasScrolled) return@collectLatest
+
+                if (scrolling && !isAutoScrolling.value && !isActiveIndexVisible) {
                     hasScrolled = true
                 }
             }
     }
 
-    LaunchedEffect(hasScrolled) {
-        if (hasScrolled) return@LaunchedEffect
-
+    LaunchedEffect(listState) {
         snapshotFlow(activeIndex)
             .distinctUntilChanged()
             .collectLatest { index ->
+                if (hasScrolled) return@collectLatest
                 if (cues.isEmpty()) return@collectLatest
                 if (index !in cues.indices) return@collectLatest
 
@@ -278,7 +291,13 @@ private fun SubtitleCuesList(
                 .padding(bottom = 16.dp)
         ) {
             OutlinedButton(
-                onClick = { hasScrolled = false },
+                onClick = {
+                    scope.launch {
+                        listState.animateScrollToItem(index = activeIndex())
+                    }.invokeOnCompletion {
+                        hasScrolled = false
+                    }
+                },
                 shape = MaterialTheme.shapes.small,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                 border = BorderStroke(
