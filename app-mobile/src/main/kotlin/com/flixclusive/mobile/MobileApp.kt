@@ -104,6 +104,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.system.exitProcess
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -113,6 +115,7 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val transitionMutex = remember { Mutex() }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val hasNotSeenNewChangelogs by viewModel.hasNotSeenNewChangelogs.collectAsStateWithLifecycle()
@@ -151,18 +154,24 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     }
 
     suspend fun transitionToPlayer(playerData: PlayerData) {
-        useBottomBar = false
-        delay(500)
-        isNavigatingToPlayerScreen = true
-        delay(1200)
-        isNavigatingToPlayerScreen = false
+        if (transitionMutex.isLocked) return
 
-        val (film, episode) = playerData
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            destinationsNavigator.navigate(PlayerScreenDestination(film = film as FilmMetadata, episode = episode))
+        transitionMutex.withLock {
+            useBottomBar = false
+            delay(500)
+            isNavigatingToPlayerScreen = true
+            delay(1200)
+            isNavigatingToPlayerScreen = false
+
+            val (film, episode) = playerData
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                destinationsNavigator.navigate(
+                    PlayerScreenDestination(film = film as FilmMetadata, episode = episode)
+                )
+            }
+
+            viewModel.updateLoadLinksState(LoadLinksState.Idle)
         }
-
-        viewModel.updateLoadLinksState(LoadLinksState.Idle)
     }
 
     DisplayChangelogsObserver(
