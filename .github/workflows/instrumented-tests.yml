@@ -27,16 +27,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check for androidTest folders
+        id: check-tests
+        run: |
+          TEST_DIRS=$(find . -type d -name "androidTest" -path "*/src/androidTest*" | grep -v "build/" | grep -v ".git/")
+          if [ -n "$TEST_DIRS" ]; then
+            echo "androidTest folders found:"
+            echo "$TEST_DIRS"
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "No androidTest folders found — skipping instrumented tests."
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set up JDK
         uses: actions/setup-java@v4
+        if: steps.check-tests.outputs.has_tests == 'true'
         with:
           java-version: 17
           distribution: temurin
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        if: steps.check-tests.outputs.has_tests == 'true'
 
       - name: Enable KVM group permissions
+        if: steps.check-tests.outputs.has_tests == 'true'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
@@ -45,6 +61,7 @@ jobs:
       - name: AVD cache
         uses: actions/cache@v4
         id: avd-cache
+        if: steps.check-tests.outputs.has_tests == 'true'
         with:
           path: |
             ~/.android/avd/*
@@ -52,7 +69,7 @@ jobs:
           key: avd-api-35-${{ runner.os }}
 
       - name: Create AVD and generate snapshot for caching
-        if: steps.avd-cache.outputs.cache-hit != 'true'
+        if: steps.check-tests.outputs.has_tests == 'true' && steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -64,6 +81,7 @@ jobs:
           script: echo "AVD snapshot generated"
 
       - name: Run instrumented tests
+        if: steps.check-tests.outputs.has_tests == 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -79,7 +97,7 @@ jobs:
 
       - name: Instrumented test results
         uses: dorny/test-reporter@v1
-        if: always()
+        if: steps.check-tests.outputs.has_tests == 'true' && always()
         with:
           name: Instrumented Test Results
           path: '**/build/outputs/androidTest-results/**/TEST-*.xml'

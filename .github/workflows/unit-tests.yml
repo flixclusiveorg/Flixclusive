@@ -1,4 +1,3 @@
-# .github/workflows/unit-tests.yml
 name: Unit Tests
 
 on:
@@ -27,14 +26,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check for test folders
+        id: check-tests
+        run: |
+          TEST_DIRS=$(find . -type d -name "test" -path "*/src/test*" | grep -v "build/" | grep -v ".git/")
+          if [ -n "$TEST_DIRS" ]; then
+            echo "Test folders found:"
+            echo "$TEST_DIRS"
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "No test folders found — skipping unit tests."
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
       - uses: actions/setup-java@v4
+        if: steps.check-tests.outputs.has_tests == 'true'
         with:
           java-version: 17
           distribution: temurin
 
       - uses: gradle/actions/setup-gradle@v4
+        if: steps.check-tests.outputs.has_tests == 'true'
 
       - name: Run unit tests
+        if: steps.check-tests.outputs.has_tests == 'true'
         run: |
           VARIANT=${{ inputs.variant }}
           echo "Running unit tests for variant: $VARIANT"
@@ -42,7 +57,7 @@ jobs:
 
       - name: Unit test results
         uses: dorny/test-reporter@v1
-        if: always()
+        if: steps.check-tests.outputs.has_tests == 'true' && always()
         with:
           name: Unit Test Results
           path: '**/build/test-results/**/TEST-*.xml'
