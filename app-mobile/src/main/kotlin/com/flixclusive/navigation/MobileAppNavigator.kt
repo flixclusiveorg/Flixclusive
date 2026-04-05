@@ -27,7 +27,6 @@ import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
 import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
-import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
@@ -40,7 +39,6 @@ import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
@@ -61,7 +59,6 @@ import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SearchGrap
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
-import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
@@ -99,7 +96,6 @@ internal class MobileAppNavigator(
     LibraryDetailsScreenNavigator,
     ManageLibraryScreenNavigator,
     OpenPinScreenAction,
-    PlayerScreenNavigator,
     ProviderDetailsNavigator,
     ProviderManagerScreenNavigator,
     SearchExpandedScreenNavigator,
@@ -236,12 +232,6 @@ internal class MobileAppNavigator(
 
     override fun onExitApplication() {
         exitAction.onExitApplication()
-    }
-
-    override fun onEpisodeChange(film: FilmMetadata, episode: Episode) {
-        runOnResumed {
-            navigator.navigate(PlayerScreenDestination(film = film, episode = episode))
-        }
     }
 
     override fun openProviderSettings(providerMetadata: ProviderMetadata) {

@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.navigation.navigator.GoBackAction
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
@@ -45,7 +46,7 @@ import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 )
 @Composable
 internal fun PlayerScreen(
-    navigator: PlayerScreenNavigator,
+    navigator: GoBackAction,
     args: PlayerScreenNavArgs,
     viewModel: PlayerScreenViewModel = hiltViewModel(),
 ) {
