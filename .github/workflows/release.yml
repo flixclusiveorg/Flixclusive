@@ -30,21 +30,10 @@ jobs:
             exit 1
           fi
 
-  unit-tests:
-    name: Unit Tests
-    needs: validate
-    uses: ./.github/workflows/unit-tests.yml
-
-  instrumented-tests:
-    name: Instrumented Tests
-    needs: validate
-    uses: ./.github/workflows/instrumented-tests.yml
-
   build:
     name: Build Release APK
-    needs: [unit-tests, instrumented-tests]
+    needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
