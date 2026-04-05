@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.settings
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlin.random.Random
@@ -14,13 +13,13 @@ import kotlin.random.Random
  * */
 sealed class Tweak {
     abstract val title: String
-    abstract val descriptionProvider: (() -> String)?
+    abstract val description: (() -> String)?
     abstract val enabledProvider: () -> Boolean
 }
 
 data class TweakGroup(
     override val title: String,
-    override val descriptionProvider: (() -> String)? = null,
+    override val description: (() -> String)? = null,
     override val enabledProvider: () -> Boolean = { true },
     val tweaks: ImmutableList<TweakUI<out Any>>,
 ) : Tweak()
@@ -29,7 +28,7 @@ data class TweakGroup(
  * A set of settings items in different UI modes.
  * */
 sealed class TweakUI<T> : Tweak() {
-    abstract val onTweaked: suspend (newValue: T) -> Boolean
+    abstract val onTweaked: (newValue: T) -> Unit
     abstract val iconId: Int?
 
     /**
@@ -37,10 +36,10 @@ sealed class TweakUI<T> : Tweak() {
      * */
     data class InformationTweak(
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
     ) : TweakUI<Unit>() {
         override val enabledProvider: () -> Boolean = { true }
-        override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
+        override val onTweaked: (newValue: Unit) -> Unit = { /*No-op*/ }
         override val iconId: Int? = null
     }
 
@@ -49,9 +48,9 @@ sealed class TweakUI<T> : Tweak() {
      * */
     class Divider : TweakUI<Unit>() {
         override val title: String by lazy { Random.nextDouble().toString() }
-        override val descriptionProvider: (() -> String)? = null
+        override val description: (() -> String)? = null
         override val enabledProvider: () -> Boolean = { true }
-        override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
+        override val onTweaked: (newValue: Unit) -> Unit = { /*No-op*/ }
         override val iconId: Int? = null
     }
 
@@ -60,17 +59,17 @@ sealed class TweakUI<T> : Tweak() {
      * */
     data class ClickableTweak(
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         override val iconId: Int? = null,
         override val enabledProvider: () -> Boolean = { true },
         val onClick: () -> Unit,
     ) : TweakUI<Unit>() {
-        override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
+        override val onTweaked: (newValue: Unit) -> Unit = { /*No-op*/ }
     }
 
     data class DialogTweak(
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         override val iconId: Int? = null,
         override val enabledProvider: () -> Boolean = { true },
         val dismissOnConfirm: Boolean = true,
@@ -78,80 +77,68 @@ sealed class TweakUI<T> : Tweak() {
         val dialogMessage: String,
         val onConfirm: () -> Unit,
     ) : TweakUI<Unit>() {
-        override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
+        override val onTweaked: (newValue: Unit) -> Unit = { /*No-op*/ }
     }
 
     data class SwitchTweak(
-        val value: MutableState<Boolean>,
+        val value: () -> Boolean,
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         override val iconId: Int? = null,
         override val enabledProvider: () -> Boolean = { true },
-        override val onTweaked: suspend (newValue: Boolean) -> Boolean = { true },
+        override val onTweaked: (newValue: Boolean) -> Unit = { /*No-op*/ }
     ) : TweakUI<Boolean>()
 
     data class SliderTweak(
-        val value: MutableState<Float>,
+        val value: () -> Float,
         val range: ClosedFloatingPointRange<Float> = 0F..1F,
         val steps: Int = 0,
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         override val iconId: Int? = null,
         override val enabledProvider: () -> Boolean = { true },
-        override val onTweaked: suspend (newValue: Float) -> Boolean = { true },
+        override val onTweaked: (newValue: Float) -> Unit = { /*No-op*/ }
     ) : TweakUI<Float>()
 
     @Suppress("UNCHECKED_CAST")
     data class ListTweak<S>(
-        val value: MutableState<S>,
+        val value: () -> S,
         val options: ImmutableMap<S, String>,
         val endContent: @Composable (() -> Unit)? = null,
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         override val iconId: Int? = null,
         override val enabledProvider: () -> Boolean = { true },
-        override val onTweaked: suspend (newValue: S) -> Boolean = { true },
-    ) : TweakUI<S>() {
-        internal fun internalSet(newValue: Any) {
-            value.value = newValue as S
-        }
-
-        internal suspend fun internalOnValueChanged(newValue: Any) = onTweaked(newValue as S)
-    }
+        override val onTweaked: (newValue: S) -> Unit = { /*No-op*/ }
+    ) : TweakUI<S>()
 
     @Suppress("UNCHECKED_CAST")
     data class MultiSelectListTweak<S>(
-        val values: MutableState<Set<S>>,
+        val values: Set<S>,
         val options: ImmutableMap<S, String>,
         val endContent: @Composable (() -> Unit)? = null,
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         override val iconId: Int? = null,
         override val enabledProvider: () -> Boolean = { true },
-        override val onTweaked: suspend (newValue: Set<S>) -> Boolean = { true },
-    ) : TweakUI<Set<S>>() {
-        internal fun internalSet(newValue: Set<Any?>) {
-            values.value = newValue as Set<S>
-        }
-
-        internal suspend fun internalOnValueChanged(newValue: Set<Any?>) = onTweaked(newValue as Set<S>)
-    }
+        override val onTweaked: (newValue: Set<S>) -> Unit = { /*No-op*/ }
+    ) : TweakUI<Set<S>>()
 
     data class TextFieldTweak(
-        val value: MutableState<String>,
+        val value: () -> String,
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         override val iconId: Int? = null,
         override val enabledProvider: () -> Boolean = { true },
-        override val onTweaked: suspend (newValue: String) -> Boolean = { true },
+        override val onTweaked: (newValue: String) -> Unit = { /*No-op*/ }
     ) : TweakUI<String>()
 
     data class CustomContentTweak(
         override val title: String,
-        override val descriptionProvider: (() -> String)? = null,
+        override val description: (() -> String)? = null,
         val content: @Composable () -> Unit,
     ) : TweakUI<Nothing>() {
-        override val onTweaked: suspend (Nothing) -> Boolean = { true }
+        override val onTweaked: (Nothing) -> Unit = { /*No-op*/ }
         override val iconId: Int? get() = null
         override val enabledProvider: () -> Boolean = { true }
     }

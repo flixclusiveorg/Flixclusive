@@ -11,6 +11,7 @@ import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
+import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 
 internal class WatchProgressRepositoryImpl @Inject constructor(
@@ -99,6 +101,22 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getEpisodeProgress(
+        tvShowId: String,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        ownerId: Int
+    ): EpisodeProgress? {
+        return withContext(appDispatchers.io) {
+            episodeProgressDao.getEpisodeProgress(
+                filmId = tvShowId,
+                season = seasonNumber,
+                episode = episodeNumber,
+                ownerId = ownerId
+            )
+        }
+    }
+
     override fun getSeasonProgressAsFlow(
         tvShowId: String,
         seasonNumber: Int,
@@ -144,17 +162,38 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         return withContext(appDispatchers.io) {
             val dbFilm = film?.toDBFilm()
             val watchedList = libraryListDao.getWatchedList(item.ownerId)
+            val existingListItem = libraryListItemDao.getByListIdAndFilmId(
+                listId = watchedList.id,
+                filmId = item.filmId
+            )
             libraryListItemDao.insert(
                 film = film,
-                item = LibraryListItem(
+                item = existingListItem?.item?.copy(
+                    updatedAt = Date()
+                ) ?: LibraryListItem(
                     filmId = item.filmId,
                     listId = watchedList.id,
                 ),
             )
 
+            val actualStatus = when {
+                item.isWatching && item.isAboveThreshold -> WatchStatus.COMPLETED
+                else -> item.status
+            }
+
             when (item) {
-                is MovieProgress -> movieProgressDao.insert(item = item, film = dbFilm)
-                is EpisodeProgress -> episodeProgressDao.insert(item = item, film = dbFilm)
+                is MovieProgress -> {
+                    movieProgressDao.insert(
+                        item = item.copy(status = actualStatus),
+                        film = dbFilm?.copy(updatedAt = Date())
+                    )
+                }
+                is EpisodeProgress -> {
+                    episodeProgressDao.insert(
+                        item = item.copy(status = actualStatus),
+                        film = dbFilm?.copy(updatedAt = Date())
+                    )
+                }
             }
         }
     }

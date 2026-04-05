@@ -26,7 +26,7 @@ internal fun EpisodeOptionsBottomSheet(
     onToggleWatchStatus: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    val isWatched = episode.watchProgress?.isFinished == true
+    val isWatched = episode.watchProgress?.isCompleted == true
 
     val label = if (isWatched) {
         stringResource(LocaleR.string.mark_as_unwatched)

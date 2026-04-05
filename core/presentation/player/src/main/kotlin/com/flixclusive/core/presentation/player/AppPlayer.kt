@@ -1,6 +1,7 @@
 package com.flixclusive.core.presentation.player
 
 import android.content.Context
+import android.media.audiofx.LoudnessEnhancer
 import android.os.Looper
 import android.view.Surface
 import android.view.SurfaceHolder
@@ -49,6 +50,7 @@ import com.flixclusive.core.presentation.player.ui.PiPEvent
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.disableSSLVerification
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getLoadControl
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getRenderers
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -71,29 +73,30 @@ class AppPlayer(
     private val subtitlePrefs: SubtitlesPreferences,
     internal val dataSourceFactory: AppDataSourceFactory,
 ) : CuesProvider, Player {
+    private val mediaSourceManager: MediaSourceManager by lazy {
+        MediaSourceManager(dataSourceFactory)
+    }
+    private val listener = InternalPlayerListener()
+    private var loudnessEnhancer: LoudnessEnhancer? = null
+
+    private var textRenderer: TextRenderer? = null
+    private var mediaSession: MediaSession? = null
+
+    /** Backing property for playWhenReady to keep the value when the player is null. */
+    private var _playWhenReady: Boolean = true
+
+    /** Only internally visible so ComposePlayer component can access it */
+    internal var exoPlayer: ExoPlayer? = null
+
+    internal val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
+    val errors = _errors.asSharedFlow()
+
     override var offset by mutableLongStateOf(0L)
         private set
 
     val currentCuesWithTiming = mutableStateListOf<CueWithTiming>()
 
-    internal val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
-    val errors = _errors.asSharedFlow()
-
     var subtitleView: SubtitleView? = null
-
-    private var textRenderer: TextRenderer? = null
-
-    /** Only internally visible so ComposePlayer component can access it */
-    internal var exoPlayer: ExoPlayer? = null
-    private var mediaSession: MediaSession? = null
-    private val listener = InternalPlayerListener()
-
-    /** Backing property for playWhenReady to keep the value when the player is null. */
-    private var _playWhenReady: Boolean = true
-
-    private val mediaSourceManager: MediaSourceManager by lazy {
-        MediaSourceManager(dataSourceFactory)
-    }
 
     fun initialize() {
         if (exoPlayer != null && mediaSession != null) return
@@ -218,14 +221,6 @@ class AppPlayer(
         mediaSession = null
     }
 
-    override fun release() {
-        infoLog("Releasing...")
-        removeListener(listener)
-        exoPlayer?.release()
-        exoPlayer = null
-        textRenderer = null
-    }
-
     fun selectSubtitle(index: Int) {
         switchTrack(C.TRACK_TYPE_TEXT, index)
     }
@@ -285,6 +280,29 @@ class AppPlayer(
         )
     }
 
+    fun setVolumeBoosterEnabled(enabled: Boolean) {
+        safeCall {
+            loudnessEnhancer?.enabled = enabled
+        }
+    }
+
+    fun setVolumeGain(gainMb: Int) {
+        safeCall {
+            loudnessEnhancer?.setTargetGain(gainMb)
+        }
+    }
+
+    override fun release() {
+        infoLog("Releasing...")
+        removeListener(listener)
+        exoPlayer?.release()
+        exoPlayer = null
+        textRenderer = null
+        loudnessEnhancer?.release()
+        loudnessEnhancer = null
+        currentCuesWithTiming.clear()
+    }
+
     override fun setPlayWhenReady(value: Boolean) {
         _playWhenReady = value
         exoPlayer?.playWhenReady = value
@@ -320,6 +338,11 @@ class AppPlayer(
 
         override fun onCues(cueGroup: CueGroup) {
             subtitleView?.setCues(cueGroup.cues)
+        }
+
+        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+            loudnessEnhancer?.release()
+            loudnessEnhancer = LoudnessEnhancer(audioSessionId)
         }
     }
 

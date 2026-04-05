@@ -7,9 +7,12 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composer
+import androidx.compose.runtime.tooling.ComposeStackTraceMode
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import com.flixclusive.BuildConfig
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -20,6 +23,9 @@ internal class MobileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
+        if (BuildConfig.DEBUG) {
+            Composer.setDiagnosticStackTraceMode(ComposeStackTraceMode.SourceInformation)
+        }
 
         installSplashScreen()
 

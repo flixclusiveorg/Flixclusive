@@ -41,6 +41,13 @@ interface WatchProgressRepository {
         ownerId: Int,
     ): List<EpisodeProgress>
 
+    suspend fun getEpisodeProgress(
+        tvShowId: String,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        ownerId: Int,
+    ): EpisodeProgress?
+
     fun getSeasonProgressAsFlow(
         tvShowId: String,
         seasonNumber: Int,

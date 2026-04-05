@@ -21,18 +21,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.strings.R
 import com.flixclusive.model.film.common.tv.Season
+import kotlin.text.ifEmpty
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun SeasonPill(
-    modifier: Modifier = Modifier,
     season: Season,
     selected: () -> Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val contentColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.surface else LocalContentColor.current.copy(0.6f))
     val containerColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.onSurface else Color.Transparent)
@@ -71,7 +75,9 @@ internal fun SeasonPill(
                 )
         ) {
             Text(
-                text = remember { season.name },
+                text = season.name.ifEmpty {
+                    stringResource(LocaleR.string.untitled_season, season.number)
+                },
                 style = MaterialTheme.typography.labelMedium
             )
         }

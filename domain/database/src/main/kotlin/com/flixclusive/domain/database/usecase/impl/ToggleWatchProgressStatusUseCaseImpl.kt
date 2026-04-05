@@ -28,31 +28,58 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
         }
     }
 
-    private suspend fun invokeForTvShow(ownerId: Int, film: TvShow) {
+    private suspend fun invokeForTvShow(ownerId: Int, tvShow: TvShow) {
         val progress = watchProgressRepository.get(
-            id = film.identifier,
+            id = tvShow.identifier,
+            type = tvShow.filmType,
             ownerId = ownerId,
-            type = film.filmType,
         )
 
-        // TODO: Improve this as soon as TvShows starts containing list of seasons / episodes
-        //  and not just total number of seasons / episodes, so we can check if all episodes are completed or not
-        if (progress == null || (progress.watchData as EpisodeProgress).episodeNumber < film.totalEpisodes) {
+        if (progress == null) {
+            val season = tvShow.seasons
+                .lastOrNull()
+                ?.number
+                ?.takeIf { it == tvShow.totalSeasons }
+                ?: tvShow.totalSeasons
+
+            val episode = tvShow.seasons
+                .lastOrNull()
+                ?.episodes
+                ?.lastOrNull()
+                ?.number
+                ?: tvShow.totalEpisodes
+
             watchProgressRepository.insert(
-                film = film,
+                film = tvShow,
                 item = EpisodeProgress(
-                    filmId = film.identifier,
+                    filmId = tvShow.identifier,
                     ownerId = ownerId,
-                    seasonNumber = film.totalSeasons,
-                    episodeNumber = film.totalEpisodes,
-                    progress = 0L,
+                    seasonNumber = season,
+                    episodeNumber = episode,
                     status = WatchStatus.COMPLETED,
+                    progress = 0L,
                 ),
             )
+
+//            tvShow.seasons.forEach { season ->
+//                season.episodes.forEach { episode ->
+//                    watchProgressRepository.insert(
+//                        film = tvShow,
+//                        item = EpisodeProgress(
+//                            filmId = tvShow.identifier,
+//                            ownerId = ownerId,
+//                            seasonNumber = season.number,
+//                            episodeNumber = episode.number,
+//                            status = WatchStatus.COMPLETED,
+//                            progress = 0L,
+//                        ),
+//                    )
+//                }
+//            }
         } else {
-            for (i in 1..film.totalSeasons) {
+            for (i in 1..tvShow.totalSeasons) {
                 val progressList = watchProgressRepository.getSeasonProgress(
-                    tvShowId = film.identifier,
+                    tvShowId = tvShow.identifier,
                     ownerId = ownerId,
                     seasonNumber = i,
                 )
@@ -60,7 +87,7 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
                 progressList.forEach { episodeProgress ->
                     watchProgressRepository.delete(
                         item = episodeProgress.id,
-                        type = film.filmType,
+                        type = tvShow.filmType,
                     )
                 }
             }

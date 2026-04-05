@@ -26,8 +26,8 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.util.TMDBProviderUtils
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
-import com.flixclusive.domain.provider.usecase.get.GetEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
@@ -52,7 +52,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flattenConcat
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -64,7 +63,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     dataStoreManager: DataStoreManager,
     getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val appDispatchers: AppDispatchers,
-    private val getEpisode: GetEpisodeUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
     private val libraryListRepository: LibraryListRepository,
     private val providerRepository: ProviderRepository,
@@ -143,11 +142,17 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                 ownerId = user.id,
                 id = navArgFilm.identifier,
                 type = navArgFilm.filmType,
-            )
-        }.map { it?.watchData }
+            ).mapLatest {
+                val progress = it?.watchData
+                when (progress?.isCompleted) {
+                    true if progress is EpisodeProgress -> getNextEpisodeProgress(progress)
+                    else -> progress
+                }
+            }
+        }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.WhileSubscribed(2_000),
             initialValue = null,
         )
 
@@ -326,10 +331,12 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             }
 
             val watchProgress = episodeWithProgress.watchProgress
-            if (watchProgress == null || !watchProgress.isFinished) {
+            if (watchProgress == null || !watchProgress.isCompleted) {
                 watchProgressRepository.insert(
                     film = film,
-                    item = EpisodeProgress(
+                    item = watchProgress?.copy(
+                        status = WatchStatus.COMPLETED,
+                    ) ?: EpisodeProgress(
                         ownerId = user.id,
                         filmId = film.identifier,
                         seasonNumber = episodeWithProgress.episode.season,
@@ -393,37 +400,23 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         _librarySheetQuery.value = query
     }
 
-    /**
-     * Observes changes in episode watch progress and updates the selected season
-     * if the current episode is finished and there is a next episode available.
-     *
-     * @param progress The current episode progress data.
-     * */
-    private suspend fun observeEpisodeProgress(progress: EpisodeProgress) {
-        if (progress.isFinished) {
-            val nextEpisode = getEpisode(
-                tvShow = _metadata.value as TvShow,
-                season = progress.seasonNumber,
-                episode = progress.episodeNumber + 1,
-            )
+    private suspend fun getNextEpisodeProgress(progress: EpisodeProgress): EpisodeProgress {
+        val nextEpisode = getNextEpisode(
+            tvShow = _metadata.filterNotNull().first() as TvShow,
+            season = progress.seasonNumber,
+            episode = progress.episodeNumber,
+        ) ?: return progress
 
-            if (nextEpisode != null) {
-                _uiState.update { it.copy(selectedSeason = nextEpisode.season) }
+        _uiState.update { it.copy(selectedSeason = nextEpisode.season) }
 
-                // Assuming we want to start tracking progress for the next episode
-                // immediately after finishing the current one.
-                watchProgressRepository.insert(
-                    EpisodeProgress(
-                        ownerId = progress.ownerId,
-                        filmId = progress.filmId,
-                        seasonNumber = nextEpisode.season,
-                        episodeNumber = nextEpisode.number,
-                        status = WatchStatus.WATCHING,
-                        progress = 0L,
-                    )
-                )
-            }
-        }
+        return EpisodeProgress(
+            ownerId = progress.ownerId,
+            filmId = progress.filmId,
+            seasonNumber = nextEpisode.season,
+            episodeNumber = nextEpisode.number,
+            status = WatchStatus.WATCHING,
+            progress = 0L,
+        )
     }
 
     init {
@@ -440,12 +433,6 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                 if (_uiState.value.error != null) return@init
 
                 setInitialSelectedSeason()
-
-                watchProgress.collect { watchData ->
-                    if (watchData is EpisodeProgress) {
-                        observeEpisodeProgress(watchData)
-                    }
-                }
             }
 
             launch {
@@ -457,7 +444,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                     val (season) = seasonState.data!! // De-structure the season from SeasonWithProgress
                     val seasonNumber = tvShow.seasons.binarySearchBy(season.number) { it.number }
 
-                    // If we have the season but it has no episodes, update it.
+                    // If we have the season, but it has no episodes, update it.
                     // This can happen when the initial metadata has seasons without episodes.
                     // We only do this if we don't have any episodes for the season to avoid
                     // overwriting any existing data.

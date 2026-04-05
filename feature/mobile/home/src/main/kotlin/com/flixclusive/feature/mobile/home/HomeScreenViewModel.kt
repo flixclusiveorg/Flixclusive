@@ -8,6 +8,7 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.pagination.PagingDataState
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
+import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
@@ -21,8 +22,8 @@ import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
 import com.flixclusive.domain.catalog.usecase.GetHomeHeaderUseCase
 import com.flixclusive.domain.catalog.usecase.PaginateItemsUseCase
-import com.flixclusive.domain.provider.usecase.get.GetEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.feature.mobile.home.HomeUiState.Companion.MAX_PAGINATION_PAGES
 import com.flixclusive.feature.mobile.home.HomeUiState.Companion.addItems
 import com.flixclusive.feature.mobile.home.HomeUiState.Companion.updatePagingState
@@ -59,7 +60,7 @@ internal class HomeScreenViewModel @Inject constructor(
     dataStoreManager: DataStoreManager,
     private val getHomeHeader: GetHomeHeaderUseCase,
     private val paginateItems: PaginateItemsUseCase,
-    private val getEpisode: GetEpisodeUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
     private val watchProgressRepository: WatchProgressRepository,
 ) : ViewModel() {
@@ -145,7 +146,7 @@ internal class HomeScreenViewModel @Inject constructor(
     private suspend fun filterContinueWatching(item: WatchProgressWithMetadata): WatchProgressWithMetadata? {
         return when (val data = item.watchData) {
             is EpisodeProgress -> {
-                if (!data.isFinished) {
+                if (!data.isCompleted) {
                     return item // Episode not finished, include in continue watching
                 }
 
@@ -162,20 +163,18 @@ internal class HomeScreenViewModel @Inject constructor(
                 }
 
                 // Get next episode
-                val nextEpisode = getEpisode(
+                val nextEpisode = getNextEpisode(
                     tvShow = tvShow as TvShow,
                     season = data.seasonNumber,
-                    episode = data.episodeNumber + 1,
+                    episode = data.episodeNumber,
                 )
 
                 if (nextEpisode == null) {
                     null // No next episode, exclude from continue watching
                 } else {
-                    // THIS IS BAD CODE BUT I'M SICK OF REWRITING THE WHOLE WATCH PROGRESS SYSTEM
-
-                    // Insert next episode progress with 0 progress and return it
-                    val id = watchProgressRepository.insert(
-                        item = EpisodeProgress(
+                    EpisodeProgressWithMetadata(
+                        film = item.film,
+                        watchData = EpisodeProgress(
                             ownerId = data.ownerId,
                             filmId = item.film.id,
                             seasonNumber = nextEpisode.season,
@@ -183,19 +182,12 @@ internal class HomeScreenViewModel @Inject constructor(
                             progress = 0L,
                             status = WatchStatus.WATCHING,
                         ),
-                        film = item.film,
-                    )
-
-                    // Return newly created episode progress with metadata
-                    watchProgressRepository.get(
-                        id = id,
-                        type = item.film.filmType,
                     )
                 }
             }
 
             is MovieProgress -> {
-                if (!data.isFinished) {
+                if (!data.isCompleted) {
                     return item
                 }
 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -31,9 +33,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.player.ui.state.VolumeManager
+import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.feature.mobile.player.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -120,7 +124,7 @@ internal fun PlayerGestureHandler(
             }
     ) {
         GestureBox(
-            interactionSource = rightInteractionSource,
+            interactionSource = leftInteractionSource,
             screenWidth = screenWidth,
             onSingleTap = onSingleTap,
             onDoubleTap = { offset ->
@@ -128,12 +132,12 @@ internal fun PlayerGestureHandler(
                     seekAnimationJob?.cancel()
                     seekAnimationJob = launch {
                         val press = PressInteraction.Press(offset)
-                        rightInteractionSource.emit(press)
+                        leftInteractionSource.emit(press)
 
-                        gestureState.onDoubleTap(isForward = true)
-                        onSeekForward()
+                        gestureState.onDoubleTap(isForward = false)
+                        onSeekBackward()
 
-                        rightInteractionSource.emit(PressInteraction.Release(press))
+                        leftInteractionSource.emit(PressInteraction.Release(press))
                     }
                 }
             },
@@ -153,13 +157,14 @@ internal fun PlayerGestureHandler(
                 val dragPercent = dragAmount * (DRAG_MULTIPLIER * brightnessManager.maxBrightness) / screenHeight
                 val newBrightness = dragStartBrightness - dragPercent
                 brightnessManager.setBrightness(maxOf(newBrightness, 0f))
+                infoLog("Drag start brightness: $dragStartBrightness, dragAmount: $dragAmount, dragPercent: $dragPercent, newBrightness: $newBrightness")
                 dragStartBrightness = brightnessManager.currentBrightness
             },
             modifier = Modifier.align(Alignment.CenterStart)
         )
 
         GestureBox(
-            interactionSource = leftInteractionSource,
+            interactionSource = rightInteractionSource,
             screenWidth = screenWidth,
             onSingleTap = onSingleTap,
             onDoubleTap = { offset ->
@@ -167,12 +172,12 @@ internal fun PlayerGestureHandler(
                     seekAnimationJob?.cancel()
                     seekAnimationJob = launch {
                         val press = PressInteraction.Press(offset)
-                        leftInteractionSource.emit(press)
+                        rightInteractionSource.emit(press)
 
-                        gestureState.onDoubleTap(isForward = false)
-                        onSeekBackward()
+                        gestureState.onDoubleTap(isForward = true)
+                        onSeekForward()
 
-                        leftInteractionSource.emit(PressInteraction.Release(press))
+                        rightInteractionSource.emit(PressInteraction.Release(press))
                     }
                 }
             },
@@ -192,6 +197,7 @@ internal fun PlayerGestureHandler(
                 val dragPercent = dragAmount * (DRAG_MULTIPLIER * volumeManager.maxVolume) / screenHeight
                 val newVolume = dragStartVolume - dragPercent
                 volumeManager.setVolume(maxOf(newVolume, 0f))
+                infoLog("Drag start volume: $dragStartVolume, dragAmount: $dragAmount, dragPercent: $dragPercent, newVolume: $newVolume")
                 dragStartVolume = volumeManager.currentVolume
             },
             modifier = Modifier.align(Alignment.CenterEnd)
@@ -265,8 +271,24 @@ internal fun PlayerGestureHandler(
                 painterResource(icon)
             },
             value = volumeManager.currentVolumePercentage,
-            onValueChange = { volumeManager.setVolume(it * volumeManager.maxVolume) },
-            valueRange = 0f..1f
+            onValueChange = { volumeManager.setVolume(it.toInt() * volumeManager.maxVolume) },
+            valueRange = 0f..1f,
+            track = if (volumeManager.isVolumeBoosted) {
+                { sliderState ->
+                    val baseColor = MaterialTheme.colorScheme.primary
+                    val alertColor = Color(0xFFFF2241)
+
+                    VolumeBoostedGradientTrack(
+                        sliderState = sliderState,
+                        inactiveColor = Color.White.copy(alpha = 0.4f),
+                        colorStops = arrayOf(
+                            0f to baseColor,
+                            (volumeManager.systemMaxVolume / volumeManager.maxVolume) to baseColor.copy(alpha = 0.6f),
+                            1f to alertColor,
+                        )
+                    )
+                }
+            } else null
         )
     }
 }
@@ -274,9 +296,9 @@ internal fun PlayerGestureHandler(
 @Composable
 private fun GestureBox(
     interactionSource: MutableInteractionSource,
-    screenWidth: androidx.compose.ui.unit.Dp,
+    screenWidth: Dp,
     onSingleTap: () -> Unit,
-    onDoubleTap: (androidx.compose.ui.geometry.Offset) -> Unit,
+    onDoubleTap: (Offset) -> Unit,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
     onVerticalDrag: (Float) -> Unit,
