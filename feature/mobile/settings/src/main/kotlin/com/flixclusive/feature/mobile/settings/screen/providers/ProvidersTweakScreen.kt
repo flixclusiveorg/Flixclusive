@@ -2,8 +2,6 @@ package com.flixclusive.feature.mobile.settings.screen.providers
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
@@ -30,10 +28,8 @@ internal class ProvidersTweakScreen(
     override val preferencesAsState: StateFlow<ProviderPreferences> =
         viewModel.getUserPrefsAsState<ProviderPreferences>(key)
 
-    override suspend fun onUpdatePreferences(
-        transform: suspend (t: ProviderPreferences) -> ProviderPreferences,
-    ): Boolean {
-        return viewModel.updateUserPrefs(key, transform)
+    override fun onUpdatePreferences(transform: suspend (t: ProviderPreferences) -> ProviderPreferences) {
+        viewModel.updateUserPrefs(key, transform)
     }
 
     @Composable
@@ -56,21 +52,21 @@ internal class ProvidersTweakScreen(
         return listOf(
             TweakUI.ClickableTweak(
                 title = stringResource(LocaleR.string.manage_providers),
-                descriptionProvider = { resources.getString(LocaleR.string.providers_button_settings_description) },
+                description = { resources.getString(LocaleR.string.providers_button_settings_description) },
                 iconId = UiCommonR.drawable.provider_logo,
                 onClick = navigator::openProviderManagerScreen,
             ),
             TweakUI.ClickableTweak(
                 title = stringResource(LocaleR.string.test_providers),
                 enabledProvider = { providers.isNotEmpty() },
-                descriptionProvider = { resources.getString(LocaleR.string.test_providers_button_settings_description) },
+                description = { resources.getString(LocaleR.string.test_providers_button_settings_description) },
                 iconId = UiCommonR.drawable.test,
                 onClick = { navigator.testProviders(arrayListOf()) },
             ),
             TweakUI.Divider(),
             TweakUI.ClickableTweak(
                 title = stringResource(LocaleR.string.manage_repositories),
-                descriptionProvider = { resources.getString(LocaleR.string.repositories_button_settings_description) },
+                description = { resources.getString(LocaleR.string.repositories_button_settings_description) },
                 iconId = UiCommonR.drawable.repository,
                 onClick = navigator::openRepositoryManagerScreen,
             ),
@@ -87,30 +83,29 @@ internal class ProvidersTweakScreen(
 
         return TweakGroup(
             title = stringResource(LocaleR.string.general),
-            tweaks =
-                persistentListOf(
-                    TweakUI.SwitchTweak(
-                        value = remember { mutableStateOf(providerPreferences().isAutoUpdateEnabled) },
-                        title = stringResource(LocaleR.string.auto_update_providers),
-                        onTweaked = {
-                            onUpdatePreferences { oldValue ->
-                                oldValue.copy(isAutoUpdateEnabled = it)
-                            }
-                        },
-                    ),
-                    TweakUI.SwitchTweak(
-                        value = remember { mutableStateOf(providerPreferences().shouldWarnBeforeInstall) },
-                        title = stringResource(LocaleR.string.warn_on_unsafe_install),
-                        descriptionProvider = {
-                            resources.getString(LocaleR.string.warn_on_unsafe_install_description)
-                        },
-                        onTweaked = {
-                            onUpdatePreferences { oldValue ->
-                                oldValue.copy(shouldWarnBeforeInstall = it)
-                            }
-                        },
-                    ),
+            tweaks = persistentListOf(
+                TweakUI.SwitchTweak(
+                    value = { providerPreferences().isAutoUpdateEnabled },
+                    title = stringResource(LocaleR.string.auto_update_providers),
+                    onTweaked = {
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(isAutoUpdateEnabled = it)
+                        }
+                    },
                 ),
+                TweakUI.SwitchTweak(
+                    value = { providerPreferences().shouldWarnBeforeInstall },
+                    title = stringResource(LocaleR.string.warn_on_unsafe_install),
+                    description = {
+                        resources.getString(LocaleR.string.warn_on_unsafe_install_description)
+                    },
+                    onTweaked = {
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(shouldWarnBeforeInstall = it)
+                        }
+                    },
+                ),
+            ),
         )
     }
 
@@ -119,21 +114,20 @@ internal class ProvidersTweakScreen(
         val resources = LocalResources.current
         return TweakGroup(
             title = stringResource(LocaleR.string.test),
-            tweaks =
-                persistentListOf(
-                    TweakUI.SwitchTweak(
-                        value = remember { mutableStateOf(providerPreferences().shouldAddDebugPrefix) },
-                        title = stringResource(LocaleR.string.add_debug_prefix),
-                        descriptionProvider = {
-                            resources.getString(LocaleR.string.add_debug_prefix_settings_description)
-                        },
-                        onTweaked = {
-                            onUpdatePreferences { oldValue ->
-                                oldValue.copy(shouldAddDebugPrefix = it)
-                            }
-                        },
-                    ),
+            tweaks = persistentListOf(
+                TweakUI.SwitchTweak(
+                    value = { providerPreferences().shouldAddDebugPrefix },
+                    title = stringResource(LocaleR.string.add_debug_prefix),
+                    description = {
+                        resources.getString(LocaleR.string.add_debug_prefix_settings_description)
+                    },
+                    onTweaked = {
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(shouldAddDebugPrefix = it)
+                        }
+                    },
                 ),
+            ),
         )
     }
 
@@ -163,42 +157,41 @@ internal class ProvidersTweakScreen(
 
         return TweakGroup(
             title = stringResource(LocaleR.string.data),
-            tweaks =
-                persistentListOf(
-                    TweakUI.DialogTweak(
-                        title = clearCachedLinksLabel,
-                        dialogTitle = warningLabel,
-                        enabledProvider = { cacheSize > 0 },
-                        descriptionProvider = {
-                            resources.getString(
-                                LocaleR.string.cached_links_description_format,
-                                cacheSize,
-                            )
-                        },
-                        dialogMessage = formatWarningMessage(clearCachedLinksLabel),
-                        onConfirm = viewModel::clearCacheLinks,
-                    ),
-                    TweakUI.DialogTweak(
-                        title = deleteProvidersLabel,
-                        iconId = UiCommonR.drawable.warning_outline,
-                        enabledProvider = { providers().isNotEmpty() },
-                        descriptionProvider = { formatWarningCountDescription(providers().size) },
-                        dialogTitle = warningLabel,
-                        dialogMessage = formatWarningMessage(deleteProvidersLabel),
-                        onConfirm = { viewModel.deleteRepositories() },
-                    ),
-                    TweakUI.DialogTweak(
-                        title = deleteRepositoriesLabel,
-                        iconId = UiCommonR.drawable.warning_outline,
-                        enabledProvider = { repositories.isNotEmpty() },
-                        descriptionProvider = {
-                            formatWarningCountDescription(repositories.size)
-                        },
-                        dialogTitle = warningLabel,
-                        dialogMessage = formatWarningMessage(deleteRepositoriesLabel),
-                        onConfirm = { viewModel.deleteRepositories() },
-                    ),
+            tweaks = persistentListOf(
+                TweakUI.DialogTweak(
+                    title = clearCachedLinksLabel,
+                    dialogTitle = warningLabel,
+                    enabledProvider = { cacheSize > 0 },
+                    description = {
+                        resources.getString(
+                            LocaleR.string.cached_links_description_format,
+                            cacheSize,
+                        )
+                    },
+                    dialogMessage = formatWarningMessage(clearCachedLinksLabel),
+                    onConfirm = viewModel::clearCacheLinks,
                 ),
+                TweakUI.DialogTweak(
+                    title = deleteProvidersLabel,
+                    iconId = UiCommonR.drawable.warning_outline,
+                    enabledProvider = { providers().isNotEmpty() },
+                    description = { formatWarningCountDescription(providers().size) },
+                    dialogTitle = warningLabel,
+                    dialogMessage = formatWarningMessage(deleteProvidersLabel),
+                    onConfirm = { viewModel.deleteRepositories() },
+                ),
+                TweakUI.DialogTweak(
+                    title = deleteRepositoriesLabel,
+                    iconId = UiCommonR.drawable.warning_outline,
+                    enabledProvider = { repositories.isNotEmpty() },
+                    description = {
+                        formatWarningCountDescription(repositories.size)
+                    },
+                    dialogTitle = warningLabel,
+                    dialogMessage = formatWarningMessage(deleteRepositoriesLabel),
+                    onConfirm = { viewModel.deleteRepositories() },
+                ),
+            ),
         )
     }
 }

@@ -104,17 +104,19 @@ internal class SettingsViewModel @Inject constructor(
                 initialValue = T::class.java.getDeclaredConstructor().newInstance(),
             )
 
-    suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences): Boolean {
-        dataStoreManager.updateSystemPrefs(transform)
-        return true
+    fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
+        appDispatchers.ioScope.launch {
+            dataStoreManager.updateSystemPrefs(transform)
+        }
     }
 
-    suspend inline fun <reified T : UserPreferences> updateUserPrefs(
+    inline fun <reified T : UserPreferences> updateUserPrefs(
         key: Preferences.Key<String>,
         noinline transform: suspend (t: T) -> T,
-    ): Boolean {
-        dataStoreManager.updateUserPrefs(key, type = T::class, transform = transform)
-        return true
+    ) {
+        appDispatchers.ioScope.launch {
+            dataStoreManager.updateUserPrefs(key, type = T::class, transform = transform)
+        }
     }
 
     fun clearSearchHistory() {
