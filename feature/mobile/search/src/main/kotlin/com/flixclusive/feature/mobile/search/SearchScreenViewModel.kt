@@ -1,7 +1,9 @@
 package com.flixclusive.feature.mobile.search
 
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.safeCall
@@ -23,7 +25,8 @@ import javax.inject.Inject
 internal class SearchScreenViewModel @Inject constructor(
     private val getDiscoverCards: GetDiscoverCardsUseCase,
     private val providerRepository: ProviderRepository,
-    userSessionDataStore: UserSessionDataStore,
+    private val dataStoreManager: DataStoreManager,
+    private val userSessionDataStore: UserSessionDataStore,
 ) : ViewModel() {
     private val _cards = MutableStateFlow<Resource<DiscoverCards>>(Resource.Loading)
     val cards = _cards.asStateFlow()
@@ -42,7 +45,9 @@ internal class SearchScreenViewModel @Inject constructor(
                             )
                         }
 
-                        api?.catalogs
+                        api?.catalogs?.fastMap {
+                            it.copy(providerId = provider.id)
+                        }
                     }.flatten()
                 }
         }
