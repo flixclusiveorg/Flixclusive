@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,9 +32,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.datastore.model.system.SystemPreferences
-import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
-import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.splashScreen.component.LoadingTag
 import com.flixclusive.feature.splashScreen.screen.consent.ConsentScreen
@@ -86,7 +83,6 @@ internal fun SplashScreen(
         openAddProfileScreen = navigator::openAddProfileScreen,
         openProfilesScreen = navigator::openProfilesScreen,
         openHomeScreen = navigator::openHomeScreen,
-        onConsumeProviderErrors = viewModel::onConsumeProviderErrors,
         onConsumeAppUpdateError = viewModel::onConsumeAppUpdateError,
     )
 }
@@ -102,7 +98,6 @@ private fun SplashScreenContent(
     openUpdateScreen: () -> Unit,
     openAddProfileScreen: (isInitializing: Boolean) -> Unit,
     openProfilesScreen: (shouldPopBackStack: Boolean) -> Unit,
-    onConsumeProviderErrors: () -> Unit,
     onConsumeAppUpdateError: () -> Unit,
     openHomeScreen: () -> Unit,
 ) {
@@ -155,9 +150,8 @@ private fun SplashScreenContent(
                         areAllPermissionsGranted,
                         userLoggedIn,
                     ) {
-                        val hasErrors = hasAppUpdateErrors || uiState.providerErrors.isNotEmpty()
 
-                        if (areAllPermissionsGranted && !uiState.isLoading && !hasErrors) {
+                        if (areAllPermissionsGranted && !uiState.isLoading && !hasAppUpdateErrors) {
                             val hasAutoUpdate = systemPreferences.isUsingAutoUpdateAppFeature
                             val isAppOutdated = uiState.newAppUpdateInfo != null
                             val hasOldUserSession = userLoggedIn != null
@@ -178,27 +172,6 @@ private fun SplashScreenContent(
                         PermissionsRequester(
                             permissions = requiredPermissions,
                             onGrantPermissions = { areAllPermissionsGranted = true },
-                        )
-                    } else if (uiState.providerErrors.isNotEmpty() && !uiState.isLoading) {
-                        val listOfErrors by remember {
-                            derivedStateOf {
-                                uiState.providerErrors.values.toList()
-                            }
-                        }
-
-                        ProviderCrashBottomSheet(
-                            isLoading = uiState.isInitializingProviders,
-                            errors = listOfErrors,
-                            onDismissRequest = {
-                                if (uiState.isInitializingProviders) {
-                                    context.showToast(
-                                        resources.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading),
-                                    )
-                                    return@ProviderCrashBottomSheet
-                                }
-
-                                onConsumeProviderErrors()
-                            },
                         )
                     } else if (hasAppUpdateErrors && !uiState.isLoading) {
                         TextAlertDialog(
@@ -231,7 +204,6 @@ private fun SplashScreenBasePreview() {
                 openAddProfileScreen = { },
                 openProfilesScreen = { },
                 openHomeScreen = { },
-                onConsumeProviderErrors = { },
                 onConsumeAppUpdateError = { },
             )
         }

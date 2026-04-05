@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.Date
 import javax.inject.Inject
 
 // TODO: Add a mapping or list of providers that have failed to initialize
@@ -115,8 +116,8 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     }
 
                     it.copy(
-                        id = "${it.id}-debug",
-                        name = "${it.name}-debug",
+                        id = "${it.id}${ProviderPreferences.DEBUG_PREFIX}",
+                        name = "${it.name}${ProviderPreferences.DEBUG_PREFIX}",
                     )
                 }
 
@@ -129,10 +130,6 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     ownerId = userId, id = metadata.id,
                 )
 
-                if (installedProvider != null) {
-                    return@subDirectory
-                }
-
                 infoLog("New debug provider found: ${metadata.name}. Installing...")
                 providerRepository.install(
                     metadata = metadata,
@@ -141,8 +138,9 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                         id = metadata.id,
                         repositoryUrl = metadata.repositoryUrl,
                         filePath = providerFile.absolutePath,
-                        sortOrder = providerRepository.getMaxSortOrder(userId),
                         isDebug = true,
+                        sortOrder = installedProvider?.sortOrder ?: providerRepository.getMaxSortOrder(userId),
+                        createdAt = installedProvider?.createdAt ?: Date()
                     ),
                 )
             }

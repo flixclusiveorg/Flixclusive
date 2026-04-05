@@ -32,6 +32,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,9 +59,11 @@ import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.navigation.navigator.ExitAction
 import com.flixclusive.core.navigation.navigator.StartPlayerAction
 import com.flixclusive.core.navigation.navigator.ViewFilmPreviewAction
+import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.components.NetworkMonitorSnackbarVisuals
 import com.flixclusive.core.presentation.mobile.components.NetworkMonitorSnackbarVisuals.Companion.NetworkMonitorSnackbarHost
 import com.flixclusive.core.presentation.mobile.components.provider.MediaLinksBottomSheet
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.util.webview.WebViewDriver
@@ -131,10 +134,9 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     val snackBarHostState = remember { SnackbarHostState() }
     val skipPartiallyExpanded by remember { mutableStateOf(true) }
-    val bottomSheetState =
-        rememberModalBottomSheetState(
-            skipPartiallyExpanded = skipPartiallyExpanded,
-        )
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = skipPartiallyExpanded,
+    )
 
     val navController = rememberNavController()
     val destinationsNavigator = navController.rememberDestinationsNavigator()
@@ -401,13 +403,35 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 )
             }
         }
-
     }
 
     if (webViewDriver != null) {
         WebViewDriverDialog(
             webView = webViewDriver!!,
             onDismiss = viewModel::hideWebViewDriver,
+        )
+    }
+
+    if (uiState.providerErrors.isNotEmpty()) {
+        val listOfErrors by remember {
+            derivedStateOf {
+                uiState.providerErrors.values.toList()
+            }
+        }
+
+        ProviderCrashBottomSheet(
+            isLoading = uiState.isLoadingProviders,
+            errors = listOfErrors,
+            onDismissRequest = {
+                if (uiState.isLoadingProviders) {
+                    context.showToast(
+                        resources.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading),
+                    )
+                    return@ProviderCrashBottomSheet
+                }
+
+                viewModel.onConsumeProviderErrors()
+            },
         )
     }
 }
