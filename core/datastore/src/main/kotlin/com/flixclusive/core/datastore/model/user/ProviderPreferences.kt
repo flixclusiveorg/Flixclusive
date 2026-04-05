@@ -16,4 +16,8 @@ data class ProviderPreferences(
     val shouldAddDebugPrefix: Boolean = true,
     @Deprecated("This field is no longer used, as provider data has been migrated to Room. This field will be removed in a future version.")
     val providers: List<OldProviderFromPreferences> = emptyList(),
-) : UserPreferences
+) : UserPreferences {
+    companion object {
+        const val DEBUG_PREFIX = "-debug"
+    }
+}

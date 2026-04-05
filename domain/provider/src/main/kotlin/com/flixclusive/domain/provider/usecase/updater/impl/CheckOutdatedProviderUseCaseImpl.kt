@@ -4,13 +4,11 @@ import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
-import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.coroutines.flow.filterNotNull
@@ -47,7 +45,12 @@ internal class CheckOutdatedProviderUseCaseImpl @Inject constructor(
 
     override suspend fun invoke(metadata: ProviderMetadata): Boolean {
         val id = metadata.id
-        if (id.endsWith(Constants.PROVIDER_DEBUG)) return false
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+
+        val isDebug = providerRepository.getInstalledProvider(id, userId)?.isDebug ?: false
+        if (isDebug) return false
+
+        return true
 
         val provider = providerRepository.getPlugin(id) ?: return false
 

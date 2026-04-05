@@ -53,12 +53,11 @@ internal class FlixclusiveApplication :
 
             val users = userRepository.observeUsers().first()
             val hasOldSession = userSessionManager.hasOldSession()
-            val isSingleUserApp = users.size == 1
 
             if (hasOldSession) {
                 userSessionManager.restoreSession()
                 userSessionManager.currentUser.first { it != null }
-            } else if (isSingleUserApp) {
+            } else if (users.size == 1) {
                 userSessionManager.signIn(users.first())
             } else {
                 userSessionManager.signOut()

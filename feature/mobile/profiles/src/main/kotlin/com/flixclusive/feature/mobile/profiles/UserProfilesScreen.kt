@@ -43,7 +43,6 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,8 +56,6 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,12 +68,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navigator.PinAction
-import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
-import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -115,8 +110,8 @@ internal fun UserProfilesScreen(
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isLoggedIn, uiState.errors) {
-        if (uiState.isLoggedIn && uiState.errors.isEmpty()) {
+    LaunchedEffect(uiState.isLoggedIn) {
+        if (uiState.isLoggedIn) {
             navigator.openHomeScreen()
         }
     }
@@ -139,7 +134,6 @@ internal fun UserProfilesScreen(
         },
         onHoverProfile = viewModel::onHoverProfile,
         onUseProfile = viewModel::onUseProfile,
-        onConsumeErrors = viewModel::onConsumeErrors,
     )
 }
 
@@ -159,11 +153,7 @@ private fun UserProfilesScreenContent(
     initialState: ScreenType,
     onHoverProfile: (User) -> Unit,
     onUseProfile: (User) -> Unit,
-    onConsumeErrors: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val resources = LocalResources.current
-
     val (pageCount, initialPage) = remember(profiles.size) {
         val pageCount = if (profiles.size <= 2) {
             profiles.size
@@ -296,27 +286,6 @@ private fun UserProfilesScreenContent(
                 },
             )
         }
-    }
-
-    if (uiState.errors.isNotEmpty()) {
-        val listOfErrors by remember {
-            derivedStateOf {
-                uiState.errors.values.toList()
-            }
-        }
-
-        ProviderCrashBottomSheet(
-            isLoading = uiState.isLoading,
-            errors = listOfErrors,
-            onDismissRequest = {
-                if (uiState.isLoading) {
-                    context.showToast(resources.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading))
-                    return@ProviderCrashBottomSheet
-                }
-
-                onConsumeErrors()
-            },
-        )
     }
 }
 
@@ -580,7 +549,6 @@ private fun UserProfilesScreenBasePreview() {
                 initialState = ScreenType.Pager,
                 onHoverProfile = { uiState = uiState.copy(focusedProfile = it) },
                 onUseProfile = { uiState = uiState.copy(isLoading = true) },
-                onConsumeErrors = { uiState = uiState.copy(errors = emptyMap()) },
             )
         }
     }

@@ -5,30 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.system.SystemPreferences
-import com.flixclusive.core.datastore.model.user.ProviderPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.app.updates.model.AppUpdateInfo
 import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
-import com.flixclusive.domain.provider.usecase.manage.ProviderResult
-import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
-import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
-import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
-import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -41,9 +29,6 @@ internal class SplashScreenViewModel @Inject constructor(
     private val appUpdatesRepository: AppUpdatesRepository,
     private val dataStoreManager: DataStoreManager,
     private val appDispatchers: AppDispatchers,
-    private val initializeProviders: InitializeProvidersUseCase,
-    private val checkOutdatedProviders: CheckOutdatedProviderUseCase,
-    private val updateProvider: UpdateProviderUseCase
 ) : ViewModel() {
     private var saveSettingsJob: Job? = null
 
@@ -77,10 +62,6 @@ internal class SplashScreenViewModel @Inject constructor(
         }
     }
 
-    fun onConsumeProviderErrors() {
-        _uiState.update { it.copy(providerErrors = emptyMap()) }
-    }
-
     fun onConsumeAppUpdateError() {
         _uiState.update { it.copy(appUpdateError = null) }
     }
@@ -102,60 +83,9 @@ internal class SplashScreenViewModel @Inject constructor(
             }
     }
 
-    /**
-     * Initializes the providers when the user logs in for the first time.
-     *
-     * This is to ensure that the providers are loaded and ready to use.
-     * */
-    private suspend fun loadProviders() {
-        val providers = mutableListOf<ProviderMetadata>()
-
-        initializeProviders()
-            .onEach { result ->
-                when (result) {
-                    is ProviderResult.Success -> {
-                        providers += result.provider
-                    }
-
-                    is ProviderResult.Failure -> {
-                        // still collect the provider so it can be passed to updateProvider
-                        providers += result.provider
-
-                        _uiState.update { state ->
-                            val pair = result.provider.id to ProviderWithThrowable(
-                                provider = result.provider,
-                                throwable = result.error,
-                            )
-
-                            state.copy(providerErrors = state.providerErrors + pair)
-                        }
-                    }
-                }
-            }.collect()
-
-        val providerPrefs =
-            dataStoreManager.getUserPrefs(
-                key = UserPreferences.PROVIDER_PREFS_KEY,
-                type = ProviderPreferences::class
-            ).first()
-
-        if (providerPrefs.isAutoUpdateEnabled) {
-            val outdatedProviders = checkOutdatedProviders()
-            outdatedProviders
-                .filterIsInstance<CheckOutdatedProviderResult.Outdated>()
-                .forEach {
-                    updateProvider(it.metadata)
-                }
-        }
-    }
-
     init {
         appDispatchers.ioScope.launch {
             checkForUpdates()
-
-            if (userLoggedIn.value != null) {
-                loadProviders()
-            }
 
             _uiState.update { it.copy(isLoading = false) }
         }
@@ -167,6 +97,4 @@ internal data class SplashScreenUiState(
     val isLoading: Boolean = false,
     val appUpdateError: ExceptionWithUiText? = null,
     val newAppUpdateInfo: AppUpdateInfo? = null,
-    val isInitializingProviders: Boolean = false,
-    val providerErrors: Map<String, ProviderWithThrowable> = emptyMap(),
 )

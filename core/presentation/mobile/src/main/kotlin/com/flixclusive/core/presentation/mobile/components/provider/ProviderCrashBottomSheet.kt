@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -148,7 +149,7 @@ private fun LabelHeader(
     errorCount: Int,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
     Column(
         modifier = modifier,
@@ -173,7 +174,7 @@ private fun LabelHeader(
         }
 
         Text(
-            text = context.resources.getQuantityString(R.plurals.provider_failure_sub_text, errorCount),
+            text = resources.getQuantityString(R.plurals.provider_failure_sub_text, errorCount),
             style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(11.sp),
         )
     }
