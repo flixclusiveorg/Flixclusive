@@ -1,6 +1,8 @@
 name: Unit Tests
 
 on:
+  pull_request:
+    branches: [ dev, staging, main ]
   workflow_call:
     inputs:
       variant:
@@ -22,9 +24,21 @@ jobs:
   unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve variant
+        id: resolve-variant
+        run: |
+          if [ -n "${{ inputs.variant }}" ]; then
+            echo "variant=${{ inputs.variant }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.base_ref }}" = "main" ]; then
+            echo "variant=release" >> $GITHUB_OUTPUT
+          elif [ "${{ github.base_ref }}" = "staging" ]; then
+            echo "variant=preview" >> $GITHUB_OUTPUT
+          else
+            echo "variant=debug" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check for test folders
         id: check-tests
@@ -51,7 +65,7 @@ jobs:
       - name: Run unit tests
         if: steps.check-tests.outputs.has_tests == 'true'
         run: |
-          VARIANT=${{ inputs.variant }}
+          VARIANT=${{ steps.resolve-variant.outputs.variant }}
           echo "Running unit tests for variant: $VARIANT"
           ./gradlew test${VARIANT^}UnitTest
 

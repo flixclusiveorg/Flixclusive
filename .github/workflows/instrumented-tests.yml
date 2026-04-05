@@ -1,6 +1,8 @@
 name: Instrumented Tests
 
 on:
+  pull_request:
+    branches: [ staging, main ]
   workflow_call:
     inputs:
       variant:
@@ -22,10 +24,22 @@ jobs:
   instrumented-tests:
     name: Run Instrumented Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Resolve variant
+        id: resolve-variant
+        run: |
+          if [ -n "${{ inputs.variant }}" ]; then
+            echo "variant=${{ inputs.variant }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.base_ref }}" = "main" ]; then
+            echo "variant=release" >> $GITHUB_OUTPUT
+          elif [ "${{ github.base_ref }}" = "staging" ]; then
+            echo "variant=preview" >> $GITHUB_OUTPUT
+          else
+            echo "variant=debug" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check for androidTest folders
         id: check-tests
@@ -91,7 +105,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            VARIANT=${{ inputs.variant }}
+            VARIANT=${{ steps.resolve-variant.outputs.variant }}
             echo "Running instrumented tests for variant: $VARIANT"
             ./gradlew connected${VARIANT^}AndroidTest
 
