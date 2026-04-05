@@ -3,8 +3,12 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.entity.provider.InstalledProvider
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
@@ -19,6 +23,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
@@ -29,6 +34,7 @@ import javax.inject.Inject
 //       to retry initialization of those providers.
 internal class InitializeProvidersUseCaseImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val dataStoreManager: DataStoreManager,
     private val userSessionDataStore: UserSessionDataStore,
     private val loadProviderUseCase: LoadProviderUseCase,
     private val providerRepository: ProviderRepository,
@@ -64,6 +70,11 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
 
         val repositoryDirectory = localDir.listFiles()
 
+        val addDebugSuffix = dataStoreManager
+            .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            .map { it.shouldAddDebugPrefix }
+            .first()
+
         repositoryDirectory?.forEach { subDirectory ->
             if (!subDirectory.isDirectory) return@forEach
 
@@ -96,11 +107,33 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     return@subDirectory
                 }
 
-                val metadata =
-                    updaterJson.find {
-                        it.buildUrl.endsWith(providerFile.name)
-                    } ?: return@subDirectory
+                val metadata = updaterJson.find {
+                    it.buildUrl.endsWith(providerFile.name)
+                }?.let {
+                    if (!addDebugSuffix) {
+                        return@let it
+                    }
 
+                    it.copy(
+                        id = "${it.id}-debug",
+                        name = "${it.name}-debug",
+                    )
+                }
+
+                if (metadata == null) {
+                    warnLog("No metadata found for provider file: ${providerFile.name}")
+                    return@subDirectory
+                }
+
+                val installedProvider = providerRepository.getInstalledProvider(
+                    ownerId = userId, id = metadata.id,
+                )
+
+                if (installedProvider != null) {
+                    return@subDirectory
+                }
+
+                infoLog("New debug provider found: ${metadata.name}. Installing...")
                 providerRepository.install(
                     metadata = metadata,
                     provider = InstalledProvider(

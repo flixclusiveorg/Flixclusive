@@ -1,6 +1,7 @@
 package com.flixclusive.crash
 
 import com.flixclusive.core.common.exception.CrashReportSender
+import com.flixclusive.core.common.exception.REMOTE_FORM_URL
 import com.flixclusive.core.util.network.okhttp.HttpMethod
 import com.flixclusive.core.util.network.okhttp.formRequest
 import kotlinx.coroutines.test.runTest
@@ -9,9 +10,6 @@ import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isTrue
-
-private const val REMOTE_FORM_URL =
-    "https://docs.google.com/forms/u/0/d/e/1FAIpQLSfTVmgiOeF7RlDbjBR10RQG6C6uKioSk-toqKecPvpkAe9ffw/formResponse?pli=1"
 
 class CrashReportSenderTest : CrashReportSender {
     private lateinit var client: OkHttpClient

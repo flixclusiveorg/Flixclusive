@@ -1,11 +1,14 @@
 package com.flixclusive.domain.catalog.usecase.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.core.testing.extensions.isFailure
 import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.core.util.log.LogRule
+import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
@@ -17,6 +20,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -28,9 +32,10 @@ import strikt.assertions.isEqualTo
 
 class PaginateItemsUseCaseImplTest {
     private lateinit var tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository
-    private lateinit var providerApiRepository: ProviderApiRepository
+    private lateinit var providerRepository: ProviderRepository
     private lateinit var appDispatchers: AppDispatchers
     private lateinit var paginateItemsUseCase: PaginateItemsUseCaseImpl
+    private lateinit var userSessionDataStore: UserSessionDataStore
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -40,15 +45,20 @@ class PaginateItemsUseCaseImplTest {
     @Before
     fun setUp() {
         tmdbFilmSearchItemsRepository = mockk()
-        providerApiRepository = mockk()
+        providerRepository = mockk(relaxed = true)
+        userSessionDataStore = mockk {
+            every { currentUserId } returns flowOf(DatabaseTestDefaults.TEST_USER_ID)
+        }
+
         appDispatchers = mockk {
             every { io } returns testDispatcher
         }
 
         paginateItemsUseCase = PaginateItemsUseCaseImpl(
             tmdbFilmSearchItemsRepository = tmdbFilmSearchItemsRepository,
-            providerApiRepository = providerApiRepository,
+            providerRepository = providerRepository,
             appDispatchers = appDispatchers,
+            userSessionDataStore = userSessionDataStore
         )
     }
 
@@ -73,7 +83,12 @@ class PaginateItemsUseCaseImplTest {
                 totalPages = 10,
             )
 
-            every { providerApiRepository.getApi("test-provider") } returns mockProviderApi
+            coEvery {
+                providerRepository.getApi(
+                    "test-provider",
+                    DatabaseTestDefaults.TEST_USER_ID
+                )
+            } returns mockProviderApi
             coEvery {
                 mockProviderApi.getCatalogItems(
                     page = 1,
@@ -102,7 +117,12 @@ class PaginateItemsUseCaseImplTest {
             )
             val exception = RuntimeException("Network error")
 
-            every { providerApiRepository.getApi("test-provider") } returns mockProviderApi
+            coEvery {
+                providerRepository.getApi(
+                    "test-provider",
+                    DatabaseTestDefaults.TEST_USER_ID
+                )
+            } returns mockProviderApi
             coEvery {
                 mockProviderApi.getCatalogItems(
                     page = 1,
@@ -126,7 +146,12 @@ class PaginateItemsUseCaseImplTest {
                 url = "test-url",
             )
 
-            every { providerApiRepository.getApi("non-existent-provider") } returns null
+            coEvery {
+                providerRepository.getApi(
+                    "non-existent-provider",
+                    DatabaseTestDefaults.TEST_USER_ID
+                )
+            } returns null
 
             val result = paginateItemsUseCase(providerCatalog, 1)
             advanceUntilIdle()

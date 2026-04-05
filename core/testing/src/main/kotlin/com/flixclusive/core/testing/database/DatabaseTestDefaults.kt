@@ -126,7 +126,7 @@ object DatabaseTestDefaults {
         listId = listId,
     )
 
-    fun getRepositoryEntity(
+    fun getInstalledRepository(
         url: String = "https://example.com/repo",
         owner: String = "testowner",
         name: String = "testrepo",
@@ -140,18 +140,22 @@ object DatabaseTestDefaults {
         userId = userId,
     )
 
-    fun getInstalledProviderEntity(
+    fun getInstalledProvider(
         id: String = "test-provider",
         repositoryUrl: String = "https://example.com/repo",
         filePath: String = "provider.json",
         ownerId: Int = TEST_USER_ID,
         sortOrder: Double = 1.0,
+        isEnabled: Boolean = true,
+        isDebug: Boolean = false,
     ) = InstalledProvider(
         id = id,
         repositoryUrl = repositoryUrl,
         sortOrder = sortOrder,
         ownerId = ownerId,
         filePath = filePath,
+        isEnabled = isEnabled,
+        isDebug = isDebug,
     )
 
     fun createDatabase(context: Context) =
