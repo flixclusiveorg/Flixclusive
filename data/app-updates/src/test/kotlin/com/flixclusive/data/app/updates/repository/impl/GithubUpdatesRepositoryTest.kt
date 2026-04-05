@@ -91,7 +91,7 @@ class GithubUpdatesRepositoryTest {
     fun `when preview release has newer version then returns update info`() =
         runTest(testDispatcher) {
             val currentVersion = AppVersion.from(BuildType.PREVIEW, "100")
-            val newerVersionTag = "150"
+            val newerVersionTag = "p150"
             val expectedUpdateUrl = """
                 https://github.com/flixclusiveorg/preview-builds/releases/download/p150/app-mobile.apk
             """.trimIndent()

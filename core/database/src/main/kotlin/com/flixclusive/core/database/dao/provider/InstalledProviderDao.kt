@@ -2,10 +2,9 @@ package com.flixclusive.core.database.dao.provider
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import kotlinx.coroutines.flow.Flow
 
@@ -32,10 +31,10 @@ interface InstalledProviderDao {
     @Query("SELECT * FROM installed_providers WHERE repositoryUrl = :repositoryUrl AND ownerId = :ownerId ORDER BY sortOrder ASC")
     fun getByRepositoryUrl(repositoryUrl: String, ownerId: Int): Flow<List<InstalledProvider>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(provider: InstalledProvider)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(providers: List<InstalledProvider>)
 
     @Update
