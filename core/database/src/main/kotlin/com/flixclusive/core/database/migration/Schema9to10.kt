@@ -245,6 +245,7 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         db.execSQL("DROP TABLE `library_lists`")
         db.execSQL("ALTER TABLE `library_lists_new` RENAME TO `library_lists`")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_lists_ownerId` ON `library_lists` (`ownerId`)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_library_lists_ownerId_name` ON `library_lists` (`ownerId`, `name`)")
     }
 
     private fun migrateLibraryListItems(db: SupportSQLiteDatabase) {

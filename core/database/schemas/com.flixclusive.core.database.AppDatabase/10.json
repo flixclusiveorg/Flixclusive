@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 10,
-    "identityHash": "21dfeb82179bb3a2ae3baa1192cf83db",
+    "identityHash": "17ba2deaf27c48f6dbd0f7c3644e7884",
     "entities": [
       {
         "tableName": "films",
@@ -277,6 +277,16 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_library_lists_ownerId` ON `${TABLE_NAME}` (`ownerId`)"
+          },
+          {
+            "name": "index_library_lists_ownerId_name",
+            "unique": true,
+            "columnNames": [
+              "ownerId",
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_lists_ownerId_name` ON `${TABLE_NAME}` (`ownerId`, `name`)"
           }
         ],
         "foreignKeys": [
@@ -974,7 +984,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '21dfeb82179bb3a2ae3baa1192cf83db')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '17ba2deaf27c48f6dbd0f7c3644e7884')"
     ]
   }
 }

@@ -27,6 +27,7 @@ enum class LibraryListType {
     ],
     indices = [
         Index(value = ["ownerId"]),
+        Index(value = ["ownerId", "name"], unique = true)
     ]
 )
 data class LibraryList(
