@@ -28,15 +28,16 @@ interface LibraryListItemDao {
     @Query("SELECT * FROM library_list_item_with_metadata WHERE item_id = :id")
     fun getAsFlow(id: Long): Flow<LibraryListItemWithMetadata?>
 
-    @RawQuery
+    @RawQuery(observedEntities = [LibraryListItemWithMetadata::class])
     fun getByListIdRaw(query: RoomRawQuery): Flow<List<LibraryListItemWithMetadata>>
 
+    @Transaction
     @Query("""
         SELECT * FROM library_list_item_with_metadata
         WHERE item_listId = :listId AND item_filmId = :filmId
         LIMIT 1
     """)
-    fun getByListIdAndFilmId(listId: Int, filmId: String): LibraryListItemWithMetadata?
+    suspend fun getByListIdAndFilmId(listId: Int, filmId: String): LibraryListItemWithMetadata?
 
     fun getByListId(
         listId: Int,
@@ -59,7 +60,7 @@ interface LibraryListItemDao {
         )
     }
 
-    @RawQuery
+    @RawQuery(observedEntities = [LibraryListItemWithMetadata::class])
     fun searchItemsRaw(query: RoomRawQuery): Flow<List<LibraryListItemWithMetadata>>
 
     fun searchItems(
