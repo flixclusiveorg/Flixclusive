@@ -4,17 +4,7 @@ on:
   pull_request:
     branches: [ staging, main ]
   workflow_call:
-    inputs:
-      variant:
-        required: true
-        type: string
   workflow_dispatch:
-    inputs:
-      variant:
-        required: true
-        type: choice
-        options: [ debug, preview, release ]
-        description: "Select the build variant for which to run the tests."
 
 permissions:
   contents: read
@@ -27,19 +17,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Resolve variant
-        id: resolve-variant
-        run: |
-          if [ -n "${{ inputs.variant }}" ]; then
-            echo "variant=${{ inputs.variant }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.base_ref }}" = "main" ]; then
-            echo "variant=release" >> $GITHUB_OUTPUT
-          elif [ "${{ github.base_ref }}" = "staging" ]; then
-            echo "variant=preview" >> $GITHUB_OUTPUT
-          else
-            echo "variant=debug" >> $GITHUB_OUTPUT
-          fi
 
       - name: Check for androidTest folders
         id: check-tests
@@ -104,10 +81,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            VARIANT=${{ steps.resolve-variant.outputs.variant }}
-            echo "Running instrumented tests for variant: $VARIANT"
-            ./gradlew connected${VARIANT^}AndroidTest
+          script: ./gradlew connectedAndroidTest
 
       - name: Instrumented test results
         uses: dorny/test-reporter@v1
