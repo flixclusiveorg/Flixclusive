@@ -244,7 +244,7 @@ private fun ItemContent(
     val imageSize = getAdaptiveDp(40.dp)
     val imageModel = remember(listAndState) {
         val image = listAndState.items
-            .firstOrNull()
+            .lastOrNull()
             ?.metadata
             ?.posterImage
 

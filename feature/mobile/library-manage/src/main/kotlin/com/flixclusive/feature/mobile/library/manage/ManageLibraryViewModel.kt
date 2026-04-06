@@ -262,7 +262,8 @@ internal data class LibraryListWithPreview(
                 list = list,
                 itemsCount = items.size,
                 previews = items
-                    .take(3)
+                    .takeLast(3)
+                    .sortedByDescending { it.item.updatedAt }
                     .map { item -> item.metadata.toPreviewPoster() },
             )
         }
