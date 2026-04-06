@@ -120,6 +120,7 @@ internal fun InternalFilmScreen(
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
 
     FilmScreenContent(
+        isLibraryInitiallyOpened = navArgs.isTogglingLibrary,
         navigator = navigator,
         showFilmTitles = showFilmTitles,
         uiState = uiState,
@@ -143,6 +144,7 @@ internal fun InternalFilmScreen(
 @Composable
 private fun FilmScreenContent(
     navigator: FilmScreenNavigator,
+    isLibraryInitiallyOpened: Boolean,
     showFilmTitles: Boolean,
     uiState: FilmUiState,
     metadata: Film,
@@ -174,7 +176,7 @@ private fun FilmScreenContent(
     val seasonsListState = rememberLazyListState()
 
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
-    var isLibrarySheetOpen by remember { mutableStateOf(false) }
+    var isLibrarySheetOpen by remember { mutableStateOf(isLibraryInitiallyOpened) }
     var longClickedEpisode by remember { mutableStateOf<EpisodeWithProgress?>(null) }
     var showDefaultProviderDialog by remember { mutableStateOf(false) }
 
@@ -533,6 +535,7 @@ private fun FilmScreenBasePreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             FilmScreenContent(
+                isLibraryInitiallyOpened = false,
                 uiState = uiState,
                 metadata = metadata,
                 onRetry = {},
