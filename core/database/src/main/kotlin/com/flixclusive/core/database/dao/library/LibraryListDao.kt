@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
 import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.library.SystemListDeletionException
@@ -37,7 +38,7 @@ interface LibraryListDao {
     @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")
     suspend fun getWatchedList(ownerId: Int): LibraryList
 
-    @RawQuery
+    @RawQuery(observedEntities = [LibraryList::class, LibraryListItemWithMetadata::class])
     fun getListsRaw(query: RoomRawQuery): Flow<List<LibraryListWithItems>>
 
     fun getLists(
