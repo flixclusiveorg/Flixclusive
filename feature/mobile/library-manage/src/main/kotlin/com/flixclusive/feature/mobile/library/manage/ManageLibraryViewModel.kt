@@ -243,7 +243,7 @@ internal data class ManageLibraryUiState(
     val isCreatingLibrary: Boolean = false,
     val isEditingLibrary: Boolean = false,
     val longClickedLibrary: LibraryListWithPreview? = null,
-    val selectedFilter: LibrarySort = LibrarySort.Modified(ascending = false),
+    val selectedFilter: LibrarySort = LibrarySort.Added(ascending = true),
 )
 
 @Immutable
