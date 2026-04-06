@@ -257,7 +257,7 @@ class DownloadService : Service() {
             DownloadStatus.DOWNLOADING -> {
                 NotificationCompat
                     .Builder(this, NOTIFICATION_CHANNEL_ID)
-                    .setContentTitle("Downloading $fileName...")
+                    .setContentTitle("Downloading ${fileName.substringBeforeLast(".")}")
                     .setContentText("$progress%")
                     .setSmallIcon(android.R.drawable.stat_sys_download)
                     .setProgress(100, progress, false)
@@ -269,7 +269,7 @@ class DownloadService : Service() {
                 NotificationCompat
                     .Builder(this, NOTIFICATION_CHANNEL_ID)
                     .setContentTitle("Download completed")
-                    .setContentText(fileName)
+                    .setContentText(fileName.substringBeforeLast("."))
                     .setSmallIcon(android.R.drawable.stat_sys_download_done)
                     .setProgress(0, 0, false)
                     .setOngoing(false)
@@ -280,7 +280,7 @@ class DownloadService : Service() {
                 NotificationCompat
                     .Builder(this, NOTIFICATION_CHANNEL_ID)
                     .setContentTitle("Download failed")
-                    .setContentText(fileName)
+                    .setContentText(fileName.substringBeforeLast("."))
                     .setSmallIcon(android.R.drawable.stat_notify_error)
                     .setProgress(0, 0, false)
                     .setOngoing(false)
