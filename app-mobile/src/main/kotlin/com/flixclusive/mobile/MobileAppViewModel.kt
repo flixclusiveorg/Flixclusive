@@ -177,7 +177,6 @@ internal class MobileAppViewModel @Inject constructor(
         }
 
         val results = updateProvider(outdatedProviders)
-        if (results.success.isEmpty()) return
 
         // Remove providers that were updated successfully from the errors list in the ui state
         results.success.forEach {

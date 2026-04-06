@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.common.provider.extensions.toOwnerAndRepository
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
@@ -187,6 +188,8 @@ private fun CrashItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val resources = LocalResources.current
+
     Column(
         verticalArrangement = Arrangement.spacedBy(15.dp),
         modifier = modifier
@@ -195,7 +198,16 @@ private fun CrashItem(
     ) {
         CrashItemTopContent(provider = provider)
 
-        StackTracePreview(error = remember { error.stackTraceToString() })
+        StackTracePreview(
+            error = remember {
+                var message: String? = null
+                if (error is ExceptionWithUiText) {
+                    message = error.cause?.stackTraceToString() ?: error.uiText?.asString(resources)
+                }
+
+                message ?: error.stackTraceToString()
+            }
+        )
     }
 }
 

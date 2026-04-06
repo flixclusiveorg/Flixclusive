@@ -50,8 +50,6 @@ internal class CheckOutdatedProviderUseCaseImpl @Inject constructor(
         val isDebug = providerRepository.getInstalledProvider(id, userId)?.isDebug ?: false
         if (isDebug) return false
 
-        return true
-
         val provider = providerRepository.getPlugin(id) ?: return false
 
         val manifest = provider.manifest
