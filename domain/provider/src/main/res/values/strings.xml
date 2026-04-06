@@ -4,6 +4,7 @@
     <string name="empty_repository_message">This repository has no providers</string>
     <string name="failed_repository_fetch_message">Couldn\'t parse providers from the repository</string>
     <string name="failed_to_fetch_data_message">Failed to fetch data:\n%1$s</string>
+    <string name="failed_to_fetch_provider_message">The provider of this item could not be found. It may have been removed.</string>
     <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
     <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
     <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now…"</string>
