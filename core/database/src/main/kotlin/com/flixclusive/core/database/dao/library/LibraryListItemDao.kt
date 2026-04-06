@@ -1,8 +1,6 @@
 package com.flixclusive.core.database.dao.library
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
@@ -122,6 +120,6 @@ interface LibraryListItemDao {
     @Upsert
     suspend fun upsertIds(list: List<DBFilmExternalId>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertItem(list: LibraryListItem): Long
 }

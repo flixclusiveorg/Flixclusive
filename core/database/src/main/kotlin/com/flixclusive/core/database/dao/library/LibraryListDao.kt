@@ -1,13 +1,12 @@
 package com.flixclusive.core.database.dao.library
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.room.Upsert
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
@@ -35,11 +34,11 @@ interface LibraryListDao {
     """)
     fun getListsContainingFilmAsFlow(filmId: String, ownerId: Int): Flow<List<LibraryList>>
 
-    @RawQuery
-    fun getListsRaw(query: RoomRawQuery): Flow<List<LibraryListWithItems>>
-
     @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")
     suspend fun getWatchedList(ownerId: Int): LibraryList
+
+    @RawQuery
+    fun getListsRaw(query: RoomRawQuery): Flow<List<LibraryListWithItems>>
 
     fun getLists(
         userId: Int,
@@ -62,7 +61,7 @@ interface LibraryListDao {
         )
     }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(list: LibraryList): Long
 
     @Update
