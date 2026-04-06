@@ -28,6 +28,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.collections.SortUtils
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
@@ -135,6 +138,9 @@ private fun ManageLibraryScreen(
     onLongClickItem: (LibraryListWithPreview) -> Unit,
     onUpdateFilter: (LibrarySort) -> Unit,
 ) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(false) }
 
@@ -265,6 +271,12 @@ private fun ManageLibraryScreen(
                     libraryListWithPreview = library,
                     onClick = {
                         if (uiState.isMultiSelecting) {
+                            if (!library.list.isCustom) {
+                                context.showToast(
+                                    resources.getString(R.string.failed_to_select_system_list_message)
+                                )
+                                return@LibraryCard
+                            }
                             onToggleSelect(library)
                         } else {
                             onViewLibraryContent(library.list)
