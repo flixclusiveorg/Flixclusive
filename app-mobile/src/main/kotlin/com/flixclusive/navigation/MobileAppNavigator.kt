@@ -146,9 +146,9 @@ internal class MobileAppNavigator(
     override fun openFilmScreen(film: Film) {
         runOnResumed {
             when (currentNavGraph) {
-                is HomeGraph -> navigator.navigate(HomeAppLevelFilmScreenDestination(film = film))
-                is SearchGraph -> navigator.navigate(SearchAppLevelFilmScreenDestination(film = film))
-                is LibraryGraph -> navigator.navigate(LibraryAppLevelFilmScreenDestination(film = film))
+                is HomeGraph -> navigator.navigate(HomeAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
+                is SearchGraph -> navigator.navigate(SearchAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
+                is LibraryGraph -> navigator.navigate(LibraryAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
             }
         }
     }

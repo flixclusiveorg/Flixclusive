@@ -310,17 +310,26 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 when (currentNavGraph) {
                     AppmobileNavGraphs.home -> {
                         destinationsNavigator.navigate(
-                            direction = HomeAppLevelFilmScreenDestination(film = film)
+                            direction = HomeAppLevelFilmScreenDestination(
+                                film = film,
+                                isTogglingLibrary = true,
+                            )
                         )
                     }
                     AppmobileNavGraphs.search -> {
                         destinationsNavigator.navigate(
-                            direction = SearchAppLevelFilmScreenDestination(film = film)
+                            direction = SearchAppLevelFilmScreenDestination(
+                                film = film,
+                                isTogglingLibrary = true,
+                            )
                         )
                     }
                     AppmobileNavGraphs.library -> {
                         destinationsNavigator.navigate(
-                            direction = LibraryAppLevelFilmScreenDestination(film = film)
+                            direction = LibraryAppLevelFilmScreenDestination(
+                                film = film,
+                                isTogglingLibrary = true,
+                            )
                         )
                     }
                 }
