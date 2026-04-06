@@ -3,6 +3,7 @@ package com.flixclusive.domain.provider.usecase.get.impl
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.log.errorLog
@@ -13,6 +14,8 @@ import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.util.extensions.isNonDefaultProvider
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -32,9 +35,24 @@ internal class GetFilmMetadataUseCaseImpl @Inject constructor(
                     try {
                         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
                         val api = providerRepository.getApi(film.providerId, userId)!!
-                        val filmMetadata = api.getMetadata(film)
+                        val filmMetadata = api.getMetadata(film).let { metadata ->
+                            if (!film.providerId.endsWith(ProviderPreferences.DEBUG_PREFIX)) {
+                                return@let metadata
+                            }
+
+                            when (metadata) {
+                                is Movie -> metadata.copy(providerId = film.providerId)
+                                is TvShow -> metadata.copy(providerId = film.providerId)
+                                else -> metadata
+                            }
+                        }
 
                         Resource.Success(filmMetadata)
+                    } catch (e: NullPointerException) {
+                        errorLog(e)
+                        Resource.Failure(
+                            UiText.from(R.string.failed_to_fetch_provider_message),
+                        )
                     } catch (e: Exception) {
                         errorLog(e)
                         Resource.Failure(
@@ -72,4 +90,6 @@ internal class GetFilmMetadataUseCaseImpl @Inject constructor(
             FilmType.TV_SHOW -> tmdbMetadataRepository.getTvShow(id = tmdbId)
         }
     }
+
+
 }

@@ -3,6 +3,7 @@ package com.flixclusive.domain.catalog.usecase.impl
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.log.errorLog
@@ -15,7 +16,6 @@ import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.provider.ProviderApi
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -54,7 +54,19 @@ internal class PaginateItemsUseCaseImpl @Inject constructor(
                         api.getCatalogItems(
                             page = page,
                             catalog = catalog,
-                        )
+                        ).let { data ->
+                            if (!catalog.providerId.endsWith(ProviderPreferences.DEBUG_PREFIX)) {
+                                return@let data
+                            }
+
+                            data.copy(
+                                results = data.results.map { item ->
+                                    item.copy(
+                                        providerId = catalog.providerId,
+                                    )
+                                }
+                            )
+                        }
                     }
 
                     Resource.Success(items)
