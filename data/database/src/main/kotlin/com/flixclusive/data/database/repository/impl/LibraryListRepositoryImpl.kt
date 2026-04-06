@@ -66,6 +66,11 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         film: Film?,
     ): Long {
         return withContext(appDispatchers.io) {
+            val list = listDao.get(item.listId)
+            if (list != null) {
+                listDao.update(list.copy(updatedAt = Date()))
+            }
+
             itemDao.insert(item, film)
         }
     }
@@ -78,7 +83,16 @@ internal class LibraryListRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteItem(itemId: Long) {
-        return itemDao.delete(itemId)
+        return withContext(appDispatchers.io) {
+            val item = itemDao.get(itemId) ?: return@withContext
+            
+            val list = listDao.get(item.item.listId)
+            if (list != null) {
+                listDao.update(list.copy(updatedAt = Date()))
+            }
+
+            itemDao.delete(itemId)
+        }
     }
 
     override fun searchItems(

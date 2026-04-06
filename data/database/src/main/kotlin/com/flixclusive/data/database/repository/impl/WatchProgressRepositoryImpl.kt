@@ -166,6 +166,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
                 listId = watchedList.id,
                 filmId = item.filmId
             )
+            libraryListDao.update(watchedList.copy(updatedAt = Date()))
             libraryListItemDao.insert(
                 film = film,
                 item = existingListItem?.item?.copy(
@@ -200,9 +201,11 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
 
     override suspend fun deleteAll(ownerId: Int) {
         withContext(appDispatchers.io) {
+            val watchedList = libraryListDao.getWatchedList(ownerId)
+            libraryListDao.update(watchedList.copy(updatedAt = Date()))
+
             movieProgressDao.deleteAll(ownerId)
             episodeProgressDao.deleteAll(ownerId)
-            libraryListDao.deleteWatched(ownerId)
         }
     }
 
@@ -220,6 +223,8 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
 
             var canDeleteOnLibrary = type == FilmType.MOVIE
             val watchedList = libraryListDao.getWatchedList(ownerId)
+            libraryListDao.update(watchedList.copy(updatedAt = Date()))
+
             if (type == FilmType.TV_SHOW) {
                 val episodeProgress = episodeProgressDao.get(item)
                 if (episodeProgress != null) {
