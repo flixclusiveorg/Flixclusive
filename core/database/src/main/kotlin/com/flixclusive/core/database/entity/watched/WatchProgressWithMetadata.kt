@@ -1,7 +1,6 @@
 package com.flixclusive.core.database.entity.watched
 
 import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.film.DBFilmWithExternalIds
 
 /**
  * Represents a watch progress item with associated metadata.
