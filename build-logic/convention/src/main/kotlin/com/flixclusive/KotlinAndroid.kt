@@ -63,6 +63,14 @@ internal fun Project.configureKotlinAndroid(
     dependencies {
         add("coreLibraryDesugaring", libs.findLibrary("desugarJdkLibs").get())
     }
+
+    afterEvaluate {
+        if (!project.file("src/androidTest").exists()) {
+            tasks.matching { it.name.contains("AndroidTest") }.configureEach {
+                enabled = false
+            }
+        }
+    }
 }
 
 fun Project.configureKotlin() {
