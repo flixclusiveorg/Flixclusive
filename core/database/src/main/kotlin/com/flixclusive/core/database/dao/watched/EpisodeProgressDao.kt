@@ -15,6 +15,15 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EpisodeProgressDao {
+    @Query(
+        """
+        SELECT * FROM series_watch_history
+        WHERE ownerId = :ownerId
+        ORDER BY createdAt DESC
+        """,
+    )
+    fun getAll(ownerId: Int): List<EpisodeProgressWithMetadata>
+
     fun getAllAsFlow(
         ownerId: Int,
         column: String,

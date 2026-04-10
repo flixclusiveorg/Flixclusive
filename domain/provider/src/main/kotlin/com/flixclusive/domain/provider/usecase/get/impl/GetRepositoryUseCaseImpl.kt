@@ -1,16 +1,12 @@
 package com.flixclusive.domain.provider.usecase.get.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.datastore.model.user.ProviderPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetRepositoryUseCase
-import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.domain.provider.util.extensions.isUrlOnline
 import com.flixclusive.domain.provider.util.toGithubUrl
 import com.flixclusive.model.provider.Repository
@@ -39,7 +35,7 @@ internal class GetRepositoryUseCaseImpl @Inject constructor(
                 }
 
                 val providerBranchUrl = repository.getRawLink(
-                    filename = Constants.UPDATER_FILE,
+                    filename = ProviderConstants.UPDATER_JSON_FILE,
                     branch = "builds",
                 )
 

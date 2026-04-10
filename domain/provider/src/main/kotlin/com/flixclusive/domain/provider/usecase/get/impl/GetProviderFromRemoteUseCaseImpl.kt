@@ -3,13 +3,13 @@ package com.flixclusive.domain.provider.usecase.get.impl
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
-import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import kotlinx.coroutines.withContext
@@ -63,7 +63,7 @@ internal class GetProviderFromRemoteUseCaseImpl @Inject constructor(
             try {
                 val updaterJsonUrl =
                     repository.getRawLink(
-                        filename = Constants.UPDATER_FILE,
+                        filename = ProviderConstants.UPDATER_JSON_FILE,
                         branch = "builds", // TODO: This should not be hardcoded, consider making it configurable
                     )
 

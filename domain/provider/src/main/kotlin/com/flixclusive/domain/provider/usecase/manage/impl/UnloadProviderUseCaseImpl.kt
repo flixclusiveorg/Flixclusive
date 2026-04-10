@@ -2,13 +2,13 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.file.rmrf
+import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
-import com.flixclusive.core.datastore.util.rmrf
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
-import com.flixclusive.domain.provider.util.Constants
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -63,7 +63,7 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
         if (parentDirectory.isDirectory && parentDirectory.listFiles()?.size == 1) {
             val lastRemainingFile = parentDirectory.listFiles()!![0]
 
-            if (lastRemainingFile.name.equals(Constants.UPDATER_FILE, true)) {
+            if (lastRemainingFile.name.equals(ProviderConstants.UPDATER_JSON_FILE, true)) {
                 rmrf(parentDirectory)
             }
         }

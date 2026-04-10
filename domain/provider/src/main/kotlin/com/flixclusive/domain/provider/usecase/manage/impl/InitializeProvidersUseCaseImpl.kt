@@ -2,6 +2,7 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
@@ -15,7 +16,6 @@ import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
-import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.domain.provider.util.extensions.toInstalledRepository
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
@@ -79,7 +79,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
         repositoryDirectory?.forEach { subDirectory ->
             if (!subDirectory.isDirectory) return@forEach
 
-            val updaterFile = File(subDirectory.absolutePath + "/${Constants.UPDATER_FILE}")
+            val updaterFile = File(subDirectory.absolutePath + "/${ProviderConstants.UPDATER_JSON_FILE}")
             if (!updaterFile.exists()) {
                 warnLog("Provider's `updater.json` could not be found!")
                 return@forEach
@@ -104,7 +104,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
 
             val subFiles = subDirectory.listFiles()
             subFiles?.forEach subDirectory@{ providerFile ->
-                if (providerFile.name.equals(Constants.UPDATER_FILE, true)) {
+                if (providerFile.name.equals(ProviderConstants.UPDATER_JSON_FILE, true)) {
                     return@subDirectory
                 }
 

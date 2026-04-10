@@ -2,6 +2,7 @@ package com.flixclusive.domain.provider.usecase.updater.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.log.infoLog
@@ -14,7 +15,6 @@ import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.ProviderUpdateResult
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
-import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.domain.provider.util.extensions.createFileForProvider
 import com.flixclusive.domain.provider.util.extensions.downloadProvider
 import com.flixclusive.model.provider.ProviderMetadata
@@ -197,7 +197,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
     private suspend fun createBackup(provider: InstalledProvider) {
         val file = File(provider.filePath)
         val directory = file.parentFile ?: return
-        val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
+        val updaterJsonFile = File(directory, ProviderConstants.UPDATER_JSON_FILE)
 
         withContext(appDispatchers.io) {
             // Backup provider file
@@ -217,7 +217,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
     private suspend fun restoreBackup(backup: InstalledProvider) {
         val file = File(backup.filePath)
         val directory = file.parentFile ?: return
-        val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
+        val updaterJsonFile = File(directory, ProviderConstants.UPDATER_JSON_FILE)
 
         val backupFile = File(directory, "${file.name}.bak")
         val backupUpdaterJsonFile = File(directory, "${updaterJsonFile.name}.bak")
