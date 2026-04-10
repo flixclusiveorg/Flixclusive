@@ -1,10 +1,12 @@
 package com.flixclusive.data.backup.repository
 
 import android.net.Uri
-import com.flixclusive.data.backup.model.BackupOptions
+import com.flixclusive.core.datastore.model.user.BackupOptions
+import kotlinx.serialization.Serializable
 
 class NoDataToBackupException : Exception()
 
+@Serializable
 data class BackupResult(
     val missingLibraryLists: Set<String>,
     val missingProviders: Set<String>,

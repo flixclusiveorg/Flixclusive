@@ -3,7 +3,6 @@ package com.flixclusive.domain.backup.common
 import com.flixclusive.data.backup.repository.BackupResult
 
 sealed class BackupState {
-    data object Idle : BackupState()
 
     data object Loading : BackupState()
 

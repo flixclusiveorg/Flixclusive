@@ -4,12 +4,15 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.data.backup"
+    namespace = "com.flixclusive.domain.backup"
 }
 
 dependencies {
     implementation(projects.coreCommon)
+    implementation(projects.coreDatastore)
     implementation(projects.dataBackup)
+
+    implementation(libs.work.runtime.ktx)
 
     implementation(libs.kotlinx.serialization.protobuf)
 }
