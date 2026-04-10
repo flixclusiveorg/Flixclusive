@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
@@ -147,6 +148,7 @@ class BackupRepositoryImplTest {
             val db = DatabaseTestDefaults.createDatabase(context)
             val backupFile = createBackupFile(context)
             var providersDir: File? = null
+            var providersSettingsDir: File? = null
             try {
                 val userId = insertUser(db)
                 val userSession = TestUserSessionDataStore(userId)
@@ -158,8 +160,18 @@ class BackupRepositoryImplTest {
                 )
 
                 providersDir = File(context.getProvidersPath(userId)).apply { mkdirs() }
+                providersSettingsDir = File(context.getProvidersSettingsPath(userId)).apply { mkdirs() }
+
                 val repositoryDir = File(providersDir, "test-repo").apply { mkdirs() }
-                val providerFile = File(repositoryDir, "BasicDummyProvider.flx").apply { writeText("dummy content") }
+
+                val providerFileContent = "dummy content"
+                val providerFile = File(repositoryDir, "BasicDummyProvider.flx").apply { writeText(providerFileContent) }
+
+                val settingsRepositoryDir = File(providersSettingsDir, "test-repo").apply { mkdirs() }
+                val settingsFileContent = "provider settings"
+                val settingsFile = File(settingsRepositoryDir, "BasicDummyProvider.settings.json")
+                    .apply { writeText(settingsFileContent) }
+
                 File(repositoryDir, ProviderConstants.UPDATER_JSON_FILE).apply {
                     writeText("""
                         [{
@@ -219,13 +231,18 @@ class BackupRepositoryImplTest {
                 )
 
                 providerFile.writeText("old")
+                settingsFile.writeText("old")
                 val restoreResult = repository.restore(uri = Uri.fromFile(backupFile))
 
                 assertEmpty(createResult)
                 assertEmpty(restoreResult)
+
+                expectThat(providerFile.readText()).isEqualTo(providerFileContent)
+                expectThat(settingsFile.readText()).isEqualTo(settingsFileContent)
             } finally {
                 db.close()
                 providersDir?.deleteRecursively()
+                providersSettingsDir?.deleteRecursively()
                 backupFile.delete()
             }
         }

@@ -17,5 +17,5 @@ data class BackupResult(
 interface BackupRepository {
     suspend fun create(uri: Uri, options: BackupOptions = BackupOptions()): BackupResult
 
-    suspend fun restore(uri: Uri): BackupResult
+    suspend fun restore(uri: Uri, options: BackupOptions = BackupOptions()): BackupResult
 }
