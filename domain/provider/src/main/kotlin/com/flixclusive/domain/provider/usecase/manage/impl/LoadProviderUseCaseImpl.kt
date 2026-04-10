@@ -2,6 +2,7 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
@@ -16,7 +17,6 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
-import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.domain.provider.util.DynamicResourceLoader
 import com.flixclusive.domain.provider.util.ProviderMigrator
 import com.flixclusive.domain.provider.util.ProviderMigrator.canMigrateSettingsFile
@@ -108,7 +108,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 }
                 val settingsDirPath = createSettingsDirPath(
                     repositoryUrl = metadata.repositoryUrl,
-                    isDebugProvider = metadata.id.endsWith(Constants.PROVIDER_DEBUG),
+                    isDebugProvider = metadata.id.endsWith(ProviderConstants.PROVIDER_DEBUG),
                 )
 
                 if (getProviderPrefs().canMigrateSettingsFile(metadata)) {
@@ -161,7 +161,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         isDebugProvider: Boolean,
     ): String {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val parentDirectoryName = if (isDebugProvider) Constants.PROVIDER_DEBUG else "user-$userId"
+        val parentDirectoryName = if (isDebugProvider) ProviderConstants.PROVIDER_DEBUG else "user-$userId"
 
         val repository = repositoryUrl.toValidRepositoryLink()
         val childDirectoryName = "${repository.owner}-${repository.name}"
@@ -223,7 +223,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
             return cacheLocalMetadataMap[provider.id]
         }
 
-        val updaterFilePath = provider.file.parent?.plus("/${Constants.UPDATER_FILE}")
+        val updaterFilePath = provider.file.parent?.plus("/${ProviderConstants.UPDATER_JSON_FILE}")
 
         if (updaterFilePath == null) {
             errorLog("Provider's file path must not be null!")

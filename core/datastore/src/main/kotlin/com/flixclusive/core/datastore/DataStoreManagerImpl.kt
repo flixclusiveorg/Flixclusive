@@ -8,6 +8,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.file.rmrf
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.datastore.migration.MigrationV220
@@ -18,9 +21,6 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.serializer.system.SystemPreferencesSerializer
 import com.flixclusive.core.datastore.util.USER_PREFERENCE_FILENAME
 import com.flixclusive.core.datastore.util.createUserPreferences
-import com.flixclusive.core.datastore.util.getProvidersPathPrefix
-import com.flixclusive.core.datastore.util.getProvidersSettingsPathPrefix
-import com.flixclusive.core.datastore.util.rmrf
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -35,9 +35,7 @@ import java.io.File
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
-const val PROVIDERS_FOLDER_NAME = "providers"
-const val PROVIDERS_SETTINGS_FOLDER_NAME = "settings"
-internal const val SYSTEM_PREFS_FILENAME = "system-preferences.json"
+const val SYSTEM_PREFS_FILENAME = "system-preferences.json"
 
 internal val Context.systemPreferences: DataStore<SystemPreferences> by dataStore(
     fileName = SYSTEM_PREFS_FILENAME,
@@ -145,8 +143,8 @@ internal class DataStoreManagerImpl @Inject constructor(
     override suspend fun deleteAllUserRelatedFiles(userId: Int) {
         withContext(appDispatchers.io) {
             val datastoreFile = context.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
-            val providersFolder = context.getProvidersPathPrefix(userId)
-            val providersSettingsFolder = context.getProvidersSettingsPathPrefix(userId)
+            val providersFolder = context.getProvidersPath(userId)
+            val providersSettingsFolder = context.getProvidersSettingsPath(userId)
 
             rmrf(File(providersFolder))
             rmrf(File(providersSettingsFolder))

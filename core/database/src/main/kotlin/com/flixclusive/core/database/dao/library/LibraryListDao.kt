@@ -19,6 +19,9 @@ interface LibraryListDao {
     @Query("SELECT * FROM library_lists WHERE ownerId = :userId")
     fun getAllAsFlow(userId: Int): Flow<List<LibraryList>>
 
+    @Query("SELECT * FROM library_lists WHERE ownerId = :userId")
+    suspend fun getAll(userId: Int): List<LibraryListWithItems>
+
     @Query("SELECT * FROM library_lists WHERE id = :id")
     fun getAsFlow(id: Int): Flow<LibraryList?>
 

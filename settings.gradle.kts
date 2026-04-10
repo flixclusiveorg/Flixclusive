@@ -63,6 +63,7 @@ include(":domain-database")
 include(":domain-provider")
 include(":domain-downloads")
 
+include(":data-backup")
 include(":data-database")
 include(":data-provider")
 include(":data-tmdb")

@@ -17,6 +17,7 @@ androidxDataStore = "1.2.0"
 androidxTestCore = "1.7.0"
 androidxTestRules = "1.7.0"
 androidxTestRunner = "1.7.0"
+annotationsExperimental = "1.5.1"
 checkerFramework = "3.54.0"
 composeActivity = "1.12.4"
 coil = "3.4.0"
@@ -168,7 +169,9 @@ hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.re
 # Kotlin core
 desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdkLibs" }
 kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
-kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
+kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "serialization"}
+annotations-experimental = { group = "androidx.annotation", name = "annotation-experimental", version.ref = "annotationsExperimental" }
 
 # Conscrypt
 conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }

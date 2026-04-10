@@ -14,7 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 
-internal const val USER_PREFERENCE_FILENAME = "users/user-preferences"
+const val USER_PREFERENCE_FILENAME = "users/user-preferences"
 
 internal fun Context.createUserPreferences(
     userId: Int,
