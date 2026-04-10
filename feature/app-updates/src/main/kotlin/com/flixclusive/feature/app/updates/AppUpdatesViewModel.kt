@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.config.BuildConfigProvider
 import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.common.file.LegacyExternalStorageUtil
+import com.flixclusive.core.common.file.AppStorage
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.data.app.updates.model.AppUpdateInfo
 import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
@@ -85,7 +85,7 @@ class AppUpdatesViewModel
             if (downloadJob?.isActive == false) return
 
             val destinationPath = context.externalCacheDir
-                ?: LegacyExternalStorageUtil.getPublicDownloadsDirectory()
+                ?: AppStorage.getPublicDownloadsDirectory()
 
             requireNotNull(destinationPath) {
                 "Failed to access storage to cancel download."
@@ -118,7 +118,7 @@ class AppUpdatesViewModel
 
             downloadJob = viewModelScope.launch {
                 val destinationPath = context.externalCacheDir
-                    ?: LegacyExternalStorageUtil.getPublicDownloadsDirectory()
+                    ?: AppStorage.getPublicDownloadsDirectory()
 
                 if (destinationPath == null) {
                     _downloadState.update { it.error(UiText.from(R.string.failed_to_access_storage)) }

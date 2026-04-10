@@ -17,6 +17,7 @@ import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.system.SystemPreferences
+import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
@@ -27,7 +28,6 @@ import com.flixclusive.data.backup.create.impl.RepositoryBackupCreator
 import com.flixclusive.data.backup.create.impl.SearchHistoryBackupCreator
 import com.flixclusive.data.backup.create.impl.WatchProgressBackupCreator
 import com.flixclusive.data.backup.model.Backup
-import com.flixclusive.data.backup.model.BackupOptions
 import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.restore.impl.LibraryListBackupRestorer
 import com.flixclusive.data.backup.restore.impl.PreferenceBackupRestorer

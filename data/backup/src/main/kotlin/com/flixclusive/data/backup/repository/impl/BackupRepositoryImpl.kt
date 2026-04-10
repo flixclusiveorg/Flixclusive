@@ -6,11 +6,11 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.backup.create.BackupCreator
 import com.flixclusive.data.backup.model.Backup
 import com.flixclusive.data.backup.model.BackupLibraryList
-import com.flixclusive.data.backup.model.BackupOptions
 import com.flixclusive.data.backup.model.BackupPreference
 import com.flixclusive.data.backup.model.BackupProvider
 import com.flixclusive.data.backup.model.BackupProviderRepository
