@@ -58,6 +58,7 @@ include(":feature:mobile:user-edit")
 // include(":feature:tv:preferences")
 //include(":feature:tv:search")
 
+include(":domain-backup")
 include(":domain-catalog")
 include(":domain-database")
 include(":domain-provider")
