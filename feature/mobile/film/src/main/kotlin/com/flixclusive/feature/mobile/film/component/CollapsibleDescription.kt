@@ -212,7 +212,7 @@ private fun FilmMetadata.getDetailedDescription(context: Context): String {
                 .takeIf { it.isNotEmpty() }
                 ?.take(3)
                 ?.joinToString(separator = ", ") { it.name }
-                ?.also { appendLine(context.getString(R.string.network, it)) }
+                ?.also { appendLine(context.getString(R.string.tv_network, it)) }
         }
     }
 }

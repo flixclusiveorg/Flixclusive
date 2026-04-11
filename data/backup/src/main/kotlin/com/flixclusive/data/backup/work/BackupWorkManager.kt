@@ -15,15 +15,13 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.data.backup.work.util.BackupWorkFiles
+import com.flixclusive.data.backup.work.util.BackupWorkFile
 import com.flixclusive.data.backup.work.worker.BackupCreateWorker
 import com.flixclusive.data.backup.work.worker.BackupRestoreWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import java.io.FileNotFoundException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,10 +33,6 @@ class BackupWorkManager @Inject constructor(
 ) {
     private val workManager by lazy { WorkManager.getInstance(context) }
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
-
     fun enqueueCreate(userId: Int): String {
         val uniqueName = BackupWorkConstants.UNIQUE_BACKUP_CREATE_PREFIX + userId
 
@@ -46,6 +40,44 @@ class BackupWorkManager @Inject constructor(
             .setInputData(
                 workDataOf(
                     BackupWorkConstants.INPUT_USER_ID to userId,
+                )
+            )
+            .addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
+            .addTag(BackupWorkConstants.TAG_BACKUP_CREATE_USER_PREFIX + userId)
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                WorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS,
+            )
+            .build()
+
+        workManager.enqueueUniqueWork(
+            uniqueName,
+            ExistingWorkPolicy.KEEP,
+            request,
+        )
+
+        return uniqueName
+    }
+
+    fun enqueueCreate(
+        userId: Int,
+        uri: Uri,
+        options: BackupOptions = BackupOptions(),
+    ): String {
+        val uniqueName = BackupWorkConstants.UNIQUE_BACKUP_CREATE_PREFIX + userId
+
+        val request = OneTimeWorkRequestBuilder<BackupCreateWorker>()
+            .setInputData(
+                workDataOf(
+                    BackupWorkConstants.INPUT_USER_ID to userId,
+                    BackupWorkConstants.INPUT_URI to uri.toString(),
+                    BackupWorkConstants.INPUT_INCLUDE_LIBRARY to options.includeLibrary,
+                    BackupWorkConstants.INPUT_INCLUDE_WATCH_PROGRESS to options.includeWatchProgress,
+                    BackupWorkConstants.INPUT_INCLUDE_SEARCH_HISTORY to options.includeSearchHistory,
+                    BackupWorkConstants.INPUT_INCLUDE_PREFERENCES to options.includePreferences,
+                    BackupWorkConstants.INPUT_INCLUDE_PROVIDERS to options.includeProviders,
+                    BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES to options.includeRepositories,
                 )
             )
             .addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
@@ -151,27 +183,18 @@ class BackupWorkManager @Inject constructor(
 
     suspend fun readLastCreateResult(userId: Int): BackupResult {
         return withContext(appDispatchers.io) {
-            val file = BackupWorkFiles.getLastBackupResultFile(userId)
-            if (!file.exists()) throw FileNotFoundException(file.absolutePath)
-
-            json.decodeFromString(
-                BackupResult.serializer(),
-                file.readText(),
+            BackupWorkFile.readBackupResult(
+                userId = userId,
+                fileName = BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
             )
         }
     }
 
     suspend fun readLastRestoreResult(userId: Int): BackupResult {
         return withContext(appDispatchers.io) {
-            val file = BackupWorkFiles.getLastRestoreResultFile(
-                context = context,
+            BackupWorkFile.readBackupResult(
                 userId = userId,
-            )
-            if (!file.exists()) throw FileNotFoundException(file.absolutePath)
-
-            json.decodeFromString(
-                BackupResult.serializer(),
-                file.readText(),
+                fileName = BackupWorkConstants.LAST_RESTORE_RESULT_FILE_NAME,
             )
         }
     }

@@ -195,7 +195,7 @@ class BackupRestoreWorkerTest {
 
         val bytes = ProtoBuf.encodeToByteArray(Backup.serializer(), backup)
 
-        return File(context.cacheDir, "backup_${System.currentTimeMillis()}.zip")
+        return File(context.cacheDir, "backup_${System.currentTimeMillis()}.flxbackup")
             .apply {
                 parentFile?.mkdirs()
                 createNewFile()

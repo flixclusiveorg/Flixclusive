@@ -1,21 +1,20 @@
 package com.flixclusive.data.backup.work.worker
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.flixclusive.core.datastore.model.user.BackupOptions
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.backup.di.BackupWorkerEntryPoint
-import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.data.backup.work.util.BackupWorkFiles
+import com.flixclusive.data.backup.work.util.BackupWorkFile
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 
 internal class BackupRestoreWorker(
     appContext: Context,
@@ -72,16 +71,15 @@ internal class BackupRestoreWorker(
             }
 
             val currentUserId = entryPoint.userSessionDataStore().currentUserId.first()
-            if (currentUserId == null) {
-                return@withContext if (runAttemptCount < 3) {
-                    Result.retry()
-                } else {
-                    Result.failure(
-                        workDataOf(
-                            BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "No active user session",
-                        )
+
+            if (currentUserId == null && runAttemptCount < 3) {
+                return@withContext Result.retry()
+            } else if (currentUserId == null) {
+                return@withContext Result.failure(
+                    workDataOf(
+                        BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "No active user session",
                     )
-                }
+                )
             }
 
             if (currentUserId != userId) {
@@ -93,7 +91,7 @@ internal class BackupRestoreWorker(
             }
 
             runCatching {
-                val uri = Uri.parse(uriString)
+                val uri = uriString.toUri()
                 val options = BackupOptions(
                     includeLibrary = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_LIBRARY, true),
                     includeWatchProgress = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_WATCH_PROGRESS, true),
@@ -108,13 +106,17 @@ internal class BackupRestoreWorker(
                     options = options,
                 )
 
-                writeRestoreResult(
-                    userId = userId,
+                BackupWorkFile.writeBackupResult(
+                    file = BackupWorkFile.getLastBackupResultFile(
+                        userId = userId,
+                        fileName = BackupWorkConstants.LAST_RESTORE_RESULT_FILE_NAME,
+                    ),
                     result = result,
                 )
 
                 Result.success()
             }.getOrElse { error ->
+                errorLog(error)
                 Result.failure(
                     workDataOf(
                         BackupWorkConstants.OUTPUT_ERROR_MESSAGE to (error.message ?: error::class.java.simpleName),
@@ -122,15 +124,6 @@ internal class BackupRestoreWorker(
                 )
             }
         }
-    }
-
-    private fun writeRestoreResult(userId: Int, result: BackupResult) {
-        val file = BackupWorkFiles.getLastRestoreResultFile(
-            context = applicationContext,
-            userId = userId,
-        )
-        file.parentFile?.mkdirs()
-        file.writeText(Json.encodeToString(BackupResult.serializer(), result))
     }
 
     private fun hasOtherWorkRunning(workManager: WorkManager, tag: String): Boolean {

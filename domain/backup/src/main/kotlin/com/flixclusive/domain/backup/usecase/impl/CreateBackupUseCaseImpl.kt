@@ -1,22 +1,24 @@
 package com.flixclusive.domain.backup.usecase.impl
 
+import android.net.Uri
 import androidx.work.WorkInfo
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.data.backup.work.BackupWorkManager
+import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.data.backup.repository.BackupResult
+import com.flixclusive.data.backup.work.BackupWorkManager
 import com.flixclusive.domain.backup.common.BackupState
 import com.flixclusive.domain.backup.usecase.CreateBackupUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
 
 internal class CreateBackupUseCaseImpl @Inject constructor(
@@ -24,12 +26,28 @@ internal class CreateBackupUseCaseImpl @Inject constructor(
     private val backupWorkManager: BackupWorkManager,
     private val appDispatchers: AppDispatchers,
 ) : CreateBackupUseCase {
+    override fun invoke(): Flow<BackupState> = createBackupFlow {
+        backupWorkManager.enqueueCreate(it)
+    }
+
     override fun invoke(
+        uri: Uri,
+        options: BackupOptions,
+    ): Flow<BackupState> = createBackupFlow { userId ->
+        backupWorkManager.enqueueCreate(
+            userId = userId,
+            uri = uri,
+            options = options,
+        )
+    }
+
+    private fun createBackupFlow(
+        enqueue: (userId: Int) -> String,
     ): Flow<BackupState> = flow {
         emit(BackupState.Loading)
 
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val uniqueWorkName = backupWorkManager.enqueueCreate(userId)
+        val uniqueWorkName = enqueue(userId)
 
         emitAll(
             backupWorkManager.observeUniqueWork(uniqueWorkName)

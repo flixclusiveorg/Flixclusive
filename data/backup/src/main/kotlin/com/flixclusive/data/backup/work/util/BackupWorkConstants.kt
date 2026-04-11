@@ -24,7 +24,8 @@ internal object BackupWorkConstants {
     const val TAG_BACKUP_CREATE_USER_PREFIX = "backup_create_user_"
     const val TAG_BACKUP_RESTORE_USER_PREFIX = "backup_restore_user_"
 
-    const val BACKUP_FILE_EXTENSION = "zip"
-    const val LAST_RESULT_FILE_NAME = "result.json"
+    const val LAST_CREATE_RESULT_FILE_NAME = "result-create.json"
     const val LAST_RESTORE_RESULT_FILE_NAME = "restore-result.json"
+
+    const val BACKUP_FILE_PREFIX = "auto_flixclusive_backup-"
 }
