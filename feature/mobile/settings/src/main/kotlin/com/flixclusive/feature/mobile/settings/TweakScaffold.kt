@@ -30,15 +30,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastForEachIndexed
-import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.feature.mobile.settings.component.BaseTweakComponent
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
 import com.flixclusive.feature.mobile.settings.component.DialogComponent
 import com.flixclusive.feature.mobile.settings.component.ListRadioComponent
 import com.flixclusive.feature.mobile.settings.component.ListSelectComponent
 import com.flixclusive.feature.mobile.settings.component.SliderComponent
+import com.flixclusive.feature.mobile.settings.component.StaticInformationCard
 import com.flixclusive.feature.mobile.settings.component.SwitchComponent
 import com.flixclusive.feature.mobile.settings.component.TextFieldComponent
 import com.flixclusive.feature.mobile.settings.component.TitleDescriptionHeader
@@ -47,7 +46,6 @@ import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import com.flixclusive.core.drawables.R as UiCommonR
 
 internal val TweakPaddingHorizontal = 10.dp
 private val TweakGroupSpacing = 25.dp
@@ -210,18 +208,10 @@ private fun RenderTweakUi(
         }
 
         is TweakUI.InformationTweak -> {
-            BaseTweakComponent(
-                modifier = modifier,
+            StaticInformationCard(
                 title = tweak.title,
-                descriptionProvider = tweak.description,
-                enabledProvider = tweak.enabledProvider,
-                startContent = {
-                    AdaptiveIcon(
-                        painter = painterResource(UiCommonR.drawable.info),
-                        contentDescription = null,
-                        tint = LocalContentColor.current.copy(0.6f),
-                    )
-                },
+                description = tweak.description?.invoke().orEmpty(),
+                modifier = modifier,
             )
         }
 

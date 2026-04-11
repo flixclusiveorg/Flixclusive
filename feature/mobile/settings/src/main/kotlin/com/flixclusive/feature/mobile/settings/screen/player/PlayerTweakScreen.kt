@@ -270,7 +270,7 @@ internal class PlayerTweakScreen(
                     title = stringResource(LocaleR.string.video_buffer_max_length),
                     description = { resources.getString(LocaleR.string.video_buffer_max_length_desc) },
                     value = { playerPreferences().videoBufferMs },
-                    options = playerBufferLengths,
+                    options = getPlayerBufferLengths(),
                     onTweaked = {
                         onUpdatePreferences { oldValue ->
                             oldValue.copy(videoBufferMs = it)

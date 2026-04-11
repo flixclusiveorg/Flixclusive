@@ -35,7 +35,7 @@ sealed class TweakUI<T> : Tweak() {
      * A tweak that is only used for displaying texts
      * */
     data class InformationTweak(
-        override val title: String,
+        override val title: String = "",
         override val description: (() -> String)? = null,
     ) : TweakUI<Unit>() {
         override val enabledProvider: () -> Boolean = { true }

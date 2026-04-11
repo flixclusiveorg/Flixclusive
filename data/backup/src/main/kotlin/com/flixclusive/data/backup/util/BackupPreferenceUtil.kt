@@ -6,6 +6,10 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.datastore.SYSTEM_PREFS_FILENAME
 import com.flixclusive.core.datastore.util.USER_PREFERENCE_FILENAME
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import java.io.File
 
@@ -15,7 +19,7 @@ object BackupPreferenceUtil {
     }
 
     private fun createTempFileForPreferences(file: File): File {
-        val tempFile = File(file.parentFile, "${file.nameWithoutExtension}-tmp.json")
+        val tempFile = File(file.parentFile, "${file.nameWithoutExtension}-tmp.preferences_pb")
         file.copyTo(tempFile, overwrite = true)
         return tempFile
     }
@@ -27,7 +31,11 @@ object BackupPreferenceUtil {
         } catch (_: NoSuchFileException) {
             return emptyMap()
         }
-        val dataStore = PreferenceDataStoreFactory.create { tempFile }
+
+        val tempScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val dataStore = PreferenceDataStoreFactory.create(
+            scope = tempScope
+        ) { tempFile }
         val preferences = dataStore.data.first()
 
         val result = mutableMapOf<String, String>()
@@ -41,6 +49,7 @@ object BackupPreferenceUtil {
         }
 
         tempFile.delete()
+        tempScope.cancel()
         return result
     }
 

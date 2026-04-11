@@ -35,7 +35,7 @@ internal class DataTweakScreen(
     override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.database_icon_thin)
 
     @Composable
-    override fun getDescription(): String = stringResource(LocaleR.string.appearance_settings_content_desc)
+    override fun getDescription(): String = stringResource(LocaleR.string.data_and_backup_settings_content_desc)
 
     @Composable
     override fun getTweaks(): List<Tweak> {
@@ -52,6 +52,12 @@ internal class DataTweakScreen(
                         oldValue.copy(isIncognito = it)
                     }
                 },
+            ),
+            backupTweakGroup(
+                dataPreferences = { dataPreferences },
+                onUpdatePreferences = ::onUpdatePreferences,
+                createBackup = viewModel::createBackup,
+                restoreBackup = viewModel::restoreBackup,
             ),
             getSearchTweaks(),
         )

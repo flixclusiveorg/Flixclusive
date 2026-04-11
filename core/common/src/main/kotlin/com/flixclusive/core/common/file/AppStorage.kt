@@ -5,6 +5,7 @@ import java.io.File
 
 object AppStorage {
     private const val DEFAULT_FOLDER_NAME = "Flixclusive"
+    private const val BACKUP_FOLDER_NAME = "backups"
 
     /**
      * Returns the public Downloads directory.
@@ -25,8 +26,8 @@ object AppStorage {
 
     fun getPublicBackupDirectory(): File {
         return File(
-            getPublicDownloadsDirectory(),
-            "backups",
+            getPublicDirectory(),
+            BACKUP_FOLDER_NAME,
         )
     }
 }

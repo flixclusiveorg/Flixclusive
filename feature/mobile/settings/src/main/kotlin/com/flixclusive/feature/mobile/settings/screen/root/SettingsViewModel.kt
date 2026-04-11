@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.screen.root
 
+import android.net.Uri
 import androidx.compose.runtime.Stable
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
@@ -8,12 +9,16 @@ import com.flixclusive.core.common.config.BuildConfigProvider
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.system.SystemPreferences
+import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.database.repository.SearchHistoryRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.backup.common.BackupState
+import com.flixclusive.domain.backup.usecase.CreateBackupUseCase
+import com.flixclusive.domain.backup.usecase.RestoreBackupUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,6 +43,8 @@ internal class SettingsViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
     private val installedRepoRepository: InstalledRepoRepository,
     private val _buildConfig: BuildConfigProvider,
+    private val createBackupUseCase: CreateBackupUseCase,
+    private val restoreBackupUseCase: RestoreBackupUseCase,
 ) : ViewModel() {
     val currentUser = userSessionManager.currentUser
 
@@ -144,6 +151,26 @@ internal class SettingsViewModel @Inject constructor(
                 unloadProviderUseCase(it)
             }
         }
+    }
+
+    suspend fun createBackup(
+        uri: Uri,
+        options: BackupOptions = BackupOptions(),
+    ): BackupState {
+        return createBackupUseCase(
+            uri = uri,
+            options = options,
+        ).first { state -> state is BackupState.Success || state is BackupState.Error }
+    }
+
+    suspend fun restoreBackup(
+        uri: Uri,
+        options: BackupOptions = BackupOptions(),
+    ): BackupState {
+        return restoreBackupUseCase(
+            uri = uri,
+            options = options,
+        ).first { state -> state is BackupState.Success || state is BackupState.Error }
     }
 
     private suspend fun getCurrentUserId(): Int {

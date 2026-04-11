@@ -7,16 +7,16 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.flixclusive.core.common.file.FileConstants
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.backup.di.BackupWorkerEntryPoint
-import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.data.backup.work.util.BackupWorkFiles
+import com.flixclusive.data.backup.work.util.BackupWorkFile
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import java.io.File
 
 internal class BackupCreateWorker(
@@ -80,21 +80,38 @@ internal class BackupCreateWorker(
                 .first()
 
             val maxBackups = dataPreferences.maxBackups.coerceAtLeast(1)
-            val userBackupDir = BackupWorkFiles.getUserBackupDirectory(userId).apply { mkdirs() }
+            val userBackupDir = BackupWorkFile.getUserBackupDirectory(userId).apply { mkdirs() }
             val outputFile = selectBackupOutputFile(
                 userBackupDir = userBackupDir,
                 maxBackups = maxBackups,
             )
 
+            val outputUri = inputData.getString(BackupWorkConstants.INPUT_URI)
+                ?.takeIf { it.isNotBlank() }
+                ?.let(Uri::parse)
+                ?: Uri.fromFile(outputFile)
+
             runCatching {
-                val options = dataPreferences.autoBackupOptions
+                val defaultOptions = dataPreferences.autoBackupOptions
+                val options = defaultOptions.copy(
+                    includeLibrary = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_LIBRARY, defaultOptions.includeLibrary),
+                    includeWatchProgress = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_WATCH_PROGRESS, defaultOptions.includeWatchProgress),
+                    includeSearchHistory = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_SEARCH_HISTORY, defaultOptions.includeSearchHistory),
+                    includePreferences = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_PREFERENCES, defaultOptions.includePreferences),
+                    includeProviders = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_PROVIDERS, defaultOptions.includeProviders),
+                    includeRepositories = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES, defaultOptions.includeRepositories),
+                )
                 val result = entryPoint.backupRepository().create(
-                    uri = Uri.fromFile(outputFile),
+                    uri = outputUri,
                     options = options,
                 )
 
-                writeBackupResult(
-                    userId = userId,
+
+                BackupWorkFile.writeBackupResult(
+                    file = BackupWorkFile.getLastBackupResultFile(
+                        userId = userId,
+                        fileName = BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
+                    ),
                     result = result,
                 )
 
@@ -105,6 +122,7 @@ internal class BackupCreateWorker(
 
                 Result.success()
             }.getOrElse { error ->
+                errorLog(error)
                 Result.failure(
                     workDataOf(
                         BackupWorkConstants.OUTPUT_ERROR_MESSAGE to (error.message ?: error::class.java.simpleName),
@@ -117,7 +135,7 @@ internal class BackupCreateWorker(
     private fun selectBackupOutputFile(userBackupDir: File, maxBackups: Int): File {
         val existing = userBackupDir
             .listFiles()
-            ?.filter { it.isFile && it.extension == BackupWorkConstants.BACKUP_FILE_EXTENSION }
+            ?.filter { it.isFile && it.extension == FileConstants.BACKUP_FILE_EXTENSION }
             .orEmpty()
 
         val target = if (existing.size >= maxBackups) {
@@ -128,14 +146,18 @@ internal class BackupCreateWorker(
 
         return target ?: File(
             userBackupDir,
-            "backup-${System.currentTimeMillis()}.${BackupWorkConstants.BACKUP_FILE_EXTENSION}",
+            "${BackupWorkConstants.BACKUP_FILE_PREFIX}${System.currentTimeMillis()}.${FileConstants.BACKUP_FILE_EXTENSION}",
         )
     }
 
     private fun trimOldBackups(userBackupDir: File, maxBackups: Int) {
         val backups = userBackupDir
             .listFiles()
-            ?.filter { it.isFile && it.extension == BackupWorkConstants.BACKUP_FILE_EXTENSION }
+            ?.filter {
+                it.isFile
+                    && it.extension == FileConstants.BACKUP_FILE_EXTENSION
+                    && it.name.startsWith(BackupWorkConstants.BACKUP_FILE_PREFIX)
+            }
             ?.sortedBy { it.lastModified() }
             .orEmpty()
 
@@ -143,12 +165,6 @@ internal class BackupCreateWorker(
 
         val toDelete = backups.take(backups.size - maxBackups)
         toDelete.forEach { it.delete() }
-    }
-
-    private fun writeBackupResult(userId: Int, result: BackupResult) {
-        val file = BackupWorkFiles.getLastBackupResultFile(userId)
-        file.parentFile?.mkdirs()
-        file.writeText(Json.encodeToString(BackupResult.serializer(), result))
     }
 
     private fun hasOtherWorkRunning(workManager: WorkManager, tag: String): Boolean {
