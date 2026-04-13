@@ -27,6 +27,7 @@ import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
 import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
+import com.flixclusive.feature.mobile.onboarding.OnboardingScreenNavigator
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
@@ -35,7 +36,6 @@ import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenNavigator
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
-import com.flixclusive.feature.mobile.onboarding.OnboardingScreenNavigator
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
@@ -60,6 +60,7 @@ import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SearchGrap
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
+import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
@@ -68,7 +69,6 @@ import com.ramcosta.composedestinations.generated.providersettings.destinations.
 import com.ramcosta.composedestinations.generated.providertest.destinations.ProviderTestScreenDestination
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
 import com.ramcosta.composedestinations.generated.searchexpanded.destinations.SearchExpandedScreenDestination
-import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
@@ -239,7 +239,13 @@ internal class MobileAppNavigator(
 
     override fun openAddProfileScreen(isInitializing: Boolean) {
         runOnResumed {
-            navigator.navigate(AddUserScreenDestination(isInitializing = isInitializing))
+            navigator.navigate(AddUserScreenDestination(isInitializing = isInitializing)) {
+                if (isInitializing) {
+                    popUpTo(AppGraph) {
+                        inclusive = true
+                    }
+                }
+            }
         }
     }
 
