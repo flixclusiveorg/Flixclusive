@@ -521,8 +521,6 @@
     <string name="backup_restore_success">Backup restored</string>
     <string name="backup_restore_failed_format">Restore failed: %1$s</string>
 
-    <string name="onboarding_storage_not_selected">No folder selected</string>
-
     <!--  Share app message  -->
     <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>
     <string name="share_message_subject">Flixclusive download link</string>
