@@ -498,7 +498,7 @@
     <string name="backup_included_data_title">Data included</string>
 
     <string name="backup_actions_title">Manual backup</string>
-    <string name="backup_actions_desc">Create a backup file or restore from one.</string>
+    <string name="backup_actions_desc">Create a backup file or restore from one.\n\nNote: restoring merges the backup data with your current data, it doesn\'t replace it. This means that if you have a library in the backup and a library in your current data, after restoring, you will have both libraries in your account.</string>
     <string name="backup_create_button">Create</string>
     <string name="backup_restore_button">Restore</string>
 

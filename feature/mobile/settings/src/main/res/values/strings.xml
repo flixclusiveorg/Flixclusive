@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="report_a_bug">Report a bug</string>
-    <string name="github_repository">GitHub repository</string>
+    <string name="github">GitHub</string>
     <string name="feature_request">Request a feature!</string>
 </resources>
