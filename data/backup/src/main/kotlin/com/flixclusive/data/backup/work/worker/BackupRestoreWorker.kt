@@ -11,7 +11,7 @@ import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.backup.di.BackupWorkerEntryPoint
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.data.backup.work.util.BackupWorkFile
+import com.flixclusive.data.backup.work.util.BackupWorkResultStore
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -106,11 +106,10 @@ internal class BackupRestoreWorker(
                     options = options,
                 )
 
-                BackupWorkFile.writeBackupResult(
-                    file = BackupWorkFile.getLastBackupResultFile(
-                        userId = userId,
-                        fileName = BackupWorkConstants.LAST_RESTORE_RESULT_FILE_NAME,
-                    ),
+                BackupWorkResultStore.write(
+                    context = applicationContext,
+                    userId = userId,
+                    fileName = BackupWorkConstants.LAST_RESTORE_RESULT_FILE_NAME,
                     result = result,
                 )
 

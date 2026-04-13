@@ -1,38 +1,37 @@
 package com.flixclusive.data.backup.work.util
 
-import com.flixclusive.core.common.file.AppStorage
+import android.content.Context
 import com.flixclusive.data.backup.repository.BackupResult
 import kotlinx.serialization.json.Json
 import java.io.File
 
-internal object BackupWorkFile {
-    fun getUserBackupDirectory(userId: Int): File {
+internal object BackupWorkResultStore {
+    private const val ROOT_FOLDER = "backup-work"
+
+    private fun getUserFolder(context: Context, userId: Int): File {
         return File(
-            AppStorage.getPublicBackupDirectory(),
+            File(context.filesDir, ROOT_FOLDER),
             "user-$userId",
         )
     }
 
-    fun getLastBackupResultFile(
+    fun write(
+        context: Context,
         userId: Int,
-        fileName: String
-    ): File {
-        return File(
-            getUserBackupDirectory(userId),
-            fileName,
-        )
-    }
-
-    fun writeBackupResult(file: File, result: BackupResult) {
+        fileName: String,
+        result: BackupResult,
+    ) {
+        val file = File(getUserFolder(context, userId), fileName)
         file.parentFile?.mkdirs()
         file.writeText(Json.encodeToString(BackupResult.serializer(), result))
     }
 
-    fun readBackupResult(
+    fun read(
+        context: Context,
         userId: Int,
-        fileName: String
+        fileName: String,
     ): BackupResult {
-        val file = getLastBackupResultFile(userId, fileName)
+        val file = File(getUserFolder(context, userId), fileName)
         if (!file.exists()) throw NoSuchFileException(file)
 
         val json = file.readText()

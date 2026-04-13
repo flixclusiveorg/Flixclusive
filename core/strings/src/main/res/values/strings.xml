@@ -426,7 +426,7 @@
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
     <string name="navigate_to_film">Go see details of film button</string>
     <string name="navigate_to_repository_content_desc">Open repository screen</string>
-    <string name="navigate_up">Go back</string>
+    <string name="back">Back</string>
     <string name="next_episode_button_desc">An icon for next episode</string>
     <string name="on_boarding_background_content_desc">A background image for this on-boarding screen</string>
     <string name="owner_avatar_content_desc">Avatar or picture of repository\'s owner</string>
@@ -520,6 +520,8 @@
     <string name="backup_restore_started">Restoring backup…</string>
     <string name="backup_restore_success">Backup restored</string>
     <string name="backup_restore_failed_format">Restore failed: %1$s</string>
+    
+    <string name="onboarding_storage_not_selected">No folder selected</string>
 
     <!--  Share app message  -->
     <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>

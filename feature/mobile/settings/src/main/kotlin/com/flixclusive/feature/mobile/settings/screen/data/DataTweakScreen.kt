@@ -40,6 +40,7 @@ internal class DataTweakScreen(
     @Composable
     override fun getTweaks(): List<Tweak> {
         val dataPreferences by preferencesAsState.collectAsStateWithLifecycle()
+        val systemPreferences by viewModel.systemPreferences.collectAsStateWithLifecycle()
         val resources = LocalResources.current
 
         return listOf(
@@ -55,7 +56,9 @@ internal class DataTweakScreen(
             ),
             backupTweakGroup(
                 dataPreferences = { dataPreferences },
+                systemPreferences = { systemPreferences },
                 onUpdatePreferences = ::onUpdatePreferences,
+                onUpdateSystemPreferences = viewModel::updateSystemPrefs,
                 createBackup = viewModel::createBackup,
                 restoreBackup = viewModel::restoreBackup,
             ),

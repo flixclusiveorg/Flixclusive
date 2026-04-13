@@ -13,11 +13,11 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.backup.di.BackupWorkerEntryPoint
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.data.backup.work.util.BackupWorkFile
+import com.flixclusive.data.backup.work.util.BackupWorkResultStore
 import dagger.hilt.android.EntryPointAccessors
+import com.hippo.unifile.UniFile
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import java.io.File
 
 internal class BackupCreateWorker(
     appContext: Context,
@@ -75,21 +75,64 @@ internal class BackupCreateWorker(
             val dataStoreManager = entryPoint.dataStoreManager()
             dataStoreManager.usePreferencesByUserId(userId)
 
+            val storageDirectoryUri = dataStoreManager.getSystemPrefs()
+                .first()
+                .storageDirectoryUri
+                ?.takeIf { it.isNotBlank() }
+                ?: return@withContext Result.failure(
+                    workDataOf(
+                        BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "Backup location is not set",
+                    ),
+                )
+
             val dataPreferences = dataStoreManager
                 .getUserPrefs(UserPreferences.DATA_PREFS_KEY, type = DataPreferences::class)
                 .first()
 
             val maxBackups = dataPreferences.maxBackups.coerceAtLeast(1)
-            val userBackupDir = BackupWorkFile.getUserBackupDirectory(userId).apply { mkdirs() }
-            val outputFile = selectBackupOutputFile(
-                userBackupDir = userBackupDir,
-                maxBackups = maxBackups,
-            )
 
-            val outputUri = inputData.getString(BackupWorkConstants.INPUT_URI)
+            val explicitOutputUri = inputData.getString(BackupWorkConstants.INPUT_URI)
                 ?.takeIf { it.isNotBlank() }
                 ?.let(Uri::parse)
-                ?: Uri.fromFile(outputFile)
+
+            val userBackupDirForTrim: UniFile?
+            val outputUri = if (explicitOutputUri != null) {
+                userBackupDirForTrim = null
+                explicitOutputUri
+            } else {
+                val root = UniFile.fromUri(applicationContext, Uri.parse(storageDirectoryUri))
+                    ?: return@withContext Result.failure(
+                        workDataOf(
+                            BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "Unable to access backup location",
+                        ),
+                    )
+
+                if (!root.exists() || !root.isDirectory || !root.canWrite()) {
+                    return@withContext Result.failure(
+                        workDataOf(
+                            BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "Backup location is not writable",
+                        ),
+                    )
+                }
+
+                val backupsDir = root.findFile("backups") ?: root.createDirectory("backups")
+                val userBackupDir = backupsDir?.findFile("user-$userId")
+                    ?: backupsDir?.createDirectory("user-$userId")
+                    ?: return@withContext Result.failure(
+                        workDataOf(
+                            BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "Unable to create backup folder",
+                        ),
+                    )
+
+                userBackupDirForTrim = userBackupDir
+
+                val outputFile = selectBackupOutputFile(
+                    userBackupDir = userBackupDir,
+                    maxBackups = maxBackups,
+                )
+
+                outputFile.uri
+            }
 
             runCatching {
                 val defaultOptions = dataPreferences.autoBackupOptions
@@ -106,19 +149,14 @@ internal class BackupCreateWorker(
                     options = options,
                 )
 
-
-                BackupWorkFile.writeBackupResult(
-                    file = BackupWorkFile.getLastBackupResultFile(
-                        userId = userId,
-                        fileName = BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
-                    ),
+                BackupWorkResultStore.write(
+                    context = applicationContext,
+                    userId = userId,
+                    fileName = BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
                     result = result,
                 )
 
-                trimOldBackups(
-                    userBackupDir = userBackupDir,
-                    maxBackups = maxBackups,
-                )
+                userBackupDirForTrim?.let { trimOldBackups(userBackupDir = it, maxBackups = maxBackups) }
 
                 Result.success()
             }.getOrElse { error ->
@@ -132,33 +170,31 @@ internal class BackupCreateWorker(
         }
     }
 
-    private fun selectBackupOutputFile(userBackupDir: File, maxBackups: Int): File {
-        val existing = userBackupDir
-            .listFiles()
-            ?.filter { it.isFile && it.extension == FileConstants.BACKUP_FILE_EXTENSION }
+    private fun selectBackupOutputFile(userBackupDir: UniFile, maxBackups: Int): UniFile {
+        val backups = userBackupDir.listFiles()
+            ?.asSequence()
+            ?.filter { it.isFile }
+            ?.filter { it.name?.startsWith(BackupWorkConstants.BACKUP_FILE_PREFIX) == true }
+            ?.filter { it.name?.endsWith(".${FileConstants.BACKUP_FILE_EXTENSION}") == true }
+            ?.sortedBy { it.lastModified() }
+            ?.toList()
             .orEmpty()
 
-        val target = if (existing.size >= maxBackups) {
-            existing.minByOrNull { it.lastModified() }
-        } else {
-            null
-        }
+        val target = if (backups.size >= maxBackups) backups.firstOrNull() else null
 
-        return target ?: File(
-            userBackupDir,
+        return target ?: userBackupDir.createFile(
             "${BackupWorkConstants.BACKUP_FILE_PREFIX}${System.currentTimeMillis()}.${FileConstants.BACKUP_FILE_EXTENSION}",
-        )
+        ) ?: error("Unable to create backup file")
     }
 
-    private fun trimOldBackups(userBackupDir: File, maxBackups: Int) {
-        val backups = userBackupDir
-            .listFiles()
-            ?.filter {
-                it.isFile
-                    && it.extension == FileConstants.BACKUP_FILE_EXTENSION
-                    && it.name.startsWith(BackupWorkConstants.BACKUP_FILE_PREFIX)
-            }
+    private fun trimOldBackups(userBackupDir: UniFile, maxBackups: Int) {
+        val backups = userBackupDir.listFiles()
+            ?.asSequence()
+            ?.filter { it.isFile }
+            ?.filter { it.name?.startsWith(BackupWorkConstants.BACKUP_FILE_PREFIX) == true }
+            ?.filter { it.name?.endsWith(".${FileConstants.BACKUP_FILE_EXTENSION}") == true }
             ?.sortedBy { it.lastModified() }
+            ?.toList()
             .orEmpty()
 
         if (backups.size <= maxBackups) return

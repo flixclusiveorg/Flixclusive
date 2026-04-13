@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.config.BuildConfigProvider
 import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.common.file.AppStorage
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.data.app.updates.model.AppUpdateInfo
 import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
@@ -84,12 +83,7 @@ class AppUpdatesViewModel
             // No download in progress
             if (downloadJob?.isActive == false) return
 
-            val destinationPath = context.externalCacheDir
-                ?: AppStorage.getPublicDownloadsDirectory()
-
-            requireNotNull(destinationPath) {
-                "Failed to access storage to cancel download."
-            }
+            val destinationPath = getUpdateDownloadDir()
 
             val downloadId = getDownloadId(
                 url = url,
@@ -117,13 +111,7 @@ class AppUpdatesViewModel
             if (downloadJob?.isActive == true) return
 
             downloadJob = viewModelScope.launch {
-                val destinationPath = context.externalCacheDir
-                    ?: AppStorage.getPublicDownloadsDirectory()
-
-                if (destinationPath == null) {
-                    _downloadState.update { it.error(UiText.from(R.string.failed_to_access_storage)) }
-                    return@launch
-                }
+                val destinationPath = getUpdateDownloadDir()
 
                 val file = File(destinationPath, "$version.apk")
 
@@ -137,6 +125,10 @@ class AppUpdatesViewModel
                     _downloadState.value = it
                 }
             }
+        }
+
+        private fun getUpdateDownloadDir(): File {
+            return context.externalCacheDir ?: context.cacheDir
         }
     }
 

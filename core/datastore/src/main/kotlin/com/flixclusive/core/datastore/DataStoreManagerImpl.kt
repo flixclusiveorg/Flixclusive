@@ -14,6 +14,7 @@ import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPat
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.datastore.migration.MigrationV220
+import com.flixclusive.core.datastore.migration.MigrationV220SystemPrefs
 import com.flixclusive.core.datastore.migration.SystemPreferencesMigration
 import com.flixclusive.core.datastore.migration.UserPreferencesMigration
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -43,6 +44,7 @@ internal val Context.systemPreferences: DataStore<SystemPreferences> by dataStor
     produceMigrations = { context ->
         listOf(
             SystemPreferencesMigration(context),
+            MigrationV220SystemPrefs
         )
     },
 )

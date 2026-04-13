@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SystemPreferences(
     val isFirstTimeUserLaunch: Boolean = true,
+    val storageDirectoryUri: String? = null,
     val lastSeenChangelogs: Long = -1L,
     val isUsingAutoUpdateAppFeature: Boolean = true,
     val isUsingPrereleaseUpdates: Boolean = false,
