@@ -37,7 +37,10 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 userId = userId,
             )
 
-            if (file.exists()) {
+            val alreadyInstalled = providerRepository.getInstalledProvider(
+                id = metadata.id, ownerId = userId
+            ) != null
+            if (alreadyInstalled) {
                 send(
                     ProviderResult.Failure(
                         provider = metadata,
