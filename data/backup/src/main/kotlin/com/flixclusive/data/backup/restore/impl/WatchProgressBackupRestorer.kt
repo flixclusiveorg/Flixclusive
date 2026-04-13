@@ -29,9 +29,6 @@ internal class WatchProgressBackupRestorer @Inject constructor(
         return runCatching {
             val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            movieProgressDao.deleteAll(ownerId)
-            episodeProgressDao.deleteAll(ownerId)
-
             val watchedList = libraryListDao.getWatchedList(ownerId)
 
             items.forEach { progress ->

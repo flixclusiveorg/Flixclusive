@@ -73,7 +73,7 @@ class SetWatchProgressUseCaseImplTest {
     private fun createTestWatchProgress(
         id: Long = 1L,
         filmId: String = "test-film-id",
-        ownerId: Int = 123,
+        ownerId: String = "test-owner-id",
         progress: Long = 70_000L,
         status: WatchStatus = WatchStatus.WATCHING,
         duration: Long = 3600_000L,

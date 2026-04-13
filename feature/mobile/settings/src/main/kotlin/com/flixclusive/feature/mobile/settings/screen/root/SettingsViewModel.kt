@@ -178,7 +178,10 @@ internal class SettingsViewModel @Inject constructor(
 
         val includeProviders = options.includeProviders && backup.providers.isNotEmpty()
         if (includeProviders) {
-            deleteProviders()
+            val userId = getCurrentUserId()
+            providerRepository.getInstalledProviders(userId).forEach {
+                unloadProviderUseCase(it, uninstall = false)
+            }
         }
 
         return restoreBackupUseCase(
@@ -187,8 +190,7 @@ internal class SettingsViewModel @Inject constructor(
         ).first { state -> state is BackupState.Success || state is BackupState.Error }
             .also {
                 if (includeProviders) {
-                    initializeProviders()
-                        .collect()
+                    initializeProviders().collect()
                 }
             }
     }
