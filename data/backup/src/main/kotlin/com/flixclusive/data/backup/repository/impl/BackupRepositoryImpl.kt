@@ -7,7 +7,6 @@ import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.BackupOptions
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.backup.create.BackupCreator
 import com.flixclusive.data.backup.model.Backup
 import com.flixclusive.data.backup.model.BackupLibraryList
@@ -20,6 +19,8 @@ import com.flixclusive.data.backup.repository.BackupRepository
 import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.repository.NoDataToBackupException
 import com.flixclusive.data.backup.restore.BackupRestorer
+import com.flixclusive.data.backup.util.BackupUtil
+import com.flixclusive.data.backup.util.BackupUtil.decodeFromUriAndRestoreFiles
 import com.flixclusive.data.backup.validate.BackupValidationMode
 import com.flixclusive.data.backup.validate.BackupValidator
 import com.hippo.unifile.UniFile
@@ -29,14 +30,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
-import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
-import java.util.zip.GZIPInputStream
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -69,16 +66,6 @@ internal class BackupRepositoryImpl @Inject constructor(
     private val providerBackupRestorer: BackupRestorer<BackupProvider>,
     private val repositoryBackupRestorer: BackupRestorer<BackupProviderRepository>,
 ) : BackupRepository {
-    private companion object {
-        private const val ZIP_ENTRY_BACKUP = "backup.pb"
-        private const val ZIP_ENTRY_PROVIDERS_PREFIX = "providers/"
-        private const val ZIP_ENTRY_PROVIDERS_SETTINGS_PREFIX = "provider-settings/"
-        private const val ZIP_MAGIC_1 = 0x50 // 'P'
-        private const val ZIP_MAGIC_2 = 0x4B // 'K'
-        private const val GZIP_MAGIC_1 = 0x1F
-        private const val GZIP_MAGIC_2 = 0x8B
-    }
-
     override suspend fun create(uri: Uri, options: BackupOptions): BackupResult {
         return withContext(appDispatchers.io) {
             val file = UniFile.fromUri(context, uri)
@@ -135,7 +122,7 @@ internal class BackupRepositoryImpl @Inject constructor(
                 .let { outputStream -> BufferedOutputStream(outputStream) }
                 .use { bufferedOut ->
                     ZipOutputStream(bufferedOut).use { zip ->
-                        zip.putNextEntry(ZipEntry(ZIP_ENTRY_BACKUP))
+                        zip.putNextEntry(ZipEntry(BackupUtil.ZIP_ENTRY_BACKUP))
                         zip.write(bytes)
                         zip.closeEntry()
 
@@ -144,7 +131,7 @@ internal class BackupRepositoryImpl @Inject constructor(
                                 addFolderToZip(
                                     zip = zip,
                                     folder = userProvidersFolder,
-                                    entryPrefix = ZIP_ENTRY_PROVIDERS_PREFIX,
+                                    entryPrefix = BackupUtil.ZIP_ENTRY_PROVIDERS_PREFIX,
                                 )
                             }
 
@@ -152,7 +139,7 @@ internal class BackupRepositoryImpl @Inject constructor(
                                 addFolderToZip(
                                     zip = zip,
                                     folder = userProvidersSettingsFolder,
-                                    entryPrefix = ZIP_ENTRY_PROVIDERS_SETTINGS_PREFIX,
+                                    entryPrefix = BackupUtil.ZIP_ENTRY_PROVIDERS_SETTINGS_PREFIX,
                                 )
                             }
                         }
@@ -165,9 +152,11 @@ internal class BackupRepositoryImpl @Inject constructor(
 
     override suspend fun restore(uri: Uri, options: BackupOptions): BackupResult {
         return withContext(appDispatchers.io) {
-            val backup = decodeFromUriAndRestoreFiles(
-                uri = uri,
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val backup = context.decodeFromUriAndRestoreFiles(
                 restoreProviderFiles = options.includeProviders,
+                userId = userId,
+                uri = uri,
             )
 
             val includeRepositories = options.includeRepositories && backup.repositories.isNotEmpty()
@@ -250,120 +239,5 @@ internal class BackupRepositoryImpl @Inject constructor(
                 }
                 zip.closeEntry()
             }
-    }
-
-    private suspend fun decodeFromUriAndRestoreFiles(
-        uri: Uri,
-        restoreProviderFiles: Boolean,
-    ): Backup {
-        val inputStream = context.contentResolver.openInputStream(uri)
-            ?: throw IOException("Unable to open backup: $uri")
-
-        return BufferedInputStream(inputStream).use { buffered ->
-            buffered.mark(4)
-            val header = ByteArray(4)
-            val read = buffered.read(header)
-            buffered.reset()
-
-            val isZip = read >= 2 &&
-                header[0] == ZIP_MAGIC_1.toByte() &&
-                header[1] == ZIP_MAGIC_2.toByte()
-
-            val isGzip = read >= 2 &&
-                header[0] == GZIP_MAGIC_1.toByte() &&
-                header[1] == GZIP_MAGIC_2.toByte()
-
-            when {
-                isZip -> decodeFromZipAndRestoreFiles(
-                    input = buffered,
-                    restoreProviderFiles = restoreProviderFiles,
-                )
-
-                isGzip -> decodeFromGzip(input = buffered)
-                else -> decodeFromRaw(input = buffered)
-            }
-        }
-    }
-
-    private suspend fun decodeFromZipAndRestoreFiles(
-        input: BufferedInputStream,
-        restoreProviderFiles: Boolean,
-    ): Backup {
-        var backupBytes: ByteArray? = null
-        var userProvidersFolder: File? = null
-        var userProvidersSettingsFolder: File? = null
-
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        ZipInputStream(input).use { zip ->
-            generateSequence { zip.nextEntry }
-                .filterNot { it.isDirectory }
-                .forEach { entry ->
-                    safeCall {
-                        when {
-                            entry.name == ZIP_ENTRY_BACKUP -> {
-                                backupBytes = zip.readBytes()
-                            }
-
-                            restoreProviderFiles && entry.name.startsWith(ZIP_ENTRY_PROVIDERS_PREFIX) -> {
-                                val relativePath = entry.name.removePrefix(ZIP_ENTRY_PROVIDERS_PREFIX)
-                                if (relativePath.isBlank()) return@forEach
-
-                                val providersFolder = userProvidersFolder ?: run {
-                                    File(context.getProvidersPath(userId)).apply { mkdirs() }
-                                        .also { userProvidersFolder = it }
-                                }
-
-                                val outFile = safeResolveChild(providersFolder, relativePath)
-                                outFile.parentFile?.mkdirs()
-                                outFile.outputStream().use { output ->
-                                    zip.copyTo(output)
-                                }
-                            }
-
-                            restoreProviderFiles && entry.name.startsWith(ZIP_ENTRY_PROVIDERS_SETTINGS_PREFIX) -> {
-                                val relativePath = entry.name.removePrefix(ZIP_ENTRY_PROVIDERS_SETTINGS_PREFIX)
-                                if (relativePath.isBlank()) return@forEach
-
-                                val settingsFolder = userProvidersSettingsFolder ?: run {
-                                    File(context.getProvidersSettingsPath(userId)).apply { mkdirs() }
-                                        .also { userProvidersSettingsFolder = it }
-                                }
-
-                                val outFile = safeResolveChild(settingsFolder, relativePath)
-                                outFile.parentFile?.mkdirs()
-                                outFile.outputStream().use { output ->
-                                    zip.copyTo(output)
-                                }
-                            }
-                        }
-                    }
-                }
-
-            zip.closeEntry()
-        }
-
-        val bytes = backupBytes ?: throw IOException("Backup archive is missing '$ZIP_ENTRY_BACKUP'")
-        return ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
-    }
-
-    private fun decodeFromGzip(input: BufferedInputStream): Backup {
-        val bytes = GZIPInputStream(input).use { it.readBytes() }
-        return ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
-    }
-
-    private fun decodeFromRaw(input: BufferedInputStream): Backup {
-        val bytes = input.readBytes()
-        return ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
-    }
-
-    private fun safeResolveChild(root: File, relativePath: String): File {
-        val canonicalRoot = root.canonicalFile
-        val canonicalChild = File(root, relativePath).canonicalFile
-
-        if (!canonicalChild.path.startsWith(canonicalRoot.path + File.separator)) {
-            throw IOException("Invalid zip entry path: $relativePath")
-        }
-
-        return canonicalChild
     }
 }
