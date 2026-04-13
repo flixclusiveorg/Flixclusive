@@ -31,7 +31,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.documentfile.provider.DocumentFile
 import com.flixclusive.core.common.file.FileConstants
 import com.flixclusive.core.common.file.UniFileUtils
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -127,13 +126,6 @@ internal fun backupTweakGroup(
         ?.takeIf { it.isNotBlank() }
         ?.let(Uri::parse)
 
-    val storageDirectoryLabel = remember(storageDirectoryUri) {
-        when {
-            storageDirectoryUri == null -> resources.getString(LocaleR.string.onboarding_storage_not_selected)
-            else -> DocumentFile.fromTreeUri(context, storageDirectoryUri)?.name ?: storageDirectoryUri.toString()
-        }
-    }
-
     val directoryPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
@@ -147,13 +139,13 @@ internal fun backupTweakGroup(
         }
     }
 
-    var pendingCreateBackupOptions by remember { mutableStateOf<BackupOptions?>(null) }
+    var pendingBackupOptions by remember { mutableStateOf<BackupOptions?>(null) }
 
     val createFileSaver = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/*"),
     ) { uri ->
-        val options = pendingCreateBackupOptions
-        pendingCreateBackupOptions = null
+        val options = pendingBackupOptions
+        pendingBackupOptions = null
 
         if (uri == null || options == null) return@rememberLauncherForActivityResult
 
@@ -168,9 +160,7 @@ internal fun backupTweakGroup(
 
             context.showToast(resources.getString(LocaleR.string.backup_create_started))
 
-            val state = createBackup(uri, options)
-
-            when (state) {
+            when (val state = createBackup(uri, options)) {
                 is BackupState.Success -> context.showToast(
                     resources.getString(LocaleR.string.backup_create_success),
                 )
@@ -192,23 +182,23 @@ internal fun backupTweakGroup(
     val restoreFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+        val options = pendingBackupOptions
+        pendingBackupOptions = null
+
+        if (uri == null || options == null) return@rememberLauncherForActivityResult
 
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         runCatching {
             context.contentResolver.takePersistableUriPermission(uri, flags)
         }
 
-        val options = dataPreferences().autoBackupOptions
         scope.launch {
             if (isBackupOperationRunning) return@launch
             isBackupOperationRunning = true
 
             context.showToast(resources.getString(LocaleR.string.backup_restore_started))
 
-            val state = restoreBackup(uri, options)
-
-            when (state) {
+            when (val state = restoreBackup(uri, options)) {
                 is BackupState.Success -> context.showToast(
                     resources.getString(LocaleR.string.backup_restore_success),
                 )
@@ -228,59 +218,68 @@ internal fun backupTweakGroup(
     }
 
     var isCreateOptionsDialogShown by rememberSaveable { mutableStateOf(false) }
-    val createSelectedOptions = remember { mutableStateListOf<BackupOption>() }
+    var isRestoreOptionsDialogShown by rememberSaveable { mutableStateOf(false) }
+    val manualSelectedOptions = remember { mutableStateListOf<BackupOption>() }
 
-    LaunchedEffect(isCreateOptionsDialogShown) {
-        if (!isCreateOptionsDialogShown) return@LaunchedEffect
+    LaunchedEffect(isCreateOptionsDialogShown, isRestoreOptionsDialogShown) {
+        if (!isCreateOptionsDialogShown && !isRestoreOptionsDialogShown) return@LaunchedEffect
 
-        createSelectedOptions.clear()
-        createSelectedOptions.addAll(selectedBackupOptions)
+        manualSelectedOptions.clear()
+        manualSelectedOptions.addAll(selectedBackupOptions)
     }
 
-    if (isCreateOptionsDialogShown) {
+    if (isCreateOptionsDialogShown || isRestoreOptionsDialogShown) {
         BaseTweakDialog(
             title = stringResource(LocaleR.string.backup_included_data_title),
-            onDismissRequest = { isCreateOptionsDialogShown = false },
+            onDismissRequest = {
+                isCreateOptionsDialogShown = false
+                isRestoreOptionsDialogShown = false
+            },
             onConfirm =
-                if (createSelectedOptions.isNotEmpty()) {
+                if (manualSelectedOptions.isNotEmpty()) {
                     fun() {
-                        isCreateOptionsDialogShown = false
                         val options = BackupOptions(
-                            includeLibrary = createSelectedOptions.contains(BackupOption.LIBRARY),
-                            includeWatchProgress = createSelectedOptions.contains(BackupOption.WATCH_PROGRESS),
-                            includeSearchHistory = createSelectedOptions.contains(BackupOption.SEARCH_HISTORY),
-                            includePreferences = createSelectedOptions.contains(BackupOption.PREFERENCES),
-                            includeProviders = createSelectedOptions.contains(BackupOption.PROVIDERS),
-                            includeRepositories = createSelectedOptions.contains(BackupOption.REPOSITORIES),
+                            includeLibrary = manualSelectedOptions.contains(BackupOption.LIBRARY),
+                            includeWatchProgress = manualSelectedOptions.contains(BackupOption.WATCH_PROGRESS),
+                            includeSearchHistory = manualSelectedOptions.contains(BackupOption.SEARCH_HISTORY),
+                            includePreferences = manualSelectedOptions.contains(BackupOption.PREFERENCES),
+                            includeProviders = manualSelectedOptions.contains(BackupOption.PROVIDERS),
+                            includeRepositories = manualSelectedOptions.contains(BackupOption.REPOSITORIES),
                         )
 
-                        pendingCreateBackupOptions = options
-                        createFileSaver.launch(
-                            "manual_flixclusive_backup_${System.currentTimeMillis()}.${FileConstants.BACKUP_FILE_EXTENSION}",
-                        )
+                        pendingBackupOptions = options
+                        if (isCreateOptionsDialogShown) {
+                            createFileSaver.launch(
+                                "manual_flixclusive_backup_${System.currentTimeMillis()}.${FileConstants.BACKUP_FILE_EXTENSION}",
+                            )
+                        } else if (isRestoreOptionsDialogShown) {
+                            restoreFilePicker.launch(backupFileMimeTypes)
+                        }
+
+                        isCreateOptionsDialogShown = false
+                        isRestoreOptionsDialogShown = false
                     }
                 } else {
                     null
                 },
         ) {
             LazyColumn(
-                modifier =
-                    Modifier
-                        .heightIn(max = getAdaptiveDp(400.dp, 50.dp)),
+                modifier = Modifier
+                    .heightIn(max = getAdaptiveDp(400.dp, 50.dp)),
             ) {
                 items(
                     items = BackupOption.entries,
                     key = { it.name },
                 ) { option ->
                     val label = backupOptions[option].orEmpty()
-                    val isSelected = createSelectedOptions.contains(option)
+                    val isSelected = manualSelectedOptions.contains(option)
 
                     LabeledCheckbox(
                         checked = isSelected,
                         onCheckedChange = { isAdding ->
                             when {
-                                isAdding -> createSelectedOptions.add(option)
-                                else -> createSelectedOptions.remove(option)
+                                isAdding -> manualSelectedOptions.add(option)
+                                else -> manualSelectedOptions.remove(option)
                             }
                         },
                         modifier =
@@ -288,8 +287,8 @@ internal fun backupTweakGroup(
                                 .fillMaxWidth()
                                 .clickable {
                                     when {
-                                        isSelected -> createSelectedOptions.remove(option)
-                                        else -> createSelectedOptions.add(option)
+                                        isSelected -> manualSelectedOptions.remove(option)
+                                        else -> manualSelectedOptions.add(option)
                                     }
                                 }
                                 .minimumInteractiveComponentSize()
@@ -384,7 +383,7 @@ internal fun backupTweakGroup(
                     BackupActionsRow(
                         enabled = !isBackupOperationRunning,
                         onCreateClick = { isCreateOptionsDialogShown = true },
-                        onRestoreClick = { restoreFilePicker.launch(backupFileMimeTypes) },
+                        onRestoreClick = { isRestoreOptionsDialogShown = true },
                     )
                 },
             ),
