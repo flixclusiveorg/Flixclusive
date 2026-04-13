@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFilter
@@ -42,7 +43,6 @@ import com.flixclusive.feature.mobile.settings.component.SwitchComponent
 import com.flixclusive.feature.mobile.settings.component.TextFieldComponent
 import com.flixclusive.feature.mobile.settings.component.TitleDescriptionHeader
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery
-import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -123,12 +123,12 @@ private fun SubScreenHeader(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.headlineLarge.asAdaptiveTextStyle(),
+            style = MaterialTheme.typography.headlineSmall.asAdaptiveTextStyle(),
         )
 
         Text(
             text = description,
-            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+            style = MaterialTheme.typography.bodyMedium.asAdaptiveTextStyle(),
         )
     }
 }
@@ -150,22 +150,21 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                     TitleDescriptionHeader(
                         title = tweak.title,
                         descriptionProvider = tweak.description,
-                        titleStyle =
-                            getEmphasizedLabel(
-                                size = 20.sp,
-                                letterSpacing = 0.1.sp,
-                            ).copy(color = LocalContentColor.current.copy(0.8F)),
-                        modifier =
-                            Modifier
-                                .animateItem()
-                                .graphicsLayer {
-                                    alpha = if (tweak.enabledProvider()) 1F else 0.6F
-                                }
-                                .padding(
-                                    bottom = getAdaptiveDp(10.dp),
-                                    top = TweakGroupSpacing,
-                                )
-                                .padding(horizontal = TweakPaddingHorizontal),
+                        titleStyle = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp,
+                        ),
+                        modifier = Modifier
+                            .animateItem()
+                            .graphicsLayer {
+                                alpha = if (tweak.enabledProvider()) 1F else 0.6F
+                            }
+                            .padding(
+                                bottom = getAdaptiveDp(10.dp),
+                                top = TweakGroupSpacing,
+                            )
+                            .padding(horizontal = TweakPaddingHorizontal),
                     )
                 }
 
