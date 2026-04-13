@@ -27,7 +27,7 @@ internal class ProviderBackupValidator @Inject constructor(
         }
     }
 
-    private suspend fun validateCreate(ownerId: Int, backup: List<BackupProvider>): Set<String> {
+    private suspend fun validateCreate(ownerId: String, backup: List<BackupProvider>): Set<String> {
         val expectedProviders = installedProviderDao.getAll(ownerId)
         val backupById = backup.associateBy { it.id }
 
@@ -51,7 +51,7 @@ internal class ProviderBackupValidator @Inject constructor(
         return missing
     }
 
-    private suspend fun validateRestore(ownerId: Int, backup: List<BackupProvider>): Set<String> {
+    private suspend fun validateRestore(ownerId: String, backup: List<BackupProvider>): Set<String> {
         val expectedById = backup.associateBy { it.id }
         if (expectedById.isEmpty()) return emptySet()
 

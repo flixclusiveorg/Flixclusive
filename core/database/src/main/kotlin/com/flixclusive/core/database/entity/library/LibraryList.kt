@@ -32,7 +32,7 @@ enum class LibraryListType {
 )
 data class LibraryList(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val ownerId: Int,
+    val ownerId: String,
     val name: String,
     val description: String? = null,
     val listType: LibraryListType = LibraryListType.CUSTOM,

@@ -27,7 +27,7 @@ internal class SearchHistoryBackupValidator @Inject constructor(
         }
     }
 
-    private suspend fun validateCreate(ownerId: Int, backup: List<BackupSearchHistory>): Set<String> {
+    private suspend fun validateCreate(ownerId: String, backup: List<BackupSearchHistory>): Set<String> {
         val expectedHistory = searchHistoryDao.getAll(ownerId)
         val backupByQuery = backup.associateBy { it.query }
 
@@ -48,7 +48,7 @@ internal class SearchHistoryBackupValidator @Inject constructor(
         return missing
     }
 
-    private suspend fun validateRestore(ownerId: Int, backup: List<BackupSearchHistory>): Set<String> {
+    private suspend fun validateRestore(ownerId: String, backup: List<BackupSearchHistory>): Set<String> {
         val expectedByQuery = backup.associateBy { it.query }
         if (expectedByQuery.isEmpty()) return emptySet()
 

@@ -306,7 +306,7 @@ internal class MobileAppNavigator(
         uriHandler.openUri(url)
     }
 
-    override fun openEditUserScreen(userId: Int) {
+    override fun openEditUserScreen(userId: String) {
         runOnResumed {
             navigator.navigate(UserEditScreenDestination(userId = userId))
         }

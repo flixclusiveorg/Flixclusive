@@ -178,7 +178,7 @@ internal class ProvidersTweakScreen(
                     description = { formatWarningCountDescription(providers().size) },
                     dialogTitle = warningLabel,
                     dialogMessage = formatWarningMessage(deleteProvidersLabel),
-                    onConfirm = { viewModel.deleteRepositories() },
+                    onConfirm = { viewModel.deleteProviders() },
                 ),
                 TweakUI.DialogTweak(
                     title = deleteRepositoriesLabel,

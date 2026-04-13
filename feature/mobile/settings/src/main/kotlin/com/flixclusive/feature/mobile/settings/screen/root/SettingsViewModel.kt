@@ -173,7 +173,7 @@ internal class SettingsViewModel @Inject constructor(
         ).first { state -> state is BackupState.Success || state is BackupState.Error }
     }
 
-    private suspend fun getCurrentUserId(): Int {
+    private suspend fun getCurrentUserId(): String {
         return userSessionManager.currentUser
             .filterNotNull()
             .map { it.id }

@@ -8,7 +8,7 @@ import java.io.File
 internal object BackupWorkResultStore {
     private const val ROOT_FOLDER = "backup-work"
 
-    private fun getUserFolder(context: Context, userId: Int): File {
+    private fun getUserFolder(context: Context, userId: String): File {
         return File(
             File(context.filesDir, ROOT_FOLDER),
             "user-$userId",
@@ -17,7 +17,7 @@ internal object BackupWorkResultStore {
 
     fun write(
         context: Context,
-        userId: Int,
+        userId: String,
         fileName: String,
         result: BackupResult,
     ) {
@@ -28,7 +28,7 @@ internal object BackupWorkResultStore {
 
     fun read(
         context: Context,
-        userId: Int,
+        userId: String,
         fileName: String,
     ): BackupResult {
         val file = File(getUserFolder(context, userId), fileName)

@@ -60,7 +60,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
      * Initializes all debug providers from local storage and adds
      * them to the preferences, if they are not already present.
      * */
-    private suspend fun initializeDebugProviders(userId: Int) {
+    private suspend fun initializeDebugProviders(userId: String) {
         val path = "${context.getExternalFilesDir(null)}/$PROVIDERS_FOLDER_NAME/debug"
         val localDir = File(path)
 

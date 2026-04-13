@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -83,6 +84,10 @@ fun UserAvatar(
             contentScale = contentScale,
             modifier = Modifier
                 .matchParentSize()
+                .graphicsLayer {
+                    clip = true
+                    this.shape = shape
+                }
                 .border(
                     width = borderWidth,
                     color = borderColor,

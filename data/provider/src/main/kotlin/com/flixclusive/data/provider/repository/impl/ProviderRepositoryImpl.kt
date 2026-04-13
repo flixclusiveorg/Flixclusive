@@ -79,14 +79,14 @@ internal class ProviderRepositoryImpl @Inject constructor(
 
     override suspend fun getInstalledProvider(
         id: String,
-        ownerId: Int
+        ownerId: String
     ): InstalledProvider? {
         return withContext(appDispatchers.io) {
             installedProviderDao.get(id, ownerId)
         }
     }
 
-    override suspend fun getApi(id: String, ownerId: Int): ProviderApi? = withContext(appDispatchers.io) {
+    override suspend fun getApi(id: String, ownerId: String): ProviderApi? = withContext(appDispatchers.io) {
         val provider = pluginsMap[id] ?: return@withContext null
         try {
             provider.getApi(context, okHttpClient)
@@ -102,29 +102,29 @@ internal class ProviderRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun isEnabled(id: String, ownerId: Int)
+    override suspend fun isEnabled(id: String, ownerId: String)
         = withContext(appDispatchers.io) {
             installedProviderDao.isEnabled(id = id, ownerId = ownerId)
         }
 
-    override fun getEnabledProvidersAsFlow(ownerId: Int): Flow<List<InstalledProvider>> {
+    override fun getEnabledProvidersAsFlow(ownerId: String): Flow<List<InstalledProvider>> {
         return installedProviderDao.getEnabledAsFlow(ownerId)
     }
 
-    override suspend fun getEnabledProviders(ownerId: Int): List<InstalledProvider> {
+    override suspend fun getEnabledProviders(ownerId: String): List<InstalledProvider> {
         return withContext(appDispatchers.io) {
             installedProviderDao.getEnabled(ownerId)
         }
     }
 
-    override suspend fun getInstalledProviders(ownerId: Int)
+    override suspend fun getInstalledProviders(ownerId: String)
         = withContext(appDispatchers.io) {
             installedProviderDao.getAll(ownerId)
         }
 
-    override fun getInstalledProvidersAsFlow(ownerId: Int) = installedProviderDao.getAllAsFlow(ownerId)
+    override fun getInstalledProvidersAsFlow(ownerId: String) = installedProviderDao.getAllAsFlow(ownerId)
 
-    override suspend fun getMaxSortOrder(ownerId: Int): Double {
+    override suspend fun getMaxSortOrder(ownerId: String): Double {
         return withContext(appDispatchers.io) {
             providerSortOrderManager.getNextSortOrder(ownerId)
         }
@@ -142,7 +142,7 @@ internal class ProviderRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun renormalizePositions(ownerId: Int) {
+    override suspend fun renormalizePositions(ownerId: String) {
         val all = installedProviderDao.getAll(ownerId)
         if (providerSortOrderManager.needsRenormalization(all)) {
             providerSortOrderManager.renormalize(all, ownerId)
@@ -155,7 +155,7 @@ internal class ProviderRepositoryImpl @Inject constructor(
         metadataMap.clear()
     }
 
-    override suspend fun toggleProvider(id: String, ownerId: Int) {
+    override suspend fun toggleProvider(id: String, ownerId: String) {
         val isEnabled = installedProviderDao.isEnabled(id, ownerId)
         installedProviderDao.setEnabled(
             id = id,

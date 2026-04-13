@@ -76,7 +76,7 @@ internal class DataStoreManagerImpl @Inject constructor(
 
     override fun getSystemPrefs() = systemPreferences.data
 
-    override fun usePreferencesByUserId(userId: Int) {
+    override fun usePreferencesByUserId(userId: String) {
         synchronized(lock) {
             userPreferences = context.createUserPreferences(
                 userId = userId,
@@ -84,9 +84,9 @@ internal class DataStoreManagerImpl @Inject constructor(
                     listOf(
                         UserPreferencesMigration(context = context),
                         MigrationV220(
+                            userId = userId,
                             providerDao = providerDao,
                             repositoryDao = repositoryDao,
-                            userId = userId
                         )
                     )
                 },
@@ -142,7 +142,7 @@ internal class DataStoreManagerImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAllUserRelatedFiles(userId: Int) {
+    override suspend fun deleteAllUserRelatedFiles(userId: String) {
         withContext(appDispatchers.io) {
             val datastoreFile = context.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
             val providersFolder = context.getProvidersPath(userId)

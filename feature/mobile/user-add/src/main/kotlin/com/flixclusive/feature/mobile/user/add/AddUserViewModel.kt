@@ -17,6 +17,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -96,10 +97,13 @@ internal class AddUserViewModel @Inject constructor(
         }
 
         addJob = appDispatchers.ioScope.launch {
-            val userId = userRepository.addUser(user).toInt()
+            val userId = user.id.ifBlank { UUID.randomUUID().toString() }
+            val validatedUser = user.copy(id = userId)
+
+            userRepository.addUser(validatedUser)
             libraryListRepository.seedLists(userId)
+
             if (isSigningIn) {
-                val validatedUser = user.copy(id = userId)
                 userSessionManager.signIn(validatedUser)
             }
 

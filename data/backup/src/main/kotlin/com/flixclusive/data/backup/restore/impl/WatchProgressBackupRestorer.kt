@@ -69,7 +69,7 @@ internal class WatchProgressBackupRestorer @Inject constructor(
         }
     }
 
-    private fun BackupWatchMovieProgress.toMovieProgress(ownerId: Int): MovieProgress {
+    private fun BackupWatchMovieProgress.toMovieProgress(ownerId: String): MovieProgress {
         return MovieProgress(
             filmId = filmId,
             ownerId = ownerId,
@@ -81,7 +81,7 @@ internal class WatchProgressBackupRestorer @Inject constructor(
         )
     }
 
-    private fun BackupWatchEpisodeProgress.toEpisodeProgress(ownerId: Int): EpisodeProgress {
+    private fun BackupWatchEpisodeProgress.toEpisodeProgress(ownerId: String): EpisodeProgress {
         return EpisodeProgress(
             filmId = filmId,
             ownerId = ownerId,

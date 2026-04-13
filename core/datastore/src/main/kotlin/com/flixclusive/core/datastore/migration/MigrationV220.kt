@@ -20,7 +20,7 @@ import java.io.File
 
 @Suppress("DEPRECATION")
 internal class MigrationV220(
-    private val userId: Int,
+    private val userId: String,
     private val providerDao: InstalledProviderDao,
     private val repositoryDao: InstalledRepositoryDao,
 ) : DataMigration<Preferences> {

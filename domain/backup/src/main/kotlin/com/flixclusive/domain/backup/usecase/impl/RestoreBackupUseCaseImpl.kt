@@ -55,7 +55,7 @@ internal class RestoreBackupUseCaseImpl @Inject constructor(
         .flowOn(appDispatchers.io)
 
     private suspend fun WorkInfo?.toBackupState(
-        userId: Int,
+        userId: String,
         readResult: suspend () -> BackupResult,
     ): BackupState {
         val state = this?.state

@@ -22,10 +22,10 @@ interface EpisodeProgressDao {
         ORDER BY createdAt DESC
         """,
     )
-    fun getAll(ownerId: Int): List<EpisodeProgressWithMetadata>
+    fun getAll(ownerId: String): List<EpisodeProgressWithMetadata>
 
     fun getAllAsFlow(
-        ownerId: Int,
+        ownerId: String,
         column: String,
         ascending: Boolean,
     ): Flow<List<EpisodeProgressWithMetadata>> {
@@ -47,8 +47,8 @@ interface EpisodeProgressDao {
             RoomRawQuery(
                 sql = query,
                 onBindStatement = { statement ->
-                    statement.bindInt(1, ownerId)
-                    statement.bindInt(2, ownerId)
+                    statement.bindText(1, ownerId)
+                    statement.bindText(2, ownerId)
                 }
             )
         )
@@ -66,7 +66,7 @@ interface EpisodeProgressDao {
         """,
     )
     fun getRandoms(
-        ownerId: Int,
+        ownerId: String,
         count: Int,
     ): Flow<List<EpisodeProgressWithMetadata>>
 
@@ -86,7 +86,7 @@ interface EpisodeProgressDao {
         LIMIT 1
         """,
     )
-    suspend fun get(filmId: String, ownerId: Int): EpisodeProgressWithMetadata?
+    suspend fun get(filmId: String, ownerId: String): EpisodeProgressWithMetadata?
 
     @Transaction
     @Query("SELECT * FROM series_watch_history WHERE id = :id")
@@ -104,7 +104,7 @@ interface EpisodeProgressDao {
         LIMIT 1
         """,
     )
-    fun getAsFlow(itemId: String, ownerId: Int): Flow<EpisodeProgressWithMetadata?>
+    fun getAsFlow(itemId: String, ownerId: String): Flow<EpisodeProgressWithMetadata?>
 
     @Query(
         """
@@ -113,7 +113,7 @@ interface EpisodeProgressDao {
         ORDER BY episodeNumber ASC
         """,
     )
-    suspend fun getSeasonProgress(filmId: String, season: Int, ownerId: Int): List<EpisodeProgress>
+    suspend fun getSeasonProgress(filmId: String, season: Int, ownerId: String): List<EpisodeProgress>
 
     @Query(
         """
@@ -122,7 +122,7 @@ interface EpisodeProgressDao {
         LIMIT 1
         """,
     )
-    suspend fun getEpisodeProgress(filmId: String, season: Int, episode: Int, ownerId: Int): EpisodeProgress?
+    suspend fun getEpisodeProgress(filmId: String, season: Int, episode: Int, ownerId: String): EpisodeProgress?
 
     @Query(
         """
@@ -131,7 +131,7 @@ interface EpisodeProgressDao {
         ORDER BY episodeNumber ASC
         """,
     )
-    fun getSeasonProgressAsFlow(filmId: String, season: Int, ownerId: Int): Flow<List<EpisodeProgress>>
+    fun getSeasonProgressAsFlow(filmId: String, season: Int, ownerId: String): Flow<List<EpisodeProgress>>
 
     @Transaction
     suspend fun insert(
@@ -163,7 +163,7 @@ interface EpisodeProgressDao {
     suspend fun delete(id: Long)
 
     @Query("DELETE FROM series_watch_history WHERE ownerId = :ownerId")
-    suspend fun deleteAll(ownerId: Int)
+    suspend fun deleteAll(ownerId: String)
 
     @Query(
         "UPDATE series_watch_history " +

@@ -12,17 +12,17 @@ internal class InstalledRepoRepositoryImpl @Inject constructor(
     private val repositoryDao: InstalledRepositoryDao,
     private val appDispatchers: AppDispatchers
 ) : InstalledRepoRepository {
-    override suspend fun getAll(ownerId: Int): List<InstalledRepository> {
+    override suspend fun getAll(ownerId: String): List<InstalledRepository> {
         return withContext(appDispatchers.io) {
             repositoryDao.getAll(ownerId)
         }
     }
 
-    override fun getAllAsFlow(ownerId: Int): Flow<List<InstalledRepository>> {
+    override fun getAllAsFlow(ownerId: String): Flow<List<InstalledRepository>> {
         return repositoryDao.getAllAsFlow(ownerId)
     }
 
-    override suspend fun isInstalled(url: String, ownerId: Int): Boolean {
+    override suspend fun isInstalled(url: String, ownerId: String): Boolean {
         return withContext(appDispatchers.io) {
             repositoryDao.isInstalled(url, ownerId)
         }
@@ -40,7 +40,7 @@ internal class InstalledRepoRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAll(ownerId: Int) {
+    override suspend fun deleteAll(ownerId: String) {
         withContext(appDispatchers.io) {
             repositoryDao.deleteAll(ownerId)
         }

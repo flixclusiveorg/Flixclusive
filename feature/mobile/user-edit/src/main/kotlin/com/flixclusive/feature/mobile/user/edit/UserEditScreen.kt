@@ -99,9 +99,9 @@ internal fun UserEditScreen(
 private fun UserEditScreenContent(
     user: User,
     onEditUser: (User) -> Unit,
-    onRemoveUser: (userId: Int) -> Unit,
-    onClearSearchHistory: (userId: Int) -> Unit,
-    onClearLibraries: (userId: Int, libraries: List<Library>) -> Unit,
+    onRemoveUser: (userId: String) -> Unit,
+    onClearSearchHistory: (userId: String) -> Unit,
+    onClearLibraries: (userId: String, libraries: List<Library>) -> Unit,
     openUserAvatarSelectScreen: (selected: Int) -> Unit,
     goBack: () -> Unit,
     openUserPinScreen: (action: PinAction) -> Unit,
@@ -279,7 +279,7 @@ private fun UserEditScreenBasePreview() {
         ) {
             UserEditScreenContent(
                 user = User(
-                    id = 1,
+                    id = "preview-user",
                     name = "John Doe",
                     image = 1,
                     pin = "1234",

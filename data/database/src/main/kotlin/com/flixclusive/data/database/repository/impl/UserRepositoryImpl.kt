@@ -16,13 +16,17 @@ internal class UserRepositoryImpl @Inject constructor(
         return userDao.getAllAsFlow()
     }
 
-    override suspend fun getUser(id: Int): User? {
+    override suspend fun getAll(): List<User> {
+        return userDao.getAll()
+    }
+
+    override suspend fun getUser(id: String): User? {
         return withContext(appDispatchers.io) {
             userDao.get(id)
         }
     }
 
-    override fun observeUser(id: Int): Flow<User?> {
+    override fun observeUser(id: String): Flow<User?> {
         return userDao.getAsFlow(id)
     }
 
@@ -38,7 +42,7 @@ internal class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteUser(id: Int) {
+    override suspend fun deleteUser(id: String) {
         return withContext(appDispatchers.io) {
             userDao.delete(id)
         }

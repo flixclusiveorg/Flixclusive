@@ -385,7 +385,7 @@ private fun LibraryListSheetPreview() {
                     list = LibraryList(
                         id = it,
                         name = "List $it",
-                        ownerId = 1,
+                        ownerId = "preview-user",
                         description = "Description $it",
                     ),
                 ),
@@ -411,7 +411,7 @@ private fun LibraryListSheetPreview() {
                             list = LibraryList(
                                 id = lists.size + 1,
                                 name = name,
-                                ownerId = 1,
+                                ownerId = "preview-user",
                                 description = description,
                             ),
                         ),

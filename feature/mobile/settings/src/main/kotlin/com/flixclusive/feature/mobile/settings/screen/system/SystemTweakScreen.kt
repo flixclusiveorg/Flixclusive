@@ -2,12 +2,11 @@ package com.flixclusive.feature.mobile.settings.screen.system
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -24,7 +23,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -58,45 +56,22 @@ internal class SystemTweakScreen(
     @Composable
     private fun getUpdatesTweaks(systemPreferencesProvider: () -> SystemPreferences): ImmutableList<TweakUI<out Any>> {
         val resources = LocalResources.current
-        val showPrereleaseWarning = remember { mutableStateOf(false) }
-
-        val scope = rememberCoroutineScope()
-
-        if (showPrereleaseWarning.value) {
-            PreReleaseWarningDialog(
-                onDismiss = { showPrereleaseWarning.value = false },
-                onConfirm = {
-                    scope.launch {
-                        onUpdatePreferences { oldValue ->
-                            oldValue.copy(isUsingPrereleaseUpdates = true)
-                        }
-                        showPrereleaseWarning.value = false
-                    }
-                },
-            )
-        }
+        val uriLauncher = LocalUriHandler.current
 
         return persistentListOf(
+            TweakUI.ClickableTweak(
+                title = resources.getString(LocaleR.string.sign_up_prerelease),
+                description = { resources.getString(LocaleR.string.signup_prerelease_updates_desc) },
+                onClick = {
+                    uriLauncher.openUri("https://github.com/flixclusive/preview-builds/releases/latest")
+                }
+            ),
             TweakUI.SwitchTweak(
                 value = { systemPreferencesProvider().isUsingAutoUpdateAppFeature },
                 title = resources.getString(LocaleR.string.notify_about_new_app_updates),
-                onTweaked = {
-                    onUpdatePreferences { oldValue ->
-                        oldValue.copy(isUsingAutoUpdateAppFeature = true)
-                    }
-                },
-            ),
-            TweakUI.SwitchTweak(
-                value = { systemPreferencesProvider().isUsingPrereleaseUpdates },
-                title = resources.getString(LocaleR.string.sign_up_prerelease),
-                description = { resources.getString(LocaleR.string.signup_prerelease_updates_desc) },
                 onTweaked = { state ->
-                    if (state && !showPrereleaseWarning.value) {
-                        showPrereleaseWarning.value = true
-                    } else {
-                        onUpdatePreferences { oldValue ->
-                            oldValue.copy(isUsingPrereleaseUpdates = false)
-                        }
+                    onUpdatePreferences { oldValue ->
+                        oldValue.copy(isUsingAutoUpdateAppFeature = state)
                     }
                 },
             ),
@@ -104,9 +79,9 @@ internal class SystemTweakScreen(
                 value = { systemPreferencesProvider().isSendingCrashLogsAutomatically },
                 title = resources.getString(LocaleR.string.automatic_crash_report),
                 description = { resources.getString(LocaleR.string.automatic_crash_report_label) },
-                onTweaked = {
+                onTweaked = { state ->
                     onUpdatePreferences { oldValue ->
-                        oldValue.copy(isSendingCrashLogsAutomatically = it)
+                        oldValue.copy(isSendingCrashLogsAutomatically = state)
                     }
                 },
             ),

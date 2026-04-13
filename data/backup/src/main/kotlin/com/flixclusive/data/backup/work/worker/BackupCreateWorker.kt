@@ -2,6 +2,7 @@ package com.flixclusive.data.backup.work.worker
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -14,8 +15,8 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.backup.di.BackupWorkerEntryPoint
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
 import com.flixclusive.data.backup.work.util.BackupWorkResultStore
-import dagger.hilt.android.EntryPointAccessors
 import com.hippo.unifile.UniFile
+import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
@@ -25,8 +26,13 @@ internal class BackupCreateWorker(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        val userId = inputData.getInt(BackupWorkConstants.INPUT_USER_ID, -1)
-        if (userId <= 0) {
+        val userId = inputData.getString(BackupWorkConstants.INPUT_USER_ID)
+            ?.takeIf { it.isNotBlank() }
+            ?: inputData.getInt(BackupWorkConstants.INPUT_USER_ID, -1)
+                .takeIf { it > 0 }
+                ?.toString()
+
+        if (userId == null) {
             return Result.failure(
                 workDataOf(
                     BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "Missing '${BackupWorkConstants.INPUT_USER_ID}'",
@@ -100,7 +106,7 @@ internal class BackupCreateWorker(
                 userBackupDirForTrim = null
                 explicitOutputUri
             } else {
-                val root = UniFile.fromUri(applicationContext, Uri.parse(storageDirectoryUri))
+                val root = UniFile.fromUri(applicationContext, storageDirectoryUri.toUri())
                     ?: return@withContext Result.failure(
                         workDataOf(
                             BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "Unable to access backup location",

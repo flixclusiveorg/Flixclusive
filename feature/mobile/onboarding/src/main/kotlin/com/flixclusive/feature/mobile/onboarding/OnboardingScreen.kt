@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,7 @@ import com.flixclusive.feature.mobile.onboarding.component.OnboardingStepIndicat
 import com.flixclusive.feature.mobile.onboarding.component.PermissionsStep
 import com.flixclusive.feature.mobile.onboarding.component.StorageStep
 import com.flixclusive.feature.mobile.onboarding.component.WelcomeStep
+import com.hippo.unifile.UniFile
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.strings.R as LocaleR
@@ -78,6 +80,11 @@ internal fun OnboardingScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val systemPreferences by viewModel.systemPreferences.collectAsStateWithLifecycle()
+    val filePath = remember(systemPreferences.storageDirectoryUri) {
+        systemPreferences.storageDirectoryUri?.toUri()?.let { uri ->
+            UniFile.fromUri(context, uri).filePath
+        }
+    }
 
     var notificationsGranted by remember { mutableStateOf(isNotificationsGranted(context)) }
     var unknownSourcesAllowed by remember { mutableStateOf(isUnknownSourcesAllowed(context)) }
@@ -130,10 +137,19 @@ internal fun OnboardingScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    LaunchedEffect(viewModel) {
+        viewModel.nextStepNavigation.collect { navigation ->
+            when (navigation) {
+                NextStepNavigation.CONTINUE_ONBOARDING -> navigator.openAddProfileScreen(true)
+                NextStepNavigation.HOME -> navigator.openHomeScreen()
+            }
+        }
+    }
+
     OnboardingScreenContent(
         notificationsGranted = notificationsGranted,
         unknownSourcesAllowed = unknownSourcesAllowed,
-        storageDirectoryUri = systemPreferences.storageDirectoryUri,
+        storageDirectoryUri = filePath,
         grantedPermissions = grantedPermissions,
         requestNotificationsPermission = {
             if (Build.VERSION.SDK_INT >= 33) {
@@ -144,10 +160,7 @@ internal fun OnboardingScreen(
             unknownSourcesSettingsLauncher.launch(createUnknownSourcesIntent(context.packageName))
         },
         openStorageDirectoryPicker = { storageDirectoryPicker.launch(null) },
-        finishOnboarding = {
-            viewModel.completeOnboarding()
-            navigator.openAddProfileScreen(true)
-        },
+        finishOnboarding = viewModel::completeOnboarding,
     )
 }
 
@@ -363,16 +376,28 @@ private fun getPreGrantedPermissions(
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         }
         .distinct()
-        .map { permission ->
+        .mapNotNull { permission ->
             val label = runCatching {
                 pm.getPermissionInfo(permission, 0)
                     .loadLabel(pm)
                     .toString()
             }.getOrNull().orEmpty()
 
+            val description = runCatching {
+                pm.getPermissionInfo(permission, 0)
+                    .loadDescription(pm)
+                    .toString()
+            }.getOrNull().orEmpty()
+
+            if (label.isEmpty()) return@mapNotNull null
+            if (label.startsWith("com.")) return@mapNotNull null
+
             GrantedPermissionItem(
-                label = label.ifBlank { permission.substringAfterLast('.') },
-                name = permission,
+                label = label
+                    .ifBlank { permission.substringAfterLast('.') }
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                description = description
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
             )
         }
         .sortedBy { it.label.lowercase() }
@@ -404,11 +429,11 @@ private fun OnboardingScreenBasePreview() {
                 grantedPermissions = listOf(
                     GrantedPermissionItem(
                         label = "Full network access",
-                        name = "android.permission.INTERNET",
+                        description = "android.permission.INTERNET",
                     ),
                     GrantedPermissionItem(
                         label = "View network connections",
-                        name = "android.permission.ACCESS_NETWORK_STATE",
+                        description = "android.permission.ACCESS_NETWORK_STATE",
                     ),
                 ),
                 requestNotificationsPermission = {},
@@ -464,7 +489,7 @@ private fun OnboardingScreenPermissionsStepPreview() {
                 grantedPermissions = listOf(
                     GrantedPermissionItem(
                         label = "Full network access",
-                        name = "android.permission.INTERNET",
+                        description = "android.permission.INTERNET",
                     ),
                 ),
                 requestNotificationsPermission = {},

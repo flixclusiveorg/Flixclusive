@@ -22,14 +22,14 @@ import java.util.Date
  * Test defaults for database-related tests.
  * */
 object DatabaseTestDefaults {
-    const val TEST_USER_ID = 1
+    const val TEST_USER_ID = "11111111-1111-1111-1111-111111111111"
 
     fun getDBFilm(film: Film = FilmTestDefaults.getMovie()) = film.toDBFilm()
 
     fun getMovieProgress(
         id: Long = 0,
         filmId: String = getDBFilm().id,
-        ownerId: Int = TEST_USER_ID,
+        ownerId: String = TEST_USER_ID,
         progress: Long = 0,
         status: WatchStatus = WatchStatus.WATCHING,
         duration: Long = 0,
@@ -49,7 +49,7 @@ object DatabaseTestDefaults {
     fun getEpisodeProgress(
         id: Long = 0,
         filmId: String = getDBFilm(film = FilmTestDefaults.getTvShow()).id,
-        ownerId: Int = TEST_USER_ID,
+        ownerId: String = TEST_USER_ID,
         seasonNumber: Int = 1,
         episodeNumber: Int = 1,
         progress: Long = 0,
@@ -71,7 +71,7 @@ object DatabaseTestDefaults {
     )
 
     fun getUser(
-        id: Int = TEST_USER_ID,
+        id: String = TEST_USER_ID,
         name: String = "Test User",
         image: Int = 1,
         pin: String? = null,
@@ -87,7 +87,7 @@ object DatabaseTestDefaults {
     fun getSearchHistory(
         id: Int = 0,
         query: String = "Test Query",
-        ownerId: Int = TEST_USER_ID,
+        ownerId: String = TEST_USER_ID,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
     ) = SearchHistory(
@@ -102,7 +102,7 @@ object DatabaseTestDefaults {
         id: Int = 0,
         name: String = "Test List",
         description: String = "Test Description",
-        ownerId: Int = TEST_USER_ID,
+        ownerId: String = TEST_USER_ID,
         listType: LibraryListType = LibraryListType.CUSTOM,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
@@ -130,7 +130,7 @@ object DatabaseTestDefaults {
         url: String = "https://example.com/repo",
         owner: String = "testowner",
         name: String = "testrepo",
-        userId: Int = TEST_USER_ID,
+        userId: String = TEST_USER_ID,
         rawLinkFormat: String = "https://raw.example.com/%s",
     ) = InstalledRepository(
         url = url,
@@ -144,7 +144,7 @@ object DatabaseTestDefaults {
         id: String = "test-provider",
         repositoryUrl: String = "https://example.com/repo",
         filePath: String = "provider.json",
-        ownerId: Int = TEST_USER_ID,
+        ownerId: String = TEST_USER_ID,
         sortOrder: Double = 1.0,
         isEnabled: Boolean = true,
         isDebug: Boolean = false,

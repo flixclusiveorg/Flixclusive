@@ -14,7 +14,7 @@ import com.flixclusive.data.provider.util.ProviderSortOrderManager.Companion.MIN
 internal class ProviderSortOrderManager(
     private val installedProviderDao: InstalledProviderDao,
 ) {
-    suspend fun getNextSortOrder(ownerId: Int): Double {
+    suspend fun getNextSortOrder(ownerId: String): Double {
         val maxOrder = installedProviderDao.getMaxSortOrder(ownerId) ?: 0.0
         return maxOrder + NORMALIZATION_STEP
     }
@@ -32,7 +32,7 @@ internal class ProviderSortOrderManager(
         }
     }
 
-    suspend fun renormalize(orderedIds: List<InstalledProvider>, ownerId: Int) {
+    suspend fun renormalize(orderedIds: List<InstalledProvider>, ownerId: String) {
         orderedIds.forEachIndexed { index, provider ->
             val newOrder = (index + 1) * NORMALIZATION_STEP
             installedProviderDao.updateSortOrder(

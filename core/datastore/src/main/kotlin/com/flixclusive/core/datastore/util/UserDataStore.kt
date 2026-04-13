@@ -17,7 +17,7 @@ import kotlinx.coroutines.cancel
 const val USER_PREFERENCE_FILENAME = "users/user-preferences"
 
 internal fun Context.createUserPreferences(
-    userId: Int,
+    userId: String,
     corruptionHandler: ReplaceFileCorruptionHandler<Preferences>? = null,
     produceMigrations: (Context) -> List<DataMigration<Preferences>> = { listOf() },
     scope: CoroutineScope = CoroutineScope(AppDispatchers.IO.dispatcher + SupervisorJob()),
@@ -58,7 +58,7 @@ private object DataStoreLock {
 
     @GuardedBy("lock")
     @Volatile
-    var CURRENT_USER_ID: Int? = null
+    var CURRENT_USER_ID: String? = null
 
     @GuardedBy("lock")
     @Volatile

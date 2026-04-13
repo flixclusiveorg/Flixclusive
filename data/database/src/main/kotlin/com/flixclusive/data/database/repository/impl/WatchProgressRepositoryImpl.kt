@@ -31,7 +31,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
     private val libraryListDao: LibraryListDao,
     private val appDispatchers: AppDispatchers
 ) : WatchProgressRepository {
-    override fun getAllAsFlow(ownerId: Int, sort: LibrarySort): Flow<List<WatchProgressWithMetadata>> {
+    override fun getAllAsFlow(ownerId: String, sort: LibrarySort): Flow<List<WatchProgressWithMetadata>> {
         val column = when (sort) {
             is LibrarySort.Added -> "createdAt"
             is LibrarySort.Modified -> "updatedAt"
@@ -76,7 +76,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
 
     override suspend fun get(
         id: String,
-        ownerId: Int,
+        ownerId: String,
         type: FilmType,
     ): WatchProgressWithMetadata? {
         return withContext(appDispatchers.io) {
@@ -90,7 +90,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
     override suspend fun getSeasonProgress(
         tvShowId: String,
         seasonNumber: Int,
-        ownerId: Int
+        ownerId: String
     ): List<EpisodeProgress> {
         return withContext(appDispatchers.io) {
             episodeProgressDao.getSeasonProgress(
@@ -105,7 +105,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         tvShowId: String,
         seasonNumber: Int,
         episodeNumber: Int,
-        ownerId: Int
+        ownerId: String
     ): EpisodeProgress? {
         return withContext(appDispatchers.io) {
             episodeProgressDao.getEpisodeProgress(
@@ -120,7 +120,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
     override fun getSeasonProgressAsFlow(
         tvShowId: String,
         seasonNumber: Int,
-        ownerId: Int
+        ownerId: String
     ): Flow<List<EpisodeProgress>> = episodeProgressDao.getSeasonProgressAsFlow(
         filmId = tvShowId,
         season = seasonNumber,
@@ -136,7 +136,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
 
     override fun getAsFlow(
         id: String,
-        ownerId: Int,
+        ownerId: String,
         type: FilmType
     ): Flow<WatchProgressWithMetadata?> {
         return when (type) {
@@ -145,7 +145,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getRandoms(ownerId: Int, count: Int): Flow<List<WatchProgressWithMetadata>> {
+    override suspend fun getRandoms(ownerId: String, count: Int): Flow<List<WatchProgressWithMetadata>> {
         return withContext(appDispatchers.io) {
             combine(
                 movieProgressDao.getRandoms(ownerId = ownerId, count = count),
@@ -199,7 +199,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAll(ownerId: Int) {
+    override suspend fun deleteAll(ownerId: String) {
         withContext(appDispatchers.io) {
             val watchedList = libraryListDao.getWatchedList(ownerId)
             libraryListDao.update(watchedList.copy(updatedAt = Date()))

@@ -132,7 +132,7 @@ internal class PlayerScreenViewModel @Inject constructor(
      * */
     val filmMetadata = navArgs.film
 
-    private val userId: Int
+    private val userId: String
         get() {
             val user = userSessionManager.currentUser.value
             requireNotNull(user) {

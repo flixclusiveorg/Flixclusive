@@ -60,6 +60,7 @@ import strikt.assertions.isEqualTo
 import java.io.File
 import java.io.IOException
 import java.util.Date
+import java.util.UUID
 import java.util.zip.ZipInputStream
 import kotlin.reflect.KClass
 
@@ -300,14 +301,15 @@ class BackupRepositoryImplTest {
             }
         }
 
-    private suspend fun insertUser(db: AppDatabase): Int {
-        val rowId = db.userDao().insert(DatabaseTestDefaults.getUser(id = 0))
-        return rowId.toInt()
+    private suspend fun insertUser(db: AppDatabase): String {
+        val userId = UUID.randomUUID().toString()
+        db.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
+        return userId
     }
 
     private suspend fun seedCustomLibraryList(
         db: AppDatabase,
-        ownerId: Int,
+        ownerId: String,
         listName: String,
         filmId: String,
     ) {
@@ -522,14 +524,14 @@ class BackupRepositoryImplTest {
         }
     }
 
-    private class TestUserSessionDataStore(initialUserId: Int) : UserSessionDataStore {
-        private val currentUserIdState = MutableStateFlow<Int?>(initialUserId)
+    private class TestUserSessionDataStore(initialUserId: String) : UserSessionDataStore {
+        private val currentUserIdState = MutableStateFlow<String?>(initialUserId)
         private val sessionTimeoutState = MutableStateFlow(0L)
 
-        override val currentUserId: Flow<Int?> = currentUserIdState.asStateFlow()
+        override val currentUserId: Flow<String?> = currentUserIdState.asStateFlow()
         override val sessionTimeout: Flow<Long> = sessionTimeoutState.asStateFlow()
 
-        override suspend fun saveCurrentUserId(userId: Int) {
+        override suspend fun saveCurrentUserId(userId: String) {
             currentUserIdState.value = userId
         }
 
@@ -541,7 +543,7 @@ class BackupRepositoryImplTest {
     private object NoOpDataStoreManager : DataStoreManager {
         override fun getSystemPrefs(): Flow<SystemPreferences> = emptyFlow()
 
-        override fun usePreferencesByUserId(userId: Int) = Unit
+        override fun usePreferencesByUserId(userId: String) = Unit
 
         override suspend fun updateSystemPrefs(
             transform: suspend (t: SystemPreferences) -> SystemPreferences
@@ -560,6 +562,6 @@ class BackupRepositoryImplTest {
             transform: suspend (T) -> T
         ) = Unit
 
-        override suspend fun deleteAllUserRelatedFiles(userId: Int) = Unit
+        override suspend fun deleteAllUserRelatedFiles(userId: String) = Unit
     }
 }

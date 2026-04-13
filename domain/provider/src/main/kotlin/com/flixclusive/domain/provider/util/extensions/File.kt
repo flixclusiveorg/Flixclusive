@@ -8,7 +8,7 @@ import java.io.File
 
 internal fun Context.createFileForProvider(
     provider: ProviderMetadata,
-    userId: Int,
+    userId: String,
 ): File {
     val prefix = getProvidersPath(userId)
     val repository = provider.repositoryUrl.toValidRepositoryLink()

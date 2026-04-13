@@ -42,7 +42,7 @@ internal class CreateBackupUseCaseImpl @Inject constructor(
     }
 
     private fun createBackupFlow(
-        enqueue: (userId: Int) -> String,
+        enqueue: (userId: String) -> String,
     ): Flow<BackupState> = flow {
         emit(BackupState.Loading)
 
@@ -65,7 +65,7 @@ internal class CreateBackupUseCaseImpl @Inject constructor(
         .flowOn(appDispatchers.io)
 
     private suspend fun WorkInfo?.toBackupState(
-        userId: Int,
+        userId: String,
         readResult: suspend () -> BackupResult,
     ): BackupState {
         val state = this?.state

@@ -98,7 +98,8 @@ class BackupCreateWorkerTest {
                 File(context.filesDir, "backup-work").deleteRecursively()
             }
 
-            val userId = database.userDao().insert(DatabaseTestDefaults.getUser(id = 0)).toInt()
+            val userId = DatabaseTestDefaults.TEST_USER_ID
+            database.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
             userSessionDataStore.saveCurrentUserId(userId)
 
             dataStoreManager.usePreferencesByUserId(userId)
@@ -170,7 +171,8 @@ class BackupCreateWorkerTest {
                 File(context.filesDir, "backup-work").deleteRecursively()
             }
 
-            val userId = database.userDao().insert(DatabaseTestDefaults.getUser(id = 0)).toInt()
+            val userId = DatabaseTestDefaults.TEST_USER_ID
+            database.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
             userSessionDataStore.saveCurrentUserId(userId)
 
             dataStoreManager.usePreferencesByUserId(userId)
@@ -274,7 +276,7 @@ class BackupCreateWorkerTest {
         }
     }
 
-    private suspend fun awaitBackupOutputWritten(userId: Int, backupRoot: File) {
+    private suspend fun awaitBackupOutputWritten(userId: String, backupRoot: File) {
         val userBackupDir = File(backupRoot, "backups/user-$userId")
 
         withContext(Dispatchers.Default) {
@@ -315,7 +317,7 @@ class BackupCreateWorkerTest {
 
     private suspend fun seedCustomLibraryList(
         db: AppDatabase,
-        ownerId: Int,
+        ownerId: String,
         listName: String,
         filmId: String,
     ) {

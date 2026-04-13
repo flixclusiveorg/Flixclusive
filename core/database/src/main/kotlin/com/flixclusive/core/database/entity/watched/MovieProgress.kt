@@ -39,7 +39,7 @@ import java.util.Date
 data class MovieProgress(
     @PrimaryKey(autoGenerate = true) override val id: Long = 0,
     override val filmId: String,
-    override val ownerId: Int,
+    override val ownerId: String,
     override val progress: Long,
     override val status: WatchStatus,
     override val duration: Long = 0,

@@ -3,13 +3,13 @@ package com.flixclusive.core.database.entity.provider
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import androidx.room.PrimaryKey
 import com.flixclusive.core.database.entity.user.User
 import java.io.Serializable
 import java.util.Date
 
 @Entity(
     tableName = "repositories",
+    primaryKeys = ["url", "userId"],
     foreignKeys = [
         ForeignKey(
             entity = User::class,
@@ -23,9 +23,8 @@ import java.util.Date
     ]
 )
 data class InstalledRepository(
-    @PrimaryKey
     val url: String,
-    val userId: Int,
+    val userId: String,
     val owner: String,
     val name: String,
     val rawLinkFormat: String,

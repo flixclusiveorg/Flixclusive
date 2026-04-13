@@ -22,8 +22,13 @@ internal class BackupRestoreWorker(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        val userId = inputData.getInt(BackupWorkConstants.INPUT_USER_ID, -1)
-        if (userId <= 0) {
+        val userId = inputData.getString(BackupWorkConstants.INPUT_USER_ID)
+            ?.takeIf { it.isNotBlank() }
+            ?: inputData.getInt(BackupWorkConstants.INPUT_USER_ID, -1)
+                .takeIf { it > 0 }
+                ?.toString()
+
+        if (userId == null) {
             return Result.failure(
                 workDataOf(
                     BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "Missing '${BackupWorkConstants.INPUT_USER_ID}'",

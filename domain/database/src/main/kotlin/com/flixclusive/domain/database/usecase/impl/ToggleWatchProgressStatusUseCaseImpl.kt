@@ -28,7 +28,7 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
         }
     }
 
-    private suspend fun invokeForTvShow(ownerId: Int, tvShow: TvShow) {
+    private suspend fun invokeForTvShow(ownerId: String, tvShow: TvShow) {
         val progress = watchProgressRepository.get(
             id = tvShow.identifier,
             type = tvShow.filmType,
@@ -95,7 +95,7 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
         }
     }
 
-    private suspend fun invokeForMovie(ownerId: Int, film: Movie) {
+    private suspend fun invokeForMovie(ownerId: String, film: Movie) {
         val progress = watchProgressRepository.get(
             id = film.identifier,
             ownerId = ownerId,

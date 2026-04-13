@@ -11,6 +11,7 @@ data class SystemPreferences(
     val storageDirectoryUri: String? = null,
     val lastSeenChangelogs: Long = -1L,
     val isUsingAutoUpdateAppFeature: Boolean = true,
+    @Deprecated("This field is no longer used and will be removed in future versions.")
     val isUsingPrereleaseUpdates: Boolean = false,
     val isSendingCrashLogsAutomatically: Boolean = true,
     val dns: DoHPreference = DoHPreference.None,

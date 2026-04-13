@@ -8,7 +8,7 @@ interface SearchHistoryRepository {
 
     suspend fun remove(id: Int)
 
-    fun getAllItemsInFlow(ownerId: Int): Flow<List<SearchHistory>>
+    fun getAllItemsInFlow(ownerId: String): Flow<List<SearchHistory>>
 
-    suspend fun clearAll(ownerId: Int)
+    suspend fun clearAll(ownerId: String)
 }

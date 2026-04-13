@@ -13,7 +13,7 @@ object ProviderFile {
      * @param userId The ID of the user.
      * @return The path prefix for the providers' folder.
      */
-    fun Context.getProvidersPath(userId: Int): String =
+    fun Context.getProvidersPath(userId: String): String =
         getExternalFilesDir(null)?.absolutePath + "/$PROVIDERS_FOLDER_NAME/user-$userId"
 
     /**
@@ -22,7 +22,7 @@ object ProviderFile {
      * @param userId The ID of the user.
      * @return The path prefix for the providers settings folder.
      */
-    fun Context.getProvidersSettingsPath(userId: Int): String =
+    fun Context.getProvidersSettingsPath(userId: String): String =
         getExternalFilesDir(null)?.absolutePath + "/$PROVIDERS_SETTINGS_FOLDER_NAME/user-$userId"
 
     fun Context.getDebugProvidersPath(): String =

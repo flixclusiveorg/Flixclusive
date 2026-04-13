@@ -52,7 +52,7 @@ internal class ProviderBackupRestorer @Inject constructor(
         }
     }
 
-    private fun buildProviderFileIndex(ownerId: Int): Map<String, ProviderFileInfo> {
+    private fun buildProviderFileIndex(ownerId: String): Map<String, ProviderFileInfo> {
         val index = HashMap<String, ProviderFileInfo>()
 
         indexProvidersInRoot(
