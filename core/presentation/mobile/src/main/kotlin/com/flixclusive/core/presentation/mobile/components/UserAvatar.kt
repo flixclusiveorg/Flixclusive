@@ -14,11 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -26,13 +28,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.DefaultAvatarShape
 import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.DefaultAvatarSize
-import com.flixclusive.core.presentation.mobile.extensions.boxShadow
 import com.flixclusive.core.presentation.mobile.extensions.getAvatarResource
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import kotlin.random.Random
@@ -76,7 +78,21 @@ fun UserAvatar(
     }
 
     Box(
-        modifier = modifier,
+        modifier = modifier
+            .border(
+                width = borderWidth,
+                color = borderColor,
+                shape = shape,
+            )
+            .dropShadow(
+                shape = shape,
+                shadow = Shadow(
+                    radius = shadowBlur,
+                    spread = shadowSpread,
+                    color = MaterialTheme.colorScheme.surface,
+                    offset = DpOffset(x = 4.dp, 4.dp)
+                )
+            ),
     ) {
         Image(
             painter = painterResource(avatarId),
@@ -84,21 +100,7 @@ fun UserAvatar(
             contentScale = contentScale,
             modifier = Modifier
                 .matchParentSize()
-                .graphicsLayer {
-                    clip = true
-                    this.shape = shape
-                }
-                .border(
-                    width = borderWidth,
-                    color = borderColor,
-                    shape = shape,
-                )
-                .boxShadow(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = shape,
-                    blurRadius = shadowBlur,
-                    spreadRadius = shadowSpread,
-                ),
+                .clip(shape),
         )
     }
 }
