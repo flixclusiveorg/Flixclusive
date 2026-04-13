@@ -22,6 +22,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -194,72 +195,78 @@ private fun OnboardingScreenContent(
         else -> stringResource(LocaleR.string.next)
     }
 
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxSize()
             .systemBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        OnboardingStepIndicator(
-            currentIndex = currentStep.coerceIn(0, 3),
-            steps = OnboardingStep.entries.size,
+        Column(
             modifier = Modifier
-                .align(Alignment.Start)
-                .padding(bottom = 14.dp),
-        )
+                .fillMaxSize()
+                .align(Alignment.TopCenter),
+        ) {
+            OnboardingStepIndicator(
+                currentIndex = currentStep.coerceIn(0, 3),
+                steps = OnboardingStep.entries.size,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 14.dp),
+            )
 
-        AnimatedContent(
-            targetState = currentStep,
-            label = "onboarding_step",
-            transitionSpec = {
-                val tweenOffset = tween<IntOffset>(durationMillis = 300)
-                val tweenAlpha = tween<Float>(durationMillis = 300)
-                val widthDivisor = 6
+            AnimatedContent(
+                targetState = currentStep,
+                label = "onboarding_step",
+                transitionSpec = {
+                    val tweenOffset = tween<IntOffset>(durationMillis = 300)
+                    val tweenAlpha = tween<Float>(durationMillis = 300)
+                    val widthDivisor = 6
 
-                if (targetState > initialState) {
-                    (fadeIn(tweenAlpha) +
-                        slideInHorizontally(animationSpec = tweenOffset) { it / widthDivisor }) togetherWith
-                        (fadeOut(tweenAlpha) +
-                            slideOutHorizontally(animationSpec = tweenOffset) { -it / widthDivisor })
-                } else {
-                    (fadeIn(tweenAlpha) +
-                        slideInHorizontally(animationSpec = tweenOffset) { -it / widthDivisor }) togetherWith
-                        (fadeOut(tweenAlpha) +
-                            slideOutHorizontally(animationSpec = tweenOffset) { it / widthDivisor })
-                }.using(
-                    SizeTransform(
-                        clip = false,
-                        sizeAnimationSpec = { _, _ -> tween(durationMillis = 300) },
-                    ),
-                )
-            },
-            contentAlignment = Alignment.TopStart,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-        ) { stepIndex ->
-            when (OnboardingStep.entries[stepIndex]) {
-                OnboardingStep.Welcome -> WelcomeStep()
-                OnboardingStep.Permissions -> PermissionsStep(
-                    notificationsGranted = notificationsGranted,
-                    unknownSourcesAllowed = unknownSourcesAllowed,
-                    grantedPermissions = grantedPermissions,
-                    requestNotificationsPermission = requestNotificationsPermission,
-                    openUnknownSourcesSettings = openUnknownSourcesSettings,
-                )
+                    if (targetState > initialState) {
+                        (fadeIn(tweenAlpha) +
+                            slideInHorizontally(animationSpec = tweenOffset) { it / widthDivisor }) togetherWith
+                            (fadeOut(tweenAlpha) +
+                                slideOutHorizontally(animationSpec = tweenOffset) { -it / widthDivisor })
+                    } else {
+                        (fadeIn(tweenAlpha) +
+                            slideInHorizontally(animationSpec = tweenOffset) { -it / widthDivisor }) togetherWith
+                            (fadeOut(tweenAlpha) +
+                                slideOutHorizontally(animationSpec = tweenOffset) { it / widthDivisor })
+                    }.using(
+                        SizeTransform(
+                            clip = false,
+                            sizeAnimationSpec = { _, _ -> tween(durationMillis = 300) },
+                        ),
+                    )
+                },
+                contentAlignment = Alignment.TopStart,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) { stepIndex ->
+                when (OnboardingStep.entries[stepIndex]) {
+                    OnboardingStep.Welcome -> WelcomeStep()
+                    OnboardingStep.Permissions -> PermissionsStep(
+                        notificationsGranted = notificationsGranted,
+                        unknownSourcesAllowed = unknownSourcesAllowed,
+                        grantedPermissions = grantedPermissions,
+                        requestNotificationsPermission = requestNotificationsPermission,
+                        openUnknownSourcesSettings = openUnknownSourcesSettings,
+                    )
 
-                OnboardingStep.Storage -> StorageStep(
-                    storageDirectoryUri = storageDirectoryUri,
-                    onPickStorageDirectory = openStorageDirectoryPicker,
-                )
+                    OnboardingStep.Storage -> StorageStep(
+                        storageDirectoryUri = storageDirectoryUri,
+                        onPickStorageDirectory = openStorageDirectoryPicker,
+                    )
 
-                OnboardingStep.FinishUp -> FinishUpStep()
+                    OnboardingStep.FinishUp -> FinishUpStep()
+                }
             }
         }
 
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .align(Alignment.BottomCenter),
         ) {
             if (!isContinueEnabled) {
                 Text(
