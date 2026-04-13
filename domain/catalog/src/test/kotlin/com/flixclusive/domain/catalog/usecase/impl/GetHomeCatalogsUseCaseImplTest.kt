@@ -100,7 +100,7 @@ class GetHomeCatalogsUseCaseImplTest {
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
                 watchProgressRepository.getRandoms(
-                    ownerId = 1,
+                    ownerId = testUser.id,
                     count = any(),
                 )
             } returns flowOf(
@@ -158,7 +158,7 @@ class GetHomeCatalogsUseCaseImplTest {
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
                 watchProgressRepository.getRandoms(
-                    ownerId = 1,
+                    ownerId = testUser.id,
                     count = any(),
                 )
             } returns flowOf(
@@ -206,7 +206,7 @@ class GetHomeCatalogsUseCaseImplTest {
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
                 watchProgressRepository.getRandoms(
-                    ownerId = 1,
+                    ownerId = testUser.id,
                     count = any(),
                 )
             } returns flowOf(emptyList())
@@ -239,7 +239,7 @@ class GetHomeCatalogsUseCaseImplTest {
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
                 watchProgressRepository.getRandoms(
-                    ownerId = 1,
+                    ownerId = testUser.id,
                     count = any(),
                 )
             } returns flowOf(emptyList())

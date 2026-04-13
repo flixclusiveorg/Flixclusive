@@ -18,8 +18,6 @@ internal class SearchHistoryBackupRestorer @Inject constructor(
         return runCatching {
             val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            searchHistoryDao.deleteAll(ownerId)
-
             items.forEach { history ->
                 searchHistoryDao.insert(
                     SearchHistory(

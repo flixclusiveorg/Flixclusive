@@ -387,6 +387,9 @@ internal fun backupTweakGroup(
                     )
                 },
             ),
+            TweakUI.InformationTweak(
+                description = { resources.getString(LocaleR.string.backup_actions_tip) }
+            )
         ),
     )
 }

@@ -27,8 +27,6 @@ internal class LibraryListBackupRestorer @Inject constructor(
         return runCatching {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            libraryListDao.deleteAllExceptWatched(ownerId = userId)
-
             // Restore all film metadata (including WATCHED list items)
             items.forEach { list ->
                 list.items.forEach { item ->

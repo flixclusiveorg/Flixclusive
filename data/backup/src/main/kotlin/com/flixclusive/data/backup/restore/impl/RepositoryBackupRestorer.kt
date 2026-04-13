@@ -18,8 +18,6 @@ internal class RepositoryBackupRestorer @Inject constructor(
         return runCatching {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            installedRepositoryDao.deleteAll(userId)
-
             items.forEach { repository ->
                 installedRepositoryDao.insert(
                     InstalledRepository(

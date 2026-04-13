@@ -23,25 +23,25 @@ internal fun TitleDescriptionHeader(
         .copy(color = LocalContentColor.current.copy(0.6f))
         .asAdaptiveTextStyle(),
 ) {
-    if (title.isNotBlank()) {
-        Column(
-            modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        if (title.isNotBlank()) {
             Text(
                 text = title,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2,
                 style = titleStyle,
             )
+        }
 
-            if (descriptionProvider?.invoke()?.isNotEmpty() == true) {
-                Text(
-                    text = descriptionProvider(),
-                    style = descriptionStyle,
-                    maxLines = 10,
-                )
-            }
+        if (descriptionProvider?.invoke()?.isNotEmpty() == true) {
+            Text(
+                text = descriptionProvider(),
+                style = descriptionStyle,
+                maxLines = 10,
+            )
         }
     }
 }

@@ -28,8 +28,6 @@ internal class ProviderBackupRestorer @Inject constructor(
         return runCatching {
             val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            installedProviderDao.deleteAll(ownerId)
-
             val providerFilesIndex = buildProviderFileIndex(ownerId)
 
             items.forEach { provider ->
