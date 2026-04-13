@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,6 +65,8 @@ internal fun StorageStep(
 
         Button(
             onClick = onPickStorageDirectory,
+            colors = if (storageDirectoryUri == null) ButtonDefaults.buttonColors() else ButtonDefaults.outlinedButtonColors(),
+            border = if (storageDirectoryUri == null) null else ButtonDefaults.outlinedButtonBorder(true),
             shape = MaterialTheme.shapes.medium,
         ) {
             Text(text = stringResource(R.string.onboarding_storage_pick_button))
