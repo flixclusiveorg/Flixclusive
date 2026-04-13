@@ -26,6 +26,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -68,7 +70,10 @@ internal class DataStoreManagerImpl @Inject constructor(
         CoroutineScope(appDispatchers.io).launch {
             userSessionDataStore.currentUserId.collectLatest {
                 if (it != null) {
-                    usePreferencesByUserId(userId = it)
+                    val legacyCurrentUserId = userSessionDataStore.legacyCurrentUserId.filterNotNull().first()
+                    usePreferencesByUserId(
+                        userId = it, legacyUserId = legacyCurrentUserId
+                    )
                 }
             }
         }
@@ -76,7 +81,10 @@ internal class DataStoreManagerImpl @Inject constructor(
 
     override fun getSystemPrefs() = systemPreferences.data
 
-    override fun usePreferencesByUserId(userId: String) {
+    override fun usePreferencesByUserId(
+        userId: String,
+        legacyUserId: Int?,
+    ) {
         synchronized(lock) {
             userPreferences = context.createUserPreferences(
                 userId = userId,
@@ -84,6 +92,8 @@ internal class DataStoreManagerImpl @Inject constructor(
                     listOf(
                         UserPreferencesMigration(context = context),
                         MigrationV220(
+                            context = context,
+                            legacyUserId = legacyUserId ?: 1,
                             userId = userId,
                             providerDao = providerDao,
                             repositoryDao = repositoryDao,

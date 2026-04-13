@@ -4,6 +4,7 @@ import androidx.room.migration.Migration
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flixclusive.core.database.migration.Schema10to11
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -13,7 +14,6 @@ import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
 import com.flixclusive.core.database.migration.Schema8to9
 import com.flixclusive.core.database.migration.Schema9to10
-import com.flixclusive.core.database.migration.Schema10to11
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

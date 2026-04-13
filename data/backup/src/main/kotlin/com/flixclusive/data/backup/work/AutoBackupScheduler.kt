@@ -10,6 +10,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,7 +34,7 @@ class AutoBackupScheduler @Inject constructor(
             var previousUserId: String? = null
 
             userSessionDataStore.currentUserId
-                .distinctUntilChanged()
+                .filterNotNull()
                 .debounce(2000L)
                 .collectLatest { currentUserId ->
                     if (previousUserId != null && previousUserId != currentUserId) {
@@ -41,11 +42,6 @@ class AutoBackupScheduler @Inject constructor(
                     }
 
                     previousUserId = currentUserId
-
-                    if (currentUserId == null) return@collectLatest
-
-                    dataStoreManager.usePreferencesByUserId(currentUserId)
-
                     dataStoreManager
                         .getUserPrefs(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
                         .map { it.autoBackupFrequencyDays }

@@ -529,9 +529,11 @@ class BackupRepositoryImplTest {
         private val sessionTimeoutState = MutableStateFlow(0L)
 
         override val currentUserId: Flow<String?> = currentUserIdState.asStateFlow()
+        @Deprecated("This field is only used for migration purposes and will be removed in future versions")
+        override val legacyCurrentUserId: Flow<Int?> = emptyFlow()
         override val sessionTimeout: Flow<Long> = sessionTimeoutState.asStateFlow()
 
-        override suspend fun saveCurrentUserId(userId: String) {
+        override suspend fun saveCurrentUserId(userId: String, legacyUserId: Int) {
             currentUserIdState.value = userId
         }
 
@@ -543,7 +545,7 @@ class BackupRepositoryImplTest {
     private object NoOpDataStoreManager : DataStoreManager {
         override fun getSystemPrefs(): Flow<SystemPreferences> = emptyFlow()
 
-        override fun usePreferencesByUserId(userId: String) = Unit
+        override fun usePreferencesByUserId(userId: String, legacyUserId: Int?) = Unit
 
         override suspend fun updateSystemPrefs(
             transform: suspend (t: SystemPreferences) -> SystemPreferences

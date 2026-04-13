@@ -17,6 +17,8 @@ data class User(
     val pinHint: String? = null,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
+    @Deprecated("This field is no longer used and will be removed in future versions")
+    val legacyId: Int = 0,
 ) : Serializable {
     companion object {
         const val MAX_USER_PIN_LENGTH = 4

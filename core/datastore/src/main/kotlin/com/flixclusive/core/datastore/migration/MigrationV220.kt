@@ -2,6 +2,7 @@
 
 package com.flixclusive.core.datastore.migration
 
+import android.content.Context
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
@@ -20,10 +21,16 @@ import java.io.File
 
 @Suppress("DEPRECATION")
 internal class MigrationV220(
+    private val legacyUserId: Int,
     private val userId: String,
+    private val context: Context,
     private val providerDao: InstalledProviderDao,
     private val repositoryDao: InstalledRepositoryDao,
 ) : DataMigration<Preferences> {
+    private companion object {
+        val LegacyUserSegmentRegex = Regex("""/user-(\d+)(?=/|$)""")
+    }
+
     override suspend fun cleanUp() {
         // No - op, since we are not deleting any old data or files in this migration
     }
@@ -33,6 +40,11 @@ internal class MigrationV220(
 
         val providerData = mutablePrefs[UserPreferences.PROVIDER_PREFS_KEY] ?: return currentData
         val oldProviderPrefs = Json.decodeFromString<ProviderPreferencesV213>(providerData)
+
+        val externalRoot = context.getExternalFilesDir(null)
+        migrateLegacyUserFolders(root = File(externalRoot, "providers"))
+        migrateLegacyUserFolders(root = File(externalRoot, "settings"))
+
         migrateRepositoriesToDatabase(oldProviderPrefs)
         migrateProvidersToDatabase(oldProviderPrefs)
 
@@ -75,9 +87,10 @@ internal class MigrationV220(
         oldProviderPrefs: ProviderPreferencesV213
     ) {
         val metadataList = oldProviderPrefs.providers.mapNotNull { preference ->
-            val metadata = findProviderFromUpdaterJson(preference.id, preference.filePath)
+            val filePath = preference.filePath.replaceLegacyUserId()
+            val metadata = findProviderFromUpdaterJson(preference.id, filePath)
             if (metadata == null) {
-                warnLog("Warning: Could not find metadata for provider with id ${preference.id} and file path ${preference.filePath}. Skipping this provider...")
+                warnLog("Warning: Could not find metadata for provider with id ${preference.id} and file path $filePath. Skipping this provider...")
             }
 
             metadata
@@ -101,15 +114,56 @@ internal class MigrationV220(
         preference: OldProviderFromPreferences,
         metadata: ProviderMetadata
     ): InstalledProvider {
+        val updatedFilePath = preference.filePath.replaceLegacyUserId()
+
         return InstalledProvider(
             id = preference.id,
             repositoryUrl = metadata.repositoryUrl,
             isEnabled = !preference.isDisabled,
             sortOrder = index.toDouble(),
             isDebug = preference.isDebug,
-            filePath = preference.filePath,
+            filePath = updatedFilePath,
             ownerId = userId
         )
+    }
+
+    private fun migrateLegacyUserFolders(root: File) {
+        if (!root.exists() || !root.isDirectory) return
+
+        val legacyDir = File(root, "user-$legacyUserId")
+        if (!legacyDir.exists() || !legacyDir.isDirectory) return
+
+        val newDir = File(root, "user-$userId")
+        if (newDir.exists()) return
+
+        newDir.parentFile?.mkdirs()
+
+        if (legacyDir.renameTo(newDir)) {
+            return
+        }
+
+        moveDirectory(source = legacyDir, destination = newDir)
+    }
+
+    private fun moveDirectory(source: File, destination: File) {
+        if (!destination.exists()) {
+            destination.mkdirs()
+        }
+
+        source.listFiles()?.forEach { file ->
+            val newFile = File(destination, file.name)
+
+            if (file.isDirectory) {
+                moveDirectory(file, newFile)
+            } else {
+                if (!file.renameTo(newFile)) {
+                    file.copyTo(newFile, overwrite = true)
+                    file.delete()
+                }
+            }
+        }
+
+        source.delete()
     }
 
     private fun findProviderFromUpdaterJson(
@@ -123,5 +177,18 @@ internal class MigrationV220(
 
         val updaterJson = fromJson<List<ProviderMetadata>>(updaterJsonFile.reader())
         return updaterJson.firstOrNull { it.id == providerId }
+    }
+
+    private fun String.replaceLegacyUserId(): String {
+        return this.replace(LegacyUserSegmentRegex) { matchResult ->
+            val foundLegacyUserId = matchResult.groupValues[1]
+                .toIntOrNull() ?: return@replace matchResult.value
+
+            if (foundLegacyUserId == legacyUserId) {
+                "/user-$userId"
+            } else {
+                matchResult.value
+            }
+        }
     }
 }
