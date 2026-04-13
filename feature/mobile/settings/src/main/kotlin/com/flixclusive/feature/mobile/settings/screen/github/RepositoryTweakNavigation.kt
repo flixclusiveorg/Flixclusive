@@ -12,7 +12,7 @@ import com.flixclusive.core.drawables.R as UiCommonR
 
 internal object RepositoryTweakNavigation : BaseTweakNavigation {
     @Composable
-    override fun getTitle(): String = stringResource(R.string.check_out_the_repository)
+    override fun getTitle(): String = stringResource(R.string.github_repository)
 
     @Composable
     override fun getIconPainter(): Painter
