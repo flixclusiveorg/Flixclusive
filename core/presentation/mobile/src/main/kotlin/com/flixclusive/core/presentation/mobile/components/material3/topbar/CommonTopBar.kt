@@ -150,11 +150,11 @@ fun ActionButton(
 
 @Composable
 fun DefaultNavigationIcon(onClick: () -> Unit) {
-    PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
+    PlainTooltipBox(description = stringResource(LocaleR.string.back)) {
         ActionButton(onClick = onClick) {
             AdaptiveIcon(
                 painter = painterResource(UiCommonR.drawable.left_arrow),
-                contentDescription = stringResource(LocaleR.string.navigate_up),
+                contentDescription = stringResource(LocaleR.string.back),
                 dp = 16.dp,
                 increaseBy = 3.dp,
             )

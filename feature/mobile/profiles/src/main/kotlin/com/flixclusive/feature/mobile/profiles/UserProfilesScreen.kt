@@ -446,7 +446,7 @@ private fun BackButton(
     ) {
         AdaptiveIcon(
             painter = painterResource(UiCommonR.drawable.left_arrow),
-            contentDescription = stringResource(LocaleR.string.navigate_up),
+            contentDescription = stringResource(LocaleR.string.back),
             tint = MaterialTheme.colorScheme.onSurface.copy(0.7F),
             modifier = Modifier.align(Alignment.Center),
         )

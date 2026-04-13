@@ -1,12 +1,14 @@
 package com.flixclusive.data.backup.work
 
 import android.content.Context
+import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
+import com.flixclusive.core.common.file.FileConstants
 import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
@@ -20,7 +22,6 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.data.backup.work.util.BackupWorkFile
 import com.flixclusive.model.film.util.FilmType
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -82,6 +83,8 @@ class BackupCreateWorkerTest {
         runTest(testDispatcher) {
             val workManager = WorkManager.getInstance(context)
 
+            val backupRoot = File(context.cacheDir, "backup-work-test")
+
             withContext(Dispatchers.IO) {
                 database.clearAllTables()
                 userSessionDataStore.clearCurrentUser()
@@ -89,8 +92,10 @@ class BackupCreateWorkerTest {
                 workManager.cancelAllWork().result.get()
                 workManager.pruneWork().result.get()
 
-                // Clean output folder to avoid retention logic affecting assertions.
-                BackupWorkFile.getUserBackupDirectory(1).deleteRecursively()
+                backupRoot.deleteRecursively()
+                backupRoot.mkdirs()
+
+                File(context.filesDir, "backup-work").deleteRecursively()
             }
 
             val userId = database.userDao().insert(DatabaseTestDefaults.getUser(id = 0)).toInt()
@@ -102,6 +107,10 @@ class BackupCreateWorkerTest {
                     maxBackups = 1,
                     autoBackupOptions = libraryOnlyOptions(),
                 )
+            }
+
+            dataStoreManager.updateSystemPrefs { old ->
+                old.copy(storageDirectoryUri = Uri.fromFile(backupRoot).toString())
             }
 
             seedCustomLibraryList(
@@ -123,14 +132,19 @@ class BackupCreateWorkerTest {
             val result = backupWorkManager.readLastCreateResult(userId)
             assertEmpty(result)
 
-            val userBackupDir = BackupWorkFile.getUserBackupDirectory(userId)
+            val userBackupDir = File(backupRoot, "backups/user-$userId")
             val backups = userBackupDir
                 .listFiles()
-                ?.filter { it.isFile && it.extension == BackupWorkConstants.BACKUP_FILE_EXTENSION }
+                ?.filter { it.isFile && it.extension == FileConstants.BACKUP_FILE_EXTENSION }
                 .orEmpty()
 
             expectThat(backups).hasSize(1)
-            expectThat(File(userBackupDir, BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME).exists()).isEqualTo(true)
+
+            val resultFile = File(
+                File(context.filesDir, "backup-work/user-$userId"),
+                BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
+            )
+            expectThat(resultFile.exists()).isEqualTo(true)
         }
 
     @Test
@@ -141,6 +155,8 @@ class BackupCreateWorkerTest {
                 "WorkManager test driver is null. Did WorkManagerTestInitHelper.initializeTestWorkManager(context) run?"
             }
 
+            val backupRoot = File(context.cacheDir, "backup-work-test")
+
             withContext(Dispatchers.IO) {
                 database.clearAllTables()
                 userSessionDataStore.clearCurrentUser()
@@ -148,8 +164,10 @@ class BackupCreateWorkerTest {
                 workManager.cancelAllWork().result.get()
                 workManager.pruneWork().result.get()
 
-                // Clean output folder to avoid retention logic affecting assertions.
-                BackupWorkFile.getUserBackupDirectory(1).deleteRecursively()
+                backupRoot.deleteRecursively()
+                backupRoot.mkdirs()
+
+                File(context.filesDir, "backup-work").deleteRecursively()
             }
 
             val userId = database.userDao().insert(DatabaseTestDefaults.getUser(id = 0)).toInt()
@@ -161,6 +179,10 @@ class BackupCreateWorkerTest {
                     maxBackups = 1,
                     autoBackupOptions = libraryOnlyOptions(),
                 )
+            }
+
+            dataStoreManager.updateSystemPrefs { old ->
+                old.copy(storageDirectoryUri = Uri.fromFile(backupRoot).toString())
             }
 
             seedCustomLibraryList(
@@ -184,19 +206,24 @@ class BackupCreateWorkerTest {
             // Periodic work doesn't run immediately in the test scheduler.
             testDriver.setPeriodDelayMet(workInfo.id)
 
-            awaitBackupOutputWritten(userId)
+            awaitBackupOutputWritten(userId = userId, backupRoot = backupRoot)
 
             val result = backupWorkManager.readLastCreateResult(userId)
             assertEmpty(result)
 
-            val userBackupDir = BackupWorkFile.getUserBackupDirectory(userId)
+            val userBackupDir = File(backupRoot, "backups/user-$userId")
             val backups = userBackupDir
                 .listFiles()
-                ?.filter { it.isFile && it.extension == BackupWorkConstants.BACKUP_FILE_EXTENSION }
+                ?.filter { it.isFile && it.extension == FileConstants.BACKUP_FILE_EXTENSION }
                 .orEmpty()
 
             expectThat(backups).hasSize(1)
-            expectThat(File(userBackupDir, BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME).exists()).isEqualTo(true)
+
+            val resultFile = File(
+                File(context.filesDir, "backup-work/user-$userId"),
+                BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
+            )
+            expectThat(resultFile.exists()).isEqualTo(true)
         }
 
     private suspend fun awaitUniqueWorkFinished(
@@ -247,18 +274,21 @@ class BackupCreateWorkerTest {
         }
     }
 
-    private suspend fun awaitBackupOutputWritten(userId: Int) {
-        val userBackupDir = BackupWorkFile.getUserBackupDirectory(userId)
+    private suspend fun awaitBackupOutputWritten(userId: Int, backupRoot: File) {
+        val userBackupDir = File(backupRoot, "backups/user-$userId")
 
         withContext(Dispatchers.Default) {
             withTimeout(15_000) {
                 while (true) {
                     val backups = userBackupDir
                         .listFiles()
-                        ?.filter { it.isFile && it.extension == BackupWorkConstants.BACKUP_FILE_EXTENSION }
+                        ?.filter { it.isFile && it.extension == FileConstants.BACKUP_FILE_EXTENSION }
                         .orEmpty()
 
-                    val hasResultFile = File(userBackupDir, BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME).exists()
+                    val hasResultFile = File(
+                        File(context.filesDir, "backup-work/user-$userId"),
+                        BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
+                    ).exists()
 
                     if (backups.isNotEmpty() && hasResultFile) {
                         return@withTimeout

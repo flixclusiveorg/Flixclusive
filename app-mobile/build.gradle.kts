@@ -111,6 +111,7 @@ dependencies {
     implementation(projects.feature.splashScreen)
     implementation(projects.feature.mobile.appUpdates)
     implementation(projects.feature.mobile.profiles)
+    implementation(projects.feature.mobile.onboarding)
     implementation(projects.feature.mobile.userAdd)
     implementation(projects.feature.mobile.userEdit)
 

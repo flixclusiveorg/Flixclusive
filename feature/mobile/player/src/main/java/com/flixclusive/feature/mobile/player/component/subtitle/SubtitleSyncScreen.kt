@@ -138,7 +138,7 @@ internal fun SubtitleSyncScreen(
                 IconButton(onClick = onBack) {
                     AdaptiveIcon(
                         painter = painterResource(id = UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(id = LocaleR.string.navigate_up),
+                        contentDescription = stringResource(id = LocaleR.string.back),
                         tint = Color.White
                     )
                 }

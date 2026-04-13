@@ -15,7 +15,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.data.backup.work.util.BackupWorkFile
+import com.flixclusive.data.backup.work.util.BackupWorkResultStore
 import com.flixclusive.data.backup.work.worker.BackupCreateWorker
 import com.flixclusive.data.backup.work.worker.BackupRestoreWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -183,7 +183,8 @@ class BackupWorkManager @Inject constructor(
 
     suspend fun readLastCreateResult(userId: Int): BackupResult {
         return withContext(appDispatchers.io) {
-            BackupWorkFile.readBackupResult(
+            BackupWorkResultStore.read(
+                context = context,
                 userId = userId,
                 fileName = BackupWorkConstants.LAST_CREATE_RESULT_FILE_NAME,
             )
@@ -192,7 +193,8 @@ class BackupWorkManager @Inject constructor(
 
     suspend fun readLastRestoreResult(userId: Int): BackupResult {
         return withContext(appDispatchers.io) {
-            BackupWorkFile.readBackupResult(
+            BackupWorkResultStore.read(
+                context = context,
                 userId = userId,
                 fileName = BackupWorkConstants.LAST_RESTORE_RESULT_FILE_NAME,
             )

@@ -35,6 +35,7 @@ import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenNavigator
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
+import com.flixclusive.feature.mobile.onboarding.OnboardingScreenNavigator
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
@@ -67,6 +68,7 @@ import com.ramcosta.composedestinations.generated.providersettings.destinations.
 import com.ramcosta.composedestinations.generated.providertest.destinations.ProviderTestScreenDestination
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
 import com.ramcosta.composedestinations.generated.searchexpanded.destinations.SearchExpandedScreenDestination
+import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
@@ -85,6 +87,7 @@ internal class MobileAppNavigator(
 ) : AddProfileAction,
     AddProviderScreenNavigator,
     AddUserScreenNavigator,
+    OnboardingScreenNavigator,
     AppUpdatesDialogNavigator,
     AppUpdatesScreenNavigator,
     ChooseProfileAction,
@@ -199,6 +202,16 @@ internal class MobileAppNavigator(
                     popUpTo(AppGraph) {
                         inclusive = true
                     }
+                }
+            }
+        }
+    }
+
+    override fun openOnboardingScreen() {
+        runOnResumed {
+            navigator.navigate(OnboardingScreenDestination) {
+                popUpTo(AppGraph) {
+                    inclusive = true
                 }
             }
         }

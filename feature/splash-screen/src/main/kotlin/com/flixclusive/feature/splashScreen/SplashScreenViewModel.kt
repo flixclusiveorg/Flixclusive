@@ -12,7 +12,6 @@ import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,8 +29,6 @@ internal class SplashScreenViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val appDispatchers: AppDispatchers,
 ) : ViewModel() {
-    private var saveSettingsJob: Job? = null
-
     private val _uiState = MutableStateFlow(SplashScreenUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
 
@@ -53,14 +50,6 @@ internal class SplashScreenViewModel @Inject constructor(
         )
 
     val userLoggedIn = userSessionManager.currentUser
-
-    fun updateSettings(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
-        if (saveSettingsJob?.isActive == true) return
-
-        saveSettingsJob = appDispatchers.ioScope.launch {
-            dataStoreManager.updateSystemPrefs(transform)
-        }
-    }
 
     fun onConsumeAppUpdateError() {
         _uiState.update { it.copy(appUpdateError = null) }

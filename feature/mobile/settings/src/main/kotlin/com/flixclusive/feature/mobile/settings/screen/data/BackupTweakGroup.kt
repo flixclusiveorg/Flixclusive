@@ -31,8 +31,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.common.file.AppStorage
+import androidx.documentfile.provider.DocumentFile
 import com.flixclusive.core.common.file.FileConstants
+import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.presentation.common.extensions.showToast
@@ -52,7 +53,9 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun backupTweakGroup(
     dataPreferences: () -> DataPreferences,
+    systemPreferences: () -> SystemPreferences,
     onUpdatePreferences: (suspend (DataPreferences) -> DataPreferences) -> Unit,
+    onUpdateSystemPreferences: (suspend (SystemPreferences) -> SystemPreferences) -> Unit,
     createBackup: suspend (uri: Uri, options: BackupOptions) -> BackupState,
     restoreBackup: suspend (uri: Uri, options: BackupOptions) -> BackupState,
 ): TweakGroup {
@@ -117,6 +120,30 @@ internal fun backupTweakGroup(
             "application/octet-stream",
             "application/zip",
         )
+    }
+
+    val storageDirectoryUri = systemPreferences().storageDirectoryUri
+        ?.takeIf { it.isNotBlank() }
+        ?.let(Uri::parse)
+
+    val storageDirectoryLabel = remember(storageDirectoryUri) {
+        when {
+            storageDirectoryUri == null -> resources.getString(LocaleR.string.onboarding_storage_not_selected)
+            else -> DocumentFile.fromTreeUri(context, storageDirectoryUri)?.name ?: storageDirectoryUri.toString()
+        }
+    }
+
+    val directoryPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        runCatching { context.contentResolver.takePersistableUriPermission(uri, flags) }
+
+        onUpdateSystemPreferences {
+            it.copy(storageDirectoryUri = uri.toString())
+        }
     }
 
     var pendingCreateBackupOptions by remember { mutableStateOf<BackupOptions?>(null) }
@@ -286,14 +313,20 @@ internal fun backupTweakGroup(
     return TweakGroup(
         title = stringResource(LocaleR.string.backup),
         tweaks = persistentListOf(
-            TweakUI.InformationTweak(
+            TweakUI.ClickableTweak(
                 title = stringResource(LocaleR.string.backup_location_title),
                 description = {
-                    resources.getString(
-                        LocaleR.string.backup_location_desc,
-                        AppStorage.getPublicBackupDirectory().path,
-                    )
+                    if (storageDirectoryUri == null) {
+                        resources.getString(LocaleR.string.backup_location_desc)
+                    } else {
+                        resources.getString(
+                            LocaleR.string.backup_location_desc,
+                            storageDirectoryLabel,
+                        )
+                    }
                 },
+                enabledProvider = { !isBackupOperationRunning },
+                onClick = { directoryPicker.launch(null) },
             ),
             TweakUI.ListTweak(
                 title = stringResource(LocaleR.string.backup_auto_frequency_title),

@@ -15,6 +15,7 @@ import com.ramcosta.composedestinations.annotation.ExternalDestination
 import com.ramcosta.composedestinations.annotation.ExternalModuleDestinations
 import com.ramcosta.composedestinations.annotation.NavHostGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
+import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
@@ -30,6 +31,7 @@ internal annotation class AppNavGraph {
     @ExternalDestination<AppUpdatesScreenDestination>
     @ExternalDestination<PlayerScreenDestination>
     @ExternalDestination<SplashScreenDestination>(start = true)
+    @ExternalDestination<OnboardingScreenDestination>
     @ExternalDestination<UserProfilesScreenDestination>
     @ExternalModuleDestinations<UsereditModuleDestinations>
     companion object Includes
