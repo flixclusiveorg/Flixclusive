@@ -1,16 +1,6 @@
 package com.flixclusive.feature.splashScreen.component
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,9 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.feature.splashScreen.APP_TAG_KEY
-import com.flixclusive.feature.splashScreen.ENTER_DELAY
-import com.flixclusive.feature.splashScreen.EXIT_DELAY
 import com.flixclusive.feature.splashScreen.TagSize
 import kotlinx.coroutines.delay
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -57,11 +44,7 @@ internal fun getGradientColors() =
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-internal fun LoadingTag(
-    isLoading: Boolean,
-    animatedScope: AnimatedVisibilityScope,
-    sharedTransitionScope: SharedTransitionScope,
-) {
+internal fun LoadingTag() {
     val gradientColors = getGradientColors()
 
     Column(
@@ -69,58 +52,37 @@ internal fun LoadingTag(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
     ) {
-        Tag(
-            animatedScope = animatedScope,
-            sharedTransitionScope = sharedTransitionScope,
-        )
+        Tag()
 
-        AnimatedVisibility(
-            visible = isLoading,
-            enter = fadeIn(
-                animationSpec = tween(durationMillis = EXIT_DELAY),
-            ) + scaleIn(),
-            exit = scaleOut(
-                animationSpec = tween(durationMillis = ENTER_DELAY),
-            ) + fadeOut(),
-        ) {
-            GradientCircularProgressIndicator(colors = gradientColors)
-        }
+        GradientCircularProgressIndicator(colors = gradientColors)
     }
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-internal fun Tag(
-    animatedScope: AnimatedVisibilityScope,
-    sharedTransitionScope: SharedTransitionScope,
-) {
+internal fun Tag() {
     val gradientColors = getGradientColors()
-    with(sharedTransitionScope) {
-        Box(
+
+    Box(
+        modifier = Modifier
+    ) {
+        Image(
+            painter = painterResource(UiCommonR.drawable.flixclusive_tag),
+            contentDescription = stringResource(id = LocaleR.string.flixclusive_tag_content_desc),
+            contentScale = ContentScale.Fit,
             modifier = Modifier
-                .sharedElement(
-                    sharedContentState = rememberSharedContentState(key = APP_TAG_KEY),
-                    animatedVisibilityScope = animatedScope,
-                ),
-        ) {
-            Image(
-                painter = painterResource(UiCommonR.drawable.flixclusive_tag),
-                contentDescription = stringResource(id = LocaleR.string.flixclusive_tag_content_desc),
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .width(TagSize)
-                    .graphicsLayer(alpha = 0.99F)
-                    .drawWithCache {
-                        onDrawWithContent {
-                            drawContent()
-                            drawRect(
-                                brush = Brush.linearGradient(colors = gradientColors),
-                                blendMode = BlendMode.SrcAtop,
-                            )
-                        }
-                    },
-            )
-        }
+                .width(TagSize)
+                .graphicsLayer(alpha = 0.99F)
+                .drawWithCache {
+                    onDrawWithContent {
+                        drawContent()
+                        drawRect(
+                            brush = Brush.linearGradient(colors = gradientColors),
+                            blendMode = BlendMode.SrcAtop,
+                        )
+                    }
+                },
+        )
     }
 }
 
@@ -141,18 +103,7 @@ private fun LoadingTagPreview() {
                 Modifier
                     .fillMaxSize(),
         ) {
-            SharedTransitionLayout {
-                AnimatedContent(
-                    isLoading,
-                    label = "test_transition",
-                ) {
-                    LoadingTag(
-                        isLoading = it,
-                        animatedScope = this@AnimatedContent,
-                        sharedTransitionScope = this@SharedTransitionLayout,
-                    )
-                }
-            }
+            LoadingTag()
         }
     }
 }
