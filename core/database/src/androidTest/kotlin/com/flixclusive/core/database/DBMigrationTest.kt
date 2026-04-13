@@ -13,6 +13,7 @@ import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
 import com.flixclusive.core.database.migration.Schema8to9
 import com.flixclusive.core.database.migration.Schema9to10
+import com.flixclusive.core.database.migration.Schema10to11
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -159,6 +160,26 @@ class DBMigrationTest {
             Schema7to8,
             Schema8to9,
             Schema9to10(context),
+        )
+    }
+
+    @Test
+    @Throws(IOException::class)
+    fun migrate10To11() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        testMigrate(
+            initialVersion = 10,
+            migrateVersion = 11,
+            Schema1to2,
+            Schema2to3,
+            Schema3to4,
+            Schema4to5,
+            Schema5to6,
+            Schema6to7,
+            Schema7to8,
+            Schema8to9,
+            Schema9to10(context),
+            Schema10to11(context),
         )
     }
 }

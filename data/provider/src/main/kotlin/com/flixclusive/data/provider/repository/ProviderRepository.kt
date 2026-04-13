@@ -23,25 +23,25 @@ interface ProviderRepository {
         metadata: ProviderMetadata,
     )
 
-    suspend fun getApi(id: String, ownerId: Int): ProviderApi?
+    suspend fun getApi(id: String, ownerId: String): ProviderApi?
 
     fun getMetadata(id: String): ProviderMetadata?
 
     fun getPlugin(id: String): Provider?
 
-    suspend fun getInstalledProvider(id: String, ownerId: Int): InstalledProvider?
+    suspend fun getInstalledProvider(id: String, ownerId: String): InstalledProvider?
 
-    fun getEnabledProvidersAsFlow(ownerId: Int): Flow<List<InstalledProvider>>
+    fun getEnabledProvidersAsFlow(ownerId: String): Flow<List<InstalledProvider>>
 
-    suspend fun getEnabledProviders(ownerId: Int): List<InstalledProvider>
+    suspend fun getEnabledProviders(ownerId: String): List<InstalledProvider>
 
-    suspend fun isEnabled(id: String, ownerId: Int): Boolean
+    suspend fun isEnabled(id: String, ownerId: String): Boolean
 
-    suspend fun getInstalledProviders(ownerId: Int): List<InstalledProvider>
+    suspend fun getInstalledProviders(ownerId: String): List<InstalledProvider>
 
-    fun getInstalledProvidersAsFlow(ownerId: Int): Flow<List<InstalledProvider>>
+    fun getInstalledProvidersAsFlow(ownerId: String): Flow<List<InstalledProvider>>
 
-    suspend fun getMaxSortOrder(ownerId: Int): Double
+    suspend fun getMaxSortOrder(ownerId: String): Double
 
     suspend fun reorderPosition(
         moved: InstalledProvider,
@@ -49,9 +49,9 @@ interface ProviderRepository {
         after: InstalledProvider?,
     )
 
-    suspend fun renormalizePositions(ownerId: Int)
+    suspend fun renormalizePositions(ownerId: String)
 
     suspend fun clearAll()
 
-    suspend fun toggleProvider(id: String, ownerId: Int)
+    suspend fun toggleProvider(id: String, ownerId: String)
 }

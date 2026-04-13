@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface WatchProgressRepository {
     fun getAllAsFlow(
-        ownerId: Int,
+        ownerId: String,
         sort: LibrarySort
     ): Flow<List<WatchProgressWithMetadata>>
 
@@ -20,7 +20,7 @@ interface WatchProgressRepository {
 
     suspend fun get(
         id: String,
-        ownerId: Int,
+        ownerId: String,
         type: FilmType,
     ): WatchProgressWithMetadata?
 
@@ -31,31 +31,31 @@ interface WatchProgressRepository {
 
     fun getAsFlow(
         id: String,
-        ownerId: Int,
+        ownerId: String,
         type: FilmType,
     ): Flow<WatchProgressWithMetadata?>
 
     suspend fun getSeasonProgress(
         tvShowId: String,
         seasonNumber: Int,
-        ownerId: Int,
+        ownerId: String,
     ): List<EpisodeProgress>
 
     suspend fun getEpisodeProgress(
         tvShowId: String,
         seasonNumber: Int,
         episodeNumber: Int,
-        ownerId: Int,
+        ownerId: String,
     ): EpisodeProgress?
 
     fun getSeasonProgressAsFlow(
         tvShowId: String,
         seasonNumber: Int,
-        ownerId: Int,
+        ownerId: String,
     ): Flow<List<EpisodeProgress>>
 
     suspend fun getRandoms(
-        ownerId: Int,
+        ownerId: String,
         count: Int,
     ): Flow<List<WatchProgressWithMetadata>>
 
@@ -63,5 +63,5 @@ interface WatchProgressRepository {
 
     suspend fun delete(item: Long, type: FilmType)
 
-    suspend fun deleteAll(ownerId: Int)
+    suspend fun deleteAll(ownerId: String)
 }

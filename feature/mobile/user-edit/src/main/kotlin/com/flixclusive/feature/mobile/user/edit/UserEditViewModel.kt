@@ -59,7 +59,7 @@ internal class UserEditViewModel @Inject constructor(
     private var clearSearchHistoryJob: Job? = null
     private var clearLibrariesJob: Job? = null
 
-    fun onRemoveUser(userId: Int) {
+    fun onRemoveUser(userId: String) {
         if (removeUserJob?.isActive == true) return
 
         removeUserJob = appDispatchers.ioScope.launch {
@@ -90,7 +90,7 @@ internal class UserEditViewModel @Inject constructor(
         }
     }
 
-    fun onClearSearchHistory(userId: Int) {
+    fun onClearSearchHistory(userId: String) {
         if (clearSearchHistoryJob?.isActive == true) return
 
         clearSearchHistoryJob = appDispatchers.ioScope.launch {
@@ -99,7 +99,7 @@ internal class UserEditViewModel @Inject constructor(
     }
 
     fun onClearLibraries(
-        userId: Int,
+        userId: String,
         libraries: List<Library>,
     ) {
         if (clearLibrariesJob?.isActive == true) return
@@ -114,19 +114,19 @@ internal class UserEditViewModel @Inject constructor(
         }
     }
 
-    private suspend fun clearProviders(userId: Int) {
+    private suspend fun clearProviders(userId: String) {
         if (!isUserLoggedIn(userId)) return
         providerRepository.getInstalledProviders(userId).forEach {
             unloadProvider(it)
         }
     }
 
-    private suspend fun signOut(userId: Int) {
+    private suspend fun signOut(userId: String) {
         if (!isUserLoggedIn(userId)) return
         userSessionManager.signOut()
     }
 
-    private fun isUserLoggedIn(userId: Int): Boolean {
+    private fun isUserLoggedIn(userId: String): Boolean {
         return userSessionManager.currentUser.value?.id == userId
     }
 }

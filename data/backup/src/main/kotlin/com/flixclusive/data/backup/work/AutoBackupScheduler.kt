@@ -30,7 +30,7 @@ class AutoBackupScheduler @Inject constructor(
         if (job?.isActive == true) return
 
         job = appDispatchers.ioScope.launch {
-            var previousUserId: Int? = null
+            var previousUserId: String? = null
 
             userSessionDataStore.currentUserId
                 .distinctUntilChanged()

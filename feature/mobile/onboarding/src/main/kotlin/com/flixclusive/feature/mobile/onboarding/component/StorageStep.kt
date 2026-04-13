@@ -2,9 +2,7 @@ package com.flixclusive.feature.mobile.onboarding.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +19,6 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.onboarding.R
 import com.flixclusive.core.drawables.R as UiCommonR
-
 
 @Composable
 internal fun StorageStep(
@@ -57,7 +54,7 @@ internal fun StorageStep(
 
             Text(
                 text = storageDirectoryUri ?: stringResource(R.string.onboarding_storage_not_selected),
-                style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(),
+                style = MaterialTheme.typography.labelSmall.asAdaptiveTextStyle(),
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -82,12 +79,12 @@ internal fun StorageStep(
                 painter = painterResource(UiCommonR.drawable.info),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                dp = 18.dp
+                dp = 20.dp
             )
 
             Text(
                 text = stringResource(R.string.onboarding_storage_tip),
-                style = MaterialTheme.typography.bodySmall.copy(
+                style = MaterialTheme.typography.bodyMedium.copy(
                     lineHeight = 16.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                 ).asAdaptiveTextStyle(),

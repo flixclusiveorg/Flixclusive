@@ -22,10 +22,10 @@ interface MovieProgressDao {
         ORDER BY createdAt DESC
         """,
     )
-    fun getAll(ownerId: Int): List<MovieProgressWithMetadata>
+    fun getAll(ownerId: String): List<MovieProgressWithMetadata>
 
     fun getAllAsFlow(
-        ownerId: Int,
+        ownerId: String,
         column: String,
         ascending: Boolean,
     ): Flow<List<MovieProgressWithMetadata>> {
@@ -38,7 +38,7 @@ interface MovieProgressDao {
             RoomRawQuery(
                 sql = query,
                 onBindStatement = { statement ->
-                    statement.bindInt(1, ownerId)
+                    statement.bindText(1, ownerId)
                 }
             )
         )
@@ -50,7 +50,7 @@ interface MovieProgressDao {
     @Transaction
     @Query("SELECT * FROM movies_watch_history WHERE ownerId = :ownerId ORDER BY RANDOM() LIMIT :count")
     fun getRandoms(
-        ownerId: Int,
+        ownerId: String,
         count: Int,
     ): Flow<List<MovieProgressWithMetadata>>
 
@@ -60,7 +60,7 @@ interface MovieProgressDao {
 
     @Transaction
     @Query("SELECT * FROM movies_watch_history WHERE filmId = :id AND ownerId = :ownerId")
-    suspend fun get(id: String, ownerId: Int): MovieProgressWithMetadata?
+    suspend fun get(id: String, ownerId: String): MovieProgressWithMetadata?
 
     @Transaction
     @Query("SELECT * FROM movies_watch_history WHERE id = :id")
@@ -68,7 +68,7 @@ interface MovieProgressDao {
 
     @Transaction
     @Query("SELECT * FROM movies_watch_history WHERE filmId = :id AND ownerId = :ownerId")
-    fun getAsFlow(id: String, ownerId: Int): Flow<MovieProgressWithMetadata?>
+    fun getAsFlow(id: String, ownerId: String): Flow<MovieProgressWithMetadata?>
 
     @Transaction
     suspend fun insert(
@@ -100,7 +100,7 @@ interface MovieProgressDao {
     suspend fun delete(id: Long)
 
     @Query("DELETE FROM movies_watch_history WHERE ownerId = :ownerId")
-    suspend fun deleteAll(ownerId: Int)
+    suspend fun deleteAll(ownerId: String)
 
     @Query(
         "UPDATE movies_watch_history " +

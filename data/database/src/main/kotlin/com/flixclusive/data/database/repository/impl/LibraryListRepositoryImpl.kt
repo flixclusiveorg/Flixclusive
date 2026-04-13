@@ -25,7 +25,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
     private val itemDao: LibraryListItemDao,
     private val appDispatchers: AppDispatchers,
 ) : LibraryListRepository {
-    override fun getLists(userId: Int): Flow<List<LibraryList>> {
+    override fun getLists(userId: String): Flow<List<LibraryList>> {
         return listDao.getAllAsFlow(userId)
     }
 
@@ -77,7 +77,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
 
     override fun getListsContainingFilm(
         filmId: String,
-        ownerId: Int,
+        ownerId: String,
     ): Flow<List<LibraryList>> {
         return listDao.getListsContainingFilmAsFlow(filmId, ownerId)
     }
@@ -128,7 +128,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun getListsAndItems(userId: Int, sort: LibrarySort): Flow<List<LibraryListWithItems>> {
+    override fun getListsAndItems(userId: String, sort: LibrarySort): Flow<List<LibraryListWithItems>> {
         val column = when (sort) {
             is LibrarySort.Added -> "createdAt"
             is LibrarySort.Modified -> "updatedAt"
@@ -142,7 +142,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun seedLists(userId: Int) {
+    override suspend fun seedLists(userId: String) {
         val watchedListName = context.getString(DatabaseR.string.seeded_recently_watched)
         val watchedListDesc = context.getString(DatabaseR.string.seeded_recently_watched_description)
 
@@ -158,7 +158,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAllExceptWatched(ownerId: Int) {
+    override suspend fun deleteAllExceptWatched(ownerId: String) {
         return withContext(appDispatchers.io) {
             listDao.deleteAllExceptWatched(ownerId)
         }

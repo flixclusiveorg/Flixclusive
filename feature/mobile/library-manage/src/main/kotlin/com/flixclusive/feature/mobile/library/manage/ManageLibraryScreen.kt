@@ -411,7 +411,7 @@ private fun ManageLibraryScreenBasePreview() {
                 val list =
                     LibraryList(
                         id = it,
-                        ownerId = 1,
+                        ownerId = "preview-user",
                         name = "Library $it",
                         description = description,
                     )

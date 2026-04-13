@@ -495,7 +495,7 @@ private fun FilmScreenBasePreview() {
                     list = LibraryList(
                         id = it,
                         name = "List $it",
-                        ownerId = 1,
+                        ownerId = "preview-user",
                         description = "Description $it",
                     ),
                 ),
@@ -511,7 +511,7 @@ private fun FilmScreenBasePreview() {
             val duration = 900L + Random.nextInt(1200, 6000)
 
             EpisodeProgress(
-                ownerId = 0,
+                ownerId = "preview-user",
                 filmId = metadata.identifier,
                 progress = Random.nextLong(900, duration),
                 duration = duration,
@@ -521,7 +521,7 @@ private fun FilmScreenBasePreview() {
             )
         } else {
             MovieProgress(
-                ownerId = 0,
+                ownerId = "preview-user",
                 filmId = metadata.identifier,
                 progress = 5400L,
                 duration = 7200L,
@@ -555,7 +555,7 @@ private fun FilmScreenBasePreview() {
                             list = LibraryList(
                                 id = lists.size + 1,
                                 name = name,
-                                ownerId = 1,
+                                ownerId = "preview-user",
                                 description = description,
                             ),
                         ),
@@ -575,7 +575,7 @@ private fun FilmScreenBasePreview() {
                                         episode = episode,
                                         watchProgress = EpisodeProgress(
                                             id = episode.number.toLong(),
-                                            ownerId = 0,
+                                            ownerId = "preview-user",
                                             filmId = metadata.identifier,
                                             progress = Random.nextLong(900, duration),
                                             duration = duration,

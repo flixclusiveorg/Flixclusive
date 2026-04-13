@@ -33,7 +33,7 @@ class BackupWorkManager @Inject constructor(
 ) {
     private val workManager by lazy { WorkManager.getInstance(context) }
 
-    fun enqueueCreate(userId: Int): String {
+    fun enqueueCreate(userId: String): String {
         val uniqueName = BackupWorkConstants.UNIQUE_BACKUP_CREATE_PREFIX + userId
 
         val request = OneTimeWorkRequestBuilder<BackupCreateWorker>()
@@ -61,7 +61,7 @@ class BackupWorkManager @Inject constructor(
     }
 
     fun enqueueCreate(
-        userId: Int,
+        userId: String,
         uri: Uri,
         options: BackupOptions = BackupOptions(),
     ): String {
@@ -99,7 +99,7 @@ class BackupWorkManager @Inject constructor(
     }
 
     fun enqueueRestore(
-        userId: Int,
+        userId: String,
         uri: Uri,
         options: BackupOptions = BackupOptions(),
     ): String {
@@ -136,7 +136,7 @@ class BackupWorkManager @Inject constructor(
         return uniqueName
     }
 
-    fun syncPeriodicAutoBackup(userId: Int, frequencyDays: Int) {
+    fun syncPeriodicAutoBackup(userId: String, frequencyDays: Int) {
         val uniqueName = BackupWorkConstants.UNIQUE_AUTO_BACKUP_CREATE_PREFIX + userId
         val clampedDays = frequencyDays.coerceIn(0, 30)
 
@@ -166,12 +166,12 @@ class BackupWorkManager @Inject constructor(
 
         workManager.enqueueUniquePeriodicWork(
             uniqueName,
-            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            ExistingPeriodicWorkPolicy.KEEP,
             request,
         )
     }
 
-    fun cancelPeriodicAutoBackup(userId: Int) {
+    fun cancelPeriodicAutoBackup(userId: String) {
         val uniqueName = BackupWorkConstants.UNIQUE_AUTO_BACKUP_CREATE_PREFIX + userId
         workManager.cancelUniqueWork(uniqueName)
     }
@@ -181,7 +181,7 @@ class BackupWorkManager @Inject constructor(
             .map { infos -> infos.lastOrNull() }
     }
 
-    suspend fun readLastCreateResult(userId: Int): BackupResult {
+    suspend fun readLastCreateResult(userId: String): BackupResult {
         return withContext(appDispatchers.io) {
             BackupWorkResultStore.read(
                 context = context,
@@ -191,7 +191,7 @@ class BackupWorkManager @Inject constructor(
         }
     }
 
-    suspend fun readLastRestoreResult(userId: Int): BackupResult {
+    suspend fun readLastRestoreResult(userId: String): BackupResult {
         return withContext(appDispatchers.io) {
             BackupWorkResultStore.read(
                 context = context,

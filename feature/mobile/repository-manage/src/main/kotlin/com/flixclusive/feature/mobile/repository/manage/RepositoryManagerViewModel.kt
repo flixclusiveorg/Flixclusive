@@ -40,7 +40,7 @@ internal class RepositoryManagerViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
 ) : ViewModel() {
     companion object {
-        fun Repository.toInstalledRepository(userId: Int): InstalledRepository {
+        fun Repository.toInstalledRepository(userId: String): InstalledRepository {
             return InstalledRepository(
                 name = name,
                 owner = owner,

@@ -249,7 +249,7 @@ private fun ClickedProfileScreenBasePreview(avatar: Int = 1) {
                 AnimatedVisibility(true) {
                     ProvideAnimatedVisibilityScope {
                         ClickedProfileScreen(
-                            user = remember { User(id = 1, name = "User", image = avatar) },
+                            user = remember { User(id = "preview-user", name = "User", image = avatar) },
                             isLoading = remember { mutableStateOf(false) }.value,
                             onConfirm = {},
                             onBack = {}

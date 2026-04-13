@@ -524,10 +524,10 @@ private fun UserProfilesScreenBasePreview() {
         Surface(modifier = Modifier.fillMaxSize()) {
             UserProfilesScreenContent(
                 profiles = listOf(
-                    User(id = 1, name = "User 1", image = 1),
-                    User(id = 2, name = "User 2", image = 2),
-                    User(id = 3, name = "User 3", image = 3),
-                    User(id = 4, name = "User 4", image = 4),
+                    User(id = "preview-user-1", name = "User 1", image = 1),
+                    User(id = "preview-user-2", name = "User 2", image = 2),
+                    User(id = "preview-user-3", name = "User 3", image = 3),
+                    User(id = "preview-user-4", name = "User 4", image = 4),
                 ),
                 uiState = uiState,
                 isFromSplashScreen = false,
@@ -540,7 +540,7 @@ private fun UserProfilesScreenBasePreview() {
 
                     override fun openUserAvatarSelectScreen(selected: Int) {}
 
-                    override fun openEditUserScreen(userId: Int) {}
+                    override fun openEditUserScreen(userId: String) {}
 
                     override fun openUserPinScreen(action: PinAction) {}
 

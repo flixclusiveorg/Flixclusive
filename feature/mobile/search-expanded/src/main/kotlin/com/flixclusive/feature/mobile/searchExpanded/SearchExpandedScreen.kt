@@ -243,7 +243,7 @@ private fun SearchExpandedScreenBasePreview() {
             SearchHistory(
                 id = it,
                 query = "Search query $it",
-                ownerId = 0,
+                ownerId = "preview-user",
             )
         }
     }

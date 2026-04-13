@@ -24,11 +24,11 @@ internal class SearchHistoryRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAllItemsInFlow(ownerId: Int): Flow<List<SearchHistory>> {
+    override fun getAllItemsInFlow(ownerId: String): Flow<List<SearchHistory>> {
         return searchHistoryDao.getAllAsFlow(ownerId)
     }
 
-    override suspend fun clearAll(ownerId: Int) {
+    override suspend fun clearAll(ownerId: String) {
         return withContext(appDispatchers.io) {
                 searchHistoryDao.deleteAll(ownerId)
         }

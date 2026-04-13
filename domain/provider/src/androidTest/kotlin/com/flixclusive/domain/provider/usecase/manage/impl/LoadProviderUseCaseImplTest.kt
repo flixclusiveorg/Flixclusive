@@ -43,7 +43,7 @@ class LoadProviderUseCaseImplTest {
     private lateinit var testInstalledProvider: InstalledProvider
     private val testDispatcher = StandardTestDispatcher()
 
-    private val testUserId = 1
+    private val testUserId = DatabaseTestDefaults.TEST_USER_ID
     private val testProviderMetadata = ProviderTestDefaults.getProviderMetadata(
         buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/BasicDummyProvider.flx",
     )

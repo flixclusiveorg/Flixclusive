@@ -283,7 +283,7 @@ private fun HomeScreenBasePreview() {
                             MovieProgressWithMetadata(
                                 watchData = MovieProgress(
                                     id = 0,
-                                    ownerId = 1,
+                                    ownerId = "preview-user",
                                     filmId = "continue_1",
                                     progress = 3600000L, // 1 hour in milliseconds
                                     status = WatchStatus.WATCHING,
@@ -298,7 +298,7 @@ private fun HomeScreenBasePreview() {
                             EpisodeProgressWithMetadata(
                                 watchData = EpisodeProgress(
                                     id = 1,
-                                    ownerId = 1,
+                                    ownerId = "preview-user",
                                     filmId = "continue_2",
                                     seasonNumber = 1,
                                     episodeNumber = 3,

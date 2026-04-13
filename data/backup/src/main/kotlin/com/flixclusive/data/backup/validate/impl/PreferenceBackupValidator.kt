@@ -29,7 +29,7 @@ internal class PreferenceBackupValidator @Inject constructor(
         }
     }
 
-    private suspend fun Context.validateCreate(userId: Int, backup: List<BackupPreference>): Set<String> {
+    private suspend fun Context.validateCreate(userId: String, backup: List<BackupPreference>): Set<String> {
         val expected = getLocalPreferences(userId)
         val actualByKey = backup.associateBy { it.key }
 
@@ -42,7 +42,7 @@ internal class PreferenceBackupValidator @Inject constructor(
         return missing
     }
 
-    private suspend fun Context.validateRestore(userId: Int, backup: List<BackupPreference>): Set<String> {
+    private suspend fun Context.validateRestore(userId: String, backup: List<BackupPreference>): Set<String> {
         val expectedByKey = backup.associateBy { it.key }
         if (expectedByKey.isEmpty()) return emptySet()
 

@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.first
 import java.io.File
 
 object BackupPreferenceUtil {
-    private fun Context.getUserPreferencesFile(userId: Int): File {
+    private fun Context.getUserPreferencesFile(userId: String): File {
         return preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
     }
 
@@ -24,7 +24,7 @@ object BackupPreferenceUtil {
         return tempFile
     }
 
-    private suspend fun Context.getUserPreferencesFromJson(userId: Int): Map<String, String> {
+    private suspend fun Context.getUserPreferencesFromJson(userId: String): Map<String, String> {
         val actualFile = getUserPreferencesFile(userId)
         val tempFile = try {
             createTempFileForPreferences(actualFile)
@@ -66,7 +66,7 @@ object BackupPreferenceUtil {
         return mapOf(SYSTEM_PREFS_FILENAME to jsonString)
     }
 
-    suspend fun Context.getLocalPreferences(userId: Int): Map<String, String> {
+    suspend fun Context.getLocalPreferences(userId: String): Map<String, String> {
         val userJson = getUserPreferencesFromJson(userId)
         val systemJson = getSystemPreferencesFromJson()
         return userJson + systemJson

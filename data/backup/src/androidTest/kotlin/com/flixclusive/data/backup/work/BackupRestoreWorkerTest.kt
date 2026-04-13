@@ -83,7 +83,8 @@ class BackupRestoreWorkerTest {
                 workManager.pruneWork().result.get()
             }
 
-            val userId = database.userDao().insert(DatabaseTestDefaults.getUser(id = 0)).toInt()
+            val userId = DatabaseTestDefaults.TEST_USER_ID
+            database.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
             userSessionDataStore.saveCurrentUserId(userId)
 
             val listName = "Test List"

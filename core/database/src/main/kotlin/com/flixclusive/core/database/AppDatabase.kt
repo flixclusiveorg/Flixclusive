@@ -35,6 +35,7 @@ import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
 import com.flixclusive.core.database.migration.Schema8to9
 import com.flixclusive.core.database.migration.Schema9to10
+import com.flixclusive.core.database.migration.Schema10to11
 import java.io.File
 
 internal const val APP_DATABASE = "app_database"
@@ -54,7 +55,7 @@ internal const val APP_DATABASE = "app_database"
         InstalledProvider::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 @TypeConverters(
@@ -102,6 +103,7 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema7to8,
                         Schema8to9,
                         Schema9to10(context),
+                        Schema10to11(context),
                     ).build()
                     .also { INSTANCE = it }
             }

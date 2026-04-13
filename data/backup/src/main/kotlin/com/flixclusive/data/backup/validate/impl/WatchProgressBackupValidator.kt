@@ -66,7 +66,7 @@ internal class WatchProgressBackupValidator @Inject constructor(
             watchData.updatedAt.time == backup.updatedAt
     }
 
-    private suspend fun validateCreate(ownerId: Int, backup: List<BackupWatchProgress>): Set<String> {
+    private suspend fun validateCreate(ownerId: String, backup: List<BackupWatchProgress>): Set<String> {
         val expectedMovies = movieProgressDao.getAll(ownerId)
         val expectedEpisodes = episodeProgressDao.getAll(ownerId)
 
@@ -97,7 +97,7 @@ internal class WatchProgressBackupValidator @Inject constructor(
         return missing
     }
 
-    private suspend fun validateRestore(ownerId: Int, backup: List<BackupWatchProgress>): Set<String> {
+    private suspend fun validateRestore(ownerId: String, backup: List<BackupWatchProgress>): Set<String> {
         val expectedMovies = backup.filterIsInstance<BackupWatchMovieProgress>()
         val expectedEpisodes = backup.filterIsInstance<BackupWatchEpisodeProgress>()
 

@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import com.flixclusive.core.common.file.FileConstants
+import com.flixclusive.core.common.file.UniFileUtils
 import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.DataPreferences
@@ -316,14 +317,10 @@ internal fun backupTweakGroup(
             TweakUI.ClickableTweak(
                 title = stringResource(LocaleR.string.backup_location_title),
                 description = {
-                    if (storageDirectoryUri == null) {
-                        resources.getString(LocaleR.string.backup_location_desc)
-                    } else {
-                        resources.getString(
-                            LocaleR.string.backup_location_desc,
-                            storageDirectoryLabel,
-                        )
-                    }
+                    resources.getString(
+                        LocaleR.string.backup_location_desc,
+                        UniFileUtils.getFilePath(context, storageDirectoryUri),
+                    )
                 },
                 enabledProvider = { !isBackupOperationRunning },
                 onClick = { directoryPicker.launch(null) },

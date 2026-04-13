@@ -259,7 +259,7 @@ private fun ContinueWatchingRowBasePreview() {
                 filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
             ).toDBFilm()
 
-            val ownerId = index
+            val ownerId = "preview-user-$index"
             val duration = Random.nextLong(2, 3) * 1000 * 60 * 60
             val progress = (duration.toDouble() * Random.nextDouble(0.3, 0.9)).roundToLong()
             val watchStatus = WatchStatus.WATCHING

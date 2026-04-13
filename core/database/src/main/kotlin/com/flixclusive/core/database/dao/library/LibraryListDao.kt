@@ -17,16 +17,16 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LibraryListDao {
     @Query("SELECT * FROM library_lists WHERE ownerId = :userId")
-    fun getAllAsFlow(userId: Int): Flow<List<LibraryList>>
+    fun getAllAsFlow(userId: String): Flow<List<LibraryList>>
 
     @Query("SELECT * FROM library_lists WHERE ownerId = :userId")
-    suspend fun getAll(userId: Int): List<LibraryListWithItems>
+    suspend fun getAll(userId: String): List<LibraryListWithItems>
 
     @Query("SELECT * FROM library_lists WHERE id = :id")
     fun getAsFlow(id: Int): Flow<LibraryList?>
 
     @Query("SELECT * FROM library_lists WHERE ownerId = :ownerId AND listType = :listType")
-    fun getByTypeAsFlow(ownerId: Int, listType: String): Flow<List<LibraryList>>
+    fun getByTypeAsFlow(ownerId: String, listType: String): Flow<List<LibraryList>>
 
     @Transaction
     @Query("""
@@ -36,16 +36,16 @@ interface LibraryListDao {
         WHERE listItem.filmId = :filmId AND list.ownerId = :ownerId
         ORDER BY list.createdAt DESC
     """)
-    fun getListsContainingFilmAsFlow(filmId: String, ownerId: Int): Flow<List<LibraryList>>
+    fun getListsContainingFilmAsFlow(filmId: String, ownerId: String): Flow<List<LibraryList>>
 
     @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")
-    suspend fun getWatchedList(ownerId: Int): LibraryList
+    suspend fun getWatchedList(ownerId: String): LibraryList
 
     @RawQuery(observedEntities = [LibraryList::class, LibraryListItemWithMetadata::class])
     fun getListsRaw(query: RoomRawQuery): Flow<List<LibraryListWithItems>>
 
     fun getLists(
-        userId: Int,
+        userId: String,
         columnSort: String,
         ascending: Boolean,
     ): Flow<List<LibraryListWithItems>> {
@@ -59,7 +59,7 @@ interface LibraryListDao {
             RoomRawQuery(
                 sql = query,
                 onBindStatement = { statement ->
-                    statement.bindInt(1, userId)
+                    statement.bindText(1, userId)
                 }
             )
         )
@@ -94,8 +94,8 @@ interface LibraryListDao {
     suspend fun deleteInternal(listId: Int)
 
     @Query("SELECT * FROM library_lists WHERE ownerId = :ownerId AND listType = :listType")
-    suspend fun getByType(ownerId: Int, listType: LibraryListType): List<LibraryList>
+    suspend fun getByType(ownerId: String, listType: LibraryListType): List<LibraryList>
 
     @Query("DELETE FROM library_lists WHERE ownerId = :ownerId AND listType != 'WATCHED'")
-    suspend fun deleteAllExceptWatched(ownerId: Int)
+    suspend fun deleteAllExceptWatched(ownerId: String)
 }

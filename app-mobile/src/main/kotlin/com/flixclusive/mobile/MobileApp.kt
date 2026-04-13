@@ -86,6 +86,7 @@ import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchA
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
+import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
@@ -460,6 +461,7 @@ private fun shouldHideBottomBar(route: Route): Boolean {
             UserAvatarSelectScreenDestination,
             UserEditScreenDestination,
             UserProfilesScreenDestination,
+            OnboardingScreenDestination,
         )
 
     val noBottomBarNestedScreens =

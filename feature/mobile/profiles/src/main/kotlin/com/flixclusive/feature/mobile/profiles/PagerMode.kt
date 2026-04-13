@@ -297,7 +297,7 @@ private fun UsernameTag(
 private fun PagerModeBasePreview() {
     val profiles = List(10) {
         User(
-            id = it,
+            id = "preview-user-$it",
             image = it % AVATARS_IMAGE_COUNT,
             name = "User $it",
         )

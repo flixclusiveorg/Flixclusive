@@ -8,9 +8,9 @@ import java.util.Date
 
 @Entity
 data class User(
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     @ColumnInfo("userId")
-    val id: Int,
+    val id: String,
     val name: String,
     val image: Int,
     val pin: String? = null,
@@ -21,6 +21,6 @@ data class User(
     companion object {
         const val MAX_USER_PIN_LENGTH = 4
 
-        val Empty = User(0, "", 0)
+        val Empty = User("", "", 0)
     }
 }

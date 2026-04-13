@@ -485,8 +485,8 @@
 
     <!--  Backup & restore  -->
     <string name="backup">Backup</string>
-    <string name="backup_location_title">Backup location</string>
-    <string name="backup_location_desc">Auto-backups are saved to %1$s.</string>
+    <string name="backup_location_title">Storage location</string>
+    <string name="backup_location_desc">%1$s\n\nThis is a system-wide folder. All users on this app will use this same folder for storage.</string>
 
     <string name="backup_auto_frequency_title">Auto-backup frequency</string>
     <string name="backup_auto_frequency_off">Off</string>
@@ -520,7 +520,7 @@
     <string name="backup_restore_started">Restoring backup…</string>
     <string name="backup_restore_success">Backup restored</string>
     <string name="backup_restore_failed_format">Restore failed: %1$s</string>
-    
+
     <string name="onboarding_storage_not_selected">No folder selected</string>
 
     <!--  Share app message  -->

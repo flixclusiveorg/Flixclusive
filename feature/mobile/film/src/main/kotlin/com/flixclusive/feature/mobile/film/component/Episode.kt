@@ -454,7 +454,7 @@ private fun EpisodeCardBasePreview() {
                                 episode = episode,
                                 watchProgress = EpisodeProgress(
                                     filmId = series.identifier,
-                                    ownerId = -1,
+                                    ownerId = "preview-user",
                                     progress = 50000L,
                                     duration = 90000L,
                                     seasonNumber = episode.season,

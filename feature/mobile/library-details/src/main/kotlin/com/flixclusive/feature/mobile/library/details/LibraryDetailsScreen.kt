@@ -329,7 +329,7 @@ private fun LibraryDetailsScreenBasePreview() {
         remember {
             LibraryList(
                 id = 1,
-                ownerId = 1,
+                ownerId = "preview-user",
                 name = "Best horror movies",
                 description = "A curation of the best horror movies out there. Feel free to browse my list :D",
                 createdAt = Date(),

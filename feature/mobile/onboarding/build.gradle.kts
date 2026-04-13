@@ -11,12 +11,15 @@ android {
 
 dependencies {
     implementation(projects.coreCommon)
+    implementation(projects.coreDatabase)
     implementation(projects.coreDatastore)
     implementation(projects.coreDrawables)
     implementation(projects.coreStrings)
     implementation(projects.coreNavigation)
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
+
+    implementation(projects.dataDatabase)
 
     implementation(libs.compose.animation)
     implementation(libs.compose.foundation)

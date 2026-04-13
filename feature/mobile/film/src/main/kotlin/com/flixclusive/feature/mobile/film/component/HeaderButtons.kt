@@ -405,7 +405,7 @@ private fun HeaderButtonsPreview() {
                     watchProgress = remember {
                         MovieProgress(
                             filmId = metadata.identifier,
-                            ownerId = 0,
+                            ownerId = "preview-user",
                             progress = 500L,
                             status = WatchStatus.WATCHING,
                             duration = 6000L,
@@ -423,7 +423,7 @@ private fun HeaderButtonsPreview() {
                     watchProgress = remember {
                         MovieProgress(
                             filmId = metadata.identifier,
-                            ownerId = 0,
+                            ownerId = "preview-user",
                             progress = 500L,
                             status = WatchStatus.WATCHING,
                             duration = 6000L,

@@ -25,8 +25,8 @@ internal class GetHomeCatalogsUseCaseImpl @Inject constructor(
     private val userSessionManager: UserSessionManager,
     private val providerRepository: ProviderRepository,
 ) : GetHomeCatalogsUseCase {
-    private fun getCatalogsFlow(userId: Int)
-        = providerRepository.getEnabledProvidersAsFlow(userId)
+    private fun getCatalogsFlow(userId: String) =
+        providerRepository.getEnabledProvidersAsFlow(userId)
             .mapLatest { providers ->
                 val apis = providers.mapNotNull {
                     providerRepository.getApi(
