@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EpisodeProgressDao {
+    @Transaction
     @Query(
         """
         SELECT * FROM series_watch_history

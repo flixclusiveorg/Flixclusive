@@ -129,6 +129,10 @@ internal class MobileAppViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val user = userSessionManager.currentUser.filterNotNull().first().name
+
+            // Ensure that the onboarding process has been completed before loading providers for the first time
+            dataStoreManager.getSystemPrefs().first { prefs -> !prefs.isFirstTimeUserLaunch }
+
             infoLog("Loading $user's providers for the first time...")
             initProviders()
             updateProviders()

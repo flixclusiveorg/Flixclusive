@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 11,
-    "identityHash": "50e1c2a747844ca7dde9cc269fd01deb",
+    "identityHash": "d3182f318796e0aa237efa67f7d963cd",
     "entities": [
       {
         "tableName": "films",
@@ -477,7 +477,7 @@
       },
       {
         "tableName": "User",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `name` TEXT NOT NULL, `image` INTEGER NOT NULL, `pin` TEXT, `pinHint` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`userId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `name` TEXT NOT NULL, `image` INTEGER NOT NULL, `pin` TEXT, `pinHint` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `legacyId` INTEGER NOT NULL, PRIMARY KEY(`userId`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -516,6 +516,12 @@
           {
             "fieldPath": "updatedAt",
             "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "legacyId",
+            "columnName": "legacyId",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -998,7 +1004,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '50e1c2a747844ca7dde9cc269fd01deb')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd3182f318796e0aa237efa67f7d963cd')"
     ]
   }
 }

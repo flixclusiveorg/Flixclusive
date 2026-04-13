@@ -57,7 +57,7 @@ internal class UserSessionManagerImpl @Inject constructor(
 
     override suspend fun signIn(user: User) {
         withContext(appDispatchers.io) {
-            userSessionDataStore.saveCurrentUserId(user.id)
+            userSessionDataStore.saveCurrentUserId(user.id, user.legacyId)
         }
     }
 

@@ -19,6 +19,7 @@ interface LibraryListDao {
     @Query("SELECT * FROM library_lists WHERE ownerId = :userId")
     fun getAllAsFlow(userId: String): Flow<List<LibraryList>>
 
+    @Transaction
     @Query("SELECT * FROM library_lists WHERE ownerId = :userId")
     suspend fun getAll(userId: String): List<LibraryListWithItems>
 

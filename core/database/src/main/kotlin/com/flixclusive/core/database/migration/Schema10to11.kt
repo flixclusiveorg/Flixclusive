@@ -21,7 +21,6 @@ internal class Schema10to11(private val context: Context) : Migration(startVersi
     private companion object {
         const val USER_PREFERENCE_FILE_PREFIX = "user-preferences-"
         const val USER_PREFERENCE_FILE_SUFFIX = ".preferences_pb"
-        val LEGACY_USER_SEGMENT_REGEX = Regex("""/user-(\\d+)(?=/|$)""")
     }
 
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -40,10 +39,7 @@ internal class Schema10to11(private val context: Context) : Migration(startVersi
             migrateInstalledProviders(db)
 
             val userIdMap = readUserIdMap(db)
-            migrateLegacyProviderUserFolders(userIdMap)
-            migrateLegacySettingsUserFolders(userIdMap)
             migrateLegacyUserPreferenceFiles(userIdMap)
-            migrateInstalledProviderFilePaths(db, userIdMap)
 
             db.execSQL("DROP TABLE IF EXISTS `user_id_map`")
 
@@ -91,45 +87,6 @@ internal class Schema10to11(private val context: Context) : Migration(startVersi
         return result
     }
 
-    private fun migrateLegacyProviderUserFolders(userIdMap: Map<Int, String>) {
-        val externalRoot = context.getExternalFilesDir(null) ?: return
-        migrateLegacyUserFolders(
-            root = File(externalRoot, "providers"),
-            userIdMap = userIdMap,
-        )
-    }
-
-    private fun migrateLegacySettingsUserFolders(userIdMap: Map<Int, String>) {
-        val externalRoot = context.getExternalFilesDir(null) ?: return
-        migrateLegacyUserFolders(
-            root = File(externalRoot, "settings"),
-            userIdMap = userIdMap,
-        )
-    }
-
-    private fun migrateLegacyUserFolders(
-        root: File,
-        userIdMap: Map<Int, String>,
-    ) {
-        if (!root.exists() || !root.isDirectory) return
-
-        userIdMap.forEach { (legacyUserId, uuidUserId) ->
-            val legacyDir = File(root, "user-$legacyUserId")
-            if (!legacyDir.exists() || !legacyDir.isDirectory) return@forEach
-
-            val newDir = File(root, "user-$uuidUserId")
-            if (newDir.exists()) return@forEach
-
-            newDir.parentFile?.mkdirs()
-
-            if (legacyDir.renameTo(newDir)) {
-                return@forEach
-            }
-
-            moveDirectory(source = legacyDir, destination = newDir)
-        }
-    }
-
     private fun migrateLegacyUserPreferenceFiles(userIdMap: Map<Int, String>) {
         val datastoreUsersDir = File(context.filesDir, "datastore/users")
         if (!datastoreUsersDir.exists() || !datastoreUsersDir.isDirectory) return
@@ -155,57 +112,6 @@ internal class Schema10to11(private val context: Context) : Migration(startVersi
         }
     }
 
-    private fun migrateInstalledProviderFilePaths(
-        db: SupportSQLiteDatabase,
-        userIdMap: Map<Int, String>,
-    ) {
-        db.query("SELECT `id`, `ownerId`, `filePath` FROM `installed_providers`").use { cursor ->
-            while (cursor.moveToNext()) {
-                val id = cursor.getString(0)
-                val ownerId = cursor.getString(1)
-                val filePath = cursor.getString(2)
-
-                val migratedFilePath = LEGACY_USER_SEGMENT_REGEX.replace(filePath) { match ->
-                    val legacyUserId = match.groupValues[1].toIntOrNull()
-                        ?: return@replace match.value
-
-                    val mappedUserId = userIdMap[legacyUserId]
-                        ?: return@replace match.value
-
-                    "/user-$mappedUserId"
-                }
-
-                if (migratedFilePath == filePath) continue
-
-                db.execSQL(
-                    "UPDATE `installed_providers` SET `filePath` = ? WHERE `id` = ? AND `ownerId` = ?",
-                    arrayOf<Any>(migratedFilePath, id, ownerId),
-                )
-            }
-        }
-    }
-
-    private fun moveDirectory(source: File, destination: File) {
-        if (!destination.exists()) {
-            destination.mkdirs()
-        }
-
-        source.listFiles()?.forEach { file ->
-            val newFile = File(destination, file.name)
-
-            if (file.isDirectory) {
-                moveDirectory(file, newFile)
-            } else {
-                if (!file.renameTo(newFile)) {
-                    file.copyTo(newFile, overwrite = true)
-                    file.delete()
-                }
-            }
-        }
-
-        source.delete()
-    }
-
     private fun migrateUserTable(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -217,6 +123,7 @@ internal class Schema10to11(private val context: Context) : Migration(startVersi
                 `pinHint` TEXT,
                 `createdAt` INTEGER NOT NULL,
                 `updatedAt` INTEGER NOT NULL,
+                `legacyId` INTEGER NOT NULL,
                 PRIMARY KEY(`userId`)
             )
             """.trimIndent(),
@@ -224,8 +131,8 @@ internal class Schema10to11(private val context: Context) : Migration(startVersi
 
         db.execSQL(
             """
-            INSERT INTO `User_new` (`userId`, `name`, `image`, `pin`, `pinHint`, `createdAt`, `updatedAt`)
-            SELECT map.`newUserId`, u.`name`, u.`image`, u.`pin`, u.`pinHint`, u.`createdAt`, u.`updatedAt`
+            INSERT INTO `User_new` (`userId`, `name`, `image`, `pin`, `pinHint`, `createdAt`, `updatedAt`, `legacyId`)
+            SELECT map.`newUserId`, u.`name`, u.`image`, u.`pin`, u.`pinHint`, u.`createdAt`, u.`updatedAt`, u.`userId`
             FROM `User` u
             INNER JOIN `user_id_map` map ON map.`oldUserId` = u.`userId`
             """.trimIndent(),
