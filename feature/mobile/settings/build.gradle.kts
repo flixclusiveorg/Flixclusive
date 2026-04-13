@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.corePresentationMobile)
     implementation(projects.coreNavigation)
     implementation(projects.coreStrings)
+    implementation(projects.dataBackup)
     implementation(projects.dataDatabase)
     implementation(projects.dataProvider)
     implementation(projects.domainBackup)
