@@ -88,7 +88,7 @@ internal class MigrationV220(
     ) {
         val metadataList = oldProviderPrefs.providers.mapNotNull { preference ->
             val filePath = preference.filePath.replaceLegacyUserId()
-            val metadata = findProviderFromUpdaterJson(preference.id, filePath)
+            val metadata = findProviderFromUpdaterJson(preference, filePath)
             if (metadata == null) {
                 warnLog("Warning: Could not find metadata for provider with id ${preference.id} and file path $filePath. Skipping this provider...")
             }
@@ -97,7 +97,13 @@ internal class MigrationV220(
         }
 
         val dbProviders = metadataList.mapIndexedNotNull { index, metadata ->
-            val correspondingPreference = oldProviderPrefs.providers.firstOrNull { it.id == metadata.id }
+            val correspondingPreference = oldProviderPrefs.providers.firstOrNull {
+                if (it.id.isEmpty()) {
+                    it.name == metadata.name
+                } else {
+                    it.id == metadata.id
+                }
+            }
             if (correspondingPreference == null) {
                 warnLog("Warning: Could not find corresponding preference for provider with id ${metadata.id}. Skipping this provider...")
                 return@mapIndexedNotNull null
@@ -117,7 +123,7 @@ internal class MigrationV220(
         val updatedFilePath = preference.filePath.replaceLegacyUserId()
 
         return InstalledProvider(
-            id = preference.id,
+            id = metadata.id,
             repositoryUrl = metadata.repositoryUrl,
             isEnabled = !preference.isDisabled,
             sortOrder = index.toDouble(),
@@ -167,7 +173,7 @@ internal class MigrationV220(
     }
 
     private fun findProviderFromUpdaterJson(
-        providerId: String,
+        provider: OldProviderFromPreferences,
         filePath: String
     ): ProviderMetadata? {
         val providerFile = File(filePath)
@@ -176,7 +182,13 @@ internal class MigrationV220(
         if (!updaterJsonFile.exists()) return null
 
         val updaterJson = fromJson<List<ProviderMetadata>>(updaterJsonFile.reader())
-        return updaterJson.firstOrNull { it.id == providerId }
+        return updaterJson.firstOrNull {
+            if (provider.id.isEmpty()) {
+                provider.name == it.name
+            } else {
+                provider.id == it.id
+            }
+        }
     }
 
     private fun String.replaceLegacyUserId(): String {
