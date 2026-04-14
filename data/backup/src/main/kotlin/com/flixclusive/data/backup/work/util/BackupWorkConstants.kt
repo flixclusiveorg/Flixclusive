@@ -27,5 +27,5 @@ internal object BackupWorkConstants {
     const val LAST_CREATE_RESULT_FILE_NAME = "result-create.json"
     const val LAST_RESTORE_RESULT_FILE_NAME = "restore-result.json"
 
-    const val BACKUP_FILE_PREFIX = "auto_flixclusive_backup-"
+    const val BACKUP_FILE_PREFIX = "auto_backup-"
 }

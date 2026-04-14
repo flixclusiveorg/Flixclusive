@@ -1,6 +1,7 @@
 package com.flixclusive.data.backup.di
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.backup.repository.BackupRepository
@@ -15,4 +16,5 @@ internal interface BackupWorkerEntryPoint {
     fun appDispatchers(): AppDispatchers
     fun userSessionDataStore(): UserSessionDataStore
     fun dataStoreManager(): DataStoreManager
+    fun userDao(): UserDao
 }

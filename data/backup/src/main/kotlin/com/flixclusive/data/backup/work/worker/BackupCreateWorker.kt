@@ -132,7 +132,9 @@ internal class BackupCreateWorker(
 
                 userBackupDirForTrim = userBackupDir
 
+                val userName = entryPoint.userDao().get(userId)?.name ?: ""
                 val outputFile = selectBackupOutputFile(
+                    userName = userName,
                     userBackupDir = userBackupDir,
                     maxBackups = maxBackups,
                 )
@@ -176,7 +178,11 @@ internal class BackupCreateWorker(
         }
     }
 
-    private fun selectBackupOutputFile(userBackupDir: UniFile, maxBackups: Int): UniFile {
+    private fun selectBackupOutputFile(
+        userName: String,
+        userBackupDir: UniFile,
+        maxBackups: Int,
+    ): UniFile {
         val backups = userBackupDir.listFiles()
             ?.asSequence()
             ?.filter { it.isFile }
@@ -189,7 +195,7 @@ internal class BackupCreateWorker(
         val target = if (backups.size >= maxBackups) backups.firstOrNull() else null
 
         return target ?: userBackupDir.createFile(
-            "${BackupWorkConstants.BACKUP_FILE_PREFIX}${System.currentTimeMillis()}.${FileConstants.BACKUP_FILE_EXTENSION}",
+            "${BackupWorkConstants.BACKUP_FILE_PREFIX}${userName}_${System.currentTimeMillis()}.${FileConstants.BACKUP_FILE_EXTENSION}",
         ) ?: error("Unable to create backup file")
     }
 
