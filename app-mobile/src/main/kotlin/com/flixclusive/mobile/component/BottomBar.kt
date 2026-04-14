@@ -52,7 +52,7 @@ internal val MaxBottomBarHeight = 60.dp
 
 @Composable
 internal fun BottomBar(
-    currentSelectedScreen: NavGraphSpec,
+    currentSelectedGraph: NavGraphSpec,
     onNavigate: (DirectionNavGraphSpec) -> Unit,
 ) {
     Box(
@@ -87,7 +87,7 @@ internal fun BottomBar(
             mobileNavigationItems.forEach {
                 CustomNavItem(
                     item = it,
-                    isSelected = currentSelectedScreen == it.screen,
+                    isSelected = currentSelectedGraph == it.screen,
                     onClick = {
                         onNavigate(it.screen)
                     },

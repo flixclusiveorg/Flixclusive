@@ -1,0 +1,15 @@
+package com.flixclusive.domain.backup.usecase
+
+import android.net.Uri
+import com.flixclusive.core.datastore.model.user.BackupOptions
+import com.flixclusive.domain.backup.common.BackupState
+import kotlinx.coroutines.flow.Flow
+
+interface CreateBackupUseCase {
+    operator fun invoke(): Flow<BackupState>
+
+    operator fun invoke(
+        uri: Uri,
+        options: BackupOptions = BackupOptions(),
+    ): Flow<BackupState>
+}

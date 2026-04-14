@@ -4,10 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flixclusive.core.database.entity.ListItem
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.user.User
-import java.io.Serializable
 import java.util.Date
 
 /**
@@ -42,13 +40,12 @@ data class EpisodeProgress(
     @PrimaryKey(autoGenerate = true)
     override val id: Long = 0,
     override val filmId: String,
-    override val ownerId: Int,
+    override val ownerId: String,
     override val progress: Long,
-    override val duration: Long = 0,
     override val status: WatchStatus,
-    override val watchedAt: Date = Date(),
+    override val duration: Long = 0,
+    override val createdAt: Date = Date(),
+    override val updatedAt: Date = Date(),
     val seasonNumber: Int,
     val episodeNumber: Int,
-) : Serializable,
-    ListItem,
-    WatchProgress
+) : WatchProgress

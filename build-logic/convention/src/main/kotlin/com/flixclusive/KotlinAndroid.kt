@@ -30,6 +30,12 @@ internal fun Project.configureKotlinAndroid(
                     targetCompatibility = JavaVersion.VERSION_17
                     isCoreLibraryDesugaringEnabled = true
                 }
+
+                buildTypes {
+                    create("preview") {
+                        matchingFallbacks.addAll(listOf("release", "debug"))
+                    }
+                }
             }
             is ApplicationExtension -> {
                 defaultConfig {
@@ -42,6 +48,12 @@ internal fun Project.configureKotlinAndroid(
                     targetCompatibility = JavaVersion.VERSION_17
                     isCoreLibraryDesugaringEnabled = true
                 }
+
+                buildTypes {
+                    create("preview") {
+                        matchingFallbacks.addAll(listOf("release", "debug"))
+                    }
+                }
             }
         }
     }
@@ -50,6 +62,14 @@ internal fun Project.configureKotlinAndroid(
 
     dependencies {
         add("coreLibraryDesugaring", libs.findLibrary("desugarJdkLibs").get())
+    }
+
+    afterEvaluate {
+        if (!project.file("src/androidTest").exists()) {
+            tasks.matching { it.name.contains("AndroidTest") }.configureEach {
+                enabled = false
+            }
+        }
     }
 }
 

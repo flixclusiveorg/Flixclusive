@@ -6,24 +6,26 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.flixclusive.core.database.converters.DateConverter
-import com.flixclusive.core.database.converters.MapConverter
-import com.flixclusive.core.database.dao.DBFilmDao
-import com.flixclusive.core.database.dao.EpisodeProgressDao
-import com.flixclusive.core.database.dao.LibraryListDao
-import com.flixclusive.core.database.dao.LibraryListItemDao
-import com.flixclusive.core.database.dao.MovieProgressDao
+import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
+import com.flixclusive.core.database.dao.library.LibraryListDao
+import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
-import com.flixclusive.core.database.dao.WatchlistDao
+import com.flixclusive.core.database.dao.provider.InstalledProviderDao
+import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
+import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.film.DBFilmExternalId
+import com.flixclusive.core.database.entity.film.DBFilmFts
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.provider.InstalledProvider
+import com.flixclusive.core.database.entity.provider.InstalledRepository
 import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
-import com.flixclusive.core.database.entity.watchlist.Watchlist
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -32,6 +34,8 @@ import com.flixclusive.core.database.migration.Schema5to6
 import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
 import com.flixclusive.core.database.migration.Schema8to9
+import com.flixclusive.core.database.migration.Schema9to10
+import com.flixclusive.core.database.migration.Schema10to11
 import java.io.File
 
 internal const val APP_DATABASE = "app_database"
@@ -39,26 +43,26 @@ internal const val APP_DATABASE = "app_database"
 @Database(
     entities = [
         DBFilm::class,
+        DBFilmExternalId::class,
+        DBFilmFts::class,
         LibraryList::class,
         LibraryListItem::class,
         SearchHistory::class,
         User::class,
         MovieProgress::class,
         EpisodeProgress::class,
-        Watchlist::class,
+        InstalledRepository::class,
+        InstalledProvider::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 9,
+    version = 11,
     exportSchema = true,
 )
 @TypeConverters(
     DateConverter::class,
-    MapConverter::class,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
-
-    abstract fun watchlistDao(): WatchlistDao
 
     abstract fun searchHistoryDao(): SearchHistoryDao
 
@@ -66,11 +70,13 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun libraryListItemDao(): LibraryListItemDao
 
-    abstract fun filmsDao(): DBFilmDao
-
     abstract fun episodeProgressDao(): EpisodeProgressDao
 
     abstract fun movieProgressDao(): MovieProgressDao
+
+    abstract fun repositoryDao(): InstalledRepositoryDao
+
+    abstract fun installedProviderDao(): InstalledProviderDao
 
     companion object {
         @Volatile
@@ -96,6 +102,8 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema6to7,
                         Schema7to8,
                         Schema8to9,
+                        Schema9to10(context),
+                        Schema10to11(context),
                     ).build()
                     .also { INSTANCE = it }
             }

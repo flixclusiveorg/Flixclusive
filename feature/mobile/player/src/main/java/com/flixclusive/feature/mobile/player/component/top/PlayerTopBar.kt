@@ -41,7 +41,7 @@ internal fun PlayerTopBar(
             .fillMaxWidth()
     ) {
         PlainTooltipBox(
-            description = stringResource(LocaleR.string.navigate_up)
+            description = stringResource(LocaleR.string.back)
         ) {
             IconButton(
                 onClick = onBack,
@@ -51,7 +51,7 @@ internal fun PlayerTopBar(
             ) {
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.left_arrow),
-                    contentDescription = stringResource(LocaleR.string.navigate_up)
+                    contentDescription = stringResource(LocaleR.string.back)
                 )
             }
         }

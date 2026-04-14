@@ -17,6 +17,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +29,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.player.model.track.PlayerServer
+import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.PlayerTrack
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.ProviderMetadata
@@ -40,6 +44,7 @@ internal fun <Type> ListContentHolder(
     selectedIndex: Int,
     onItemClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    failedItems: () -> Set<String> = { emptySet() },
     onItemLongClick: (Int) -> Unit = {},
     actions: @Composable RowScope.() -> Unit = { }
 ) {
@@ -57,7 +62,7 @@ internal fun <Type> ListContentHolder(
             modifier = Modifier.fadingEdge(
                 scrollableState = listState,
                 orientation = Orientation.Vertical,
-                startEdge = 200.dp,
+                startEdge = 100.dp,
                 endEdge = 100.dp,
             ),
             state = listState,
@@ -65,8 +70,18 @@ internal fun <Type> ListContentHolder(
         ) {
             items(
                 count = items.size,
+                key = {
+                    when (val item = items.elementAt(it)) {
+                        is String -> item
+                        is ProviderMetadata -> item.id
+                        is PlayerServer -> item.url + item.label
+                        is PlayerSubtitle -> item.url + item.label
+                        else -> throw ClassFormatError("Invalid content type provided.")
+                    }
+                }
             ) { i ->
-                val name = when (val item = items.elementAt(i)) {
+                val item = items.elementAt(i)
+                val name = when (item) {
                     is String -> item
                     is ProviderMetadata -> item.name
                     is PlayerTrack -> item.label
@@ -76,8 +91,14 @@ internal fun <Type> ListContentHolder(
                 ListItem(
                     name = name,
                     isSelected = i == selectedIndex,
+                    isFailed = if (item is PlayerServer) {
+                        remember { derivedStateOf { item.url in failedItems() } }.value
+                    } else {
+                        false
+                    },
                     onClick = { onItemClick(i) },
-                    onLongClick = { onItemLongClick(i) }
+                    onLongClick = { onItemLongClick(i) },
+                    modifier = Modifier.animateItem()
                 )
             }
         }

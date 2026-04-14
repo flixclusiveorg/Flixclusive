@@ -6,13 +6,15 @@ import kotlinx.coroutines.flow.Flow
 interface UserRepository {
     fun observeUsers(): Flow<List<User>>
 
-    fun observeUser(id: Int): Flow<User?>
+    suspend fun getAll(): List<User>
+
+    fun observeUser(id: String): Flow<User?>
 
     suspend fun addUser(user: User): Long
 
     suspend fun updateUser(user: User)
 
-    suspend fun deleteUser(id: Int)
+    suspend fun deleteUser(id: String)
 
-    suspend fun getUser(id: Int): User?
+    suspend fun getUser(id: String): User?
 }

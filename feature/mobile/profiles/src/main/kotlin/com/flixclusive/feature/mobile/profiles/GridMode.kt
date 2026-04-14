@@ -311,7 +311,7 @@ private fun GridModeBasePreview() {
                             listState = rememberLazyGridState(),
                             profiles = List(1) {
                                 User(
-                                    id = it,
+                                    id = "preview-user-$it",
                                     image = it % AVATARS_IMAGE_COUNT,
                                     name = "User $it"
                                 )

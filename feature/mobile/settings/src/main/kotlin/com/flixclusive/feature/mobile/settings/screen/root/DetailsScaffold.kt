@@ -48,7 +48,7 @@ internal fun DetailsScaffold(
             1F to MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
         )
 
-    var searchQuery = remember { mutableStateOf("") }
+    val searchQuery = remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -103,7 +103,7 @@ private fun DetailsScaffoldBasePreview() {
             val list = List(50) {
                 TweakUI.ClickableTweak(
                     "A basic title for a clickable",
-                    descriptionProvider = { "Some description" },
+                    description = { "Some description" },
                     onClick = {},
                 )
             }
@@ -119,7 +119,7 @@ private fun DetailsScaffoldBasePreview() {
                         items(list) { item ->
                             ClickableComponent(
                                 title = item.title,
-                                descriptionProvider = item.descriptionProvider,
+                                descriptionProvider = item.description,
                                 onClick = item.onClick,
                             )
                         }

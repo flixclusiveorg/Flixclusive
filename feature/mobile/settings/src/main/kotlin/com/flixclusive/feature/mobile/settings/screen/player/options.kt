@@ -7,11 +7,12 @@ import android.text.format.Formatter
 import androidx.compose.runtime.Stable
 import com.flixclusive.core.datastore.model.user.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
 import com.flixclusive.core.datastore.model.user.player.PlayerQuality
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 import com.flixclusive.core.strings.R as LocaleR
 
-internal val playerBufferLengths by lazy {
-    listOf(
+internal fun getPlayerBufferLengths(): ImmutableMap<Long, String> {
+    return listOf(
         50L,
         60L,
         90L,

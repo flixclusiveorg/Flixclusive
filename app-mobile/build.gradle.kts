@@ -46,7 +46,7 @@ android {
             buildConfigField("int", "BUILD_TYPE", "1") // 1 for stable
         }
 
-        create("preview") {
+        getByName("preview") {
             applicationIdSuffix = ".preview"
 
             resValue("string", "app_name", "PRE-$appName")
@@ -111,6 +111,7 @@ dependencies {
     implementation(projects.feature.splashScreen)
     implementation(projects.feature.mobile.appUpdates)
     implementation(projects.feature.mobile.profiles)
+    implementation(projects.feature.mobile.onboarding)
     implementation(projects.feature.mobile.userAdd)
     implementation(projects.feature.mobile.userEdit)
 
@@ -132,6 +133,7 @@ dependencies {
     implementation(projects.corePresentationMobile)
 
     implementation(projects.dataDownloads)
+    implementation(projects.dataBackup)
     implementation(projects.dataDatabase)
     implementation(projects.dataProvider)
     implementation(projects.domainProvider)

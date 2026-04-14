@@ -73,7 +73,7 @@ internal fun FilmScreenTopBar(
             titleTextStyle = getTopBarHeadlinerTextStyle(),
             hideTitleSemantics = false,
             navigationIcon = {
-                PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
+                PlainTooltipBox(description = stringResource(LocaleR.string.back)) {
                     IconButton(
                         onClick = onNavigate,
                         modifier = Modifier
@@ -89,7 +89,7 @@ internal fun FilmScreenTopBar(
                     ) {
                         AdaptiveIcon(
                             painter = painterResource(UiCommonR.drawable.left_arrow),
-                            contentDescription = stringResource(LocaleR.string.navigate_up),
+                            contentDescription = stringResource(LocaleR.string.back),
                             dp = 16.dp,
                             increaseBy = 3.dp,
                         )

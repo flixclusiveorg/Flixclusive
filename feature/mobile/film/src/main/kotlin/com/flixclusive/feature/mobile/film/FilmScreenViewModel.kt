@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.film
 
-import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
@@ -11,6 +10,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
@@ -19,30 +19,26 @@ import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.LibraryListRepository
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.util.TMDBProviderUtils
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
-import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
-import com.flixclusive.domain.provider.usecase.get.GetEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
-import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchProgressLibraryList
-import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchlistLibraryList
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,8 +52,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flattenConcat
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -66,19 +60,16 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel(assistedFactory = FilmScreenViewModel.Factory::class)
 internal class FilmScreenViewModel @AssistedInject constructor(
-    @ApplicationContext context: Context,
     dataStoreManager: DataStoreManager,
     getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val appDispatchers: AppDispatchers,
-    private val getEpisode: GetEpisodeUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
     private val libraryListRepository: LibraryListRepository,
     private val providerRepository: ProviderRepository,
     private val toggleWatchProgressStatus: ToggleWatchProgressStatusUseCase,
-    private val toggleWatchlistStatus: ToggleWatchlistStatusUseCase,
     private val userSessionManager: UserSessionManager,
     private val watchProgressRepository: WatchProgressRepository,
-    private val watchlistRepository: WatchlistRepository,
     @Assisted private val navArgFilm: Film,
 ) : ViewModel() {
     @AssistedFactory
@@ -132,9 +123,11 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     ) { selectedSeason, tvShow, _ ->
         if (tvShow !is TvShow) return@combine null
 
-        getSeasonWithWatchProgress(tvShow, selectedSeason)
+        tvShow to selectedSeason
     }.filterNotNull()
-        .flattenConcat()
+        .flatMapLatest { (tvShow, selectedSeason) ->
+            getSeasonWithWatchProgress(tvShow, selectedSeason)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -151,11 +144,17 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                 ownerId = user.id,
                 id = navArgFilm.identifier,
                 type = navArgFilm.filmType,
-            )
-        }.map { it?.watchData }
+            ).mapLatest {
+                val progress = it?.watchData
+                when (progress?.isCompleted) {
+                    true if progress is EpisodeProgress -> getNextEpisodeProgress(progress)
+                    else -> progress
+                }
+            }
+        }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.WhileSubscribed(2_000),
             initialValue = null,
         )
 
@@ -172,39 +171,22 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     val libraryLists = userSessionManager.currentUser
         .filterNotNull()
         .flatMapLatest { user ->
-            combine(
-                libraryListRepository
-                    .getUserWithListsAndItems(user.id)
-                    .mapLatest { it.lists }
-                    .distinctUntilChanged(),
-                watchProgressRepository.getAllAsFlow(user.id),
-                watchlistRepository.getAllAsFlow(user.id),
-            ) { lists, watchProgressList, watchlist ->
-                val filmId = navArgFilm.identifier
+            libraryListRepository
+                .getListsAndItems(user.id, sort = LibrarySort.Modified())
+                .mapLatest { lists ->
+                    val filmId = navArgFilm.identifier
 
-                // Pre-process watch progress list
-                val preProcessedWatchProgress = watchProgressList.toWatchProgressLibraryList(
-                    context = context, ownerId = user.id
-                )
+                    lists.fastMap { listAndItems ->
+                        val containsFilm = listAndItems.items.fastAny { item ->
+                            item.filmId == filmId
+                        }
 
-                // Pre-process watchlist
-                val preProcessedWatchlist = watchlist.toWatchlistLibraryList(
-                    context = context, ownerId = user.id
-                )
-
-                val combinedLists = lists + preProcessedWatchProgress + preProcessedWatchlist
-
-                combinedLists.fastMap { list ->
-                    val containsFilm = list.items.fastAny { item ->
-                        item.filmId == filmId
+                        LibraryListAndState(
+                            listWithItems = listAndItems,
+                            containsFilm = containsFilm,
+                        )
                     }
-
-                    LibraryListAndState(
-                        listWithItems = list,
-                        containsFilm = containsFilm,
-                    )
                 }
-            }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -258,7 +240,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         val providerUsed = if (providerId == DEFAULT_FILM_SOURCE_NAME) {
             TMDBProviderUtils.tmdbProviderMetadata
         } else {
-            providerId?.let { providerRepository.getProviderMetadata(it) }
+            providerId?.let { providerRepository.getMetadata(it) }
         }
 
         if (providerUsed == null) {
@@ -306,19 +288,14 @@ internal class FilmScreenViewModel @AssistedInject constructor(
      *
      * @param id The ID of the library list to toggle the film in.
      * */
-    fun toggleOnLibrary(id: Int) {
+    fun toggleOnLibrary(id: Int, type: LibraryListType) {
         appDispatchers.ioScope.launch {
             val film = _metadata.value
             requireNotNull(film) {
                 "Film metadata must be loaded before toggling watch progress"
             }
 
-            if (id == LibraryListUtil.WATCHLIST_LIB_ID) {
-                toggleWatchlistStatus(film = film)
-                return@launch
-            }
-
-            if (id == LibraryListUtil.WATCH_PROGRESS_LIB_ID) {
+            if (type.isWatched) {
                 toggleWatchProgressStatus(film = film)
                 return@launch
             }
@@ -356,17 +333,18 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             }
 
             val watchProgress = episodeWithProgress.watchProgress
-            if (watchProgress == null) {
+            if (watchProgress == null || !watchProgress.isCompleted) {
                 watchProgressRepository.insert(
                     film = film,
-                    item = EpisodeProgress(
+                    item = watchProgress?.copy(
+                        status = WatchStatus.COMPLETED,
+                    ) ?: EpisodeProgress(
                         ownerId = user.id,
                         filmId = film.identifier,
                         seasonNumber = episodeWithProgress.episode.season,
                         episodeNumber = episodeWithProgress.episode.number,
                         status = WatchStatus.COMPLETED,
-                        progress = 1L, // Mark as fully watched (100%)
-                        duration = 1L,
+                        progress = 0L
                     ),
                 )
             } else {
@@ -414,9 +392,9 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun onSeasonChange(seasonNumber: Int) {
+    fun onSeasonChange(season: Season) {
         _uiState.update {
-            it.copy(selectedSeason = seasonNumber)
+            it.copy(selectedSeason = season.number)
         }
     }
 
@@ -424,37 +402,23 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         _librarySheetQuery.value = query
     }
 
-    /**
-     * Observes changes in episode watch progress and updates the selected season
-     * if the current episode is finished and there is a next episode available.
-     *
-     * @param progress The current episode progress data.
-     * */
-    private suspend fun observeEpisodeProgress(progress: EpisodeProgress) {
-        if (progress.isFinished) {
-            val nextEpisode = getEpisode(
-                tvShow = _metadata.value as TvShow,
-                season = progress.seasonNumber,
-                episode = progress.episodeNumber + 1,
-            )
+    private suspend fun getNextEpisodeProgress(progress: EpisodeProgress): EpisodeProgress {
+        val nextEpisode = getNextEpisode(
+            tvShow = _metadata.filterNotNull().first() as TvShow,
+            season = progress.seasonNumber,
+            episode = progress.episodeNumber,
+        ) ?: return progress
 
-            if (nextEpisode != null) {
-                _uiState.update { it.copy(selectedSeason = nextEpisode.season) }
+        _uiState.update { it.copy(selectedSeason = nextEpisode.season) }
 
-                // Assuming we want to start tracking progress for the next episode
-                // immediately after finishing the current one.
-                watchProgressRepository.insert(
-                    EpisodeProgress(
-                        ownerId = progress.ownerId,
-                        filmId = progress.filmId,
-                        seasonNumber = nextEpisode.season,
-                        episodeNumber = nextEpisode.number,
-                        status = WatchStatus.WATCHING,
-                        progress = 0L,
-                    )
-                )
-            }
-        }
+        return EpisodeProgress(
+            ownerId = progress.ownerId,
+            filmId = progress.filmId,
+            seasonNumber = nextEpisode.season,
+            episodeNumber = nextEpisode.number,
+            status = WatchStatus.WATCHING,
+            progress = 0L,
+        )
     }
 
     init {
@@ -471,12 +435,6 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                 if (_uiState.value.error != null) return@init
 
                 setInitialSelectedSeason()
-
-                watchProgress.collect { watchData ->
-                    if (watchData is EpisodeProgress) {
-                        observeEpisodeProgress(watchData)
-                    }
-                }
             }
 
             launch {
@@ -488,7 +446,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                     val (season) = seasonState.data!! // De-structure the season from SeasonWithProgress
                     val seasonNumber = tvShow.seasons.binarySearchBy(season.number) { it.number }
 
-                    // If we have the season but it has no episodes, update it.
+                    // If we have the season, but it has no episodes, update it.
                     // This can happen when the initial metadata has seasons without episodes.
                     // We only do this if we don't have any episodes for the season to avoid
                     // overwriting any existing data.

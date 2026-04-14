@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,20 +69,13 @@ internal fun RepositoryManagerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val repositories by viewModel.repositories.collectAsStateWithLifecycle()
-    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val selectedRepositories by viewModel.selectedRepositories.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val urlQuery by viewModel.urlQuery.collectAsStateWithLifecycle()
 
     RepositoryManagerScreenContent(
         uiState = uiState,
-        repositories = {
-            if (searchQuery.isNotBlank() && uiState.isShowingSearchBar) {
-                searchResults
-            } else {
-                repositories
-            }
-        },
+        repositories = { repositories },
         searchQuery = { searchQuery },
         urlQuery = { urlQuery },
         selectedRepositories = { selectedRepositories },
@@ -117,6 +111,7 @@ private fun RepositoryManagerScreenContent(
     onGoBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val clipboardManager = rememberClipboardManager()
 
     val hapticFeedBack = getFeedbackOnLongPress()
@@ -142,7 +137,7 @@ private fun RepositoryManagerScreenContent(
             val message = uiState.error
                 .asString(context)
                 .takeIf { it.isNotBlank() }
-                ?: context.getString(LocaleR.string.default_error)
+                ?: resources.getString(LocaleR.string.default_error)
 
             snackbarHostState.showMessage(message)
         }

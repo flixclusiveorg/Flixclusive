@@ -289,8 +289,6 @@
     <string name="modified_at">Modified at</string>
     <string name="added_at">Added at</string>
     <string name="created_at">Created at</string>
-    <string name="recently_watched">Recently Watched</string>
-    <string name="watchlist">Watchlist</string>
     <string name="mark_as_watched">Mark as watched</string>
     <string name="mark_as_unwatched">Mark as unwatched</string>
     <string name="watched">Watched</string>
@@ -312,6 +310,10 @@
     <plurals name="number_of_items_format">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>
+    </plurals>
+    <plurals name="backup_count_format">
+        <item quantity="one">%1$d backup</item>
+        <item quantity="other">%1$d backups</item>
     </plurals>
     <string name="modified_at_format">Modified at %1$s</string>
     <string name="avatar_number">Avatar %1$d</string>
@@ -363,6 +365,7 @@
     <string name="skip_loading_message">Skip loading links</string>
     <string name="tooltip_providers_screen_help_guide">This guide contains all the useful information about the providers system. Check it out for more details!</string>
     <string name="unavailable_episode">Episode is not yet available</string>
+    <string name="failed_to_load_episode">Failed to load episode</string>
     <string name="unknown_provider_type">Unknown provider type</string>
     <string name="up_to_date">Version is up to date!</string>
     <string name="watchlist_empty_message">Start adding now!</string>
@@ -378,8 +381,6 @@
 
     <!--  Content descriptions  -->
     <string name="plus_button_content_desc">A plus icon indicating addition of an item</string>
-    <string name="recently_watched_description">A quick rewind of everything you’ve watched—so you can pick up where you left off or relive the best moments.</string>
-    <string name="watchlist_description">Your personal hype list! Save movies and shows you’re dying to watch, all in one place.</string>
     <string name="action_warning_format_message">Are you sure you want to do the following action: %1$s?</string>
     <string name="action_warning_default_message">This is an irreversible action, do you still wish to proceed?</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
@@ -425,7 +426,7 @@
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
     <string name="navigate_to_film">Go see details of film button</string>
     <string name="navigate_to_repository_content_desc">Open repository screen</string>
-    <string name="navigate_up">Go back</string>
+    <string name="back">Back</string>
     <string name="next_episode_button_desc">An icon for next episode</string>
     <string name="on_boarding_background_content_desc">A background image for this on-boarding screen</string>
     <string name="owner_avatar_content_desc">Avatar or picture of repository\'s owner</string>
@@ -481,6 +482,45 @@
     <string name="providers_settings_content_desc">This contains all the settings to manage how providers are managed.</string>
     <string name="subtitles_settings_content_desc">This contains all the settings to customize how subtitles are displayed.</string>
     <string name="system_settings_content_desc">This contains all system-level settings that are not tied to individual users or profiles. Changes made here will affect all users and profiles utilizing the app.</string>
+
+    <!--  Backup & restore  -->
+    <string name="backup">Backup</string>
+    <string name="backup_location_title">Storage location</string>
+    <string name="backup_location_desc">%1$s\n\nThis is a system-wide folder. All users on this app will use this same folder for storage.</string>
+
+    <string name="backup_auto_frequency_title">Auto-backup frequency</string>
+    <string name="backup_auto_frequency_off">Off</string>
+    <string name="backup_auto_frequency_every_day">Every day</string>
+    <string name="backup_auto_frequency_every_n_days_format">Every %1$d days</string>
+
+    <string name="backup_max_backups_title">Max backups to keep</string>
+    <string name="backup_max_backups_desc">%1$d most recent backups will be kept. Older backups will be automatically deleted.</string>
+    <string name="backup_included_data_title">Data included</string>
+
+    <string name="backup_actions_title">Manual backup</string>
+    <string name="backup_actions_desc">Create a backup file or restore from one.</string>
+    <string name="backup_actions_tip">Note: restoring merges the backup data with your current data, it doesn\'t replace it. This means that if you have a library in the backup and a library in your current data, after restoring, you will have both libraries in your profile.</string>
+    <string name="backup_create_button">Create</string>
+    <string name="backup_restore_button">Restore</string>
+
+    <string name="backup_option_library">Library</string>
+    <string name="backup_option_watch_progress">Watch progress</string>
+    <string name="backup_option_search_history">Search history</string>
+    <string name="backup_option_preferences">Preferences</string>
+    <string name="backup_option_providers">Providers</string>
+    <string name="backup_option_repositories">Repositories</string>
+
+    <string name="backup_create_now_title">Create backup now</string>
+    <string name="backup_create_now_desc">Exports a .flxbackup file to a location you choose.</string>
+    <string name="backup_create_started">Creating backup…</string>
+    <string name="backup_create_success">Backup created</string>
+    <string name="backup_create_failed_format">Backup failed: %1$s</string>
+
+    <string name="backup_restore_title">Restore from backup</string>
+    <string name="backup_restore_desc">Select a backup .flxbackup file to restore.</string>
+    <string name="backup_restore_started">Restoring backup…</string>
+    <string name="backup_restore_success">Backup restored</string>
+    <string name="backup_restore_failed_format">Restore failed: %1$s</string>
 
     <!--  Share app message  -->
     <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>

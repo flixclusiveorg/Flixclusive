@@ -127,6 +127,7 @@ internal fun FilmPreviewBottomSheet(
                 if (film.rating != null || film.parsedReleaseDate != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         film.rating?.let {
                             Text(

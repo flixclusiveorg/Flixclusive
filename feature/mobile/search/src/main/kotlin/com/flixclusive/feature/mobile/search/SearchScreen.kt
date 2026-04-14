@@ -66,10 +66,11 @@ internal fun SearchScreen(
     viewModel: SearchScreenViewModel = hiltViewModel(),
 ) {
     val cards by viewModel.cards.collectAsStateWithLifecycle()
+    val providerCards by viewModel.providersCatalogsCards.collectAsStateWithLifecycle()
 
     SearchScreenContent(
         cards = cards,
-        providerCards = viewModel.providersCatalogsCards,
+        providerCards = providerCards,
         openSearchExpandedScreen = navigator::openSearchExpandedScreen,
         onRetryLoadingCards = viewModel::initializeCards,
         openSeeAllScreen = navigator::openSeeAllScreen,

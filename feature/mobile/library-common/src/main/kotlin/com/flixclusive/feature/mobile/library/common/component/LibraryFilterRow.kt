@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -24,19 +23,15 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun LibraryFilterRow(
     isListEditable: Boolean,
-    filters: ImmutableList<LibrarySortFilter>,
-    selected: LibrarySortFilter,
-    ascending: Boolean,
-    onUpdate: (LibrarySortFilter) -> Unit,
+    selected: () -> LibrarySort,
+    onUpdate: (LibrarySort) -> Unit,
     onStartSelecting: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -79,13 +74,20 @@ fun LibraryFilterRow(
         }
 
         items(
-            items = filters,
-            key = { it.displayName.hashCode() },
-        ) { filter ->
+            count = 3,
+            key = { it },
+        ) { i ->
+            val filter = remember {
+                when (i) {
+                    0 -> LibrarySort.Added()
+                    1 -> LibrarySort.Modified()
+                    else -> LibrarySort.Name()
+                }
+            }
+
             LibraryFilterPill(
-                isSelected = selected == filter,
+                selected = selected,
                 filter = filter,
-                ascending = ascending,
                 onToggleDirection = { onUpdate(filter) },
             )
         }
@@ -95,20 +97,15 @@ fun LibraryFilterRow(
 @Preview
 @Composable
 private fun LibraryFilterRowPreview() {
-    var currentFilter by remember { mutableStateOf<LibrarySortFilter>(LibrarySortFilter.Name) }
+    var currentFilter by remember { mutableStateOf<LibrarySort>(LibrarySort.Name(ascending = false)) }
     var ascending by remember { mutableStateOf(true) }
 
     FlixclusiveTheme {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterRow(
                 isListEditable = true,
-                filters = persistentListOf(
-                    LibrarySortFilter.Name,
-                    LibrarySortFilter.AddedAt,
-                    LibrarySortFilter.ModifiedAt,
-                ),
-                selected = currentFilter,
-                ascending = ascending,
+                selected = { currentFilter },
+                onStartSelecting = { },
                 onUpdate = { filter ->
                     if (currentFilter == filter) {
                         ascending = !ascending
@@ -117,7 +114,6 @@ private fun LibraryFilterRowPreview() {
                         ascending = true
                     }
                 },
-                onStartSelecting = { },
             )
         }
     }

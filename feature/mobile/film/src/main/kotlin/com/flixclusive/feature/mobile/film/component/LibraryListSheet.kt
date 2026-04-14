@@ -52,6 +52,7 @@ import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
@@ -77,7 +78,7 @@ internal fun LibraryListSheet(
     libraryListStates: () -> List<LibraryListAndState>,
     query: () -> String,
     onQueryChange: (String) -> Unit,
-    toggleOnLibrary: (Int) -> Unit,
+    toggleOnLibrary: (Int, LibraryListType) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -128,7 +129,9 @@ internal fun LibraryListSheet(
             ) { listAndState ->
                 ItemContent(
                     listAndState = listAndState,
-                    toggleOnLibrary = { toggleOnLibrary(listAndState.list.id) },
+                    toggleOnLibrary = {
+                        toggleOnLibrary(listAndState.list.id, listAndState.list.listType)
+                    },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -241,7 +244,7 @@ private fun ItemContent(
     val imageSize = getAdaptiveDp(40.dp)
     val imageModel = remember(listAndState) {
         val image = listAndState.items
-            .firstOrNull()
+            .lastOrNull()
             ?.metadata
             ?.posterImage
 
@@ -368,6 +371,7 @@ private fun LibraryListSheetPreview() {
                 LibraryListItemWithMetadata(
                     item = LibraryListItem(listId = 1, filmId = metadata.id),
                     metadata = metadata,
+                    externalIds = emptyList(),
                 ),
             )
         } else {
@@ -381,7 +385,7 @@ private fun LibraryListSheetPreview() {
                     list = LibraryList(
                         id = it,
                         name = "List $it",
-                        ownerId = 1,
+                        ownerId = "preview-user",
                         description = "Description $it",
                     ),
                 ),
@@ -398,7 +402,7 @@ private fun LibraryListSheetPreview() {
                 libraryListStates = { lists },
                 query = { query },
                 onQueryChange = { query = it },
-                toggleOnLibrary = {},
+                toggleOnLibrary = { _, _ -> },
                 onDismissRequest = {},
                 createLibrary = { name, description ->
                     lists = lists + LibraryListAndState(
@@ -407,7 +411,7 @@ private fun LibraryListSheetPreview() {
                             list = LibraryList(
                                 id = lists.size + 1,
                                 name = name,
-                                ownerId = 1,
+                                ownerId = "preview-user",
                                 description = description,
                             ),
                         ),

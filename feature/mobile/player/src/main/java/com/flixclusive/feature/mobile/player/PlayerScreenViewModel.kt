@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.player
 
 import android.content.Context
+import androidx.annotation.MainThread
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
@@ -25,15 +26,18 @@ import com.flixclusive.core.presentation.player.model.track.PlayerServer.Compani
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.CacheKey
+import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
+import com.flixclusive.data.provider.repository.CachedLinks
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
-import com.flixclusive.domain.provider.usecase.get.GetEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.cleanDuplicates
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerServer
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerSubtitle
+import com.flixclusive.feature.mobile.player.util.extensions.isSameEpisode
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
@@ -53,7 +57,7 @@ import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
@@ -62,13 +66,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
 internal class PlayerScreenViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
     private val cachedLinksRepository: CachedLinksRepository,
-    private val getEpisode: GetEpisodeUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val providerRepository: ProviderRepository,
@@ -127,7 +132,7 @@ internal class PlayerScreenViewModel @Inject constructor(
      * */
     val filmMetadata = navArgs.film
 
-    private val userId: Int
+    private val userId: String
         get() {
             val user = userSessionManager.currentUser.value
             requireNotNull(user) {
@@ -138,34 +143,112 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
 
     // Only using non-suspend function since we don't need to observe changes here
-    val providers by lazy { providerRepository.getEnabledProviders() }
+    val providers = userSessionManager.currentUser
+        .filterNotNull()
+        .flatMapLatest { user ->
+            if (!filmMetadata.isFromTmdb) {
+                val metadata = providerRepository.getMetadata(filmMetadata.providerId)
+                    ?: return@flatMapLatest flowOf(emptyList())
 
-    val servers = cachedLinksRepository.currentCache
-        .mapLatest {
-            it?.streams?.fastMap { it.toPlayerServer() }
-                ?: emptyList()
+                return@flatMapLatest flowOf(listOf(metadata))
+            }
+
+            providerRepository.getEnabledProvidersAsFlow(ownerId = user.id)
+                .map { list ->
+                    list.mapNotNull { provider ->
+                        providerRepository.getMetadata(provider.id)
+                    }
+                }
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = cachedLinksRepository.currentCache.value?.streams?.fastMap {
-                it.toPlayerServer()
-            } ?: emptyList(),
+            initialValue = emptyList(),
         )
 
     private val _uiState = MutableStateFlow(
         value = PlayerUiState(
-            currentProvider = cachedLinksRepository.currentCache.value?.providerId
-                ?: throw NullPointerException("Current cache must not be null when initializing the player"),
+            currentProvider = cachedLinksRepository.currentCache.value?.providerId ?: "",
             currentEpisode = navArgs.episode,
             currentSeason = navArgs.episode?.season,
         )
     )
+
     val uiState = _uiState.asStateFlow()
 
-    val selectedEpisode = _uiState
+    private val distinctEpisodeFlow = _uiState
         .map { it.currentEpisode }
         .distinctUntilChanged()
+
+    private val distinctProviderFlow = _uiState
+        .map { it.currentProvider }
+        .distinctUntilChanged()
+
+    private val currentCacheKey = distinctProviderFlow
+        .combine(distinctEpisodeFlow) { providerId, episode ->
+            CacheKey.create(
+                filmId = filmMetadata.identifier,
+                providerId = providerId,
+                episode = episode,
+            )
+        }
+
+    val servers = currentCacheKey
+        .flatMapLatest { cacheKey ->
+            cachedLinksRepository.observeCache(cacheKey)
+                .mapLatest { cache ->
+                    cache?.streams?.fastMap {
+                        it.toPlayerServer()
+                    } ?: emptyList()
+                }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = cachedLinksRepository.currentCache.value?.let { cache ->
+                cache.streams.fastMap {
+                    it.toPlayerServer()
+                }
+            } ?: emptyList(),
+        )
+
+    val failedStreamUrls = currentCacheKey
+        .flatMapLatest { cacheKey ->
+            cachedLinksRepository.observeCache(cacheKey)
+                .mapLatest { cache ->
+                    cache?.failedStreamUrls ?: emptySet()
+                }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = cachedLinksRepository.currentCache.value?.failedStreamUrls ?: emptySet(),
+        )
+
+    val canSkipLoading = _uiState
+        .map { state ->
+            state.loadLinksState.toCacheKey(
+                filmId = filmMetadata.identifier,
+                episode = state.currentEpisode,
+            )
+        }
+        .distinctUntilChanged()
+        .flatMapLatest { cacheKey ->
+            if (cacheKey == null) {
+                flowOf(false)
+            } else {
+                cachedLinksRepository.observeCache(cacheKey)
+                    .map { it?.hasStreamableLinks == true }
+            }
+        }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false,
+        )
+
+    val selectedEpisode = distinctEpisodeFlow
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -206,18 +289,33 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     val watchProgress = combine(
         selectedEpisode, // For triggers only
-        userSessionManager.currentUser,
-    ) { _, user ->
-        requireNotNull(user) { "User must be logged in to fetch watch progress inside the Player" }
-
+        userSessionManager.currentUser.filterNotNull(),
+    ) { episode, user ->
+        episode to user
+    }.flatMapLatest { (episode, user) ->
         watchProgressRepository
             .getAsFlow(
                 id = filmMetadata.identifier,
                 type = filmMetadata.filmType,
                 ownerId = user.id,
             ).filterNotNull()
-            .map { it.watchData }
-    }.flattenConcat().stateIn(
+            .map {
+                val progress = it.watchData
+                if (progress is EpisodeProgress) {
+                    val isSameEpisode = progress.isSameEpisode(
+                        otherEpisode = episode?.number ?: -1,
+                        otherSeason = episode?.season ?: -1,
+                        otherFilmId = filmMetadata.identifier,
+                    )
+
+                    if (!isSameEpisode) {
+                        return@map createDefaultWatchProgress()
+                    }
+                }
+
+                progress
+            }
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = createDefaultWatchProgress(),
@@ -245,26 +343,17 @@ internal class PlayerScreenViewModel @Inject constructor(
         val cacheKey = CacheKey.create(
             filmId = filmMetadata.identifier,
             providerId = _uiState.value.currentProvider,
-            episode = selectedEpisode.value,
+            episode = _uiState.value.currentEpisode,
         )
 
         val cache = cachedLinksRepository.getCache(cacheKey) ?: return
-        val servers = cache.streams.cleanDuplicates {
-            (it as Stream).toPlayerServer()
-        }
-
-        if (serverIndex !in servers.indices) return
+        if (serverIndex !in cache.streams.indices) return
 
         _uiState.update { it.copy(currentServer = serverIndex) }
-
-        changeServerJob = viewModelScope.launch(appDispatchers.main) {
-            loadLinks(
-                providerId = _uiState.value.currentProvider,
-                startPositionMs = player.currentPosition,
-                episode = selectedEpisode.value,
-                playImmediately = true,
-            )
-        }
+        player.prepare(
+            cache = cache,
+            startPositionMs = player.currentPosition,
+        )
     }
 
     fun onProviderChange(providerId: String) {
@@ -275,22 +364,115 @@ internal class PlayerScreenViewModel @Inject constructor(
 
         updateWatchProgress()
 
+        val currentServer = _uiState.value.currentServer
+        val currentProvider = _uiState.value.currentProvider
+        _uiState.update {
+            it.copy(currentProvider = providerId, currentServer = -1)
+        }
+
         changeProviderJob = viewModelScope.launch {
-            loadLinks(
+            val (key, cache) = loadLinks(
                 providerId = providerId,
-                startPositionMs = withContext(appDispatchers.main) {
-                    player.currentPosition
-                },
-                episode = selectedEpisode.value,
-                playImmediately = true,
+                episode = _uiState.value.currentEpisode,
+            )
+
+            if (cache == null) {
+                _uiState.update {
+                    it.copy(
+                        currentProvider = currentProvider,
+                        currentServer = currentServer
+                    )
+                }
+                return@launch
+            }
+
+            // TODO: Uncomment this once we support provider changing even if [filmMetadata] didn't come from TMDb.
+            //  The current workaround now is we lock and filter available providers based on the [filmMetadata.providerId]
+            //  if the metadata didn't come from TMDb, but ideally we should be able to switch between providers
+            //  even for non-TMDb films as long as they have support the identifiers of the film (e.g. IMDb ID).
+
+            // if (filmMetadata is TvShow) {
+            //     val nextEpisode = getNextEpisode(currentEpisode)
+            //     _uiState.update { it.copy(nextEpisode = nextEpisode) }
+            // }
+
+            cachedLinksRepository.setCurrentCache(key)
+            withContext(appDispatchers.main) {
+                player.prepare(
+                    cache = cache,
+                    startPositionMs = player.currentPosition,
+                )
+            }
+        }
+
+        changeProviderJob?.invokeOnCompletion { throwable ->
+            if (throwable != null) {
+                _uiState.update {
+                    it.copy(
+                        currentProvider = currentProvider,
+                        currentServer = currentServer
+                    )
+                }
+            }
+        }
+    }
+
+    fun onSkipProviderLoading() {
+        val state = _uiState.value.loadLinksState
+        val cacheKey = state.toCacheKey(
+            filmId = filmMetadata.identifier,
+            episode = selectedEpisode.value,
+        ) ?: return
+
+        val cache = cachedLinksRepository.getCache(cacheKey)
+        if (cache == null || !cache.hasStreamableLinks) return
+
+        cachedLinksRepository.setCurrentCache(cacheKey)
+
+        val providerId = when (state) {
+            is LoadLinksState.Extracting -> state.providerId
+            is LoadLinksState.Success -> state.providerId
+            else -> return
+        }
+
+        _uiState.update {
+            it.copy(
+                currentProvider = providerId,
+                loadLinksState = LoadLinksState.Idle,
             )
         }
+
+        viewModelScope.launch(appDispatchers.main) {
+            player.prepare(
+                cache = cache,
+                startPositionMs = player.currentPosition,
+            )
+        }
+    }
+
+    fun onServerFail(serverIndex: Int) {
+        val server = servers.value.getOrNull(serverIndex) ?: return
+        val cacheKey = CacheKey.create(
+            filmId = filmMetadata.identifier,
+            providerId = _uiState.value.currentProvider,
+            episode = _uiState.value.currentEpisode,
+        )
+
+        cachedLinksRepository.markStreamAsFailed(cacheKey, server.url)
+    }
+
+    fun onCancelLoading() {
+        changeProviderJob?.cancel()
+        changeServerJob?.cancel()
+        changeEpisodeJob?.cancel()
+        queueNextEpisodeJob?.cancel()
+        _uiState.update { it.copy(loadLinksState = LoadLinksState.Idle) }
     }
 
     /**
      * Called when the player auto-queues the next episode to play.
      * */
-    fun onQueueNextEpisode() {
+    private fun onQueueNextEpisode() {
         if (queueNextEpisodeJob?.isActive == true) return
 
         val episode = _uiState.value.nextEpisode ?: return
@@ -298,13 +480,9 @@ internal class PlayerScreenViewModel @Inject constructor(
         updateWatchProgress()
 
         queueNextEpisodeJob = viewModelScope.launch {
-            val startPositionMs = getSavedStartPositionMs(episode)
-
             loadLinks(
                 providerId = _uiState.value.currentProvider,
-                startPositionMs = startPositionMs,
                 episode = episode,
-                playImmediately = false,
                 quiet = true,
             )
         }
@@ -321,14 +499,20 @@ internal class PlayerScreenViewModel @Inject constructor(
         changeEpisodeJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
-            val success = loadLinks(
+            val (key, cache) = loadLinks(
                 providerId = _uiState.value.currentProvider,
-                startPositionMs = startPositionMs,
                 episode = episode,
-                playImmediately = true,
             )
 
-            if (success) {
+            if (cache != null) {
+                cachedLinksRepository.setCurrentCache(key)
+                withContext(appDispatchers.main) {
+                    player.prepare(
+                        cache = cache,
+                        startPositionMs = startPositionMs,
+                    )
+                }
+
                 _uiState.update {
                     it.copy(
                         currentEpisode = episode,
@@ -343,84 +527,76 @@ internal class PlayerScreenViewModel @Inject constructor(
         _uiState.update { it.copy(currentSeason = seasonNumber) }
     }
 
-    /**
-     * Loads the media links for the given [providerId] and prepares the player.
-     *
-     * @param providerId The ID of the provider to load links from.
-     * @param startPositionMs The position to start playback from, in milliseconds.
-     * @param episode The episode to load links for, if [filmMetadata] is a [TvShow].
-     * @param playImmediately Whether to start playback immediately after loading the links.
-     * @param quiet Whether to not show loading/error states in the player.
-     *
-     * @return True if the links were loaded and the player was prepared, false if the links were already loaded.
-     * */
     private suspend fun loadLinks(
         providerId: String,
-        startPositionMs: Long,
         episode: Episode?,
-        playImmediately: Boolean = false,
         quiet: Boolean = false,
-    ): Boolean {
+    ): Pair<CacheKey, CachedLinks?> {
         val cacheKey = CacheKey.create(
             filmId = filmMetadata.identifier,
             providerId = providerId,
             episode = episode,
         )
 
-        // Check if we have cached links for this key
-        var cache = cachedLinksRepository.getCache(cacheKey)
-
-        if (cache == null) {
-            var areLinksLoaded = false
-
-            val response = when (filmMetadata) {
-                is Movie -> {
-                    getMediaLinks(
-                        movie = filmMetadata,
-                        providerId = providerId,
-                    )
-                }
-
-                is TvShow -> {
-                    requireNotNull(episode) {
-                        "Selected episode must not be null when loading links for a TV show"
-                    }
-
-                    getMediaLinks(
-                        tvShow = filmMetadata,
-                        episode = episode,
-                        providerId = providerId,
-                    )
-                }
-
-                else -> throw IllegalStateException("Unsupported film type: $filmMetadata")
-            }
-
-            response
-                .catch { error ->
-                    if (quiet) return@catch
-
-                    _uiState.update { it.copy(loadLinksState = LoadLinksState.Error(error)) }
-                }.collect { state ->
-                    _uiState.update {
-                        if (state.isSuccess) {
-                            areLinksLoaded = true
-
-                            return@update it.copy(
-                                currentProvider = providerId,
-                                loadLinksState = if (quiet) it.loadLinksState else LoadLinksState.Idle,
-                            )
-                        }
-
-                        it.copy(loadLinksState = if (quiet) it.loadLinksState else state)
-                    }
-                }
-
-            if (!areLinksLoaded) return false
-
-            cache = cachedLinksRepository.getCache(cacheKey) ?: return false
+        val cache = cachedLinksRepository.getCache(cacheKey)
+        if (cache?.hasExtractedSuccessfully == true) {
+            return cacheKey to cache
         }
 
+        val response = when (filmMetadata) {
+            is Movie -> {
+                getMediaLinks(
+                    movie = filmMetadata,
+                    providerId = providerId,
+                )
+            }
+
+            is TvShow -> {
+                requireNotNull(episode) {
+                    "Selected episode must not be null when loading links for a TV show"
+                }
+
+                getMediaLinks(
+                    tvShow = filmMetadata,
+                    episode = episode,
+                    providerId = providerId,
+                )
+            }
+
+            else -> throw IllegalStateException("Unsupported film type: $filmMetadata")
+        }
+
+        response
+            .catch { error ->
+                if (quiet) return@catch
+
+                _uiState.update { it.copy(loadLinksState = LoadLinksState.Error(error)) }
+            }.collect { state ->
+                _uiState.update {
+                    val hasSkippedLoading = state.isError && it.loadLinksState.isIdle
+                    if (hasSkippedLoading && !quiet) {
+                        return@update it
+                    }
+
+                    if (state.isSuccess) {
+                        return@update it.copy(
+                            currentProvider = providerId,
+                            loadLinksState = if (quiet) it.loadLinksState else LoadLinksState.Idle,
+                        )
+                    }
+
+                    it.copy(loadLinksState = if (quiet) it.loadLinksState else state)
+                }
+            }
+
+        return cacheKey to cachedLinksRepository.getCache(cacheKey)
+    }
+
+    @MainThread
+    private fun AppPlayer.prepare(
+        cache: CachedLinks,
+        startPositionMs: Long,
+    ) {
         val servers = cache.streams.cleanDuplicates {
             (it as Stream).toPlayerServer()
         }
@@ -428,29 +604,18 @@ internal class PlayerScreenViewModel @Inject constructor(
             (it as Subtitle).toPlayerSubtitle()
         }
 
-        if (playImmediately) {
-            cachedLinksRepository.setCurrentCache(cacheKey)
-        }
-
         var currentServer = _uiState.value.currentServer
         if (currentServer !in servers.indices) {
             currentServer = servers.getIndexOfPreferredQuality(playerPreferences.value.quality)
 
-            if (playImmediately) {
-                _uiState.update { it.copy(currentServer = currentServer) }
-            }
+            _uiState.update { it.copy(currentServer = currentServer) }
         }
 
-        withContext(appDispatchers.main) {
-            player.prepare(
-                server = servers[currentServer],
-                subtitles = subtitles,
-                startPositionMs = startPositionMs,
-                playImmediately = playImmediately,
-            )
-        }
-
-        return true
+        prepare(
+            server = servers[currentServer],
+            subtitles = subtitles,
+            startPositionMs = startPositionMs,
+        )
     }
 
     /**
@@ -460,10 +625,10 @@ internal class PlayerScreenViewModel @Inject constructor(
     private suspend fun getNextEpisode(episode: Episode?): Episode? {
         if (episode == null) return null
 
-        return getEpisode(
+        return getNextEpisode(
             tvShow = filmMetadata as TvShow,
             season = episode.season,
-            episode = episode.number + 1,
+            episode = episode.number,
         )
     }
 
@@ -481,7 +646,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
-                seasonNumber = selectedEpisode.value!!.number,
+                seasonNumber = selectedEpisode.value!!.season,
                 episodeNumber = selectedEpisode.value!!.number,
             )
 
@@ -495,7 +660,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 if (!events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED))
                     return@listenTo
 
-                val isFinished = !isPlaying && currentPosition >= duration
+                val isFinished = !isPlaying && currentPosition >= duration && duration > 0
                 val nextEpisode = _uiState.value.nextEpisode
                 if (isFinished && nextEpisode != null) {
                     onEpisodeChange(nextEpisode)
@@ -533,11 +698,15 @@ internal class PlayerScreenViewModel @Inject constructor(
                     is EpisodeProgress -> progress.copy(
                         progress = currentPosition,
                         duration = duration,
+                        status = WatchStatus.WATCHING,
+                        updatedAt = Date()
                     )
 
                     is MovieProgress -> progress.copy(
                         progress = currentPosition,
                         duration = duration,
+                        status = WatchStatus.WATCHING,
+                        updatedAt = Date()
                     )
                 },
             )
@@ -554,19 +723,22 @@ internal class PlayerScreenViewModel @Inject constructor(
      * */
     private suspend fun getSavedStartPositionMs(episode: Episode? = null): Long {
         val watchProgress = if (episode == null) {
-            watchProgressRepository
-                .get(
-                    id = filmMetadata.identifier,
-                    type = filmMetadata.filmType,
-                    ownerId = userId,
-                )?.watchData
+            watchProgressRepository.get(
+                id = filmMetadata.identifier,
+                type = filmMetadata.filmType,
+                ownerId = userId,
+            )?.watchData
         } else {
-            watchProgressRepository
-                .getSeasonProgress(
-                    tvShowId = filmMetadata.identifier,
-                    ownerId = userId,
-                    seasonNumber = episode.season,
-                ).lastOrNull()
+            watchProgressRepository.getEpisodeProgress(
+                tvShowId = filmMetadata.identifier,
+                seasonNumber = episode.season,
+                episodeNumber = episode.number,
+                ownerId = userId,
+            )
+        }
+
+        if (watchProgress?.status == WatchStatus.COMPLETED) {
+            return 0L
         }
 
         return watchProgress?.progress ?: 0L
@@ -574,37 +746,27 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     private fun initialize() {
         viewModelScope.launch {
-            if (navArgs.episode != null) {
-                changeProviderJob?.cancel()
-                changeEpisodeJob?.cancel()
-                queueNextEpisodeJob?.cancel()
-                _uiState.update { it.copy(loadLinksState = LoadLinksState.Idle) }
+            val cacheKey = CacheKey.create(
+                filmId = filmMetadata.identifier,
+                providerId = _uiState.value.currentProvider,
+                episode = _uiState.value.currentEpisode,
+            )
 
-                val startPositionMs = getSavedStartPositionMs(navArgs.episode)
+            val cache = cachedLinksRepository.getCache(cacheKey)
+            if (cache == null || !cache.hasStreamableLinks) {
+                return@launch
+            }
 
-                val success = loadLinks(
-                    providerId = _uiState.value.currentProvider,
-                    startPositionMs = startPositionMs,
-                    episode = navArgs.episode,
-                    playImmediately = true,
-                )
+            cachedLinksRepository.setCurrentCache(cacheKey)
+            val nextEpisode = getNextEpisode(navArgs.episode)
+            _uiState.update {
+                it.copy(nextEpisode = nextEpisode)
+            }
 
-                // Pre-fetch next episode if available and if the current metadata is a TV show
-                if (success && filmMetadata is TvShow) {
-                    val nextEpisode = getNextEpisode(navArgs.episode)
-                    _uiState.update {
-                        it.copy(nextEpisode = nextEpisode)
-                    }
-                }
-            } else {
-                val startPositionMs = getSavedStartPositionMs()
-
-                // Load links for the movie once
-                loadLinks(
-                    providerId = _uiState.value.currentProvider,
-                    startPositionMs = startPositionMs,
-                    episode = null,
-                    playImmediately = true,
+            withContext(appDispatchers.main) {
+                player.prepare(
+                    cache = cache,
+                    startPositionMs = getSavedStartPositionMs(navArgs.episode),
                 )
             }
         }
@@ -617,7 +779,7 @@ private const val QUEUE_THRESHOLD = 0.8
 
 @Immutable
 internal data class PlayerUiState(
-    val currentProvider: String,
+    val currentProvider: String = "",
     val currentSeason: Int? = null,
     val currentEpisode: Episode? = null,
     val currentServer: Int = -1,

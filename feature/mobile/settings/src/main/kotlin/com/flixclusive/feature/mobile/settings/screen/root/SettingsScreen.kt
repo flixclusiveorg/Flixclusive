@@ -277,7 +277,7 @@ private fun TabletPreview() {
 
                     override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
-                    override fun openEditUserScreen(userId: Int) = Unit
+                    override fun openEditUserScreen(userId: String) = Unit
                 },
             )
         }
@@ -303,7 +303,7 @@ private fun PhonePreview() {
 
                     override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
-                    override fun openEditUserScreen(userId: Int) = Unit
+                    override fun openEditUserScreen(userId: String) = Unit
                 },
             )
         }

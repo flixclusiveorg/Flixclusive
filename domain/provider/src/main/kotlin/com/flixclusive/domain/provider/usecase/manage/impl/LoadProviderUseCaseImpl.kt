@@ -2,28 +2,24 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.exception.ExceptionWithUiText
+import com.flixclusive.core.common.provider.ProviderConstants
+import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
-import com.flixclusive.data.provider.repository.ProviderApiRepository
+import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.R
-import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
-import com.flixclusive.domain.provider.util.Constants
+import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.util.DynamicResourceLoader
 import com.flixclusive.domain.provider.util.ProviderMigrator
 import com.flixclusive.domain.provider.util.ProviderMigrator.canMigrateSettingsFile
-import com.flixclusive.domain.provider.util.extensions.createFileForProvider
-import com.flixclusive.domain.provider.util.extensions.downloadProvider
 import com.flixclusive.domain.provider.util.extensions.getFileFromPath
 import com.flixclusive.domain.provider.util.extensions.getProviderInstance
 import com.flixclusive.model.provider.ProviderManifest
@@ -32,8 +28,6 @@ import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -49,86 +43,29 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val dataStoreManager: DataStoreManager,
     private val providerRepository: ProviderRepository,
-    private val providerApiRepository: ProviderApiRepository,
-    private val downloadFile: DownloadFileUseCase,
     private val appDispatchers: AppDispatchers,
 ) : LoadProviderUseCase {
     private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
+
+    private val cacheLocalMetadataMap = HashMap<String, ProviderMetadata>()
 
     private suspend fun getProviderPrefs() =
         dataStoreManager
             .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
             .first()
 
-    override fun invoke(metadata: ProviderMetadata): Flow<LoadProviderResult> =
-        channelFlow {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val file = context.createFileForProvider(
-                provider = metadata,
-                userId = userId,
-            )
-
-            if (isProviderAlreadyLoaded(metadata)) {
-                send(
-                    LoadProviderResult.Failure(
-                        provider = metadata,
-                        filePath = file.absolutePath,
-                        error = IllegalStateException(
-                            context.getString(R.string.provider_already_exists, metadata.name)
-                        ),
-                    ),
-                )
-                return@channelFlow
-            }
-
-            val success = withContext(appDispatchers.io) {
-                try {
-                    downloadFile.downloadProvider(
-                        file = file,
-                        metadata = metadata,
-                    ).collect()
-                } catch (e: Throwable) {
-                    errorLog("Failed to download provider: ${metadata.name}")
-                    errorLog(e)
-
-                    send(
-                        LoadProviderResult.Failure(
-                            provider = metadata,
-                            filePath = file.absolutePath,
-                            error = when (e) {
-                                is ExceptionWithUiText -> e.cause ?: e
-                                else -> e
-                            },
-                        ),
-                    )
-                    return@withContext false
-                }
-
-                file.exists()
-            }
-
-            if (!success) {
-                return@channelFlow
-            }
-
-            invoke(
-                filePath = file.absolutePath,
-                metadata = metadata,
-            ).collect(::send)
-        }
-
     // TODO: Create a separate service for loading providers
     //       since `InitializeProvidersUseCase` also needs to load providers
-    override fun invoke(
-        metadata: ProviderMetadata,
-        filePath: String,
-    ): Flow<LoadProviderResult> =
+    override fun invoke(installedProvider: InstalledProvider): Flow<ProviderResult> =
         flow {
+            val metadata = providerRepository.getMetadata(installedProvider.id)
+                ?: getMetadataFromFile(installedProvider)
+            requireNotNull(metadata) { "Metadata not found for provider with id: ${installedProvider.id}" }
+
             if (isProviderAlreadyLoaded(metadata)) {
                 emit(
-                    LoadProviderResult.Failure(
+                    ProviderResult.Failure(
                         provider = metadata,
-                        filePath = filePath,
                         error = IllegalStateException(
                             context.getString(R.string.provider_already_exists, metadata.name)
                         ),
@@ -137,14 +74,15 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 return@flow
             }
 
+            val filePath = installedProvider.filePath
+            val file = installedProvider.file
+
             try {
-                val file = File(filePath)
                 if (!file.exists()) {
                     errorLog("Provider file does not exist: $filePath")
                     emit(
-                        LoadProviderResult.Failure(
+                        ProviderResult.Failure(
                             provider = metadata,
-                            filePath = filePath,
                             error = FileNotFoundException(
                                 context.getString(
                                     R.string.provider_file_not_found,
@@ -170,13 +108,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 }
                 val settingsDirPath = createSettingsDirPath(
                     repositoryUrl = metadata.repositoryUrl,
-                    isDebugProvider = metadata.id.endsWith(Constants.PROVIDER_DEBUG),
-                )
-
-                val preferenceItem = getPreferenceItemOrCreate(
-                    id = metadata.id,
-                    fileName = file.nameWithoutExtension,
-                    filePath = filePath,
+                    isDebugProvider = metadata.id.endsWith(ProviderConstants.PROVIDER_DEBUG),
                 )
 
                 if (getProviderPrefs().canMigrateSettingsFile(metadata)) {
@@ -205,40 +137,17 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                     }
                 }
 
-                var isApiDisabled = preferenceItem.isDisabled
-                try {
-                    if (!isApiDisabled) {
-                        providerApiRepository.addApiFromProvider(
-                            id = metadata.id,
-                            provider = provider,
-                        )
-                    }
+                providerRepository.load(
+                    classLoader = loader,
+                    provider = provider,
+                    metadata = metadata,
+                )
 
-                    emit(LoadProviderResult.Success(provider = metadata))
-                } catch (e: Throwable) {
-                    isApiDisabled = true
-
-                    emit(
-                        LoadProviderResult.Failure(
-                            provider = metadata,
-                            filePath = filePath,
-                            error = e,
-                        ),
-                    )
-                    errorLog(e)
-                } finally {
-                    providerRepository.add(
-                        classLoader = loader,
-                        provider = provider,
-                        metadata = metadata,
-                        preferenceItem = preferenceItem.copy(isDisabled = isApiDisabled),
-                    )
-                }
+                emit(ProviderResult.Success(provider = metadata))
             } catch (e: Throwable) {
                 emit(
-                    LoadProviderResult.Failure(
+                    ProviderResult.Failure(
                         provider = metadata,
-                        filePath = filePath,
                         error = e,
                     ),
                 )
@@ -252,7 +161,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         isDebugProvider: Boolean,
     ): String {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val parentDirectoryName = if (isDebugProvider) Constants.PROVIDER_DEBUG else "user-$userId"
+        val parentDirectoryName = if (isDebugProvider) ProviderConstants.PROVIDER_DEBUG else "user-$userId"
 
         val repository = repositoryUrl.toValidRepositoryLink()
         val childDirectoryName = "${repository.owner}-${repository.name}"
@@ -261,33 +170,8 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         return "${context.getExternalFilesDir(null)}/$finalPathPrefix"
     }
 
-    private suspend fun getPreferenceItemOrCreate(
-        id: String,
-        fileName: String,
-        filePath: String,
-    ): ProviderFromPreferences {
-        var providerFromPreferences =
-            getProviderPrefs()
-                .providers
-                .find { it.id == id }
-
-        if (providerFromPreferences == null) {
-            providerFromPreferences =
-                ProviderFromPreferences(
-                    id = id,
-                    name = fileName,
-                    filePath = filePath,
-                    isDisabled = false,
-                )
-        }
-
-        return providerFromPreferences
-    }
-
-    private fun isProviderAlreadyLoaded(
-        metadata: ProviderMetadata,
-    ): Boolean {
-        if (providerRepository.getProvider(metadata.id) != null) {
+    private fun isProviderAlreadyLoaded(metadata: ProviderMetadata): Boolean {
+        if (providerRepository.getPlugin(metadata.id) != null) {
             warnLog("Provider with name ${metadata.name} already exists")
             return true
         }
@@ -327,5 +211,37 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
             errorLog(e)
             return false
         }
+    }
+
+    /**
+     * Retrieves the metadata from the `updater.json` file for the given provider ID.
+     *
+     * All online metadata are stored in the `updater.json` file
+     * */
+    private fun getMetadataFromFile(provider: InstalledProvider): ProviderMetadata? {
+        if (cacheLocalMetadataMap.containsKey(provider.id)) {
+            return cacheLocalMetadataMap[provider.id]
+        }
+
+        val updaterFilePath = provider.file.parent?.plus("/${ProviderConstants.UPDATER_JSON_FILE}")
+
+        if (updaterFilePath == null) {
+            errorLog("Provider's file path must not be null!")
+            return null
+        }
+
+        val updaterFile = File(updaterFilePath)
+
+        if (!updaterFile.exists()) {
+            errorLog("Provider's updater.json could not be found!")
+            return null
+        }
+
+        val updaterJsonList = fromJson<List<ProviderMetadata>>(updaterFile.reader())
+        updaterJsonList.forEach { metadata ->
+            cacheLocalMetadataMap[metadata.id] = metadata
+        }
+
+        return cacheLocalMetadataMap[provider.id]
     }
 }

@@ -18,6 +18,6 @@ internal val <T> T.uiText: UiText
             is DecoderPriority -> UiText.from(this.getStringResId())
             is PlayerQuality -> UiText.from(this.qualityStringResId)
             is CaptionEdgeTypePreference -> UiText.from(this.getStringResId())
-            else -> throw IllegalArgumentException("Unsupported type")
+            else -> throw IllegalArgumentException("Unsupported type: ${this ?: this::class.java.simpleName}")
         }
     }

@@ -1,29 +1,37 @@
 package com.flixclusive.mobile
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.util.fastFirstOrNull
+import androidx.compose.ui.util.fastFilteredMap
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.BuildConfig
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
+import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.monitor.NetworkMonitor
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.player.PlayerCache
+import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
+import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
+import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
+import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
+import com.flixclusive.domain.provider.usecase.manage.ProviderResult
+import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
+import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
+import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Movie
@@ -31,43 +39,59 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.strings.R as LocaleR
 
+internal sealed class ProviderUpdateInfo {
+    data class Updated(val providerNames: List<String>) : ProviderUpdateInfo()
+    data class Outdated(val providerNames: List<String>) : ProviderUpdateInfo()
+}
+
 @HiltViewModel
 internal class MobileAppViewModel @Inject constructor(
     private val _getFilmMetadata: GetFilmMetadataUseCase,
-    private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
+    private val getSeason: GetSeasonUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val watchProgressRepository: WatchProgressRepository,
-    private val watchlistRepository: WatchlistRepository,
     private val dataStoreManager: DataStoreManager,
     private val userSessionManager: UserSessionManager,
     private val libraryListRepository: LibraryListRepository,
     private val appDispatchers: AppDispatchers,
     private val playerCache: PlayerCache,
     private val cachedLinksRepository: CachedLinksRepository,
+    private val initializeProviders: InitializeProvidersUseCase,
+    private val checkOutdatedProviders: CheckOutdatedProviderUseCase,
+    private val updateProvider: UpdateProviderUseCase,
     networkMonitor: NetworkMonitor,
 ) : ViewModel() {
     private var onFilmLongClickJob: Job? = null
     private var onFetchMediaLinksJob: Job? = null
 
-    private val userId: Int
-        get() {
-            return userSessionManager.currentUser.value?.id
-                ?: error("It is now allowed to browse the app without a logged in user!")
-        }
+    private val _uiState = MutableStateFlow(MobileAppUiState())
+    val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
+
+    private val _providerUpdateInfo = MutableSharedFlow<ProviderUpdateInfo?>()
+    val providerUpdateInfo = _providerUpdateInfo.asSharedFlow()
+
+    val currentLinksCache = cachedLinksRepository.currentCache
 
     /**
      * A WebView driver instance that is shared across the app.
@@ -102,27 +126,103 @@ internal class MobileAppViewModel @Inject constructor(
             initialValue = true,
         )
 
-    private val _uiState = MutableStateFlow(MobileAppUiState())
-    val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
+    init {
+        viewModelScope.launch {
+            val user = userSessionManager.currentUser.filterNotNull().first().name
 
-    val currentLinksCache = cachedLinksRepository.currentCache
+            // Ensure that the onboarding process has been completed before loading providers for the first time
+            dataStoreManager.getSystemPrefs().first { prefs -> !prefs.isFirstTimeUserLaunch }
+
+            infoLog("Loading $user's providers for the first time...")
+            initProviders()
+            updateProviders()
+        }
+    }
+
+    private suspend fun initProviders() {
+        initializeProviders()
+            .onStart {
+                _uiState.update { it.copy(isLoadingProviders = true) }
+            }
+            .onEach { result ->
+                if (result !is ProviderResult.Failure) return@onEach
+
+                _uiState.update { state ->
+                    val pair = result.provider.id to ProviderWithThrowable(
+                        provider = result.provider,
+                        throwable = result.error,
+                    )
+
+                    state.copy(providerErrors = state.providerErrors + pair)
+                }
+            }
+            .onCompletion {
+                _uiState.update { it.copy(isLoadingProviders = false) }
+            }.collect()
+    }
+
+    private suspend fun updateProviders() {
+        val providerPrefs = dataStoreManager.getUserPrefs(
+            key = UserPreferences.PROVIDER_PREFS_KEY,
+            type = ProviderPreferences::class
+        ).first()
+
+        val outdatedProviders = checkOutdatedProviders()
+            .fastFilteredMap(
+                predicate = { it is CheckOutdatedProviderResult.Outdated },
+                transform = { it.metadata }
+            )
+
+        if (outdatedProviders.isEmpty()) return
+        if (!providerPrefs.isAutoUpdateEnabled) {
+            val names = outdatedProviders.fastMap { it.name }
+            _providerUpdateInfo.emit(ProviderUpdateInfo.Outdated(names))
+            return
+        }
+
+        val results = updateProvider(outdatedProviders)
+
+        // Remove providers that were updated successfully from the errors list in the ui state
+        results.success.forEach {
+            _uiState.update { state ->
+                state.copy(providerErrors = state.providerErrors - it.id)
+            }
+        }
+
+        // Add providers that failed to update to the errors list in the ui state
+        results.failed.forEach { (provider, throwable) ->
+            val pair = provider.id to ProviderWithThrowable(
+                provider = provider,
+                throwable = throwable ?: Error("Failed to update provider"),
+            )
+
+            _uiState.update { state ->
+                state.copy(providerErrors = state.providerErrors + pair)
+            }
+        }
+
+        if (results.success.isNotEmpty()) {
+            val names = results.success.fastMap { it.name }
+            _providerUpdateInfo.emit(ProviderUpdateInfo.Updated(names))
+        }
+    }
+
+    fun onConsumeProviderErrors() {
+        _uiState.update { state ->
+            state.copy(providerErrors = emptyMap())
+        }
+    }
 
     fun previewFilm(film: Film) {
         if (onFilmLongClickJob?.isActive == true) return
 
         onFilmLongClickJob = viewModelScope.launch {
-            val watchlistItem = watchlistRepository.get(filmId = film.identifier, ownerId = userId)
-            val libraryItem =
-                libraryListRepository.getListsContainingFilm(filmId = film.identifier, ownerId = userId).first()
-            val watchProgressItem = watchProgressRepository.get(
-                id = film.identifier,
-                ownerId = userId,
-                type = film.filmType,
-            )
-
-            val isInLibrary = libraryItem.isNotEmpty() ||
-                watchProgressItem != null ||
-                watchlistItem != null
+            val userId = userSessionManager.currentUser.filterNotNull().first().id
+            val libraryItem = libraryListRepository.getListsContainingFilm(
+                filmId = film.identifier,
+                ownerId = userId
+            ).first()
+            val isInLibrary = libraryItem.isNotEmpty()
 
             _uiState.update {
                 it.copy(
@@ -139,9 +239,12 @@ internal class MobileAppViewModel @Inject constructor(
         film: Film,
         episode: Episode? = null,
     ) {
-        if (onFetchMediaLinksJob?.isActive == true) return
+        if (onFetchMediaLinksJob?.isActive == true && _uiState.value.playerData != null) return
 
+        onFetchMediaLinksJob?.cancel()
         onFetchMediaLinksJob = viewModelScope.launch {
+            _uiState.update { it.copy(playerData = PlayerData(film, episode)) }
+            cachedLinksRepository.setCurrentCache(null)
             updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.film_data_fetching))
 
             val metadata = getFilmMetadata(film = film)
@@ -157,21 +260,20 @@ internal class MobileAppViewModel @Inject constructor(
                 is Movie -> getMediaLinks(movie = metadata)
                 is TvShow -> {
                     var episodeToLoad = episode
-
                     if (episode == null) {
-                        getSeason(tvShow = metadata)
-                            .onSuccess { episodeToLoad = it }
-                            .onFailure { e ->
-                                updateLoadLinksState(LoadLinksState.Error(e))
-                                return@launch
-                            }
+                        episodeToLoad = getEpisodeToWatch(tvShow = metadata)
+                    }
+
+                    if (episodeToLoad == null) {
+                        updateLoadLinksState(LoadLinksState.Error(LocaleR.string.failed_to_load_episode))
+                        return@launch
                     }
 
                     playerData = playerData.copy(episode = episodeToLoad)
 
                     getMediaLinks(
                         tvShow = metadata,
-                        episode = episodeToLoad!!,
+                        episode = episodeToLoad,
                     )
                 }
 
@@ -201,39 +303,41 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getSeason(tvShow: TvShow): Result<Episode> {
-        val episodeProgress = watchProgressRepository.get(
+    private suspend fun getEpisodeToWatch(tvShow: TvShow): Episode? {
+        val userId = userSessionManager.currentUser.filterNotNull().first().id
+        val progress = watchProgressRepository.get(
             id = tvShow.identifier,
             ownerId = userId,
             type = tvShow.filmType,
         ) as? EpisodeProgressWithMetadata
 
-        // Default to 1 if this has not been saved yet
-        val seasonNumber = episodeProgress?.watchData?.seasonNumber ?: 1
-        val episodeNumber = episodeProgress?.watchData?.episodeNumber ?: 1
-
-        val response = getSeasonWithWatchProgress(tvShow = tvShow, number = seasonNumber)
-            .dropWhile { it is Resource.Loading }
-            .first()
-
-        when (response) {
-            is Resource.Failure -> {
-                return Result.failure(ExceptionWithUiText(response.error))
-            }
-
-            is Resource.Success -> {
-                val season = response.data!!
-                val episodeWithProgress = season.episodes.fastFirstOrNull { it.number == episodeNumber }
-
-                if (episodeWithProgress == null) {
-                    return Result.failure(ExceptionWithUiText(UiText.from(LocaleR.string.unavailable_episode)))
-                }
-
-                return Result.success(episodeWithProgress.episode)
-            }
-
-            else -> error("Fetching seasons for load links state is still loading!")
+        if (progress?.watchData?.isCompleted == true) {
+            return getNextEpisode(
+                tvShow = tvShow,
+                season = progress.watchData.seasonNumber,
+                episode = progress.watchData.episodeNumber,
+            )
         }
+
+        // Default to 1 if this has not been saved yet
+        val seasonNumber = progress?.watchData?.seasonNumber ?: 1
+        val episodeNumber = progress?.watchData?.episodeNumber ?: 1
+
+        val season = getSeason(
+            tvShow = tvShow,
+            number = seasonNumber,
+        ).let { response ->
+            when (response) {
+                is Resource.Success -> response.data
+                else -> null
+            }
+        }
+
+        val episode = season?.episodes?.binarySearch {
+            it.number.compareTo(episodeNumber)
+        }?.let { index -> season.episodes.getOrNull(index) }
+
+        return episode
     }
 
     fun hideWebViewDriver() {
@@ -278,7 +382,12 @@ internal class MobileAppViewModel @Inject constructor(
             }
         }
 
-        _uiState.update { it.copy(loadLinksState = state) }
+        _uiState.update {
+            it.copy(
+                loadLinksState = state,
+                playerData = if (state.isIdle) null else it.playerData
+            )
+        }
     }
 
     private fun isFailureButHasLinks(): Boolean {
@@ -296,6 +405,8 @@ internal data class MobileAppUiState(
     val loadLinksState: LoadLinksState = LoadLinksState.Idle,
     val filmPreviewState: FilmPreview? = null,
     val playerData: PlayerData? = null,
+    val isLoadingProviders: Boolean = false,
+    val providerErrors: Map<String, ProviderWithThrowable> = emptyMap(),
 )
 
 @Stable

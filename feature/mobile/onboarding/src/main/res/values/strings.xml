@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_notifications_desc">Used for updates and download status</string>
+    <string name="permission_unknown_sources_desc">Used for auto-updating the app</string>
+
+    <string name="onboarding_welcome_title">Welcome!</string>
+    <string name="onboarding_welcome_desc">Let\'s get you set up — quick and easy.</string>
+
+    <string name="onboarding_permissions_title">Permissions</string>
+    <string name="onboarding_permissions_desc">Enable what\'s needed.</string>
+    <string name="onboarding_permission_unknown_sources_title">Install unknown apps</string>
+    <string name="onboarding_permission_notifications_title">Notifications</string>
+    <string name="onboarding_open_settings">Open settings</string>
+    <string name="onboarding_permissions_required_hint">Enable Install unknown apps to continue.</string>
+    <string name="onboarding_permissions_view_granted_button">View other granted permissions</string>
+    <string name="onboarding_permissions_granted_sheet_title">Other granted permissions</string>
+    <string name="onboarding_permissions_granted_sheet_desc">These are permissions Android has already granted to the app.</string>
+    <string name="onboarding_permissions_granted_sheet_empty">No other granted permissions found.</string>
+
+    <string name="onboarding_storage_title">Storage location</string>
+    <string name="onboarding_storage_desc">Pick a dedicated folder for storing data.\n\nThe app will use it for:\n• Automatic backups\n• In-app update downloads (APK files)\n• Future downloaded media</string>
+    <string name="onboarding_storage_current_label">Selected folder</string>
+    <string name="onboarding_storage_not_selected">Not selected</string>
+    <string name="onboarding_storage_pick_button">Choose folder</string>
+    <string name="onboarding_storage_tip">Recommended:\nCreate a folder named "Flixclusive".\n\nAvoid using the ff. folders to prevent issues:\n• Download\n• Documents</string>
+    <string name="onboarding_storage_required_hint">Choose a folder to continue.</string>
+
+    <string name="onboarding_finish_up_title">All set!</string>
+    <string name="onboarding_finish_up_desc">You can now create a profile, add your favorite providers, and start exploring your library.</string>
+
+</resources>

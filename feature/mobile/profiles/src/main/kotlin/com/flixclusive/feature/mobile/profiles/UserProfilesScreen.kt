@@ -43,7 +43,6 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,7 +56,6 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,12 +68,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navigator.PinAction
-import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
-import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -114,8 +110,8 @@ internal fun UserProfilesScreen(
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isLoggedIn, uiState.errors) {
-        if (uiState.isLoggedIn && uiState.errors.isEmpty()) {
+    LaunchedEffect(uiState.isLoggedIn) {
+        if (uiState.isLoggedIn) {
             navigator.openHomeScreen()
         }
     }
@@ -138,7 +134,6 @@ internal fun UserProfilesScreen(
         },
         onHoverProfile = viewModel::onHoverProfile,
         onUseProfile = viewModel::onUseProfile,
-        onConsumeErrors = viewModel::onConsumeErrors,
     )
 }
 
@@ -158,10 +153,7 @@ private fun UserProfilesScreenContent(
     initialState: ScreenType,
     onHoverProfile: (User) -> Unit,
     onUseProfile: (User) -> Unit,
-    onConsumeErrors: () -> Unit,
 ) {
-    val context = LocalContext.current
-
     val (pageCount, initialPage) = remember(profiles.size) {
         val pageCount = if (profiles.size <= 2) {
             profiles.size
@@ -294,27 +286,6 @@ private fun UserProfilesScreenContent(
                 },
             )
         }
-    }
-
-    if (uiState.errors.isNotEmpty()) {
-        val listOfErrors by remember {
-            derivedStateOf {
-                uiState.errors.values.toList()
-            }
-        }
-
-        ProviderCrashBottomSheet(
-            isLoading = uiState.isLoading,
-            errors = listOfErrors,
-            onDismissRequest = {
-                if (uiState.isLoading) {
-                    context.showToast(context.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading))
-                    return@ProviderCrashBottomSheet
-                }
-
-                onConsumeErrors()
-            },
-        )
     }
 }
 
@@ -475,7 +446,7 @@ private fun BackButton(
     ) {
         AdaptiveIcon(
             painter = painterResource(UiCommonR.drawable.left_arrow),
-            contentDescription = stringResource(LocaleR.string.navigate_up),
+            contentDescription = stringResource(LocaleR.string.back),
             tint = MaterialTheme.colorScheme.onSurface.copy(0.7F),
             modifier = Modifier.align(Alignment.Center),
         )
@@ -553,10 +524,10 @@ private fun UserProfilesScreenBasePreview() {
         Surface(modifier = Modifier.fillMaxSize()) {
             UserProfilesScreenContent(
                 profiles = listOf(
-                    User(id = 1, name = "User 1", image = 1),
-                    User(id = 2, name = "User 2", image = 2),
-                    User(id = 3, name = "User 3", image = 3),
-                    User(id = 4, name = "User 4", image = 4),
+                    User(id = "preview-user-1", name = "User 1", image = 1),
+                    User(id = "preview-user-2", name = "User 2", image = 2),
+                    User(id = "preview-user-3", name = "User 3", image = 3),
+                    User(id = "preview-user-4", name = "User 4", image = 4),
                 ),
                 uiState = uiState,
                 isFromSplashScreen = false,
@@ -569,7 +540,7 @@ private fun UserProfilesScreenBasePreview() {
 
                     override fun openUserAvatarSelectScreen(selected: Int) {}
 
-                    override fun openEditUserScreen(userId: Int) {}
+                    override fun openEditUserScreen(userId: String) {}
 
                     override fun openUserPinScreen(action: PinAction) {}
 
@@ -578,7 +549,6 @@ private fun UserProfilesScreenBasePreview() {
                 initialState = ScreenType.Pager,
                 onHoverProfile = { uiState = uiState.copy(focusedProfile = it) },
                 onUseProfile = { uiState = uiState.copy(isLoading = true) },
-                onConsumeErrors = { uiState = uiState.copy(errors = emptyMap()) },
             )
         }
     }

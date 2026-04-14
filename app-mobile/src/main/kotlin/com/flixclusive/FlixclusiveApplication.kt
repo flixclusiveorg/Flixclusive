@@ -8,6 +8,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.util.network.okhttp.UserAgentManager
 import com.flixclusive.crash.GlobalCrashHandler
+import com.flixclusive.data.backup.work.AutoBackupScheduler
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import dagger.hilt.android.HiltAndroidApp
@@ -32,6 +33,9 @@ internal class FlixclusiveApplication :
     @Inject
     lateinit var client: OkHttpClient
 
+    @Inject
+    lateinit var autoBackupScheduler: AutoBackupScheduler
+
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader
             .Builder(context)
@@ -45,6 +49,8 @@ internal class FlixclusiveApplication :
 
         GlobalCrashHandler.initialize(applicationContext)
 
+        autoBackupScheduler.start()
+
         appDispatchers.ioScope.launch {
             launch {
                 // Initialize user-agents
@@ -53,12 +59,11 @@ internal class FlixclusiveApplication :
 
             val users = userRepository.observeUsers().first()
             val hasOldSession = userSessionManager.hasOldSession()
-            val isSingleUserApp = users.size == 1
 
             if (hasOldSession) {
                 userSessionManager.restoreSession()
                 userSessionManager.currentUser.first { it != null }
-            } else if (isSingleUserApp) {
+            } else if (users.size == 1) {
                 userSessionManager.signIn(users.first())
             } else {
                 userSessionManager.signOut()

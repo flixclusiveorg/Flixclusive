@@ -6,12 +6,14 @@ import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListType
+import com.flixclusive.core.database.entity.provider.InstalledProvider
+import com.flixclusive.core.database.entity.provider.InstalledRepository
 import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
-import com.flixclusive.core.database.entity.watchlist.Watchlist
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.model.film.Film
 import java.util.Date
@@ -20,31 +22,19 @@ import java.util.Date
  * Test defaults for database-related tests.
  * */
 object DatabaseTestDefaults {
-    const val TEST_USER_ID = 1
+    const val TEST_USER_ID = "11111111-1111-1111-1111-111111111111"
 
     fun getDBFilm(film: Film = FilmTestDefaults.getMovie()) = film.toDBFilm()
 
-    fun getWatchlistItem(
-        id: Long = 0,
-        ownerId: Int = TEST_USER_ID,
-        filmId: String = getDBFilm().identifier,
-        addedAt: Date = Date(),
-    ) = Watchlist(
-        id = id,
-        ownerId = ownerId,
-        filmId = filmId,
-        addedAt = addedAt,
-    )
-
     fun getMovieProgress(
         id: Long = 0,
-        filmId: String = getDBFilm().identifier,
-        ownerId: Int = TEST_USER_ID,
+        filmId: String = getDBFilm().id,
+        ownerId: String = TEST_USER_ID,
         progress: Long = 0,
         status: WatchStatus = WatchStatus.WATCHING,
         duration: Long = 0,
-        watchedAt: Date = Date(),
-        watchCount: Int = 1,
+        createdAt: Date = Date(),
+        updatedAt: Date = createdAt,
     ) = MovieProgress(
         id = id,
         filmId = filmId,
@@ -52,20 +42,21 @@ object DatabaseTestDefaults {
         progress = progress,
         status = status,
         duration = duration,
-        watchedAt = watchedAt,
-        watchCount = watchCount,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
     )
 
     fun getEpisodeProgress(
         id: Long = 0,
-        filmId: String = getDBFilm(film = FilmTestDefaults.getTvShow()).identifier,
-        ownerId: Int = TEST_USER_ID,
+        filmId: String = getDBFilm(film = FilmTestDefaults.getTvShow()).id,
+        ownerId: String = TEST_USER_ID,
         seasonNumber: Int = 1,
         episodeNumber: Int = 1,
         progress: Long = 0,
         status: WatchStatus = WatchStatus.WATCHING,
         duration: Long = 0,
-        watchedAt: Date = Date(),
+        createdAt: Date = Date(),
+        updatedAt: Date = createdAt,
     ) = EpisodeProgress(
         id = id,
         filmId = filmId,
@@ -75,11 +66,12 @@ object DatabaseTestDefaults {
         progress = progress,
         status = status,
         duration = duration,
-        watchedAt = watchedAt,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
     )
 
     fun getUser(
-        id: Int = TEST_USER_ID,
+        id: String = TEST_USER_ID,
         name: String = "Test User",
         image: Int = 1,
         pin: String? = null,
@@ -95,20 +87,23 @@ object DatabaseTestDefaults {
     fun getSearchHistory(
         id: Int = 0,
         query: String = "Test Query",
-        ownerId: Int = TEST_USER_ID,
-        searchedOn: Date = Date(),
+        ownerId: String = TEST_USER_ID,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date(),
     ) = SearchHistory(
         id = id,
         query = query,
         ownerId = ownerId,
-        searchedOn = searchedOn,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
     )
 
     fun getLibraryList(
         id: Int = 0,
         name: String = "Test List",
         description: String = "Test Description",
-        ownerId: Int = TEST_USER_ID,
+        ownerId: String = TEST_USER_ID,
+        listType: LibraryListType = LibraryListType.CUSTOM,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
     ) = LibraryList(
@@ -116,18 +111,51 @@ object DatabaseTestDefaults {
         name = name,
         description = description,
         ownerId = ownerId,
+        listType = listType,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
 
     fun getLibraryListItem(
         id: Long = 0,
-        filmId: String = getDBFilm().identifier,
+        filmId: String = getDBFilm().id,
         listId: Int = 1,
     ) = LibraryListItem(
         id = id,
         filmId = filmId,
         listId = listId,
+    )
+
+    fun getInstalledRepository(
+        url: String = "https://example.com/repo",
+        owner: String = "testowner",
+        name: String = "testrepo",
+        userId: String = TEST_USER_ID,
+        rawLinkFormat: String = "https://raw.example.com/%s",
+    ) = InstalledRepository(
+        url = url,
+        owner = owner,
+        name = name,
+        rawLinkFormat = rawLinkFormat,
+        userId = userId,
+    )
+
+    fun getInstalledProvider(
+        id: String = "test-provider",
+        repositoryUrl: String = "https://example.com/repo",
+        filePath: String = "provider.json",
+        ownerId: String = TEST_USER_ID,
+        sortOrder: Double = 1.0,
+        isEnabled: Boolean = true,
+        isDebug: Boolean = false,
+    ) = InstalledProvider(
+        id = id,
+        repositoryUrl = repositoryUrl,
+        sortOrder = sortOrder,
+        ownerId = ownerId,
+        filePath = filePath,
+        isEnabled = isEnabled,
+        isDebug = isDebug,
     )
 
     fun createDatabase(context: Context) =
