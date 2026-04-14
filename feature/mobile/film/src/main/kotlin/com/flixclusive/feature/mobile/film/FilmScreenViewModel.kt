@@ -33,6 +33,7 @@ import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -51,7 +52,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -123,9 +123,11 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     ) { selectedSeason, tvShow, _ ->
         if (tvShow !is TvShow) return@combine null
 
-        getSeasonWithWatchProgress(tvShow, selectedSeason)
+        tvShow to selectedSeason
     }.filterNotNull()
-        .flattenConcat()
+        .flatMapLatest { (tvShow, selectedSeason) ->
+            getSeasonWithWatchProgress(tvShow, selectedSeason)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -390,9 +392,9 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun onSeasonChange(seasonNumber: Int) {
+    fun onSeasonChange(season: Season) {
         _uiState.update {
-            it.copy(selectedSeason = seasonNumber)
+            it.copy(selectedSeason = season.number)
         }
     }
 
