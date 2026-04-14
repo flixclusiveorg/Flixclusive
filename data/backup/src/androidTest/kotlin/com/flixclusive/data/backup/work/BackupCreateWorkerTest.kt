@@ -100,7 +100,7 @@ class BackupCreateWorkerTest {
 
             val userId = DatabaseTestDefaults.TEST_USER_ID
             database.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
-            userSessionDataStore.saveCurrentUserId(userId)
+            userSessionDataStore.saveCurrentUserId(userId, 1)
 
             dataStoreManager.usePreferencesByUserId(userId)
             dataStoreManager.updateUserPrefs(UserPreferences.DATA_PREFS_KEY, DataPreferences::class) { old ->
@@ -173,7 +173,7 @@ class BackupCreateWorkerTest {
 
             val userId = DatabaseTestDefaults.TEST_USER_ID
             database.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
-            userSessionDataStore.saveCurrentUserId(userId)
+            userSessionDataStore.saveCurrentUserId(userId, 1)
 
             dataStoreManager.usePreferencesByUserId(userId)
             dataStoreManager.updateUserPrefs(UserPreferences.DATA_PREFS_KEY, DataPreferences::class) { old ->

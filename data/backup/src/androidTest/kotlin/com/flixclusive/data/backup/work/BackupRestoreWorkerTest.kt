@@ -85,7 +85,7 @@ class BackupRestoreWorkerTest {
 
             val userId = DatabaseTestDefaults.TEST_USER_ID
             database.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
-            userSessionDataStore.saveCurrentUserId(userId)
+            userSessionDataStore.saveCurrentUserId(userId, 1)
 
             val listName = "Test List"
             val filmId = "film-1"
