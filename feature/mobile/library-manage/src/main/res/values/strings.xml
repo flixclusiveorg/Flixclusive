@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="invalid_library_item_selection">This library is a built-in library and cannot be selected.</string>
+    <string name="failed_to_select_system_list_message">You can\'t delete system default lists</string>
 </resources>

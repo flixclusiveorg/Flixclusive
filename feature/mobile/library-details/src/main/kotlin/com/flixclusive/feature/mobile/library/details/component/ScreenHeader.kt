@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.strings.R
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil.isCustom
 import java.text.SimpleDateFormat
 import java.util.Locale
 

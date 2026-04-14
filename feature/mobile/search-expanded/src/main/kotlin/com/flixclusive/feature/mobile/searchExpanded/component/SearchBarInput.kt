@@ -153,7 +153,7 @@ internal fun SearchBarInput(
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(LocaleR.string.navigate_up),
+                        contentDescription = stringResource(LocaleR.string.back),
                     )
                 }
             },

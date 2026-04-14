@@ -10,5 +10,5 @@ interface InitializeProvidersUseCase {
      *
      * @return A flow containing the results of the initialization operation.
      * */
-    operator fun invoke(): Flow<LoadProviderResult>
+    operator fun invoke(): Flow<ProviderResult>
 }

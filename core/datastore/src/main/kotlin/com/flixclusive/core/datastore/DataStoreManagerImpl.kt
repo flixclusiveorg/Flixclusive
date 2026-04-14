@@ -8,6 +8,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.file.rmrf
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
+import com.flixclusive.core.database.dao.provider.InstalledProviderDao
+import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
+import com.flixclusive.core.datastore.migration.MigrationV220
+import com.flixclusive.core.datastore.migration.MigrationV220SystemPrefs
 import com.flixclusive.core.datastore.migration.SystemPreferencesMigration
 import com.flixclusive.core.datastore.migration.UserPreferencesMigration
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -15,13 +22,12 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.serializer.system.SystemPreferencesSerializer
 import com.flixclusive.core.datastore.util.USER_PREFERENCE_FILENAME
 import com.flixclusive.core.datastore.util.createUserPreferences
-import com.flixclusive.core.datastore.util.getProvidersPathPrefix
-import com.flixclusive.core.datastore.util.getProvidersSettingsPathPrefix
-import com.flixclusive.core.datastore.util.rmrf
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,9 +38,7 @@ import java.io.File
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
-const val PROVIDERS_FOLDER_NAME = "providers"
-const val PROVIDERS_SETTINGS_FOLDER_NAME = "settings"
-internal const val SYSTEM_PREFS_FILENAME = "system-preferences.json"
+const val SYSTEM_PREFS_FILENAME = "system-preferences.json"
 
 internal val Context.systemPreferences: DataStore<SystemPreferences> by dataStore(
     fileName = SYSTEM_PREFS_FILENAME,
@@ -42,16 +46,19 @@ internal val Context.systemPreferences: DataStore<SystemPreferences> by dataStor
     produceMigrations = { context ->
         listOf(
             SystemPreferencesMigration(context),
+            MigrationV220SystemPrefs
         )
     },
 )
 
 @OptIn(InternalSerializationApi::class)
 internal class DataStoreManagerImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val userSessionDataStore: UserSessionDataStore,
     private val systemPreferences: DataStore<SystemPreferences>,
-    private val appDispatchers: AppDispatchers
+    private val appDispatchers: AppDispatchers,
+    private val providerDao: InstalledProviderDao,
+    private val repositoryDao: InstalledRepositoryDao,
 ) : DataStoreManager {
     val lock = Any()
 
@@ -63,7 +70,10 @@ internal class DataStoreManagerImpl @Inject constructor(
         CoroutineScope(appDispatchers.io).launch {
             userSessionDataStore.currentUserId.collectLatest {
                 if (it != null) {
-                    usePreferencesByUserId(userId = it)
+                    val legacyCurrentUserId = userSessionDataStore.legacyCurrentUserId.filterNotNull().first()
+                    usePreferencesByUserId(
+                        userId = it, legacyUserId = legacyCurrentUserId
+                    )
                 }
             }
         }
@@ -71,13 +81,23 @@ internal class DataStoreManagerImpl @Inject constructor(
 
     override fun getSystemPrefs() = systemPreferences.data
 
-    override fun usePreferencesByUserId(userId: Int) {
+    override fun usePreferencesByUserId(
+        userId: String,
+        legacyUserId: Int?,
+    ) {
         synchronized(lock) {
             userPreferences = context.createUserPreferences(
                 userId = userId,
                 produceMigrations = { _ ->
                     listOf(
                         UserPreferencesMigration(context = context),
+                        MigrationV220(
+                            context = context,
+                            legacyUserId = legacyUserId ?: 1,
+                            userId = userId,
+                            providerDao = providerDao,
+                            repositoryDao = repositoryDao,
+                        )
                     )
                 },
             )
@@ -132,11 +152,11 @@ internal class DataStoreManagerImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAllUserRelatedFiles(userId: Int) {
+    override suspend fun deleteAllUserRelatedFiles(userId: String) {
         withContext(appDispatchers.io) {
             val datastoreFile = context.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
-            val providersFolder = context.getProvidersPathPrefix(userId)
-            val providersSettingsFolder = context.getProvidersSettingsPathPrefix(userId)
+            val providersFolder = context.getProvidersPath(userId)
+            val providersSettingsFolder = context.getProvidersSettingsPath(userId)
 
             rmrf(File(providersFolder))
             rmrf(File(providersSettingsFolder))

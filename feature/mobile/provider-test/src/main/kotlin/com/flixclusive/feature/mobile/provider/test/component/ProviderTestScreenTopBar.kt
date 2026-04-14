@@ -44,7 +44,7 @@ internal fun ProviderTestScreenTopBar(
             IconButton(onClick = onNavigationIconClick) {
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.left_arrow),
-                    contentDescription = stringResource(LocaleR.string.navigate_up),
+                    contentDescription = stringResource(LocaleR.string.back),
                 )
             }
 

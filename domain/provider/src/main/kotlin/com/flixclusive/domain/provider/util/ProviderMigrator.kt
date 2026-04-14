@@ -42,7 +42,7 @@ internal object ProviderMigrator {
         if (!providerSettingsDir.exists()) return
 
         val files = providerSettingsDir.listFiles() ?: return
-        if (files.isEmpty() == true) return
+        if (files.isEmpty()) return
 
         val oldSettingsFile = File(directory, "${metadata.name}.json")
         if (!files.contains(oldSettingsFile)) return

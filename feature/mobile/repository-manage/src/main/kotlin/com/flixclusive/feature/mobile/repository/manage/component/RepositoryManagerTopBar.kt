@@ -19,12 +19,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import kotlin.math.max
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -114,7 +114,7 @@ private fun MultiSelectTopBar(
             )
         },
         actions = {
-            PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
+            PlainTooltipBox(description = stringResource(LocaleR.string.back)) {
                 ActionButton(onClick = onCopyLinks) {
                     AdaptiveIcon(
                         painter = painterResource(UiCommonR.drawable.round_content_copy_24),

@@ -103,6 +103,8 @@ class TracksState(
         trackGroups.fastForEachIndexed { i, format ->
             val source = if (format.id?.contains("http", ignoreCase = true) == true) {
                 TrackSource.REMOTE
+            } else if (format.id?.contains("://", ignoreCase = true) == true) {
+                TrackSource.LOCAL
             } else {
                 TrackSource.EMBEDDED
             }

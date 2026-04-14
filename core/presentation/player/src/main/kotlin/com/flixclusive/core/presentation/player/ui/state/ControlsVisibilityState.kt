@@ -54,7 +54,12 @@ class ControlsVisibilityState(
      * */
     private suspend fun observe(isScrubbing: Boolean) {
         player.listen { events ->
-            if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED)) {
+            if (
+                events.containsAny(
+                    Player.EVENT_PLAYBACK_STATE_CHANGED,
+                    Player.EVENT_IS_PLAYING_CHANGED
+                )
+            ) {
                 if (isScrubbing) return@listen
 
                 if (shouldShowIndefinitely()) {

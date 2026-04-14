@@ -8,9 +8,9 @@ import com.flixclusive.core.datastore.migration.ProviderFromPreferencesMigration
 import com.flixclusive.core.datastore.migration.model.OldAppSettings
 import com.flixclusive.core.datastore.migration.model.OldAppSettingsProvider
 import com.flixclusive.core.datastore.migration.model.OldOnBoardingPreferences
+import com.flixclusive.core.datastore.migration.model.ProviderPreferencesV213
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
-import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserOnBoarding
@@ -20,6 +20,7 @@ import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
+@Suppress("DEPRECATION")
 internal class UserPreferencesMigration(
     private val context: Context,
 ) : DataMigration<Preferences> {
@@ -102,14 +103,14 @@ internal class UserPreferencesMigration(
     private fun OldAppSettings.toUiPreferences(): UiPreferences =
         UiPreferences(shouldShowTitleOnCards = isShowingFilmCardTitle)
 
-    private fun OldAppSettingsProvider.toProviderPreferences(context: Context): ProviderPreferences {
+    private fun OldAppSettingsProvider.toProviderPreferences(context: Context): ProviderPreferencesV213 {
         val providersWithNewFilePaths =
             migrateToNewPaths(
                 oldProviders = providers,
                 context = context,
             )
 
-        return ProviderPreferences(
+        return ProviderPreferencesV213(
             shouldWarnBeforeInstall = warnOnInstall,
             isAutoUpdateEnabled = isUsingAutoUpdateProviderFeature,
             repositories = repositories,

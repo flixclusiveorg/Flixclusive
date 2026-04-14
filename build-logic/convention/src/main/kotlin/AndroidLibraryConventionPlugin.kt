@@ -27,7 +27,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             }
 
             dependencies {
-                add("implementation", libs.findLibrary("kotlinx-serialization").get())
+                add("implementation", libs.findLibrary("kotlinx-serialization-json").get())
+                add("implementation", libs.findLibrary("annotations-experimental").get())
             }
         }
     }

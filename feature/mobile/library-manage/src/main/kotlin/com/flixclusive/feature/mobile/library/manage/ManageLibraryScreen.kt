@@ -28,6 +28,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.collections.SortUtils
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
@@ -46,12 +49,11 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.reme
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.CreateLibraryDialog
 import com.flixclusive.feature.mobile.library.common.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil.isCustom
-import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.manage.component.DefaultLibraryCardShape
@@ -134,8 +136,11 @@ private fun ManageLibraryScreen(
     onToggleSelect: (LibraryListWithPreview) -> Unit,
     onToggleOptionsSheet: (Boolean) -> Unit,
     onLongClickItem: (LibraryListWithPreview) -> Unit,
-    onUpdateFilter: (LibrarySortFilter) -> Unit,
+    onUpdateFilter: (LibrarySort) -> Unit,
 ) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(false) }
 
@@ -223,9 +228,7 @@ private fun ManageLibraryScreen(
             ) {
                 LibraryFilterRow(
                     isListEditable = !isListEmpty && !uiState.isMultiSelecting,
-                    filters = defaultManageLibraryFilters,
-                    selected = uiState.selectedFilter,
-                    ascending = uiState.isSortingAscending,
+                    selected = { uiState.selectedFilter },
                     onUpdate = onUpdateFilter,
                     onStartSelecting = onStartMultiSelecting,
                     modifier = Modifier
@@ -268,6 +271,12 @@ private fun ManageLibraryScreen(
                     libraryListWithPreview = library,
                     onClick = {
                         if (uiState.isMultiSelecting) {
+                            if (!library.list.isCustom) {
+                                context.showToast(
+                                    resources.getString(R.string.failed_to_select_system_list_message)
+                                )
+                                return@LibraryCard
+                            }
                             onToggleSelect(library)
                         } else {
                             onViewLibraryContent(library.list)
@@ -367,14 +376,12 @@ private fun ManageLibraryScreenBasePreview() {
             val sortedList =
                 list.sortedWith(
                     SortUtils.compareBy<LibraryListWithPreview>(
-                        ascending = uiState.isSortingAscending,
+                        ascending = uiState.selectedFilter.ascending,
                         selector = {
                             when (uiState.selectedFilter) {
-                                LibrarySortFilter.Name -> it.list.name
-                                LibrarySortFilter.AddedAt -> it.list.createdAt.time
-                                LibrarySortFilter.ModifiedAt -> it.list.updatedAt.time
-                                ItemCount -> it.itemsCount
-                                else -> throw Error()
+                                is LibrarySort.Name -> it.list.name
+                                is LibrarySort.Added -> it.list.createdAt.time
+                                is LibrarySort.Modified -> it.list.updatedAt.time
                             }
                         },
                     ),
@@ -404,7 +411,7 @@ private fun ManageLibraryScreenBasePreview() {
                 val list =
                     LibraryList(
                         id = it,
-                        ownerId = 1,
+                        ownerId = "preview-user",
                         name = "Library $it",
                         description = description,
                     )
@@ -430,12 +437,12 @@ private fun ManageLibraryScreenBasePreview() {
                     selectedLibraries = { selectedLibraries },
                     searchQuery = { searchQuery },
                     onUpdateFilter = {
-                        uiState =
-                            if (uiState.selectedFilter == it) {
-                                uiState.copy(isSortingAscending = !uiState.isSortingAscending)
-                            } else {
-                                uiState.copy(selectedFilter = it)
-                            }
+                        if (uiState.selectedFilter == it) {
+                            uiState.selectedFilter.toggleAscending()
+                            return@ManageLibraryScreen
+                        }
+
+                        uiState = uiState.copy(selectedFilter = it)
                     },
                     onViewLibraryContent = {},
                     onStartMultiSelecting = { uiState = uiState.copy(isMultiSelecting = true) },

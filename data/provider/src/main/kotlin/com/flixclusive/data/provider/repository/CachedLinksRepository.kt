@@ -8,7 +8,6 @@ import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import java.io.Serializable
 
 /**
  *
@@ -57,6 +56,8 @@ value class CacheKey private constructor(
  * @param providerId the id of the provider used
  * @param streams watchable links obtained from the provider
  * @param subtitles subtitle links obtained from the provider
+ * @param failedStreamUrls a set of stream URLs that have been marked as failed
+ * @param hasExtractedSuccessfully a flag indicating whether the extraction process has completed
  *
  * @see MediaLink
  * @see Stream
@@ -68,10 +69,19 @@ data class CachedLinks(
     val thumbnail: String? = null,
     val streams: List<Stream> = emptyList(),
     val subtitles: List<Subtitle> = emptyList(),
-) : Serializable {
+    val failedStreamUrls: Set<String> = emptySet(),
+    val hasExtractedSuccessfully: Boolean = false,
+) {
     val hasStreamableLinks get() = streams.filterOutExpiredLinks().isNotEmpty()
 
+    /** Indicates whether the cached links are ready to be used, which is true when there are valid streams available and the extraction process has finished. */
+    val isReady get() = hasStreamableLinks && hasExtractedSuccessfully
+
     companion object {
+        fun CachedLinks.markStreamAsFailed(streamUrl: String): CachedLinks {
+            return copy(failedStreamUrls = failedStreamUrls + streamUrl)
+        }
+
         fun CachedLinks.appendStream(stream: Stream): CachedLinks {
             val streams = streams.toMutableSet()
 
@@ -197,6 +207,14 @@ interface CachedLinksRepository {
         key: CacheKey,
         defaultValue: CachedLinks? = null,
     ): Flow<CachedLinks?>
+
+    /**
+     * Marks a stream as failed in the cache associated with the given [CacheKey].
+     *
+     * @param key The [CacheKey] to associate with the failed stream.
+     * @param streamUrl The URL of the stream to mark as failed.
+     * */
+    fun markStreamAsFailed(key: CacheKey, streamUrl: String)
 
     /**
      * Clears all cached links including all streams and subtitles.

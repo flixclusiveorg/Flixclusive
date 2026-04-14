@@ -4,29 +4,25 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
+import java.util.Date
 
-const val MAX_USER_PIN_LENGTH = 4
-
-/**
- * An entity representing a user.
- *
- * @property id The unique identifier of the user.
- * @property name The name of the user.
- * @property image The index of the image associated with the user.
- * @property pin The pin associated with the user.
- * @property pinHint The hint for the user's pin. Required for PIN-based authentication.
- * */
 @Entity
 data class User(
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     @ColumnInfo("userId")
-    val id: Int,
+    val id: String,
     val name: String,
     val image: Int,
     val pin: String? = null,
     val pinHint: String? = null,
+    val createdAt: Date = Date(),
+    val updatedAt: Date = Date(),
+    @Deprecated("This field is no longer used and will be removed in future versions")
+    val legacyId: Int = 0,
 ) : Serializable {
     companion object {
-        val EMPTY = User(0, "", 0, null, null)
+        const val MAX_USER_PIN_LENGTH = 4
+
+        val Empty = User("", "", 0)
     }
 }

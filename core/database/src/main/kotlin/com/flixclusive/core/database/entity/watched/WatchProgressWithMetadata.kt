@@ -11,4 +11,6 @@ sealed interface WatchProgressWithMetadata {
 
     val id get() = watchData.id
     val filmId get() = film.id
+    val createdAt get() = watchData.createdAt
+    val updatedAt get() = watchData.updatedAt
 }

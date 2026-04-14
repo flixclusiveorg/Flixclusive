@@ -90,7 +90,7 @@ private fun SearchHistoryBlockPreview() {
             SearchHistoryBlock(
                 item = SearchHistory(
                     query = "test",
-                    ownerId = 0,
+                    ownerId = "preview-user",
                 ),
                 onClick = {},
                 onArrowClick = {},

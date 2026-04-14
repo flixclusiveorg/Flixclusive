@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.konan.properties.Properties
-
 plugins {
     alias(libs.plugins.flixclusive.library)
     alias(libs.plugins.flixclusive.hilt)
@@ -7,17 +5,6 @@ plugins {
 
 android {
     namespace = "com.flixclusive.core.network"
-
-    defaultConfig {
-        val properties = Properties()
-        properties.load(project.rootProject.file("local.properties").inputStream())
-
-        buildConfigField("String", "TMDB_API_KEY", "\"${properties.getProperty("TMDB_API_KEY")}\"")
-    }
-
-    buildFeatures {
-        buildConfig = true
-    }
 }
 
 dependencies {

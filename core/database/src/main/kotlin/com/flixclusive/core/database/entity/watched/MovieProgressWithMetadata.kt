@@ -5,11 +5,10 @@ import androidx.room.Relation
 import com.flixclusive.core.database.entity.film.DBFilm
 
 /**
- * Represents a movie watch progress with associated metadata.
+ * Represents a movie watch progress with associated library list item metadata.
  *
  * @see MovieProgress
  * @see WatchProgressWithMetadata
- * @see DBFilm
  * */
 data class MovieProgressWithMetadata(
     @Embedded override val watchData: MovieProgress,

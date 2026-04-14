@@ -1,6 +1,7 @@
 package com.flixclusive.core.common.locale
 
 import android.content.Context
+import android.content.res.Resources
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -46,6 +47,18 @@ sealed class UiText {
         return when (this) {
             is StringValue -> str
             is StringResource -> context.getString(stringId, *args)
+        }
+    }
+
+    /**
+     * Returns the text as a string.
+     * @param context The context used to retrieve string resources.
+     * @return The text as a string.
+     */
+    fun asString(resources: Resources): String {
+        return when (this) {
+            is StringValue -> str
+            is StringResource -> resources.getString(stringId, *args)
         }
     }
 

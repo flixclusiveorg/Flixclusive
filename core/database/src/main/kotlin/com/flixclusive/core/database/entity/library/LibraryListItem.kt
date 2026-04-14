@@ -1,11 +1,9 @@
 package com.flixclusive.core.database.entity.library
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flixclusive.core.database.entity.ListItem
 import com.flixclusive.core.database.entity.film.DBFilm
 import java.util.Date
 
@@ -14,7 +12,7 @@ import java.util.Date
     foreignKeys = [
         ForeignKey(
             entity = LibraryList::class,
-            parentColumns = ["listId"],
+            parentColumns = ["id"],
             childColumns = ["listId"],
             onDelete = ForeignKey.CASCADE
         ),
@@ -32,9 +30,9 @@ import java.util.Date
 )
 data class LibraryListItem(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo("itemId")
-    override val id: Long = 0,
-    override val filmId: String,
+    val id: Long = 0,
+    val filmId: String,
     val listId: Int,
-    val addedAt: Date = Date(),
-) : ListItem
+    val createdAt: Date = Date(),
+    val updatedAt: Date = Date(),
+)

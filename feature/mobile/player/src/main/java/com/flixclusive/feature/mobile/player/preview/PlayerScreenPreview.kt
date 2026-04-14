@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -58,6 +60,7 @@ private fun PlayerScreenBasePreview() {
     val currentEpisode = remember { currentSeason.episodes.first().episode }
     val context = LocalContext.current
     val snackbarState = remember { PlayerSnackbarState() }
+    val servers = remember { PreviewPlayerData.getTestMediaServers() }
 
     var playerPrefs by remember {
         mutableStateOf(PlayerPreferences())
@@ -75,14 +78,36 @@ private fun PlayerScreenBasePreview() {
         )
     }
 
+    var loadLinksState by remember { mutableStateOf<LoadLinksState>(LoadLinksState.Idle) }
+    var canSkipLoading by remember { mutableStateOf(false) }
+
     LaunchedEffect(true) {
         player.initialize()
         player.prepare(
             server = PreviewPlayerData.getTestMediaServers()[currentServer],
             subtitles = PreviewPlayerData.getTestMediaSubtitles(),
             startPositionMs = 0L,
-            playImmediately = true,
         )
+    }
+
+    LaunchedEffect(Unit) {
+        // Simulate loading states cycle
+        delay(1500)
+        loadLinksState = LoadLinksState.Fetching()
+        delay(1500)
+        loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id)
+        delay(1500)
+        canSkipLoading = true
+        loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id, message = "Extracting from ${currentProvider.name}...")
+        delay(1500)
+        canSkipLoading = false
+        loadLinksState = LoadLinksState.Error(UiText.from("Connection timed out. The remote server did not respond within the expected timeframe."))
+        delay(3000)
+        loadLinksState = LoadLinksState.Unavailable()
+        delay(3000)
+        loadLinksState = LoadLinksState.Success(providerId = currentProvider.id)
+        delay(1500)
+        loadLinksState = LoadLinksState.Idle
     }
 
     LaunchedEffect(Unit) {
@@ -108,7 +133,6 @@ private fun PlayerScreenBasePreview() {
             server = PreviewPlayerData.getTestMediaServers()[currentServer],
             subtitles = PreviewPlayerData.getTestMediaSubtitles(),
             startPositionMs = player.currentPosition,
-            playImmediately = true,
         )
     }
 
@@ -120,7 +144,8 @@ private fun PlayerScreenBasePreview() {
                 player = player,
                 playerPreferences = playerPrefs,
                 subtitlesPreferences = subtitlePrefs,
-                servers = { PreviewPlayerData.getTestMediaServers() },
+                servers = { servers },
+                failedStreamUrls = { setOf(servers[1].url) },
                 currentServer = { currentServer },
                 onServerChange = { onServerChange(it) },
                 onBack = { player.release() },
@@ -135,7 +160,12 @@ private fun PlayerScreenBasePreview() {
                 onProviderChange = { currentProvider = it },
                 snackbarState = snackbarState,
                 onUpdateWatchProgress = {},
-                modifier = Modifier.background(Color.Black)
+                modifier = Modifier.background(Color.Black),
+                loadLinksState = { loadLinksState },
+                canSkipLoading = { canSkipLoading },
+                onSkipProviderLoading = { },
+                onCancelLoading = { },
+                onServerFail = { },
             )
         }
     }

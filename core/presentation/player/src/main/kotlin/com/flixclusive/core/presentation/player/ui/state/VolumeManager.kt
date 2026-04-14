@@ -2,11 +2,8 @@ package com.flixclusive.core.presentation.player.ui.state
 
 import android.content.Context
 import android.media.AudioManager
-import android.media.audiofx.LoudnessEnhancer
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -14,12 +11,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.media3.common.Player
-import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.util.exception.safeCall
+import kotlin.math.roundToInt
 
 /**
  * Manages the device volume and applies loudness enhancement when the volume exceeds the maximum server volume.
@@ -27,55 +21,44 @@ import com.flixclusive.core.util.exception.safeCall
 @Stable
 class VolumeManager(
     context: Context,
+    val isVolumeBoosted: Boolean,
+    private val player: AppPlayer,
 ) {
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-    private var loudnessEnhancer: LoudnessEnhancer? = null
-        set(value) {
-            if (currentVolume > maxStreamVolume) {
-                try {
-                    value?.enabled = true
-                    value?.setTargetGain(currentLoudnessGain.toInt())
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-            field = value
-        }
-
-    private val currentStreamVolume
+    private val systemCurrentVolume
         get() = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-    private val maxStreamVolume
+    val systemMaxVolume
         get() = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-    var currentVolume by mutableFloatStateOf(currentStreamVolume.toFloat())
+    var currentVolume by mutableFloatStateOf(systemCurrentVolume.toFloat())
         private set
+
     val currentVolumePercentage by derivedStateOf {
-        (currentVolume / maxStreamVolume.toFloat())
-            .coerceIn(0F, 1F)
+        (currentVolume / maxVolume).coerceIn(0f, 1f)
     }
-    val maxVolume
-        get() = maxStreamVolume
-            .times(loudnessEnhancer?.let { 2 } ?: 1)
-            .toFloat()
+
+    val maxVolume: Float
+        get() = systemMaxVolume * (if (isVolumeBoosted) 2f else 1f)
 
     private val currentLoudnessGain
-        get() = (currentVolume - maxStreamVolume) * (MAX_VOLUME_BOOST / maxStreamVolume)
+        get() = ((currentVolume - systemMaxVolume) / systemMaxVolume * MAX_BOOST_GAIN_MB).toInt()
 
     fun setVolume(volume: Float) {
-        currentVolume = volume.coerceIn(0F, maxVolume)
+        currentVolume = volume.coerceIn(0f, maxVolume)
 
-        if (currentVolume <= maxStreamVolume) {
-            loudnessEnhancer?.enabled = false
+        if (currentVolume <= systemMaxVolume) {
+            player.setVolumeBoosterEnabled(false)
+            player.setVolumeGain(0)
             audioManager.setStreamVolume(
                 AudioManager.STREAM_MUSIC,
-                currentVolume.toInt(),
+                currentVolume.roundToInt(),
                 0,
             )
         } else {
             try {
-                loudnessEnhancer?.enabled = true
-                loudnessEnhancer?.setTargetGain(currentLoudnessGain.toInt())
+                player.setVolumeBoosterEnabled(true)
+                player.setVolumeGain(currentLoudnessGain)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -91,33 +74,23 @@ class VolumeManager(
     }
 
     companion object {
-        const val MAX_VOLUME_BOOST = 2000
+        private const val MAX_BOOST_GAIN_MB = 2000
 
         @OptIn(UnstableApi::class)
         @Composable
-        fun rememberVolumeManager(player: AppPlayer): VolumeManager {
+        fun rememberVolumeManager(
+            isVolumeBoosted: Boolean,
+            player: AppPlayer,
+        ): VolumeManager {
             val context = LocalContext.current
-            val manager = remember { VolumeManager(context = context) }
 
-            LaunchedEffect(player) {
-                player.listen { events ->
-                    if (events.contains(Player.EVENT_AUDIO_SESSION_ID)) {
-                        manager.loudnessEnhancer?.release()
-
-                        safeCall {
-                            manager.loudnessEnhancer = LoudnessEnhancer(audioSessionId)
-                        }
-                    }
-                }
+            return remember {
+                VolumeManager(
+                    context = context,
+                    player = player,
+                    isVolumeBoosted = isVolumeBoosted
+                )
             }
-
-            DisposableEffect(LocalLifecycleOwner.current) {
-                onDispose {
-                    manager.loudnessEnhancer?.release()
-                }
-            }
-
-            return manager
         }
     }
 }

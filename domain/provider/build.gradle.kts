@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.stubs.provider)
     implementation(libs.stubs.util)
 
+    androidTestImplementation(libs.room.runtime)
     androidTestImplementation(projects.coreTesting)
     testImplementation(projects.coreTesting)
 }

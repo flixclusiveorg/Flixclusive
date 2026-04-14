@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider.add.filter
 
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
@@ -12,6 +13,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Locale
 
+@Stable
 internal data class RepositoriesFilters(
     override val options: ImmutableList<String>,
     override val title: UiText,

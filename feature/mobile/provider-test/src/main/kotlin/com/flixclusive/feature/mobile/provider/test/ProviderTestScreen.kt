@@ -79,7 +79,10 @@ import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 import kotlin.time.DurationUnit
@@ -109,6 +112,7 @@ internal fun ProviderTestScreen(
         onResumeTests = viewModel::resumeTests,
         onStopTests = viewModel::stopTests,
         onClearTests = viewModel::clearTests,
+        warnDuplicateTest = viewModel.warnDuplicateTests,
         onTestAllProviders = { viewModel.startTests(providers = providers) },
         onRetestAllProviders = {
             viewModel.startTests(
@@ -133,8 +137,9 @@ internal fun ProviderTestScreenContent(
     stage: TestStage,
     testJobState: TestJobState,
     filmOnTest: String?,
+    warnDuplicateTest: Flow<Boolean>,
     onGoBack: () -> Unit,
-    onTestAllProviders: () -> StartTestResult,
+    onTestAllProviders: () -> Unit,
     onRetestAllProviders: () -> Unit,
     onSkipTestedProviders: () -> Unit,
     onPauseTests: () -> Unit,
@@ -177,6 +182,14 @@ internal fun ProviderTestScreenContent(
         targetValue = MaterialTheme.colorScheme.surface.copy(alpha = topBarBackgroundAlpha),
         label = "",
     )
+
+    LaunchedEffect(Unit) {
+        warnDuplicateTest
+            .dropWhile { !it }
+            .collect {
+                showRepetitiveTestWarning = true
+            }
+    }
 
     DisposableEffect(true) {
         onDispose {
@@ -297,14 +310,7 @@ internal fun ProviderTestScreenContent(
                                 onStop = onStopTests,
                                 onPause = onPauseTests,
                                 onResume = onResumeTests,
-                                onStart = {
-                                    when (onTestAllProviders()) {
-                                        StartTestResult.SHOW_WARNING -> showRepetitiveTestWarning = true
-                                        StartTestResult.STARTED -> {
-                                            // No op
-                                        }
-                                    }
-                                },
+                                onStart = onTestAllProviders,
                             )
                         }
 
@@ -439,13 +445,14 @@ private fun ProviderTestScreenBasePreview() {
                 results = results,
                 stage = TestStage.Idle,
                 testJobState = TestJobState.IDLE,
+                warnDuplicateTest = remember { flowOf(false) },
                 filmOnTest = "https://image.tmdb.org/t/p/w600_and_h900_multi_faces/8UlWHLMpgZm9bx6QYh0NFoq67TZ.jpg",
                 onGoBack = {},
                 onPauseTests = {},
                 onResumeTests = {},
                 onStopTests = {},
                 onClearTests = {},
-                onTestAllProviders = { StartTestResult.STARTED },
+                onTestAllProviders = {},
                 onRetestAllProviders = {},
                 onSkipTestedProviders = {},
             )

@@ -28,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -135,7 +134,6 @@ private fun PlayButton(
 
     val transition = rememberInfiniteTransition(label = "Play Button Blob Animation")
 
-    // Animate blobs smoothly
     val blob1X = transition.animateFloat(
         initialValue = 0f,
         targetValue = 300f,
@@ -176,11 +174,9 @@ private fun PlayButton(
 
     val shape = MaterialTheme.shapes.small
 
-    // Extract colors outside drawBehind
     val primaryBlobColor = MaterialTheme.colorScheme.primary
     val tertiaryBlobColor = MaterialTheme.colorScheme.tertiary
 
-    // Gradient background for the "liquid fill"
     val baseGradient = Brush.horizontalGradient(
         listOf(
             MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
@@ -188,80 +184,77 @@ private fun PlayButton(
         ),
     )
 
-    CompositionLocalProvider(
-        LocalContentColor provides MaterialTheme.colorScheme.onPrimary,
-    ) {
-        Box(
-            modifier =
-                modifier
-                    .minimumInteractiveComponentSize()
-                    .widthIn(min = 125.dp)
-                    .clip(shape)
-                    .drawBehind {
-                        val width = size.width
-                        val height = size.height
+    Box(
+        modifier = modifier
+            .minimumInteractiveComponentSize()
+            .widthIn(min = 125.dp)
+            .clip(shape)
+            .drawBehind {
+                val width = size.width
+                val height = size.height
 
-                        // First draw the base gradient fill
-                        drawRect(
-                            brush = baseGradient,
-                            size = size,
-                        )
-
-                        // Compute blob positions
-                        val pos1 = Offset(
-                            x = (blob1X.value / 300f) * width,
-                            y = (blob1Y.value / 200f) * height,
-                        )
-                        val pos2 = Offset(
-                            x = (blob2X.value / 300f) * width,
-                            y = (blob2Y.value / 200f) * height,
-                        )
-
-                        // Draw blobs on top of gradient
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(primaryBlobColor, Color.Transparent),
-                                center = pos1,
-                                radius = width / 1.4f,
-                            ),
-                            radius = width / 1.4f,
-                            center = pos1,
-                        )
-
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(tertiaryBlobColor, Color.Transparent),
-                                center = pos2,
-                                radius = width / 1.6f,
-                            ),
-                            radius = width / 1.6f,
-                            center = pos2,
-                        )
-                    }
-                    .focusable()
-                    .clickable { onClick() },
-            propagateMinConstraints = true
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-                modifier = Modifier
-                    .padding(
-                        vertical = 10.dp,
-                        horizontal = 16.dp
-                    )
-                    .align(Alignment.Center),
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(UiCommonR.drawable.play),
-                    contentDescription = label,
+                // First draw the base gradient fill
+                drawRect(
+                    brush = baseGradient,
+                    size = size,
                 )
 
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+                // Compute blob positions
+                val pos1 = Offset(
+                    x = (blob1X.value / 300f) * width,
+                    y = (blob1Y.value / 200f) * height,
+                )
+                val pos2 = Offset(
+                    x = (blob2X.value / 300f) * width,
+                    y = (blob2Y.value / 200f) * height,
+                )
+
+                // Draw blobs on top of gradient
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(primaryBlobColor, Color.Transparent),
+                        center = pos1,
+                        radius = width / 1.4f,
+                    ),
+                    radius = width / 1.4f,
+                    center = pos1,
+                )
+
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(tertiaryBlobColor, Color.Transparent),
+                        center = pos2,
+                        radius = width / 1.6f,
+                    ),
+                    radius = width / 1.6f,
+                    center = pos2,
                 )
             }
+            .focusable()
+            .clickable { onClick() },
+        propagateMinConstraints = true
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+            modifier = Modifier
+                .padding(
+                    vertical = 10.dp,
+                    horizontal = 16.dp
+                )
+                .align(Alignment.Center),
+        ) {
+            AdaptiveIcon(
+                painter = painterResource(UiCommonR.drawable.play),
+                contentDescription = label,
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
+
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
         }
     }
 }
@@ -381,11 +374,15 @@ private fun getPlayButtonLabel(
     context: Context,
     watchProgress: WatchProgress?,
 ): String {
-    return if (watchProgress?.isFinished == true) {
+    if (watchProgress == null) {
+        return context.getString(LocaleR.string.play)
+    }
+
+    return if (watchProgress.isCompleted) {
         context.getString(LocaleR.string.watch_again)
-    } else if (watchProgress?.isWatching == true && watchProgress is MovieProgress) {
+    } else if (watchProgress.isWatching && watchProgress is MovieProgress) {
         context.getString(LocaleR.string.continue_watching)
-    } else if (watchProgress?.isWatching == true && watchProgress is EpisodeProgress) {
+    } else if (watchProgress.isWatching && watchProgress is EpisodeProgress) {
         val season = watchProgress.seasonNumber
         val episode = watchProgress.episodeNumber
         context.getString(LocaleR.string.continue_watching_tv_show, season, episode)
@@ -408,7 +405,7 @@ private fun HeaderButtonsPreview() {
                     watchProgress = remember {
                         MovieProgress(
                             filmId = metadata.identifier,
-                            ownerId = 0,
+                            ownerId = "preview-user",
                             progress = 500L,
                             status = WatchStatus.WATCHING,
                             duration = 6000L,
@@ -426,7 +423,7 @@ private fun HeaderButtonsPreview() {
                     watchProgress = remember {
                         MovieProgress(
                             filmId = metadata.identifier,
-                            ownerId = 0,
+                            ownerId = "preview-user",
                             progress = 500L,
                             status = WatchStatus.WATCHING,
                             duration = 6000L,

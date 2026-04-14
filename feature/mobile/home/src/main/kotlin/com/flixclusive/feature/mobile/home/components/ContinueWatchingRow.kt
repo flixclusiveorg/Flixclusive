@@ -87,7 +87,7 @@ internal fun ContinueWatchingRow(
         LazyRow {
             items(
                 items = items,
-                key = { it.id }
+                key = { "${it.filmId}-${it.id}" }
             ) { item ->
                 ContinueWatchingCard(
                     showTitle = showCardTitle,
@@ -144,7 +144,7 @@ private fun ContinueWatchingCard(
             modifier = Modifier
                 .background(
                     color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                    shape = MaterialTheme.shapes.extraSmall,
+                    shape = MaterialTheme.shapes.small,
                 )
                 .combinedClickable(
                     onClick = onClick,
@@ -159,6 +159,7 @@ private fun ContinueWatchingCard(
                 title = film.title,
                 imageSize = "w300",
                 modifier = Modifier.width(getAdaptiveFilmCardWidth())
+                    .clip(MaterialTheme.shapes.small)
             )
 
             Box(
@@ -258,7 +259,7 @@ private fun ContinueWatchingRowBasePreview() {
                 filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
             ).toDBFilm()
 
-            val ownerId = index
+            val ownerId = "preview-user-$index"
             val duration = Random.nextLong(2, 3) * 1000 * 60 * 60
             val progress = (duration.toDouble() * Random.nextDouble(0.3, 0.9)).roundToLong()
             val watchStatus = WatchStatus.WATCHING

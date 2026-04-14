@@ -54,7 +54,6 @@ private const val MAX_STACK_TRACE_COMPONENT_HEIGHT = 200
  * A retry button with an optional error message display.
  *
  * @param modifier The modifier to be applied to the RetryButton.
- * @param shouldShowError A boolean indicating whether to show the error message and retry button.
  * @param error An optional error message to display above the retry button.
  * @param onRetry A lambda function to be invoked when the retry button is clicked.
  * */

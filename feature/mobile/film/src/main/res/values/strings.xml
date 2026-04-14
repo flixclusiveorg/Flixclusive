@@ -6,7 +6,7 @@
     <string name="provider_language">Language: %1$s</string>
     <string name="casts">Casts: %1$s</string>
     <string name="production">Production: %1$s</string>
-    <string name="network">Network: %1$s</string>
+    <string name="tv_network">Network: %1$s</string>
     <string name="adult">Adult</string>
     <string name="description_collapse">Collapse the description</string>
     <string name="description_expand">Expand the description</string>

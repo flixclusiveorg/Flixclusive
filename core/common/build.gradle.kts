@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
     implementation(libs.okhttp)
+    implementation(libs.unifile)
 
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)

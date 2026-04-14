@@ -54,9 +54,9 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.reme
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
+import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
-import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.details.component.ScreenHeader
 import com.flixclusive.feature.mobile.library.details.component.topbar.LibraryDetailsTopBar
@@ -130,7 +130,7 @@ internal fun LibraryDetailsScreen(
     onToggleSearchBar: (Boolean) -> Unit,
     onToggleSelect: (LibraryListItemWithMetadata) -> Unit,
     onLongClickItem: (LibraryListItemWithMetadata) -> Unit,
-    onUpdateFilter: (LibrarySortFilter) -> Unit,
+    onUpdateFilter: (LibrarySort) -> Unit,
 ) {
     val scrollBehavior = rememberEnterOnlyNearTopScrollBehavior()
 
@@ -214,9 +214,7 @@ internal fun LibraryDetailsScreen(
 
                         LibraryFilterRow(
                             isListEditable = items().isNotEmpty() && !uiState.isMultiSelecting,
-                            filters = LibraryDetailsFilters.defaultFilters,
-                            selected = uiState.selectedFilter,
-                            ascending = uiState.isSortingAscending,
+                            selected = { uiState.selectedFilter },
                             onUpdate = onUpdateFilter,
                             onStartSelecting = onStartMultiSelecting,
                         )
@@ -331,7 +329,7 @@ private fun LibraryDetailsScreenBasePreview() {
         remember {
             LibraryList(
                 id = 1,
-                ownerId = 1,
+                ownerId = "preview-user",
                 name = "Best horror movies",
                 description = "A curation of the best horror movies out there. Feel free to browse my list :D",
                 createdAt = Date(),
@@ -361,15 +359,13 @@ private fun LibraryDetailsScreenBasePreview() {
                     compareBy<LibraryListItemWithMetadata>(
                         selector = {
                             when (uiState.selectedFilter) {
-                                LibrarySortFilter.Name -> it.metadata.title
-                                LibrarySortFilter.AddedAt -> it.item.addedAt.time
-                                LibraryDetailsFilters.Rating -> it.metadata.rating
-                                LibraryDetailsFilters.Year -> it.metadata.year
+                                is LibrarySort.Name -> it.metadata.title
+                                is LibrarySort.Added -> it.item.createdAt.time
                                 else -> throw Error()
                             }
                         },
                     ).let { comparator ->
-                        if (uiState.isSortingAscending) comparator else comparator.reversed()
+                        if (uiState.selectedFilter.ascending) comparator else comparator.reversed()
                     },
                 )
 
@@ -391,8 +387,9 @@ private fun LibraryDetailsScreenBasePreview() {
                         id = it.toLong(),
                         filmId = film.identifier,
                         listId = sampleList.id,
-                        addedAt = Date(System.currentTimeMillis() - it * 10000000L),
-                    )
+                        createdAt = Date(System.currentTimeMillis() - it * 10000000L),
+                    ),
+                    externalIds = emptyList()
                 )
             },
         )
@@ -441,7 +438,7 @@ private fun LibraryDetailsScreenBasePreview() {
                     onLongClickItem = { uiState = uiState.copy(longClickedItem = it) },
                     onUpdateFilter = {
                         uiState = if (uiState.selectedFilter == it) {
-                            uiState.copy(isSortingAscending = !uiState.isSortingAscending)
+                            uiState.copy(selectedFilter = uiState.selectedFilter.toggleAscending())
                         } else {
                             uiState.copy(selectedFilter = it)
                         }

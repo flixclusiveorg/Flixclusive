@@ -9,7 +9,10 @@ import kotlin.reflect.KClass
 interface DataStoreManager {
     fun getSystemPrefs(): Flow<SystemPreferences>
 
-    fun usePreferencesByUserId(userId: Int)
+    fun usePreferencesByUserId(
+        userId: String,
+        legacyUserId: Int? = null, // TODO: Remove legacyUserId in future versions after migration is complete
+    )
 
     suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences)
 
@@ -24,5 +27,5 @@ interface DataStoreManager {
         transform: suspend (T) -> T,
     )
 
-    suspend fun deleteAllUserRelatedFiles(userId: Int)
+    suspend fun deleteAllUserRelatedFiles(userId: String)
 }

@@ -16,5 +16,5 @@ internal class ProviderSettingsScreenViewModel @Inject constructor(
 ) : ViewModel() {
     private val metadata = savedStateHandle.navArgs<ProviderMetadataNavArgs>().metadata
 
-    val providerInstance = providerRepository.getProvider(metadata.id)
+    val providerInstance = providerRepository.getPlugin(metadata.id)
 }

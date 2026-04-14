@@ -2,10 +2,8 @@ package com.flixclusive.feature.mobile.settings.screen.appearance
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,8 +26,8 @@ internal class AppearanceTweakScreen(
     override val preferencesAsState: StateFlow<UiPreferences> =
         viewModel.getUserPrefsAsState<UiPreferences>(key)
 
-    override suspend fun onUpdatePreferences(transform: suspend (t: UiPreferences) -> UiPreferences): Boolean {
-        return viewModel.updateUserPrefs(key, transform)
+    override fun onUpdatePreferences(transform: suspend (t: UiPreferences) -> UiPreferences) {
+        viewModel.updateUserPrefs(key, transform)
     }
 
     @Composable
@@ -52,19 +50,19 @@ internal class AppearanceTweakScreen(
 
     @Composable
     private fun getGeneralTweaks(shouldShowTitleOnCardsProvider: () -> Boolean): TweakGroup {
-        val context = LocalContext.current
+        val resources = LocalResources.current
         return TweakGroup(
             title = stringResource(LocaleR.string.general),
             tweaks =
                 persistentListOf(
                     TweakUI.SwitchTweak(
                         title = stringResource(LocaleR.string.film_card_titles),
-                        descriptionProvider = {
-                            context.getString(
+                        description = {
+                            resources.getString(
                                 LocaleR.string.film_card_titles_settings_description,
                             )
                         },
-                        value = remember { mutableStateOf(shouldShowTitleOnCardsProvider()) },
+                        value = shouldShowTitleOnCardsProvider,
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(shouldShowTitleOnCards = it)

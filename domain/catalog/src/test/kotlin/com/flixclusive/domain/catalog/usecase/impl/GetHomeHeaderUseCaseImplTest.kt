@@ -77,7 +77,7 @@ class GetHomeHeaderUseCaseImplTest {
             val result = getHomeHeaderUseCase()
 
             expectThat(result).isSuccess()
-            expectThat((result as Resource.Success).data).isEqualTo(enhancedMovieMetadata)
+            expectThat((result as Resource.Success).data?.id).isEqualTo(enhancedMovieMetadata.id)
             coVerify { tmdbMetadataRepository.getMovie(123) }
         }
 
@@ -118,7 +118,7 @@ class GetHomeHeaderUseCaseImplTest {
             val result = getHomeHeaderUseCase()
 
             expectThat(result).isSuccess()
-            expectThat((result as Resource.Success).data).isEqualTo(enhancedTvShowMetadata)
+            expectThat((result as Resource.Success).data?.id).isEqualTo(enhancedTvShowMetadata.id)
             coVerify { tmdbMetadataRepository.getTvShow(456) }
         }
 

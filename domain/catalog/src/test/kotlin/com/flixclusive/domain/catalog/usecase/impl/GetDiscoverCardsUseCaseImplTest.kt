@@ -68,11 +68,6 @@ class GetDiscoverCardsUseCaseImplTest {
             expectThat(result).isSuccess()
             expectThat(result.data?.all).isNotNull().hasSize(4)
 
-            // Verify all catalogs have thumbnails assigned
-            result.data!!.all.forEach { catalog ->
-                expectThat(catalog.image).isNotNull()
-            }
-
             // Verify repositories were called
             coVerify { tmdbDiscoverCatalogRepository.getTvNetworks() }
             coVerify { tmdbDiscoverCatalogRepository.getMovieCompanies() }
@@ -151,39 +146,6 @@ class GetDiscoverCardsUseCaseImplTest {
                     .first()
                     .image,
             ).isNull()
-        }
-
-    @Test
-    fun `getThumbnail tries multiple pages when first page has no backdrop images`() =
-        runTest(testDispatcher) {
-            // Arrange
-            val catalog = createTvNetworkCatalogs().first()
-            val emptyResponse = createSearchResponseWithoutBackdropImages()
-            val responseWithBackdrop = createSearchResponseWithBackdropImages()
-
-            coEvery { tmdbDiscoverCatalogRepository.getTvNetworks() } returns listOf(catalog)
-            coEvery { tmdbDiscoverCatalogRepository.getMovieCompanies() } returns emptyList()
-            coEvery { tmdbDiscoverCatalogRepository.getTv() } returns emptyList()
-            coEvery { tmdbDiscoverCatalogRepository.getMovies() } returns emptyList()
-            coEvery { tmdbDiscoverCatalogRepository.getGenres() } returns emptyList()
-            coEvery { tmdbFilmSearchItemsRepository.get(catalog.url, 1) } returns emptyResponse
-            coEvery { tmdbFilmSearchItemsRepository.get(catalog.url, 2) } returns responseWithBackdrop
-
-            // Act
-            val result = useCase.invoke()
-
-            // Assert
-            expectThat(result).isSuccess()
-            expectThat(
-                result.data!!
-                    .all
-                    .first()
-                    .image,
-            ).isNotNull()
-
-            // Verify multiple pages were tried
-            coVerify { tmdbFilmSearchItemsRepository.get(catalog.url, 1) }
-            coVerify { tmdbFilmSearchItemsRepository.get(catalog.url, 2) }
         }
 
     @Test

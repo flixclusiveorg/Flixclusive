@@ -91,12 +91,11 @@ internal class DataTweak(
         ) {
             val buttonMinHeight = 50.dp
             val shape = MaterialTheme.shapes.small
-            val buttonShape = shape
 
             val selectedLibraries = remember {
                 mutableStateMapOf(
-                    Library.Watchlist to false,
                     Library.WatchHistory to false,
+                    Library.CustomList to false,
                 )
             }
 
@@ -123,7 +122,7 @@ internal class DataTweak(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             ),
-                            shape = buttonShape,
+                            shape = shape,
                             modifier = Modifier
                                 .weight(1F)
                                 .heightIn(min = buttonMinHeight),
@@ -143,7 +142,7 @@ internal class DataTweak(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
-                            shape = buttonShape,
+                            shape = shape,
                             modifier = Modifier
                                 .weight(1F)
                                 .heightIn(min = buttonMinHeight),

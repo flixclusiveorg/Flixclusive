@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.player.preview
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
+import kotlin.random.Random
 
 internal object PreviewPlayerData {
     fun getTestMediaServers(): List<PlayerServer> {
@@ -23,11 +24,12 @@ internal object PreviewPlayerData {
         )
 
         return videos.mapIndexed { index, url ->
+            val loremIpsum = generateLoremIpsum(length = (5..15).random())
             PlayerServer(
-                label = "Server ${index + 1}",
+                label = "Server ${index + 1}" + Random.nextBoolean().takeIf { it }?.let { " - $loremIpsum" }.orEmpty(),
                 url = url,
                 headers = null,
-                source = TrackSource.REMOTE
+                source = TrackSource.REMOTE,
             )
         }
     }
@@ -45,5 +47,17 @@ internal object PreviewPlayerData {
                 source = TrackSource.REMOTE
             ),
         )
+    }
+
+    private fun generateLoremIpsum(length: Int): String {
+        val words = listOf(
+            "Lorem", "ipsum", "dolor", "sit", "amet,", "consectetur", "adipiscing", "elit.",
+            "Sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et",
+            "dolore", "magna", "aliqua."
+        )
+
+        // Add line break per 4 words to simulate longer labels
+        return (1..length).map { words.random() }.chunked(4)
+            .joinToString("\n") { it.joinToString(" ") }
     }
 }

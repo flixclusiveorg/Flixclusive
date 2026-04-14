@@ -59,7 +59,7 @@ class AppVersion private constructor(
         ): AppVersion {
             return when (buildType) {
                 BuildType.PREVIEW, BuildType.DEBUG -> {
-                    val commitCount = version.substring(1)
+                    val commitCount = version.trimStart { it == 'p' || it == 'd' }
 
                     AppVersion(
                         buildType = buildType,

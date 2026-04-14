@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.stubs.model.provider)
     implementation(libs.stubs.provider)
     implementation(projects.coreCommon)
+    implementation(projects.coreDatabase)
     implementation(projects.coreDatastore)
     implementation(projects.coreDrawables)
     implementation(projects.coreNavigation)

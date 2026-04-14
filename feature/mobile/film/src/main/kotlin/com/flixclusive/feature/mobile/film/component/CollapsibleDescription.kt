@@ -10,6 +10,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +64,11 @@ internal fun CollapsibleDescription(
     )
 
     val description = remember(metadata) { metadata.getDetailedDescription(context).trimEnd() }
+
+    if (description.isBlank()) {
+        Spacer(modifier = Modifier.height(16.dp))
+        return
+    }
 
     val textStyle = MaterialTheme.typography.bodySmall
         .copy(color = LocalContentColor.current.copy(0.6f))
@@ -182,11 +189,11 @@ private fun FilmMetadata.getDetailedDescription(context: Context): String {
             .takeIf { !it.isNullOrBlank() }
             ?.replace(whitespaceLineRegex, "\n")
             ?.trimEnd()
-            ?.also { appendLine(it) }
-            ?: appendLine(context.getString(R.string.default_overview))
-
-        appendLine()
-        appendLine()
+            ?.also {
+                appendLine(it)
+                appendLine()
+                appendLine()
+            }
 
         cast
             .takeIf { it.isNotEmpty() }
@@ -205,7 +212,7 @@ private fun FilmMetadata.getDetailedDescription(context: Context): String {
                 .takeIf { it.isNotEmpty() }
                 ?.take(3)
                 ?.joinToString(separator = ", ") { it.name }
-                ?.also { appendLine(context.getString(R.string.network, it)) }
+                ?.also { appendLine(context.getString(R.string.tv_network, it)) }
         }
     }
 }

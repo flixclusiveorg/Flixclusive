@@ -134,7 +134,7 @@ private fun LibraryCardBasePreview() {
             LibraryListWithPreview(
                 list = LibraryList(
                     id = it,
-                    ownerId = 0,
+                    ownerId = "preview-user",
                     name = "My List #$it",
                     description = "This is my favorite list number $it",
                 ),

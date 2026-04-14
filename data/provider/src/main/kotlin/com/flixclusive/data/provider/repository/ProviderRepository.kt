@@ -1,46 +1,57 @@
 package com.flixclusive.data.provider.repository
 
-import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
-import com.flixclusive.data.provider.util.collections.CollectionsOperation
+import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import dalvik.system.PathClassLoader
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 
 interface ProviderRepository {
-    suspend fun add(
+    suspend fun install(
+        provider: InstalledProvider,
+        metadata: ProviderMetadata
+    )
+
+    suspend fun uninstall(provider: InstalledProvider)
+
+    suspend fun unload(id: String)
+
+    suspend fun load(
         provider: Provider,
         classLoader: PathClassLoader,
         metadata: ProviderMetadata,
-        preferenceItem: ProviderFromPreferences,
     )
 
-    suspend fun addToPreferences(preferenceItem: ProviderFromPreferences)
+    suspend fun getApi(id: String, ownerId: String): ProviderApi?
 
-    fun getProviderMetadata(id: String): ProviderMetadata?
+    fun getMetadata(id: String): ProviderMetadata?
 
-    fun getProvider(id: String): Provider?
+    fun getPlugin(id: String): Provider?
 
-    fun getProviderFromPreferences(id: String): ProviderFromPreferences?
+    suspend fun getInstalledProvider(id: String, ownerId: String): InstalledProvider?
 
-    fun getEnabledProviders(): List<ProviderMetadata>
+    fun getEnabledProvidersAsFlow(ownerId: String): Flow<List<InstalledProvider>>
 
-    fun getProviders(): List<ProviderMetadata>
+    suspend fun getEnabledProviders(ownerId: String): List<InstalledProvider>
 
-    fun getOrderedProviders(): List<ProviderMetadata>
+    suspend fun isEnabled(id: String, ownerId: String): Boolean
 
-    fun observe(): SharedFlow<CollectionsOperation.List<ProviderFromPreferences>>
+    suspend fun getInstalledProviders(ownerId: String): List<InstalledProvider>
 
-    suspend fun moveProvider(
-        fromIndex: Int,
-        toIndex: Int,
+    fun getInstalledProvidersAsFlow(ownerId: String): Flow<List<InstalledProvider>>
+
+    suspend fun getMaxSortOrder(ownerId: String): Double
+
+    suspend fun reorderPosition(
+        moved: InstalledProvider,
+        before: InstalledProvider?,
+        after: InstalledProvider?,
     )
 
-    suspend fun remove(id: String)
+    suspend fun renormalizePositions(ownerId: String)
 
     suspend fun clearAll()
 
-    suspend fun removeFromPreferences(id: String)
-
-    suspend fun toggleProvider(id: String)
+    suspend fun toggleProvider(id: String, ownerId: String)
 }

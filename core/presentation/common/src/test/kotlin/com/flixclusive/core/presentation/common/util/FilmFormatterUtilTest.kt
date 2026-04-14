@@ -11,6 +11,7 @@ import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import java.util.Locale
+import com.flixclusive.core.strings.R as LocaleR
 
 
 class FilmFormatterUtilTest {
@@ -23,7 +24,7 @@ class FilmFormatterUtilTest {
             every { getString(R.string.no_ratings, *anyVararg<Any>()) } returns "No ratings"
             every {
                 resources.getQuantityString(
-                    R.plurals.season_runtime,
+                    LocaleR.plurals.season_runtime,
                     any(),
                     any()
                 )
@@ -35,7 +36,7 @@ class FilmFormatterUtilTest {
             }
             every {
                 resources.getQuantityString(
-                    R.plurals.episode_runtime,
+                    LocaleR.plurals.episode_runtime,
                     any(),
                     any()
                 )

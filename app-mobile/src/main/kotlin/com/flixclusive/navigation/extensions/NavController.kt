@@ -12,17 +12,25 @@ import com.ramcosta.composedestinations.generated.appmobile.AppmobileNavGraphs
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.spec.DirectionNavGraphSpec
 import com.ramcosta.composedestinations.spec.NavGraphSpec
+import com.ramcosta.composedestinations.spec.Route
 import com.ramcosta.composedestinations.utils.startDestination
 
 internal fun DestinationsNavigator.bottomBarNavigate(
     screen: DirectionNavGraphSpec,
+    currentSelectedScreen: Route,
     currentNavGraph: NavGraphSpec,
 ) {
     val isPoppingToRoot = screen == currentNavGraph
 
+    if (isPoppingToRoot && currentSelectedScreen == screen.startRoute) {
+        return
+    }
+
     navigate(screen) {
         if (isPoppingToRoot) {
-            popUpTo(screen.startRoute)
+            popUpTo(screen.startRoute) {
+                inclusive = true
+            }
         } else {
             popUpTo(AppmobileNavGraphs.home.startDestination) {
                 saveState = true

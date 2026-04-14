@@ -2,10 +2,8 @@ package com.flixclusive.feature.mobile.settings.screen.data
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,9 +24,8 @@ internal class DataTweakScreen(
 ) : BaseTweakScreen<DataPreferences> {
     override val key = UserPreferences.DATA_PREFS_KEY
     override val preferencesAsState: StateFlow<DataPreferences> = viewModel.getUserPrefsAsState<DataPreferences>(key)
-
-    override suspend fun onUpdatePreferences(transform: suspend (t: DataPreferences) -> DataPreferences): Boolean {
-        return viewModel.updateUserPrefs(key, transform)
+    override fun onUpdatePreferences(transform: suspend (t: DataPreferences) -> DataPreferences) {
+        viewModel.updateUserPrefs(key, transform)
     }
 
     @Composable
@@ -38,50 +35,57 @@ internal class DataTweakScreen(
     override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.database_icon_thin)
 
     @Composable
-    override fun getDescription(): String = stringResource(LocaleR.string.appearance_settings_content_desc)
+    override fun getDescription(): String = stringResource(LocaleR.string.data_and_backup_settings_content_desc)
 
     @Composable
     override fun getTweaks(): List<Tweak> {
         val dataPreferences by preferencesAsState.collectAsStateWithLifecycle()
-        val context = LocalContext.current
+        val systemPreferences by viewModel.systemPreferences.collectAsStateWithLifecycle()
+        val resources = LocalResources.current
 
         return listOf(
             TweakUI.SwitchTweak(
-                value = remember { mutableStateOf(dataPreferences.isIncognito) },
+                value = { dataPreferences.isIncognito },
                 title = stringResource(LocaleR.string.incognito),
-                descriptionProvider = { context.getString(LocaleR.string.incognito_content_desc) },
+                description = { resources.getString(LocaleR.string.incognito_content_desc) },
                 onTweaked = {
                     onUpdatePreferences { oldValue ->
                         oldValue.copy(isIncognito = it)
                     }
                 },
             ),
-            getSearchTweaks { dataPreferences },
+            backupTweakGroup(
+                dataPreferences = { dataPreferences },
+                systemPreferences = { systemPreferences },
+                onUpdatePreferences = ::onUpdatePreferences,
+                onUpdateSystemPreferences = viewModel::updateSystemPrefs,
+                createBackup = viewModel::createBackup,
+                restoreBackup = viewModel::restoreBackup,
+            ),
+            getSearchTweaks(),
         )
     }
 
     @Composable
-    private fun getSearchTweaks(dataPreferences: () -> DataPreferences): TweakGroup {
-        val context = LocalContext.current
+    private fun getSearchTweaks(): TweakGroup {
+        val resources = LocalResources.current
         val searchHistoryCount = viewModel.searchHistoryCount.collectAsStateWithLifecycle()
-        val onClearSearchHistory = remember(viewModel) { viewModel::clearSearchHistory }
 
         return TweakGroup(
             title = stringResource(LocaleR.string.search),
-            tweaks =
-                persistentListOf(
-                    TweakUI.ClickableTweak(
-                        title = stringResource(LocaleR.string.clear_search_history),
-                        enabledProvider = { searchHistoryCount.value > 0 },
-                        descriptionProvider = {
-                            context.getString(
-                                LocaleR.string.search_history_item_count_format,
-                                searchHistoryCount.value,
-                            )
-                        },
-                        onClick = onClearSearchHistory,
-                    ),
+            tweaks = persistentListOf(
+                TweakUI.ClickableTweak(
+                    title = stringResource(LocaleR.string.clear_search_history),
+                    enabledProvider = { searchHistoryCount.value > 0 },
+                    onClick = viewModel::clearSearchHistory,
+                    description = {
+                        resources.getString(
+                            LocaleR.string.search_history_item_count_format,
+                            searchHistoryCount.value,
+                        )
+                    },
                 ),
+            ),
         )
     }
 }

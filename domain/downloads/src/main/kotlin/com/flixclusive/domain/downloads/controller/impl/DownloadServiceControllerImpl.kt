@@ -10,7 +10,7 @@ import javax.inject.Inject
 internal class DownloadServiceControllerImpl
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
     ) : DownloadServiceController {
         override fun start(request: DownloadRequest) {
             DownloadService.startDownload(

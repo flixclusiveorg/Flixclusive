@@ -45,6 +45,7 @@ import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -83,6 +84,7 @@ import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -119,6 +121,7 @@ internal fun InternalFilmScreen(
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
 
     FilmScreenContent(
+        isLibraryInitiallyOpened = navArgs.isTogglingLibrary,
         navigator = navigator,
         showFilmTitles = showFilmTitles,
         uiState = uiState,
@@ -142,6 +145,7 @@ internal fun InternalFilmScreen(
 @Composable
 private fun FilmScreenContent(
     navigator: FilmScreenNavigator,
+    isLibraryInitiallyOpened: Boolean,
     showFilmTitles: Boolean,
     uiState: FilmUiState,
     metadata: Film,
@@ -151,8 +155,8 @@ private fun FilmScreenContent(
     libraryListStates: () -> List<LibraryListAndState>,
     searchResults: () -> List<LibraryListAndState>,
     onQueryChange: (String) -> Unit,
-    onSeasonChange: (Int) -> Unit,
-    toggleOnLibrary: (Int) -> Unit,
+    onSeasonChange: (Season) -> Unit,
+    toggleOnLibrary: (Int, LibraryListType) -> Unit,
     toggleEpisodeOnLibrary: (EpisodeWithProgress) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onRetry: () -> Unit,
@@ -173,7 +177,7 @@ private fun FilmScreenContent(
     val seasonsListState = rememberLazyListState()
 
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
-    var isLibrarySheetOpen by remember { mutableStateOf(false) }
+    var isLibrarySheetOpen by remember { mutableStateOf(isLibraryInitiallyOpened) }
     var longClickedEpisode by remember { mutableStateOf<EpisodeWithProgress?>(null) }
     var showDefaultProviderDialog by remember { mutableStateOf(false) }
 
@@ -478,6 +482,7 @@ private fun FilmScreenBasePreview() {
                 LibraryListItemWithMetadata(
                     item = LibraryListItem(listId = 1, filmId = film.id),
                     metadata = film,
+                    externalIds = emptyList()
                 ),
             )
         } else {
@@ -491,7 +496,7 @@ private fun FilmScreenBasePreview() {
                     list = LibraryList(
                         id = it,
                         name = "List $it",
-                        ownerId = 1,
+                        ownerId = "preview-user",
                         description = "Description $it",
                     ),
                 ),
@@ -507,7 +512,7 @@ private fun FilmScreenBasePreview() {
             val duration = 900L + Random.nextInt(1200, 6000)
 
             EpisodeProgress(
-                ownerId = 0,
+                ownerId = "preview-user",
                 filmId = metadata.identifier,
                 progress = Random.nextLong(900, duration),
                 duration = duration,
@@ -517,7 +522,7 @@ private fun FilmScreenBasePreview() {
             )
         } else {
             MovieProgress(
-                ownerId = 0,
+                ownerId = "preview-user",
                 filmId = metadata.identifier,
                 progress = 5400L,
                 duration = 7200L,
@@ -531,12 +536,13 @@ private fun FilmScreenBasePreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             FilmScreenContent(
+                isLibraryInitiallyOpened = false,
                 uiState = uiState,
                 metadata = metadata,
                 onRetry = {},
                 navigator = navigator,
                 showFilmTitles = false,
-                toggleOnLibrary = {},
+                toggleOnLibrary = { _, _ -> },
                 libraryListStates = { lists },
                 searchResults = {
                     lists.filter { it.list.name.contains(query, ignoreCase = true) }
@@ -550,7 +556,7 @@ private fun FilmScreenBasePreview() {
                             list = LibraryList(
                                 id = lists.size + 1,
                                 name = name,
-                                ownerId = 1,
+                                ownerId = "preview-user",
                                 description = description,
                             ),
                         ),
@@ -570,7 +576,7 @@ private fun FilmScreenBasePreview() {
                                         episode = episode,
                                         watchProgress = EpisodeProgress(
                                             id = episode.number.toLong(),
-                                            ownerId = 0,
+                                            ownerId = "preview-user",
                                             filmId = metadata.identifier,
                                             progress = Random.nextLong(900, duration),
                                             duration = duration,
@@ -586,7 +592,7 @@ private fun FilmScreenBasePreview() {
                         null
                     }
                 },
-                onSeasonChange = { uiState = uiState.copy(selectedSeason = it) },
+                onSeasonChange = { uiState = uiState.copy(selectedSeason = it.number) },
                 watchProgress = watchProgress,
                 toggleEpisodeOnLibrary = {},
                 onRetryFetchSeason = {},

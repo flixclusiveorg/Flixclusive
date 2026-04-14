@@ -15,8 +15,7 @@ dependencies {
     implementation(projects.coreDatabase)
     implementation(projects.coreDrawables)
     implementation(projects.coreStrings)
-//    implementation(projects.data)
-//     implementation(projects.domain)
+    implementation(projects.dataDatabase)
 
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.adaptive.layout)

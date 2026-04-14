@@ -231,6 +231,7 @@ private fun EpisodeDetails(
     val duration = (episode.watchProgress?.duration?.takeIf { it > 0L }
         ?: episode.episode.runtime?.toLong()?.takeIf { it > 0L })
         ?.toInt()
+        ?.let { (it / 1000) / 60 }
         ?.formatAsRuntime()
 
     val episodeLabel = buildString {
@@ -267,7 +268,7 @@ private fun ProgressBar(
 ) {
     val progress = remember(episodeProgress) {
         when {
-            episodeProgress.isFinished -> 1f
+            episodeProgress.isCompleted -> 1f
             else -> episodeProgress.progress.toFloat() / episodeProgress.duration.toFloat()
         }
     }
@@ -453,7 +454,7 @@ private fun EpisodeCardBasePreview() {
                                 episode = episode,
                                 watchProgress = EpisodeProgress(
                                     filmId = series.identifier,
-                                    ownerId = -1,
+                                    ownerId = "preview-user",
                                     progress = 50000L,
                                     duration = 90000L,
                                     seasonNumber = episode.season,

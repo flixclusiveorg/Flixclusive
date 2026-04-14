@@ -79,16 +79,16 @@ import com.flixclusive.feature.mobile.player.component.bottom.PlaybackSpeedSheet
 import com.flixclusive.feature.mobile.player.component.bottom.ResizeModeSheet
 import com.flixclusive.feature.mobile.player.component.center.CenterControls
 import com.flixclusive.feature.mobile.player.component.effect.NextEpisodeCountdownEffect
-import com.flixclusive.feature.mobile.player.component.episodes.EpisodesScreen
-import com.flixclusive.feature.mobile.player.component.gestures.BrightnessManager.Companion.rememberBrightnessManager
-import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureHandler
-import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureState.Companion.rememberPlayerGestureState
-import com.flixclusive.feature.mobile.player.component.gestures.SpeedBoostIndicator
-import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
+import com.flixclusive.feature.mobile.player.component.episode.EpisodesScreen
+import com.flixclusive.feature.mobile.player.component.gesture.BrightnessManager.Companion.rememberBrightnessManager
+import com.flixclusive.feature.mobile.player.component.gesture.PlayerGestureHandler
+import com.flixclusive.feature.mobile.player.component.gesture.PlayerGestureState.Companion.rememberPlayerGestureState
+import com.flixclusive.feature.mobile.player.component.gesture.SpeedBoostIndicator
+import com.flixclusive.feature.mobile.player.component.server.ServersScreen
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerErrorSnackbar
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerSnackbar
-import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
-import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleSyncScreen
+import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleAndAudioScreen
+import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleSyncScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.feature.mobile.player.util.UiMode
 import com.flixclusive.model.film.FilmMetadata
@@ -114,8 +114,10 @@ internal fun PlayerControls(
     currentProvider: ProviderMetadata,
     providers: List<ProviderMetadata>,
     servers: () -> List<PlayerServer>,
+    failedStreamUrls: () -> Set<String>,
     currentServer: () -> Int,
     onServerChange: (Int) -> Unit,
+    onServerFail: (Int) -> Unit,
     onProviderChange: (ProviderMetadata) -> Unit,
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
@@ -149,7 +151,10 @@ internal fun PlayerControls(
         isScrubbing = { scrubState.isScrubbing }
     )
 
-    val volumeManager = rememberVolumeManager(player = player)
+    val volumeManager = rememberVolumeManager(
+        player = player,
+        isVolumeBoosted = playerPrefs.isUsingVolumeBoost
+    )
     val brightnessManager = rememberBrightnessManager()
     val gestureState = rememberPlayerGestureState(seekAmountMs = seekButtonState.seekForwardAmountMs)
 
@@ -194,6 +199,7 @@ internal fun PlayerControls(
         availableServers = servers,
         currentServer = currentServer,
         onServerChange = onServerChange,
+        onServerFail = onServerFail,
         snackbarState = snackbarState
     )
 
@@ -241,16 +247,18 @@ internal fun PlayerControls(
             return@LaunchedEffect
         }
 
-        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || gestureState.isSpeedBoosting || !uiMode.isNone
+        val shouldHideControls = gestureState.isGestureActive || !uiMode.isNone
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()
 
-            if (player.isPlaying && !uiMode.isSubsSync && !uiMode.isSubs) {
+            val shouldPause = !uiMode.isSubsSync && !uiMode.isSubs && !gestureState.isGestureActive
+            if (player.isPlaying && shouldPause) {
                 queuePlay = true
                 player.playWhenReady = true
                 player.pause()
             }
+
             return@LaunchedEffect
         }
 
@@ -500,6 +508,7 @@ internal fun PlayerControls(
                     ) {
                         ServersScreen(
                             servers = servers,
+                            failedStreamUrls = failedStreamUrls,
                             currentServer = currentServer,
                             onServerChange = onServerChange,
                             currentProvider = currentProvider,

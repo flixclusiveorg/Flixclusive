@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.flixclusive.core.database.entity.user.User
 
 internal object StateHoistingUtil {
-    val LocalUserToAdd = compositionLocalOf { mutableStateOf(User(id = -1, name = "", image = 1)) }
+    val LocalUserToAdd = compositionLocalOf { mutableStateOf(User(id = "", name = "", image = 1)) }
 
     @Composable
     fun ProvideUserToAdd(

@@ -1,9 +1,10 @@
 package com.flixclusive.core.database.migration
 
+import android.annotation.SuppressLint
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.film.DBFilm.Companion.DB_FILM_VALID_RECOMMENDATIONS_COUNT
+import com.flixclusive.core.database.entity.film.DBFilmV213
+import com.flixclusive.core.database.entity.film.DBFilmV213.Companion.DB_FILM_VALID_RECOMMENDATIONS_COUNT
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.database.migration.Schema8to9.DBFilmMigrator.toDBFilm
 import com.flixclusive.core.util.log.errorLog
@@ -11,7 +12,6 @@ import com.flixclusive.core.util.network.json.fromJson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
@@ -158,13 +158,13 @@ internal object Schema8to9 : Migration(8, 9) {
 
             try {
                 val dbFilm = filmJson.toDBFilm()
-                if (dbFilm.id.isNotEmpty()) {
+                if (dbFilm.identifier.isNotEmpty()) {
                     // Check if this is a movie or series based on filmType
                     if (dbFilm.filmType.name == "MOVIE") {
                         // Migrate as MovieProgress
                         migrateMovieProgress(
                             db = db,
-                            filmId = dbFilm.id,
+                            filmId = dbFilm.identifier,
                             ownerId = ownerId,
                             episodesWatchedJson = episodesWatchedJson,
                             dateWatched = dateWatched,
@@ -173,7 +173,7 @@ internal object Schema8to9 : Migration(8, 9) {
                         // Migrate as EpisodeProgress for series
                         migrateEpisodeProgress(
                             db = db,
-                            filmId = dbFilm.id,
+                            filmId = dbFilm.identifier,
                             ownerId = ownerId,
                             episodesWatchedJson = episodesWatchedJson,
                             dateWatched = dateWatched,
@@ -353,11 +353,11 @@ internal object Schema8to9 : Migration(8, 9) {
 
             try {
                 val dbFilm = filmJson.toDBFilm()
-                if (dbFilm.id.isNotEmpty()) {
+                if (dbFilm.identifier.isNotEmpty()) {
                     // Insert into new table structure with ownerId
                     db.execSQL(
                         "INSERT OR IGNORE INTO library_list_items_new (filmId) VALUES (?)",
-                        arrayOf(dbFilm.id),
+                        arrayOf(dbFilm.identifier),
                     )
                 }
             } catch (e: Exception) {
@@ -404,11 +404,11 @@ internal object Schema8to9 : Migration(8, 9) {
 
             try {
                 val dbFilm = filmJson.toDBFilm()
-                if (dbFilm.id.isNotEmpty()) {
+                if (dbFilm.identifier.isNotEmpty()) {
                     // Insert into new table structure
                     db.execSQL(
                         "INSERT OR IGNORE INTO watchlist_new (filmId, ownerId, addedAt) VALUES (?, ?, ?)",
-                        arrayOf<Any>(dbFilm.id, ownerId, addedOn),
+                        arrayOf<Any>(dbFilm.identifier, ownerId, addedOn),
                     )
                 }
             } catch (e: Exception) {
@@ -434,9 +434,9 @@ internal object Schema8to9 : Migration(8, 9) {
             if (filmJson.isNotEmpty()) {
                 try {
                     val dbFilm = filmJson.toDBFilm()
-                    if (dbFilm.id.isNotEmpty() && !processedFilmIds.contains(dbFilm.id)) {
+                    if (dbFilm.identifier.isNotEmpty() && !processedFilmIds.contains(dbFilm.identifier)) {
                         insertDBFilm(db, dbFilm)
-                        processedFilmIds.add(dbFilm.id)
+                        processedFilmIds.add(dbFilm.identifier)
                     }
                 } catch (e: Exception) {
                     errorLog("Error parsing film from $tableName: ${e.message}")
@@ -448,7 +448,7 @@ internal object Schema8to9 : Migration(8, 9) {
 
     private fun insertDBFilm(
         database: SupportSQLiteDatabase,
-        dbFilm: DBFilm,
+        dbFilm: DBFilmV213,
     ) {
         val currentTime = System.currentTimeMillis()
 
@@ -461,7 +461,7 @@ internal object Schema8to9 : Migration(8, 9) {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             arrayOf<Any?>(
-                dbFilm.id,
+                dbFilm.identifier,
                 dbFilm.providerId,
                 dbFilm.imdbId,
                 dbFilm.tmdbId,
@@ -530,7 +530,7 @@ internal object Schema8to9 : Migration(8, 9) {
     )
 
     private object DBFilmMigrator {
-        fun String.toDBFilm(): DBFilm {
+        fun String.toDBFilm(): DBFilmV213 {
             val json = JsonParser.parseString(this)
 
             runCatching {
@@ -541,9 +541,10 @@ internal object Schema8to9 : Migration(8, 9) {
                 json.migrateToSchema8()
             }
 
-            return fromJson<DBFilm>(json)
+            return fromJson<DBFilmV213>(json)
         }
 
+        @SuppressLint("CheckResult")
         private fun JsonElement.migrateToSchema8() {
             val json = asJsonObject
 
@@ -566,6 +567,7 @@ internal object Schema8to9 : Migration(8, 9) {
             }
         }
 
+        @SuppressLint("CheckResult")
         private fun JsonElement.migrateToSchema4() {
             val json = asJsonObject
 

@@ -27,7 +27,7 @@ import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
 import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
-import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
+import com.flixclusive.feature.mobile.onboarding.OnboardingScreenNavigator
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
@@ -40,7 +40,6 @@ import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
@@ -61,7 +60,7 @@ import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SearchGrap
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
-import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
+import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
@@ -88,6 +87,7 @@ internal class MobileAppNavigator(
 ) : AddProfileAction,
     AddProviderScreenNavigator,
     AddUserScreenNavigator,
+    OnboardingScreenNavigator,
     AppUpdatesDialogNavigator,
     AppUpdatesScreenNavigator,
     ChooseProfileAction,
@@ -99,7 +99,6 @@ internal class MobileAppNavigator(
     LibraryDetailsScreenNavigator,
     ManageLibraryScreenNavigator,
     OpenPinScreenAction,
-    PlayerScreenNavigator,
     ProviderDetailsNavigator,
     ProviderManagerScreenNavigator,
     SearchExpandedScreenNavigator,
@@ -150,9 +149,9 @@ internal class MobileAppNavigator(
     override fun openFilmScreen(film: Film) {
         runOnResumed {
             when (currentNavGraph) {
-                is HomeGraph -> navigator.navigate(HomeAppLevelFilmScreenDestination(film = film))
-                is SearchGraph -> navigator.navigate(SearchAppLevelFilmScreenDestination(film = film))
-                is LibraryGraph -> navigator.navigate(LibraryAppLevelFilmScreenDestination(film = film))
+                is HomeGraph -> navigator.navigate(HomeAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
+                is SearchGraph -> navigator.navigate(SearchAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
+                is LibraryGraph -> navigator.navigate(LibraryAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
             }
         }
     }
@@ -185,8 +184,11 @@ internal class MobileAppNavigator(
         runOnResumed {
             navigator.navigate(HomeGraph) {
                 popUpTo(AppGraph) {
-                    inclusive = true
+                    saveState = true
                 }
+
+                launchSingleTop = true
+                restoreState = true
             }
         }
     }
@@ -200,6 +202,16 @@ internal class MobileAppNavigator(
                     popUpTo(AppGraph) {
                         inclusive = true
                     }
+                }
+            }
+        }
+    }
+
+    override fun openOnboardingScreen() {
+        runOnResumed {
+            navigator.navigate(OnboardingScreenDestination) {
+                popUpTo(AppGraph) {
+                    inclusive = true
                 }
             }
         }
@@ -227,22 +239,18 @@ internal class MobileAppNavigator(
 
     override fun openAddProfileScreen(isInitializing: Boolean) {
         runOnResumed {
-            navigator.navigate(AddUserScreenDestination(isInitializing = isInitializing))
+            navigator.navigate(AddUserScreenDestination(isInitializing = isInitializing)) {
+                if (isInitializing) {
+                    popUpTo(AppGraph) {
+                        inclusive = true
+                    }
+                }
+            }
         }
     }
 
     override fun onExitApplication() {
         exitAction.onExitApplication()
-    }
-
-    override fun onEpisodeChange(film: FilmMetadata, episode: Episode) {
-        runOnResumed {
-            navigator.navigate(
-                PlayerScreenDestination(film = film, episode = episode),
-            ) {
-                launchSingleTop = true
-            }
-        }
     }
 
     override fun openProviderSettings(providerMetadata: ProviderMetadata) {
@@ -304,7 +312,7 @@ internal class MobileAppNavigator(
         uriHandler.openUri(url)
     }
 
-    override fun openEditUserScreen(userId: Int) {
+    override fun openEditUserScreen(userId: String) {
         runOnResumed {
             navigator.navigate(UserEditScreenDestination(userId = userId))
         }

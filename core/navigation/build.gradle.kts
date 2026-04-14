@@ -7,10 +7,6 @@ android {
     namespace = "com.flixclusive.core.navigation"
 }
 
-ksp {
-
-}
-
 dependencies {
     implementation(libs.stubs.model.provider)
     implementation(libs.stubs.model.film)

@@ -17,6 +17,7 @@ androidxDataStore = "1.2.0"
 androidxTestCore = "1.7.0"
 androidxTestRules = "1.7.0"
 androidxTestRunner = "1.7.0"
+annotationsExperimental = "1.5.1"
 checkerFramework = "3.54.0"
 composeActivity = "1.12.4"
 coil = "3.4.0"
@@ -56,6 +57,7 @@ strikt = "0.35.1"
 tvCompose = "1.0.1"
 unifile = "1.0.0"
 universalChardet = "2.5.0"
+workManager = "2.11.2"
 
 [libraries]
 # Android Core
@@ -168,7 +170,9 @@ hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.re
 # Kotlin core
 desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdkLibs" }
 kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
-kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
+kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "serialization"}
+annotations-experimental = { group = "androidx.annotation", name = "annotation-experimental", version.ref = "annotationsExperimental" }
 
 # Conscrypt
 conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }
@@ -187,6 +191,10 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+
+# WorkManager
+work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
+work-testing = { group = "androidx.work", name = "work-testing", version.ref = "workManager" }
 
 # Unifile
 unifile = { module = "com.github.seven332:unifile", version.ref = "unifile" }

@@ -2,12 +2,15 @@ package com.flixclusive.core.datastore
 
 import kotlinx.coroutines.flow.Flow
 
-const val CURRENT_USER_ID_KEY = "user_session_id"
-const val SESSION_TIMEOUT_ID_KEY = "session_timeout"
-
 interface UserSessionDataStore {
-    val currentUserId: Flow<Int?>
+    val currentUserId: Flow<String?>
+    // TODO: Remove legacyCurrentUserId in future versions after migration is complete
+    @Deprecated("This field is only used for migration purposes and will be removed in future versions")
+    val legacyCurrentUserId: Flow<Int?>
     val sessionTimeout: Flow<Long>
-    suspend fun saveCurrentUserId(userId: Int)
+    suspend fun saveCurrentUserId(
+        userId: String,
+        legacyUserId: Int // TODO: Remove legacyUserId in future versions after migration is complete
+    )
     suspend fun clearCurrentUser()
 }
