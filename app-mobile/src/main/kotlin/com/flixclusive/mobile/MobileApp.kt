@@ -102,10 +102,10 @@ import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -196,17 +196,15 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             }.distinctUntilChanged(),
             viewModel.currentLinksCache,
         ) { screen, (loadLinksState, playerData), linksCache ->
-            if (
+            playerData?.takeIf {
                 screen != PlayerScreenDestination &&
-                loadLinksState.isSuccess &&
-                playerData != null &&
-                linksCache != null
-            ) {
-                transitionToPlayer(playerData)
-                return@combine
+                    loadLinksState.isSuccess &&
+                    linksCache != null
             }
-        }.debounce(300)
-            .collect()
+        }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .collectLatest(::transitionToPlayer)
     }
 
     LaunchedEffect(isConnectedAtNetwork) {
