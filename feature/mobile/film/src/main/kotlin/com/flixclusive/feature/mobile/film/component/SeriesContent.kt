@@ -32,7 +32,7 @@ internal fun LazyGridScope.seriesContent(
     selectedSeason: Int,
     seasons: List<Season>,
     seasonToDisplay: Resource<SeasonWithProgress>,
-    onSeasonChange: (Int) -> Unit,
+    onSeasonChange: (Season) -> Unit,
     onClick: (Episode) -> Unit,
     onLongClick: (EpisodeWithProgress) -> Unit,
     onRetry: () -> Unit,
@@ -49,7 +49,7 @@ internal fun LazyGridScope.seriesContent(
                 SeasonPill(
                     season = season,
                     selected = selectedSeason == season.number,
-                    onClick = { onSeasonChange(season.number) },
+                    onClick = { onSeasonChange(season) },
                     modifier = Modifier
                         .padding(horizontal = 5.dp)
                         .animateItem(),
