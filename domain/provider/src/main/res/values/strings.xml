@@ -58,4 +58,5 @@
     <string name="unload_exception_message">An error occurred while unloading %1$s (%2$s): %3$s</string>
     <string name="failed_to_download_provider">Failed to download provider: %1$s (%2$s)</string>
     <string name="failed_to_load_provider">Failed to load provider %1$s (%2$s) after updating. Try reinstalling to see if it could fix the problem.</string>
+    <string name="missing_metadata">Metadata not found for provider with id: %1$s</string>
 </resources>
