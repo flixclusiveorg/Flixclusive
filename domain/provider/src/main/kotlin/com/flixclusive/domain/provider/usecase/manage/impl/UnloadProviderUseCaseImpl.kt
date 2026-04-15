@@ -58,7 +58,7 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
     private fun deleteProviderRelatedFiles(file: File) {
         file.delete()
 
-        // Delete updater.json file if its the only thing remaining on that directory
+        // Delete updater.json file if it's the only thing remaining on that directory
         val parentDirectory = file.parentFile!!
         if (parentDirectory.isDirectory && parentDirectory.listFiles()?.size == 1) {
             val lastRemainingFile = parentDirectory.listFiles()!![0]

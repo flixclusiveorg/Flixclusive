@@ -22,9 +22,12 @@ import com.flixclusive.domain.provider.util.ProviderMigrator
 import com.flixclusive.domain.provider.util.ProviderMigrator.canMigrateSettingsFile
 import com.flixclusive.domain.provider.util.extensions.getFileFromPath
 import com.flixclusive.domain.provider.util.extensions.getProviderInstance
+import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
+import com.flixclusive.model.provider.Status
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
@@ -60,7 +63,18 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         flow {
             val metadata = providerRepository.getMetadata(installedProvider.id)
                 ?: getMetadataFromFile(installedProvider)
-            requireNotNull(metadata) { "Metadata not found for provider with id: ${installedProvider.id}" }
+
+            if (metadata == null) {
+                emit(
+                    ProviderResult.Failure(
+                        provider = createMissingMetadata(installedProvider),
+                        error = IllegalStateException(
+                            context.getString(R.string.missing_metadata, installedProvider.id)
+                        ),
+                    ),
+                )
+                return@flow
+            }
 
             if (isProviderAlreadyLoaded(metadata)) {
                 emit(
@@ -244,4 +258,20 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
 
         return cacheLocalMetadataMap[provider.id]
     }
+
+    private fun createMissingMetadata(provider: InstalledProvider): ProviderMetadata =
+        ProviderMetadata(
+            id = provider.id,
+            name = provider.file.nameWithoutExtension,
+            repositoryUrl = "",
+            buildUrl = "",
+            authors = emptyList(),
+            versionName = "Unknown",
+            versionCode = -1,
+            description = "No description available.",
+            iconUrl = "",
+            language = Language("Unknown"),
+            providerType = ProviderType("Unknown"),
+            status = Status.Down,
+        )
 }
