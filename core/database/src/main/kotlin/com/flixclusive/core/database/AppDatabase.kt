@@ -6,13 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.flixclusive.core.database.converters.DateConverter
-import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
-import com.flixclusive.core.database.dao.library.LibraryListDao
-import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
+import com.flixclusive.core.database.dao.library.LibraryListDao
+import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
+import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
 import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.film.DBFilmExternalId
@@ -26,6 +26,8 @@ import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
+import com.flixclusive.core.database.migration.Schema10to11
+import com.flixclusive.core.database.migration.Schema11to12
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -35,7 +37,6 @@ import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
 import com.flixclusive.core.database.migration.Schema8to9
 import com.flixclusive.core.database.migration.Schema9to10
-import com.flixclusive.core.database.migration.Schema10to11
 import java.io.File
 
 internal const val APP_DATABASE = "app_database"
@@ -55,7 +56,7 @@ internal const val APP_DATABASE = "app_database"
         InstalledProvider::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 @TypeConverters(
@@ -104,6 +105,7 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema8to9,
                         Schema9to10(context),
                         Schema10to11(context),
+                        Schema11to12,
                     ).build()
                     .also { INSTANCE = it }
             }
