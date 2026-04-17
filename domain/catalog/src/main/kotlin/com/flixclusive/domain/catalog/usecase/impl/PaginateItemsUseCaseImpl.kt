@@ -70,7 +70,7 @@ internal class PaginateItemsUseCaseImpl @Inject constructor(
                     }
 
                     Resource.Success(items)
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     errorLog(e)
                     Resource.Failure(
                         UiText.StringResource(
