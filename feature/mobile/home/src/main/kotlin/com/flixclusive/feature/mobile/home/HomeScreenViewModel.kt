@@ -204,10 +204,6 @@ internal class HomeScreenViewModel @Inject constructor(
             getHomeCatalogs().collect { response ->
                 when (response) {
                     is Async.Loading -> {
-                        if (_uiState.value.catalogs.isSuccess) {
-                            return@collect
-                        }
-
                         _uiState.update { state ->
                             state.copy(catalogs = Async.Loading)
                         }
