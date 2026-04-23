@@ -1,5 +1,8 @@
 package com.flixclusive.feature.mobile.film.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.common.components.isLoadingDelayed
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
@@ -40,41 +44,49 @@ internal fun FilmScreenPlaceholder() {
         getBackdropAspectRatio(usePortraitView)
     }
 
-    Box(
-        contentAlignment = Alignment.TopCenter,
+    AnimatedVisibility(
+        visible = !isLoadingDelayed(),
+        enter = fadeIn(),
+        exit = fadeOut(),
         modifier = Modifier.fillMaxSize()
     ) {
-        // Backdrop placeholder
-        Placeholder(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(backdropAspectRatio)
-                .drawWithContent {
-                    drawContent()
-                    drawRect(
-                        Brush.verticalGradient(
-                            0F to Color.Transparent,
-                            0.9F to surface,
-                        ),
-                    )
-                },
-        )
-
-        Column(
-            verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier
-                .aspectRatio(backdropAspectRatio * 0.95f)
-                .padding(horizontal = DefaultScreenPaddingHorizontal),
+        Box(
+            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier.fillMaxSize()
         ) {
-            BriefDetailsPlaceholder()
+            // Backdrop placeholder
+            Placeholder(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(backdropAspectRatio)
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(
+                            Brush.verticalGradient(
+                                0F to Color.Transparent,
+                                0.9F to surface,
+                            ),
+                        )
+                    },
+            )
 
-            GenresPlaceholder()
+            Column(
+                verticalArrangement = Arrangement.Bottom,
+                modifier = Modifier
+                    .aspectRatio(backdropAspectRatio * 0.95f)
+                    .padding(horizontal = DefaultScreenPaddingHorizontal),
+            ) {
+                BriefDetailsPlaceholder()
 
-            HeaderButtonsPlaceholder()
+                GenresPlaceholder()
 
-            DescriptionPlaceholder()
+                HeaderButtonsPlaceholder()
+
+                DescriptionPlaceholder()
+            }
         }
     }
+
 }
 
 @Composable

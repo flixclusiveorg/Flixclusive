@@ -57,6 +57,7 @@ import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
+import com.flixclusive.core.presentation.common.components.isLoadingDelayed
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -79,7 +80,6 @@ import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -320,16 +320,8 @@ private fun LoadingScreen(
     modifier: Modifier = Modifier,
     message: String? = null
 ) {
-    var showLoading by remember { mutableStateOf(false) }
-
-    LaunchedEffect(true) {
-        // Add a slight delay before showing the loading indicator to prevent flickering on fast loads
-        delay(600)
-        showLoading = true
-    }
-
     AnimatedVisibility(
-        visible = showLoading,
+        visible = !isLoadingDelayed(),
         enter = fadeIn(),
         exit = fadeOut(),
         modifier = modifier.fillMaxSize(),
