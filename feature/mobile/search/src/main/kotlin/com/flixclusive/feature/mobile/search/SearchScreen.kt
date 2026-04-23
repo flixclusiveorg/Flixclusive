@@ -225,15 +225,15 @@ private fun SearchScreenContent(
 @Composable
 private fun SearchScreenBasePreview() {
     val providers: Async<List<ProviderMetadata>> = remember {
-        Async.Loading
-//        Async.Success(
-//            List(10) {
-//                DummyDataForPreview.getProviderMetadata(
-//                    id = "$it",
-//                    name = "Provider $it",
-//                )
-//            }
-//        )
+//        Async.Loading
+        Async.Success(
+            List(10) {
+                DummyDataForPreview.getProviderMetadata(
+                    id = "$it",
+                    name = "Provider $it",
+                )
+            }
+        )
     }
 
     val searchHistory = remember {
@@ -247,7 +247,7 @@ private fun SearchScreenBasePreview() {
     }
 
     val films = remember {
-        List(20) {
+        List(5) {
             DummyDataForPreview.getFilm(
                 id = "$it",
                 title = "Film $it",
@@ -262,7 +262,7 @@ private fun SearchScreenBasePreview() {
             SearchScreenContent(
                 uiState = SearchUiState(
                     lastQuerySearched = "Film 1",
-                    currentViewType = SearchItemViewType.Providers,
+                    currentViewType = SearchItemViewType.Films,
                     canPaginate = true,
                 ),
                 searchQuery = { "Film 1" },

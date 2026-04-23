@@ -23,10 +23,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -46,7 +47,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -95,7 +95,10 @@ internal fun SearchBarInput(
     }
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (provider != null) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
     }
 
     val updatedOnChangeView by rememberUpdatedState(onChangeView)
@@ -112,7 +115,7 @@ internal fun SearchBarInput(
             .fillMaxWidth()
             .padding(horizontal = 10.dp),
     ) {
-        TextField(
+        OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
@@ -126,6 +129,8 @@ internal fun SearchBarInput(
                 onQueryChange(it.text)
             },
             singleLine = true,
+            isError = isError,
+            enabled = provider != null,
             textStyle = MaterialTheme.typography.bodyMedium,
             keyboardActions = KeyboardActions(
                 onSearch = {
@@ -137,16 +142,20 @@ internal fun SearchBarInput(
                         onChangeView(SearchItemViewType.Films)
                     }
 
+                    if (isError) return@KeyboardActions
+
                     onSearch()
                 },
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             shape = MaterialTheme.shapes.small,
             colors = TextFieldDefaults.colors(
-                disabledTextColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(10.dp),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
             ),
             leadingIcon = {
                 IconButton(onClick = onNavigationIconClick) {
@@ -158,24 +167,12 @@ internal fun SearchBarInput(
             },
             placeholder = {
                 Text(
-                    text = stringResource(LocaleR.string.search_suggestion),
+                    text = stringResource(LocaleR.string.search_text_field_placeholder),
                     style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.copy(0.6f),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
-            },
-            supportingText = {
-                if (isError) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(LocaleR.string.empty_query_error_msg),
-                        color = MaterialTheme.colorScheme.error,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                    )
-                }
             },
             trailingIcon = {
                 this@Column.AnimatedVisibility(
@@ -201,7 +198,9 @@ internal fun SearchBarInput(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .fillMaxWidth(),
         ) {
             item {
                 ProviderFilterButton(

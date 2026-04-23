@@ -87,7 +87,7 @@ internal fun SearchProvidersView(
 }
 
 @Composable
-fun SearchProvidersList(
+private fun SearchProvidersList(
     providers: List<ProviderMetadata>,
     selectedProviderId: String?,
     scaffoldPadding: PaddingValues,
@@ -120,7 +120,7 @@ fun SearchProvidersList(
 
 
 @Composable
-fun SearchProvidersError(
+private fun SearchProvidersError(
     message: String,
     modifier: Modifier = Modifier,
 ) {
@@ -140,7 +140,7 @@ fun SearchProvidersError(
 }
 
 @Composable
-fun SearchProvidersLoading(modifier: Modifier = Modifier) {
+private fun SearchProvidersLoading(modifier: Modifier = Modifier) {
     val elevation = Elevations.LEVEL_3
 
     Column(
