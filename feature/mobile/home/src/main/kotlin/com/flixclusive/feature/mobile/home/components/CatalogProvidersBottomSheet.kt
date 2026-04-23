@@ -228,7 +228,6 @@ private fun CatalogProviderCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val statusColor = getProviderStatusContainerColor(provider.status)
 
     Card(
         modifier = modifier,
@@ -276,7 +275,7 @@ private fun CatalogProviderCard(
                             text = provider.status.name,
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
-                            color = statusColor,
+                            color = getProviderStatusContainerColor(provider.status),
                             modifier = Modifier
                                 .graphicsLayer { alpha = 0.6F }
                         )
@@ -312,8 +311,8 @@ private fun CatalogProviderCardPlaceholder() {
         elevation = Elevations.LEVEL_3,
         modifier = Modifier
             .fillMaxWidth()
-            .height(40.dp + 20.dp)
             .padding(8.dp)
+            .height(40.dp + 12.dp)
     )
 }
 

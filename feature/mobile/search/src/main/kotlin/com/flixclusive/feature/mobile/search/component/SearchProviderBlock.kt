@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -17,19 +16,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -40,6 +43,8 @@ internal fun SearchProviderBlock(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Box(
         modifier = modifier
             .clickable(enabled = !isSelected) {
@@ -47,46 +52,49 @@ internal fun SearchProviderBlock(
             },
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(15.dp)
+            modifier = Modifier.padding(12.dp),
         ) {
             ImageWithSmallPlaceholder(
-                modifier = Modifier.size(60.dp),
-                placeholderSize = 30.dp,
-                urlImage = provider.iconUrl,
-                placeholderId = UiCommonR.drawable.provider_logo,
-                contentDescId = LocaleR.string.provider_icon_content_desc,
-                shape = MaterialTheme.shapes.small
+                model = remember { context.buildImageRequest(provider.iconUrl) },
+                placeholder = painterResource(UiCommonR.drawable.provider_logo),
+                contentDescription = provider.name,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.size(40.dp),
             )
 
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
             ) {
                 Text(
                     text = provider.name,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        fontSize = 18.sp
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .padding(bottom = 2.dp)
+                    style = MaterialTheme.typography.labelMedium
                 )
 
-                Text(
-                    text = provider.providerType.toString(),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        color = LocalContentColor.current.copy(0.6f),
-                        fontSize = 13.sp
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "v${provider.versionName} (${provider.versionCode})",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = LocalContentColor.current.copy(0.6F)
                     )
-                )
+
+
+                    if (provider.status != ProviderStatus.Working) {
+                        Text(
+                            text = provider.status.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 11.sp,
+                            color = getProviderStatusContainerColor(provider.status),
+                            modifier = Modifier
+                                .graphicsLayer { alpha = 0.6F }
+                        )
+                    }
+                }
             }
 
             AnimatedVisibility(
@@ -97,7 +105,7 @@ internal fun SearchProviderBlock(
                 Icon(
                     painter = painterResource(UiCommonR.drawable.check),
                     contentDescription = stringResource(LocaleR.string.check_indicator_content_desc),
-                    modifier = Modifier.size(25.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }

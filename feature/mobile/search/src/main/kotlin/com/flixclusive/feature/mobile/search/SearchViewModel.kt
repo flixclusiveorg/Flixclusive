@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -23,19 +22,19 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.SearchHistoryRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.usecase.get.GetSearchProvidersUseCase
 import com.flixclusive.feature.mobile.search.SearchUiState.Companion.resetPagination
 import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.PaginatedResponse
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.capability.SearchProviderApi
 import com.flixclusive.provider.filter.BottomSheetComponent
 import com.flixclusive.provider.filter.FilterGroup
 import com.flixclusive.provider.filter.FilterList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -59,33 +58,31 @@ internal class SearchViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val appDispatchers: AppDispatchers,
     private val providerRepository: ProviderRepository,
-    private val savedStateHandle: SavedStateHandle,
+    getSearchProviders: GetSearchProvidersUseCase,
     dataStoreManager: DataStoreManager,
 ) : ViewModel() {
     private var searchingJob: Job? = null
     private var paginatingJob: Job? = null
 
-    val providers = userSessionDataStore.currentUserId
-        .filterNotNull()
-        .flatMapLatest { userId ->
-            providerRepository
-                .getEnabledProvidersAsFlow(userId)
-                .mapLatest { list ->
-                    list.mapNotNull { (_, plugin, metadata) ->
-                        val hasSearchApi = plugin?.getSearchApi(context) != null
-                        if (!hasSearchApi) {
-                            return@mapNotNull null
-                        }
-
-                        metadata
-                    }.toImmutableList()
-                }
+    val providers = getSearchProviders().mapLatest { state ->
+        if (state is Async.Loading) {
+            return@mapLatest Async.Loading
+        } else if (state is Async.Failure) {
+            return@mapLatest Async.Failure(state.message, state.cause)
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = persistentListOf(),
-        )
+
+        val data = (state as Async.Success).data
+            .mapNotNull { provider ->
+                provider.metadata
+            }
+            .sortedBy { it.name }
+
+        Async.Success(data) as Async<List<ProviderMetadata>>
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Async.Loading,
+    )
 
     val searchHistory = userSessionDataStore.currentUserId
         .filterNotNull()

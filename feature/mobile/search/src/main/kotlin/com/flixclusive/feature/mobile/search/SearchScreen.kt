@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
@@ -44,8 +45,6 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -90,7 +89,7 @@ private fun SearchScreenContent(
     searchQuery: () -> String,
     searchHistory: () -> List<SearchHistory>,
     searchResults: () -> Set<Film>,
-    providers: ImmutableList<ProviderMetadata>,
+    providers: Async<List<ProviderMetadata>>,
     filters: () -> FilterList,
     onGoBack: () -> Unit,
     onQueryChange: (String) -> Unit,
@@ -129,8 +128,9 @@ private fun SearchScreenContent(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             val provider = remember(providers, uiState.selectedProviderId) {
+                if (providers !is Async.Success) return@remember null
                 val selectedProvider = uiState.selectedProviderId ?: return@remember null
-                providers.fastFirstOrNull { selectedProvider == it.id }
+                providers.data.fastFirstOrNull { selectedProvider == it.id }
             }
 
             SearchBarInput(
@@ -224,13 +224,16 @@ private fun SearchScreenContent(
 @Preview
 @Composable
 private fun SearchScreenBasePreview() {
-    val providers = remember {
-        List(10) {
-            DummyDataForPreview.getProviderMetadata(
-                id = "$it",
-                name = "Provider $it",
-            )
-        }.toImmutableList()
+    val providers: Async<List<ProviderMetadata>> = remember {
+        Async.Loading
+//        Async.Success(
+//            List(10) {
+//                DummyDataForPreview.getProviderMetadata(
+//                    id = "$it",
+//                    name = "Provider $it",
+//                )
+//            }
+//        )
     }
 
     val searchHistory = remember {
@@ -259,8 +262,7 @@ private fun SearchScreenBasePreview() {
             SearchScreenContent(
                 uiState = SearchUiState(
                     lastQuerySearched = "Film 1",
-                    currentViewType = SearchItemViewType.Films,
-                    selectedProviderId = providers.first().id,
+                    currentViewType = SearchItemViewType.Providers,
                     canPaginate = true,
                 ),
                 searchQuery = { "Film 1" },

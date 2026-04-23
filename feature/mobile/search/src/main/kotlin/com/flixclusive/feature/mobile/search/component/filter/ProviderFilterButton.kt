@@ -75,10 +75,7 @@ internal fun ProviderFilterButton(
             if (it == null || it.name.isEmpty()) {
                 Text(
                     text = stringResource(R.string.search_provider_button_placeholder),
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                 )
             } else {
                 NonEmptyFilterButton(

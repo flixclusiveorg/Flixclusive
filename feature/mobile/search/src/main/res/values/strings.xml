@@ -2,4 +2,5 @@
 <resources>
     <string name="error_search_api_not_found">Search API not found for provider ID: %1$s</string>
     <string name="search_provider_button_placeholder">Select a provider</string>
+    <string name="search_failed_to_load_search_providers">Failed to load search providers</string>
 </resources>

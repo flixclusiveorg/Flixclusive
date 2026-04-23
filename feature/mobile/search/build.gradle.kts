@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
     implementation(projects.dataProvider)
+    implementation(projects.domainProvider)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
