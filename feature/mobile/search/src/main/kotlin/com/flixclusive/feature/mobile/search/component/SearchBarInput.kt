@@ -58,11 +58,11 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.search.SearchItemViewType
+import com.flixclusive.feature.mobile.search.SearchProvider
 import com.flixclusive.feature.mobile.search.component.filter.ProviderFilterButton
 import com.flixclusive.feature.mobile.search.util.FilterHelper
 import com.flixclusive.feature.mobile.search.util.FilterHelper.getFormattedName
 import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.filter.FilterList
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -70,7 +70,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun SearchBarInput(
     currentViewType: SearchItemViewType,
-    provider: ProviderMetadata?,
+    provider: SearchProvider?,
     searchQuery: () -> String,
     lastQuerySearched: String,
     filters: FilterList,
@@ -205,7 +205,7 @@ internal fun SearchBarInput(
             item {
                 ProviderFilterButton(
                     currentViewType = currentViewType,
-                    provider = provider,
+                    provider = provider?.metadata,
                     onChangeView = onChangeView,
                 )
             }
@@ -273,7 +273,7 @@ private fun SearchBarExpandedPreview() {
                 onQueryChange = {},
                 onToggleFilterSheet = {},
                 filters = FilterList(),
-                provider = getProviderMetadata(),
+                provider = SearchProvider(getProviderMetadata(), true),
                 currentViewType = SearchItemViewType.History,
                 onChangeView = {},
             )

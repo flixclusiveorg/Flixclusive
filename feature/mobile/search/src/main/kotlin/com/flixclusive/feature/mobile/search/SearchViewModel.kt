@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.search
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
@@ -29,6 +30,7 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.PaginatedResponse
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.provider.capability.SearchProviderApi
 import com.flixclusive.provider.filter.BottomSheetComponent
 import com.flixclusive.provider.filter.FilterGroup
@@ -73,11 +75,14 @@ internal class SearchViewModel @Inject constructor(
 
         val data = (state as Async.Success).data
             .mapNotNull { provider ->
-                provider.metadata
+                SearchProvider(
+                    metadata = provider.metadata ?: return@mapNotNull null,
+                    isEnabled = provider.isEnabled,
+                )
             }
             .sortedBy { it.name }
 
-        Async.Success(data) as Async<List<ProviderMetadata>>
+        Async.Success(data) as Async<List<SearchProvider>>
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -313,6 +318,20 @@ internal data class SearchUiState(
                 error = null,
             )
     }
+}
+
+@Stable
+internal data class SearchProvider(
+    val metadata: ProviderMetadata,
+    val isEnabled: Boolean,
+) {
+    val id: String get() = metadata.id
+    val name: String get() = metadata.name
+
+    val iconUrl: String? get() = metadata.iconUrl
+    val versionName: String get() = metadata.versionName
+    val versionCode: Long get() = metadata.versionCode
+    val status: ProviderStatus get() = metadata.status
 }
 
 internal enum class SearchItemViewType {

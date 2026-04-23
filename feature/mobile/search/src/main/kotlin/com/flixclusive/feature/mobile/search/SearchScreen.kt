@@ -41,7 +41,6 @@ import com.flixclusive.feature.mobile.search.component.SearchSearchHistoryView
 import com.flixclusive.feature.mobile.search.component.filter.FilterBottomSheet
 import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
@@ -89,7 +88,7 @@ private fun SearchScreenContent(
     searchQuery: () -> String,
     searchHistory: () -> List<SearchHistory>,
     searchResults: () -> Set<Film>,
-    providers: Async<List<ProviderMetadata>>,
+    providers: Async<List<SearchProvider>>,
     filters: () -> FilterList,
     onGoBack: () -> Unit,
     onQueryChange: (String) -> Unit,
@@ -224,13 +223,16 @@ private fun SearchScreenContent(
 @Preview
 @Composable
 private fun SearchScreenBasePreview() {
-    val providers: Async<List<ProviderMetadata>> = remember {
+    val providers: Async<List<SearchProvider>> = remember {
 //        Async.Loading
         Async.Success(
             List(10) {
-                DummyDataForPreview.getProviderMetadata(
-                    id = "$it",
-                    name = "Provider $it",
+                SearchProvider(
+                    DummyDataForPreview.getProviderMetadata(
+                        id = "$it",
+                        name = "Provider $it",
+                    ),
+                    isEnabled = it % 2 == 0,
                 )
             }
         )
@@ -262,7 +264,7 @@ private fun SearchScreenBasePreview() {
             SearchScreenContent(
                 uiState = SearchUiState(
                     lastQuerySearched = "Film 1",
-                    currentViewType = SearchItemViewType.Films,
+                    currentViewType = SearchItemViewType.Providers,
                     canPaginate = true,
                 ),
                 searchQuery = { "Film 1" },

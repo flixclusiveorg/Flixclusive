@@ -31,14 +31,14 @@ import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.feature.mobile.search.SearchProvider
 import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun SearchProviderBlock(
-    provider: ProviderMetadata,
+    provider: SearchProvider,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -47,7 +47,10 @@ internal fun SearchProviderBlock(
 
     Box(
         modifier = modifier
-            .clickable(enabled = !isSelected) {
+            .graphicsLayer {
+                alpha = if (provider.isEnabled) 1F else 0.5F
+            }
+            .clickable(enabled = !isSelected && provider.isEnabled) {
                 onClick()
             },
     ) {
@@ -56,7 +59,7 @@ internal fun SearchProviderBlock(
             modifier = Modifier.padding(12.dp),
         ) {
             ImageWithSmallPlaceholder(
-                model = remember { context.buildImageRequest(provider.iconUrl) },
+                model = remember { context.buildImageRequest(provider.metadata.iconUrl) },
                 placeholder = painterResource(UiCommonR.drawable.provider_logo),
                 contentDescription = provider.name,
                 shape = MaterialTheme.shapes.small,
@@ -118,7 +121,7 @@ private fun ProviderCardPreview() {
     FlixclusiveTheme {
         Surface {
             SearchProviderBlock(
-                provider = getProviderMetadata(),
+                provider = SearchProvider(getProviderMetadata(), true),
                 isSelected = true,
                 onClick = {}
             )

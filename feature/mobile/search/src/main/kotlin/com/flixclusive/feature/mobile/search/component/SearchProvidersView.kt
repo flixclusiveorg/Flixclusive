@@ -39,8 +39,8 @@ import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveGridCellsCount
 import com.flixclusive.feature.mobile.search.R
+import com.flixclusive.feature.mobile.search.SearchProvider
 import com.flixclusive.feature.mobile.search.ViewLabelHeader
-import com.flixclusive.model.provider.ProviderMetadata
 import kotlin.math.max
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -48,7 +48,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SearchProvidersView(
-    providers: Async<List<ProviderMetadata>>,
+    providers: Async<List<SearchProvider>>,
     selectedProviderId: String?,
     scaffoldPadding: PaddingValues,
     onChangeProvider: (String) -> Unit,
@@ -88,7 +88,7 @@ internal fun SearchProvidersView(
 
 @Composable
 private fun SearchProvidersList(
-    providers: List<ProviderMetadata>,
+    providers: List<SearchProvider>,
     selectedProviderId: String?,
     scaffoldPadding: PaddingValues,
     onChangeProvider: (String) -> Unit,
