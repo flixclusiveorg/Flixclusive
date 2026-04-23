@@ -29,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.feature.mobile.search.R
@@ -107,7 +106,7 @@ private fun NonEmptyFilterButton(
                 contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .size(16.dp),
+                    .size(12.dp),
             )
         } else {
             val imageModel = remember { context.buildImageRequest(iconUrl) }
@@ -117,7 +116,7 @@ private fun NonEmptyFilterButton(
                 contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
                 onError = { isIconLoadingError = true },
                 modifier = Modifier
-                    .size(16.dp),
+                    .size(12.dp),
             )
 
             Spacer(modifier = Modifier.width(3.dp))
@@ -127,10 +126,7 @@ private fun NonEmptyFilterButton(
             text = name,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-            ),
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
         )
     }
 }
