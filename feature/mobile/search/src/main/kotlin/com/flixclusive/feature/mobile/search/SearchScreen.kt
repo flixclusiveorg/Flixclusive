@@ -44,7 +44,6 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -254,7 +253,7 @@ private fun SearchScreenBasePreview() {
                 id = "$it",
                 title = "Film $it",
             )
-        }.toImmutableSet()
+        }.toSet()
     }
 
     val filters = remember { FilterList() }
