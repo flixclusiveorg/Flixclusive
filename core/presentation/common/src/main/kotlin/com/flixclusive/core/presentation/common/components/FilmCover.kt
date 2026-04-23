@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.presentation.common.components.FilmCover.Backdrop
 import com.flixclusive.core.presentation.common.components.FilmCover.Poster
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.ifElse
@@ -46,7 +45,6 @@ enum class FilmCover(
      * Composable that displays a film cover image (poster or backdrop) with a placeholder.
      *
      * @param imagePath The path to the image to be loaded.
-     * @param imageSize The size of the image to be loaded (e.g., "w500").
      * @param title The title of the film, used for the placeholder.
      * @param contentScale The scaling strategy for the image. Default is [ContentScale.FillBounds].
      * @param modifier Modifier to be applied to the Box containing the image.
@@ -58,7 +56,6 @@ enum class FilmCover(
     @Composable
     operator fun invoke(
         imagePath: String?,
-        imageSize: String,
         title: String,
         modifier: Modifier = Modifier,
         contentScale: ContentScale = ContentScale.FillBounds,
@@ -70,10 +67,7 @@ enum class FilmCover(
         val context = LocalContext.current
 
         val painter = remember(imagePath) {
-            context.buildImageRequest(
-                imagePath = imagePath,
-                imageSize = imageSize,
-            )
+            context.buildImageRequest(imagePath = imagePath)
         }
 
         AsyncImage(
@@ -118,7 +112,6 @@ private fun FilmCoverPreview() {
             ) {
                 Poster(
                     imagePath = "/sample.png",
-                    imageSize = "w500",
                     title = "Superman (1996)",
                     modifier = Modifier.width(110.dp),
                 )

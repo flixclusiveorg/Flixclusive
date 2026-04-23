@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="failed_to_fetch_cards">Something went wrong fetching search categories</string>
+    <string name="error_search_api_not_found">Search API not found for provider ID: %1$s</string>
+    <string name="search_provider_button_placeholder">Select a provider</string>
 </resources>

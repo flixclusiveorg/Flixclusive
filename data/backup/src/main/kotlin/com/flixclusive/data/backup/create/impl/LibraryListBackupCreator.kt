@@ -73,7 +73,6 @@ internal class LibraryListBackupCreator @Inject constructor(
             language = language,
             rating = rating,
             backdropImage = backdropImage,
-            year = year,
             externalIds = externalIds,
             createdAt = createdAt.time,
             updatedAt = updatedAt.time,

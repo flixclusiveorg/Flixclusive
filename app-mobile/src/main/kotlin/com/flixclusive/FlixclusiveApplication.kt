@@ -9,8 +9,8 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.util.network.okhttp.UserAgentManager
 import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.backup.work.AutoBackupScheduler
+import com.flixclusive.data.database.repository.UserAuthRepository
 import com.flixclusive.data.database.repository.UserRepository
-import com.flixclusive.data.database.session.UserSessionManager
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -22,7 +22,7 @@ internal class FlixclusiveApplication :
     Application(),
     SingletonImageLoader.Factory {
     @Inject
-    lateinit var userSessionManager: UserSessionManager
+    lateinit var userAuthRepository: UserAuthRepository
 
     @Inject
     lateinit var userRepository: UserRepository
@@ -58,15 +58,14 @@ internal class FlixclusiveApplication :
             }
 
             val users = userRepository.observeUsers().first()
-            val hasOldSession = userSessionManager.hasOldSession()
+            val hasOldSession = userAuthRepository.hasOldSession()
 
             if (hasOldSession) {
-                userSessionManager.restoreSession()
-                userSessionManager.currentUser.first { it != null }
+                userAuthRepository.restoreSession()
             } else if (users.size == 1) {
-                userSessionManager.signIn(users.first())
+                userAuthRepository.signIn(users.first())
             } else {
-                userSessionManager.signOut()
+                userAuthRepository.signOut()
             }
         }
     }

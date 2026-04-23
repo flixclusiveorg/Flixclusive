@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.flixclusive.R
+import com.flixclusive.core.common.locale.toFormattedString
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
 import com.flixclusive.mobile.FilmPreview
@@ -90,7 +91,6 @@ internal fun FilmPreviewBottomSheet(
 
             FilmCover.Poster(
                 imagePath = film.posterImage,
-                imageSize = "w300",
                 title = film.title,
                 onClick = {
                     if (film.posterImage != null) {
@@ -124,7 +124,7 @@ internal fun FilmPreviewBottomSheet(
                     fontWeight = FontWeight.SemiBold,
                 )
 
-                if (film.rating != null || film.parsedReleaseDate != null) {
+                if (film.rating != null || film.releaseDate != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -143,9 +143,9 @@ internal fun FilmPreviewBottomSheet(
                             )
                         }
 
-                        film.parsedReleaseDate?.let {
+                        film.releaseDate?.let {
                             Text(
-                                text = it,
+                                text = it.toFormattedString()!!,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Normal,
                             )

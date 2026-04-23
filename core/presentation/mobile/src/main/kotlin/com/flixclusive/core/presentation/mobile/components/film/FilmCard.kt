@@ -49,6 +49,7 @@ fun FilmCard(
     onClick: (Film) -> Unit,
     onLongClick: (Film) -> Unit,
     modifier: Modifier = Modifier,
+    isInLibrary: Boolean = false,
     isShowingTitle: Boolean = false,
 ) {
     var showPlaceholder by rememberSaveable { mutableStateOf(true) }
@@ -62,7 +63,6 @@ fun FilmCard(
         ) {
             FilmCover.Poster(
                 imagePath = film.posterImage,
-                imageSize = "w300",
                 title = film.title,
                 onSuccess = { showPlaceholder = false },
                 onClick = { onClick(film) },

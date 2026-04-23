@@ -47,10 +47,10 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
             initializeDebugProviders(userId)
-            val providers = providerRepository.getInstalledProviders(userId)
+            val providers = providerRepository.getProviders(userId)
 
-            providers.forEach { provider ->
-                loadProviderUseCase(installedProvider = provider)
+            providers.forEach { providerWrapper ->
+                loadProviderUseCase(installedProvider = providerWrapper.provider)
                     .collect(::send)
             }
         }
@@ -116,8 +116,8 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     }
 
                     it.copy(
-                        id = "${it.id}${ProviderPreferences.DEBUG_PREFIX}",
-                        name = "${it.name}${ProviderPreferences.DEBUG_PREFIX}",
+                        id = "${it.id}${ProviderPreferences.DEBUG_SUFFIX}",
+                        name = "${it.name}${ProviderPreferences.DEBUG_SUFFIX}",
                     )
                 }
 
@@ -126,7 +126,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     return@subDirectory
                 }
 
-                val installedProvider = providerRepository.getInstalledProvider(
+                val installedProvider = providerRepository.getProvider(
                     ownerId = userId, id = metadata.id,
                 )
 

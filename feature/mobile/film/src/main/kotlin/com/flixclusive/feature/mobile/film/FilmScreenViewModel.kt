@@ -7,6 +7,7 @@ import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
@@ -15,21 +16,19 @@ import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.data.tmdb.util.TMDBProviderUtils
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
@@ -56,7 +55,6 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel(assistedFactory = FilmScreenViewModel.Factory::class)
 internal class FilmScreenViewModel @AssistedInject constructor(
@@ -68,7 +66,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     private val libraryListRepository: LibraryListRepository,
     private val providerRepository: ProviderRepository,
     private val toggleWatchProgressStatus: ToggleWatchProgressStatusUseCase,
-    private val userSessionManager: UserSessionManager,
+    private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
     @Assisted private val navArgFilm: Film,
 ) : ViewModel() {
@@ -137,12 +135,12 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     /**
      * The watch progress entity for the current film and user, if it exists.
      * */
-    val watchProgress = userSessionManager.currentUser
+    val watchProgress = userSessionDataStore.currentUserId
         .filterNotNull()
-        .flatMapLatest { user ->
+        .flatMapLatest { userId ->
             watchProgressRepository.getAsFlow(
-                ownerId = user.id,
-                id = navArgFilm.identifier,
+                ownerId = userId,
+                id = navArgFilm.id,
                 type = navArgFilm.filmType,
             ).mapLatest {
                 val progress = it?.watchData
@@ -168,13 +166,13 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     val librarySheetQuery = _librarySheetQuery.asStateFlow()
 
     /** lists that contain the current film along with whether they contain it or not */
-    val libraryLists = userSessionManager.currentUser
+    val libraryLists = userSessionDataStore.currentUserId
         .filterNotNull()
-        .flatMapLatest { user ->
+        .flatMapLatest { userId ->
             libraryListRepository
-                .getListsAndItems(user.id, sort = LibrarySort.Modified())
+                .getListsAndItems(userId, sort = LibrarySort.Modified())
                 .mapLatest { lists ->
-                    val filmId = navArgFilm.identifier
+                    val filmId = navArgFilm.id
 
                     lists.fastMap { listAndItems ->
                         val containsFilm = listAndItems.items.fastAny { item ->
@@ -210,7 +208,6 @@ internal class FilmScreenViewModel @AssistedInject constructor(
 
     /** Fetches the metadata for the current film. */
     private suspend fun fetchMetadata() {
-        // Reset any previous errors and show loading
         _uiState.update {
             it.copy(error = null, isLoading = true)
         }
@@ -221,36 +218,31 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             return
         }
 
-        val response = getFilmMetadata(navArgFilm)
-        var error: UiText? = null
-
-        if (response is Resource.Success && response.data != null) {
-            _metadata.value = response.data
-        } else if (response is Resource.Failure) {
-            error = response.error ?: UiText.from(LocaleR.string.error_film_message)
-        }
-
-        _uiState.update {
-            it.copy(isLoading = false, error = error)
+        getFilmMetadata(navArgFilm).collect { response ->
+            when (response) {
+                is Async.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
+                is Async.Failure -> _uiState.update { it.copy(isLoading = false, error = response.message) }
+                is Async.Success -> {
+                    _metadata.value = response.data
+                    _uiState.update { it.copy(isLoading = false, error = null) }
+                }
+            }
         }
     }
 
-    private fun fetchProviderUsed() {
+    private suspend fun fetchProviderUsed() {
         val providerId = _metadata.value?.providerId
-        val providerUsed = if (providerId == DEFAULT_FILM_SOURCE_NAME) {
-            TMDBProviderUtils.tmdbProviderMetadata
-        } else {
-            providerId?.let { providerRepository.getMetadata(it) }
-        }
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        val provider = providerId?.let { providerRepository.getProvider(it, userId) }
 
-        if (providerUsed == null) {
+        if (provider == null) {
             _uiState.update {
                 it.copy(error = UiText.from(R.string.provider_null_error_message))
             }
             return
         }
 
-        _uiState.update { it.copy(provider = providerUsed) }
+        _uiState.update { it.copy(provider = provider.metadata) }
     }
 
     private suspend fun setInitialSelectedSeason() {
@@ -303,7 +295,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             val oldItem = libraryLists.value
                 .firstOrNull { it.list.id == id }
                 ?.items
-                ?.firstOrNull { it.filmId == navArgFilm.identifier }
+                ?.firstOrNull { it.filmId == navArgFilm.id }
 
             // If the item already exists, remove it. Otherwise, add it.
             if (oldItem != null) {
@@ -311,7 +303,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             } else {
                 libraryListRepository.insertItem(
                     item = LibraryListItem(
-                        filmId = navArgFilm.identifier,
+                        filmId = navArgFilm.id,
                         listId = id,
                     ),
                     film = _metadata.value,
@@ -322,15 +314,8 @@ internal class FilmScreenViewModel @AssistedInject constructor(
 
     fun toggleEpisodeOnLibrary(episodeWithProgress: EpisodeWithProgress) {
         appDispatchers.ioScope.launch {
-            val film = _metadata.value
-            val user = userSessionManager.currentUser.value
-            requireNotNull(film) {
-                "Film metadata must be loaded before toggling episode progress"
-            }
-
-            requireNotNull(user) {
-                "User must be logged in to toggle episode progress"
-            }
+            val film = _metadata.filterNotNull().first()
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
             val watchProgress = episodeWithProgress.watchProgress
             if (watchProgress == null || !watchProgress.isCompleted) {
@@ -339,8 +324,8 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                     item = watchProgress?.copy(
                         status = WatchStatus.COMPLETED,
                     ) ?: EpisodeProgress(
-                        ownerId = user.id,
-                        filmId = film.identifier,
+                        ownerId = userId,
+                        filmId = film.id,
                         seasonNumber = episodeWithProgress.episode.season,
                         episodeNumber = episodeWithProgress.episode.number,
                         status = WatchStatus.COMPLETED,
@@ -364,29 +349,21 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         name: String,
         description: String?,
     ) {
-        val film = _metadata.value
-        val user = userSessionManager.currentUser.value
-
-        requireNotNull(film) {
-            "Film metadata must be loaded before creating a library"
-        }
-
-        requireNotNull(user) {
-            "User must be logged in to create a library"
-        }
 
         appDispatchers.ioScope.launch {
+            val film = _metadata.filterNotNull().first()
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val newListId = libraryListRepository.insertList(
                 list = LibraryList(
                     name = name,
                     description = description,
-                    ownerId = user.id,
+                    ownerId = userId,
                 ),
             )
 
             // Immediately add the film to the newly created list
             libraryListRepository.insertItem(
-                item = LibraryListItem(filmId = film.identifier, listId = newListId),
+                item = LibraryListItem(filmId = film.id, listId = newListId),
                 film = film,
             )
         }

@@ -18,6 +18,6 @@ data class ProviderPreferences(
     val providers: List<OldProviderFromPreferences> = emptyList(),
 ) : UserPreferences {
     companion object {
-        const val DEBUG_PREFIX = "-debug"
+        const val DEBUG_SUFFIX = "-debug"
     }
 }

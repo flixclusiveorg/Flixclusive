@@ -63,7 +63,7 @@ internal class ProviderManagerViewModel @Inject constructor(
             .currentUserId
             .filterNotNull()
             .flatMapLatest { userId ->
-                providerRepository.getInstalledProvidersAsFlow(ownerId = userId)
+                providerRepository.getProvidersAsFlow(ownerId = userId)
             }
         .stateIn(
             viewModelScope,
@@ -80,11 +80,8 @@ internal class ProviderManagerViewModel @Inject constructor(
         installedProviders
             .mapLatest { list ->
                 list.mapNotNull { provider ->
-                    val metadata = providerRepository.getMetadata(provider.id)
-                        ?: return@mapNotNull null
-
                     EnabledProvider(
-                        metadata = metadata,
+                        metadata = provider.metadata ?: return@mapNotNull null,
                         isEnabled = provider.isEnabled,
                     )
                 }.let { metadataList ->
@@ -142,9 +139,9 @@ internal class ProviderManagerViewModel @Inject constructor(
         }
 
         providerRepository.reorderPosition(
-            moved = moved,
-            before = before,
-            after = after,
+            moved = moved.provider,
+            before = before?.provider,
+            after = after?.provider,
         )
     }
 
@@ -153,28 +150,7 @@ internal class ProviderManagerViewModel @Inject constructor(
 
         toggleJob = appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-
             providerRepository.toggleProvider(id = id, ownerId = userId)
-            val isEnabled = providerRepository.isEnabled(id = id, ownerId = userId)
-
-            if (!isEnabled) return@launch
-
-            try {
-                providerRepository.getApi(
-                    id = id,
-                    ownerId = userId,
-                )
-            } catch (e: Exception) {
-                warnLog("Failed to load provider with id $id after toggling it on, disabling it again.")
-                _uiState.update {
-                    it.copy(
-                        error = ProviderWithThrowable(
-                            provider = providerRepository.getMetadata(id)!!,
-                            throwable = e
-                        )
-                    )
-                }
-            }
         }
     }
 
@@ -183,17 +159,17 @@ internal class ProviderManagerViewModel @Inject constructor(
 
         uninstallJob = appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val provider = providerRepository.getInstalledProvider(
+            val providerWrapper = providerRepository.getProvider(
                 id = metadata.id,
                 ownerId = userId
             )
 
-            if (provider == null) {
+            if (providerWrapper == null) {
                 warnLog("Failed to get provider config for provider with id ${metadata.id}, aborting uninstall.")
                 return@launch
             }
 
-            unloadProvider(provider)
+            unloadProvider(providerWrapper.provider)
         }
     }
 

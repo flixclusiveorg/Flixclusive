@@ -81,7 +81,6 @@ internal class LibraryListBackupRestorer @Inject constructor(
             rating = rating,
             backdropImage = backdropImage,
             releaseDate = releaseDate,
-            year = year,
             createdAt = Date(createdAt),
             updatedAt = Date(updatedAt),
         )

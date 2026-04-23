@@ -6,15 +6,6 @@ import androidx.room.Index
 import com.flixclusive.model.film.Film
 import java.util.Date
 
-// TODO: Move to `core-stubs`
-object ExternalMetadataSource {
-    const val TMDB = "tmdb"
-    const val IMDB = "imdb"
-    const val TVDB = "tvdb"
-    const val TRAKT = "trakt"
-    const val ANILIST = "anilist"
-}
-
 @Entity(
     tableName = "film_external_ids",
     primaryKeys = ["filmId", "providerId", "source"],
@@ -40,34 +31,15 @@ data class DBFilmExternalId(
     val updatedAt: Date = Date(),
 ) {
     companion object {
-        // TODO: Film will be refactored to have a list of external ids,
-        //  so this mapping will need to be updated accordingly.
         fun Film.toDBFilmExternalIds(): List<DBFilmExternalId> {
-            val externalIds = mutableListOf<DBFilmExternalId>()
-
-            if (imdbId != null) {
-                externalIds.add(
-                    DBFilmExternalId(
-                        filmId = identifier,
-                        providerId = providerId,
-                        source = ExternalMetadataSource.IMDB,
-                        externalId = imdbId!!,
-                    )
+            return externalIds.map { (source, externalId) ->
+                DBFilmExternalId(
+                    filmId = id,
+                    providerId = providerId,
+                    source = source.name,
+                    externalId = externalId,
                 )
             }
-
-            if (tmdbId != null) {
-                externalIds.add(
-                    DBFilmExternalId(
-                        filmId = identifier,
-                        providerId = providerId,
-                        source = ExternalMetadataSource.TMDB,
-                        externalId = tmdbId.toString(),
-                    )
-                )
-            }
-
-            return externalIds.toList()
         }
     }
 }

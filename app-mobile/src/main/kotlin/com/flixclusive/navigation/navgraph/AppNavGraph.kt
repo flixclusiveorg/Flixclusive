@@ -38,7 +38,6 @@ internal annotation class AppNavGraph {
 }
 
 @InternalDestination<HomeNavGraph>(navArgs = FilmScreenNavArgs::class)
-@InternalDestination<SearchNavGraph>(navArgs = FilmScreenNavArgs::class)
 @InternalDestination<LibraryNavGraph>(navArgs = FilmScreenNavArgs::class)
 @Composable
 internal fun AppLevelFilmScreen(
@@ -52,7 +51,6 @@ internal fun AppLevelFilmScreen(
 }
 
 @InternalDestination<HomeNavGraph>(navArgs = SeeAllScreenNavArgs::class)
-@InternalDestination<SearchNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @InternalDestination<LibraryNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @Composable
 internal fun AppLevelSeeAllScreen(

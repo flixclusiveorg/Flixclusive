@@ -49,13 +49,6 @@ interface MovieProgressDao {
     fun getAllAsFlowRaw(query: RoomRawQuery): Flow<List<MovieProgressWithMetadata>>
 
     @Transaction
-    @Query("SELECT * FROM movies_watch_history WHERE ownerId = :ownerId ORDER BY RANDOM() LIMIT :count")
-    fun getRandoms(
-        ownerId: String,
-        count: Int,
-    ): Flow<List<MovieProgressWithMetadata>>
-
-    @Transaction
     @Query("SELECT * FROM movies_watch_history WHERE id = :id")
     suspend fun get(id: Long): MovieProgressWithMetadata?
 

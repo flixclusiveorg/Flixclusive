@@ -145,19 +145,6 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getRandoms(ownerId: String, count: Int): Flow<List<WatchProgressWithMetadata>> {
-        return withContext(appDispatchers.io) {
-            combine(
-                movieProgressDao.getRandoms(ownerId = ownerId, count = count),
-                episodeProgressDao.getRandoms(ownerId = ownerId, count = count)
-            ) { movies, episodes ->
-                (movies + episodes)
-                    .shuffled()
-                    .sortedByDescending { it.watchData.createdAt }
-            }.distinctUntilChanged()
-        }
-    }
-
     override suspend fun insert(item: WatchProgress, film: Film?): Long {
         return withContext(appDispatchers.io) {
             val dbFilm = film?.toDBFilm()

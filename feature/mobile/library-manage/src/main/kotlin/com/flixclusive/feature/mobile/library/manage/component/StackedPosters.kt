@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
@@ -144,10 +143,7 @@ private fun PreviewCard(
         if (preview != null) {
             val painter =
                 remember(preview.posterPath) {
-                    context.buildImageRequest(
-                        imagePath = preview.posterPath,
-                        imageSize = "w300",
-                    )
+                    context.buildImageRequest(imagePath = preview.posterPath)
                 }
 
             AsyncImage(

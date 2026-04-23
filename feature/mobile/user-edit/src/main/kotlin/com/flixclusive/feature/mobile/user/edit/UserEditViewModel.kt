@@ -7,11 +7,12 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.SearchHistoryRepository
+import com.flixclusive.data.database.repository.UserAuthRepository
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.feature.mobile.user.R
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,7 +34,8 @@ import com.flixclusive.core.database.R as DatabaseR
 internal class UserEditViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val userRepository: UserRepository,
-    private val userSessionManager: UserSessionManager,
+    private val userAuthRepository: UserAuthRepository,
+    private val userSessionDataStore: UserSessionDataStore,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val watchProgressRepository: WatchProgressRepository,
     private val libraryListRepository: LibraryListRepository,
@@ -116,18 +119,18 @@ internal class UserEditViewModel @Inject constructor(
 
     private suspend fun clearProviders(userId: String) {
         if (!isUserLoggedIn(userId)) return
-        providerRepository.getInstalledProviders(userId).forEach {
-            unloadProvider(it)
+        providerRepository.getProviders(userId).forEach {
+            unloadProvider(it.provider)
         }
     }
 
     private suspend fun signOut(userId: String) {
         if (!isUserLoggedIn(userId)) return
-        userSessionManager.signOut()
+        userAuthRepository.signOut()
     }
 
-    private fun isUserLoggedIn(userId: String): Boolean {
-        return userSessionManager.currentUser.value?.id == userId
+    private suspend fun isUserLoggedIn(userId: String): Boolean {
+        return userSessionDataStore.currentUserId.filterNotNull().first() == userId
     }
 }
 

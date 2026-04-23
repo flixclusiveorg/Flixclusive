@@ -20,7 +20,6 @@ dependencies {
     implementation(projects.coreNetwork)
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
-    implementation(projects.dataTmdb)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

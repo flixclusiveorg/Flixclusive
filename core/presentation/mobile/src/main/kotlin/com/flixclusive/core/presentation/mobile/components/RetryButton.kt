@@ -229,7 +229,7 @@ private fun TextFieldStackTrace(
     }
 }
 
-private fun isPossibleStackTrace(input: String): Boolean {
+fun isPossibleStackTrace(input: String): Boolean {
     val stackTracePatterns = listOf(
         "at ", // Common line starter
         "Caused by: ", // Exception cause indicator

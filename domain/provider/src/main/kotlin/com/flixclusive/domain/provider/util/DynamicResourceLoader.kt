@@ -5,7 +5,7 @@ import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Build
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderPlugin
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -40,7 +40,7 @@ internal class DynamicResourceLoader(
     private val context: Context,
 ) {
     /**
-     * Loads the resources from the input file and sets them to the provided [Provider].
+     * Loads the resources from the input file and sets them to the provided [ProviderPlugin].
      * For Android Marshmallow and below, it manipulates the ZIP file before loading.
      *
      * @param inputFile The input file containing the resources to be loaded.

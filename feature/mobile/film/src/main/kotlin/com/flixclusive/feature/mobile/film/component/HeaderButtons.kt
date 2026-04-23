@@ -52,13 +52,14 @@ import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmReleaseStatus
+import java.util.Date
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -74,8 +75,7 @@ internal fun HeaderButtons(
     onToggleDownload: () -> Unit = {}, // TODO: Implement download functionality
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val isCompactOrMedium = windowSizeClass.windowWidthSizeClass.isCompact
-        || windowSizeClass.windowWidthSizeClass.isMedium
+    val isCompactOrMedium = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -300,8 +300,7 @@ private fun ExtraButton(
     onClick: () -> Unit,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val isCompactOrMedium = windowSizeClass.windowWidthSizeClass.isCompact
-        || windowSizeClass.windowWidthSizeClass.isMedium
+    val isCompactOrMedium = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
     val label = if (state) {
         stringResource(activeLabel)
@@ -404,7 +403,7 @@ private fun HeaderButtonsPreview() {
                     metadata = metadata,
                     watchProgress = remember {
                         MovieProgress(
-                            filmId = metadata.identifier,
+                            filmId = metadata.id,
                             ownerId = "preview-user",
                             progress = 500L,
                             status = WatchStatus.WATCHING,
@@ -418,11 +417,11 @@ private fun HeaderButtonsPreview() {
 
                 HeaderButtons(
                     metadata = metadata.copy(
-                        releaseDate = "2099-01-01",
+                        releaseDate = Date(),
                     ),
                     watchProgress = remember {
                         MovieProgress(
-                            filmId = metadata.identifier,
+                            filmId = metadata.id,
                             ownerId = "preview-user",
                             progress = 500L,
                             status = WatchStatus.WATCHING,

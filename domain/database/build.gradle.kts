@@ -11,6 +11,7 @@ android {
 dependencies {
     implementation(projects.coreDatabase)
     implementation(projects.dataDatabase)
+    implementation(projects.coreDatastore)
     implementation(libs.stubs.model.film)
 
     testImplementation(projects.coreTesting)

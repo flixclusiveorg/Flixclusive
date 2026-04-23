@@ -9,9 +9,9 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
-import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.model.film.Film
@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -41,7 +42,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class ManageLibraryViewModel @Inject constructor(
     private val libraryListRepository: LibraryListRepository,
-    private val userSessionManager: UserSessionManager,
+    private val userSessionDataStore: UserSessionDataStore,
     private val appDispatchers: AppDispatchers,
 ) : ViewModel() {
     private var addLibJob: Job? = null
@@ -58,10 +59,10 @@ internal class ManageLibraryViewModel @Inject constructor(
     val selectedLibraries = _selectedLibraries.asStateFlow()
 
     val libraries = combine(
-        flow = userSessionManager.currentUser.filterNotNull(),
+        flow = userSessionDataStore.currentUserId.filterNotNull(),
         flow2 = uiState.map { it.selectedFilter }.distinctUntilChanged(),
-    ) { user, filter ->
-        user.id to filter
+    ) { userId, filter ->
+        userId to filter
     }.flatMapLatest { (user, filter) ->
         libraryListRepository
             .getListsAndItems(userId = user, sort = filter)
@@ -156,14 +157,13 @@ internal class ManageLibraryViewModel @Inject constructor(
         if (addLibJob?.isActive == true) return
 
         addLibJob = appDispatchers.ioScope.launch {
-            val userId = userSessionManager.currentUser.value?.id ?: return@launch
-            val list =
-                LibraryList(
-                    id = 0,
-                    ownerId = userId,
-                    name = name,
-                    description = description,
-                )
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val list = LibraryList(
+                id = 0,
+                ownerId = userId,
+                name = name,
+                description = description,
+            )
 
             libraryListRepository.insertList(list)
             _uiState.update { state ->

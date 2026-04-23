@@ -25,9 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -42,9 +43,8 @@ import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Comp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isExpanded
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
@@ -61,13 +61,11 @@ internal fun RepositoryCrashBottomSheet(
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
 
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val screenWidth = LocalWindowInfo.current.containerSize.width.dp
     val maxWidth = when {
-        windowWidthSizeClass.isMedium -> screenWidth / 2.5f
-        windowWidthSizeClass.isExpanded -> screenWidth / 3
+        windowSizeClass.isWidthMedium -> screenWidth / 2.5f
+        !windowSizeClass.isWidthCompact -> screenWidth / 3
         else -> screenWidth
     }
 
@@ -91,7 +89,7 @@ internal fun RepositoryCrashBottomSheet(
                         error = error,
                     )
 
-                    if (i < errors.size && windowWidthSizeClass.isCompact) {
+                    if (i < errors.size && windowSizeClass.isWidthCompact) {
                         HorizontalDivider(
                             thickness = 0.5.dp,
                             color = LocalContentColor.current.copy(0.4f),
@@ -99,7 +97,7 @@ internal fun RepositoryCrashBottomSheet(
                                 .fillMaxWidth()
                                 .padding(vertical = 15.dp),
                         )
-                    } else if (!windowWidthSizeClass.isCompact) {
+                    } else if (!windowSizeClass.isWidthCompact) {
                         Spacer(modifier = Modifier.padding(vertical = 15.dp))
                     }
                 }
@@ -119,7 +117,7 @@ private fun LabelHeader(
     errorCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
     Column(
         modifier = modifier,
@@ -144,7 +142,7 @@ private fun LabelHeader(
         }
 
         Text(
-            text = context.resources.getQuantityString(R.plurals.repository_failure_description, errorCount),
+            text = resources.getQuantityString(R.plurals.repository_failure_description, errorCount),
             style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(11.sp),
         )
     }

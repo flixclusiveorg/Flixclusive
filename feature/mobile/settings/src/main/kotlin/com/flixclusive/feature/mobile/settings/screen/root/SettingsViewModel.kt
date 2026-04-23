@@ -9,14 +9,15 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.config.BuildConfigProvider
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.backup.util.BackupUtil.decodeFromUri
 import com.flixclusive.data.database.repository.SearchHistoryRepository
-import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.provider.repository.CachedLinksRepository
+import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
+import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.backup.common.BackupState
 import com.flixclusive.domain.backup.usecase.CreateBackupUseCase
@@ -40,30 +41,39 @@ import javax.inject.Inject
 @HiltViewModel
 internal class SettingsViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val userSessionManager: UserSessionManager,
+    private val userSessionDataStore: UserSessionDataStore,
     private val dataStoreManager: DataStoreManager,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val providerRepository: ProviderRepository,
     private val unloadProviderUseCase: UnloadProviderUseCase,
-    private val cachedLinksRepository: CachedLinksRepository,
+    private val mediaLinksRepository: MediaLinksRepository,
     private val appDispatchers: AppDispatchers,
     private val installedRepoRepository: InstalledRepoRepository,
     private val initializeProviders: InitializeProvidersUseCase,
     private val _buildConfig: BuildConfigProvider,
     private val createBackupUseCase: CreateBackupUseCase,
     private val restoreBackupUseCase: RestoreBackupUseCase,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
-    val currentUser = userSessionManager.currentUser
+    val currentUser = userSessionDataStore.currentUserId
+        .filterNotNull()
+        .flatMapLatest { userId ->
+            userRepository.observeUser(id = userId)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null,
+        )
 
     @Stable
     val buildConfig get() = _buildConfig.get()
 
     val searchHistoryCount =
-        userSessionManager.currentUser
+        userSessionDataStore.currentUserId
             .filterNotNull()
-            .flatMapLatest { user ->
+            .flatMapLatest { userId ->
                 searchHistoryRepository
-                    .getAllItemsInFlow(ownerId = user.id)
+                    .getAllItemsInFlow(ownerId = userId)
                     .map { it.size }
             }.stateIn(
                 scope = viewModelScope,
@@ -72,7 +82,7 @@ internal class SettingsViewModel @Inject constructor(
             )
 
     val cachedLinksSize =
-        cachedLinksRepository.caches
+        mediaLinksRepository.caches
             .mapLatest { it.size }
             .stateIn(
                 scope = viewModelScope,
@@ -88,20 +98,20 @@ internal class SettingsViewModel @Inject constructor(
             initialValue = SystemPreferences(),
         )
 
-    val providers = userSessionManager.currentUser
+    val providers = userSessionDataStore.currentUserId
         .filterNotNull()
-        .flatMapLatest { user ->
-            providerRepository.getInstalledProvidersAsFlow(user.id)
+        .flatMapLatest { userId ->
+            providerRepository.getProvidersAsFlow(userId)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),
         )
 
-    val repositories = userSessionManager.currentUser
+    val repositories = userSessionDataStore.currentUserId
         .filterNotNull()
-        .flatMapLatest { user ->
-            installedRepoRepository.getAllAsFlow(user.id)
+        .flatMapLatest { userId ->
+            installedRepoRepository.getAllAsFlow(userId)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -141,7 +151,7 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun clearCacheLinks() {
-        cachedLinksRepository.clear()
+        mediaLinksRepository.clear()
     }
 
     fun deleteRepositories() {
@@ -154,8 +164,8 @@ internal class SettingsViewModel @Inject constructor(
     fun deleteProviders() {
         appDispatchers.ioScope.launch {
             val userId = getCurrentUserId()
-            providerRepository.getInstalledProviders(userId).forEach {
-                unloadProviderUseCase(it)
+            providerRepository.getProviders(userId).forEach {
+                unloadProviderUseCase(it.provider)
             }
         }
     }
@@ -179,8 +189,8 @@ internal class SettingsViewModel @Inject constructor(
         val includeProviders = options.includeProviders && backup.providers.isNotEmpty()
         if (includeProviders) {
             val userId = getCurrentUserId()
-            providerRepository.getInstalledProviders(userId).forEach {
-                unloadProviderUseCase(it, uninstall = false)
+            providerRepository.getProviders(userId).forEach {
+                unloadProviderUseCase(it.provider, uninstall = false)
             }
         }
 
@@ -196,9 +206,6 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     private suspend fun getCurrentUserId(): String {
-        return userSessionManager.currentUser
-            .filterNotNull()
-            .map { it.id }
-            .first()
+        return userSessionDataStore.currentUserId.filterNotNull().first()
     }
 }

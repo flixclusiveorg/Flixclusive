@@ -18,8 +18,8 @@ import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.SolidColorPainter
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.model.film.Film
 
 @Composable
@@ -28,8 +28,7 @@ internal fun BackdropImage(
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact ||
-        windowSizeClass.windowWidthSizeClass.isMedium
+    val usePortraitView = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val placeholder = SolidColorPainter.from(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp))
@@ -37,12 +36,8 @@ internal fun BackdropImage(
     val context = LocalContext.current
     val model = remember(metadata, usePortraitView) {
         val imagePath = if (usePortraitView) metadata.posterImage else metadata.backdropImage
-        val imageSize = if (usePortraitView) "original" else "w1920_and_h600_multi_faces"
 
-        context.buildImageRequest(
-            imagePath = imagePath ?: metadata.posterImage,
-            imageSize = imageSize,
-        )
+        context.buildImageRequest(imagePath = imagePath ?: metadata.posterImage)
     }
 
     AsyncImage(

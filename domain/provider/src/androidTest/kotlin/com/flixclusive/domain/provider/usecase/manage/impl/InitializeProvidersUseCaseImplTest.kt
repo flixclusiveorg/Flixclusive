@@ -114,7 +114,7 @@ class InitializeProvidersUseCaseImplTest {
             } returns true
 
             coEvery {
-                mockProviderRepository.getInstalledProviders(testInstalledProvider.ownerId)
+                mockProviderRepository.getProviders(testInstalledProvider.ownerId)
             } returns listOf(testInstalledProvider)
 
             coEvery {
@@ -174,7 +174,7 @@ class InitializeProvidersUseCaseImplTest {
                 name = "${debugMetadata.name}-debug",
             )
 
-            coEvery { mockProviderRepository.getInstalledProviders(debugProvider.ownerId) } returns listOf(debugProvider)
+            coEvery { mockProviderRepository.getProviders(debugProvider.ownerId) } returns listOf(debugProvider)
 
             coEvery {
                 mockLoadProviderUseCase(debugProvider)

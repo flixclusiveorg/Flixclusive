@@ -6,7 +6,6 @@ import com.ramcosta.composedestinations.annotation.NavGraph
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
 import com.ramcosta.composedestinations.generated.providermanage.destinations.ProviderManagerScreenDestination
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
-import com.ramcosta.composedestinations.generated.providertest.destinations.ProviderTestScreenDestination
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.SettingsScreenDestination
 
@@ -16,7 +15,6 @@ internal annotation class SettingsNavGraph {
     @ExternalDestination<ProviderDetailsScreenDestination>
     @ExternalDestination<ProviderManagerScreenDestination>
     @ExternalDestination<ProviderSettingsScreenDestination>
-    @ExternalDestination<ProviderTestScreenDestination>
     @ExternalDestination<RepositoryManagerScreenDestination>
     companion object Includes
 }

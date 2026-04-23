@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.provider.settings
 
-import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -13,6 +12,7 @@ import androidx.compose.runtime.reflect.getDeclaredComposableMethod
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
@@ -22,11 +22,9 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.Comm
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.provider.settings.components.ConditionalContent
 import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.provider.Provider
-import com.flixclusive.provider.util.res.LocalResources
+import com.flixclusive.provider.ProviderPlugin
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import okhttp3.OkHttpClient
 
 @Destination<ExternalModuleGraph>(navArgs = ProviderMetadataNavArgs::class)
 @Composable
@@ -38,7 +36,7 @@ internal fun ProviderSettingsScreen(
     ProviderSettingsScreenContent(
         navigator = navigator,
         metadata = args.metadata,
-        provider = viewModel.providerInstance,
+        provider = viewModel.providerPlugin,
     )
 }
 
@@ -46,7 +44,7 @@ internal fun ProviderSettingsScreen(
 internal fun ProviderSettingsScreenContent(
     navigator: GoBackAction,
     metadata: ProviderMetadata,
-    provider: Provider?,
+    provider: ProviderPlugin?,
 ) {
     Scaffold(
         topBar = {
@@ -73,7 +71,8 @@ internal fun ProviderSettingsScreenContent(
                 }
 
                 ConditionalContent {
-                    val resources = provider.resources ?: androidx.compose.ui.platform.LocalResources.current
+                    val appResources = LocalResources.current
+                    val resources = remember { provider.resources ?: appResources }
                     CompositionLocalProvider(LocalResources provides resources) {
                         method?.invoke(currentComposer, provider)
                     }
@@ -88,12 +87,7 @@ internal fun ProviderSettingsScreenContent(
 private fun ProviderSettingsScreenBasePreview() {
     val metadata = remember { DummyDataForPreview.getProviderMetadata() }
     val provider = remember {
-        object : Provider() {
-            override fun getApi(
-                context: Context,
-                client: OkHttpClient,
-            ) = throw Error()
-
+        object : ProviderPlugin() {
             @Composable
             override fun SettingsScreen() {
                 Text("Settings Screen for ${metadata.name}")

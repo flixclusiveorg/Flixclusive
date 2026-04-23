@@ -23,7 +23,7 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
         provider: InstalledProvider,
         uninstall: Boolean,
     ) {
-        val metadata = providerRepository.getMetadata(provider.id)
+        val metadata = providerRepository.getProvider(id = provider.id, ownerId = provider.ownerId)
             ?: error(context.getString(R.string.provider_not_even_installed, provider.id))
 
         val file = provider.file

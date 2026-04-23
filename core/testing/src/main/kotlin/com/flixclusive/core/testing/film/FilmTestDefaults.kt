@@ -1,6 +1,5 @@
 package com.flixclusive.core.testing.film
 
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.Movie
@@ -16,6 +15,7 @@ import com.flixclusive.model.film.util.FilmType
  */
 object FilmTestDefaults {
     const val DEFAULT_DESCRIPTION = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    const val DEFAULT_PROVIDER_ID = "the-movie-db123"
 
     /**
      * Returns a default [Movie] instance for testing purposes.
@@ -33,7 +33,7 @@ object FilmTestDefaults {
         releaseDate: String = "1972-03-14",
         backdropImage: String = "https://image.tmdb.org/t/p/w1280/tmU7GeKVybMWFButWEGl2M4GeiP.jpg",
         posterImage: String = "https://image.tmdb.org/t/p/w500/tmU7GeKVybMWFButWEGl2M4GeiP.jpg",
-        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        providerId: String = DEFAULT_PROVIDER_ID,
         overview: String = DEFAULT_DESCRIPTION,
         recommendations: List<FilmSearchItem> = emptyList(),
         genres: List<Genre> = listOf(
@@ -71,7 +71,7 @@ object FilmTestDefaults {
         releaseDate: String = "2011-04-17",
         backdropImage: String = "https://image.tmdb.org/t/p/w1280/8hP9D4d2b6c3a2e3f4f5e6f7g8h9i0j.jpg",
         posterImage: String = "https://image.tmdb.org/t/p/w500/8hP9D4d2b6c3a2e3f4f5e6f7g8h9i0j.jpg",
-        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        providerId: String = DEFAULT_PROVIDER_ID,
         overview: String = DEFAULT_DESCRIPTION,
         genres: List<Genre> = listOf(
             Genre(id = 18, name = "Drama"),
@@ -169,7 +169,7 @@ object FilmTestDefaults {
 
     fun getFilmSearchItem(
         id: String? = null,
-        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        providerId: String = DEFAULT_PROVIDER_ID,
         filmType: FilmType = FilmType.MOVIE,
         homePage: String? = "https://example.com",
         title: String = "Example Film",

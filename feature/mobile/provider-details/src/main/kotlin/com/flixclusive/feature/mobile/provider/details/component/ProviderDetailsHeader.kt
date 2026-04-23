@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -41,7 +41,7 @@ internal fun ProviderDetailsHeader(
     openRepositoryScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val windowWidthSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val (owner, repository) = remember {
         extractGithubInfoFromLink(provider.repositoryUrl) ?: (null to null)
     }
@@ -89,7 +89,7 @@ internal fun ProviderDetailsHeader(
         }
 
         // Installation button is not shown in compact mode because it's shown in the bottom bar
-        if (!windowWidthSizeClass.isCompact) {
+        if (!windowSizeClass.isWidthCompact) {
             ToggleInstallationButton(
                 installationStatus = installationStatus,
                 onToggleInstallationState = onToggleInstallationState,

@@ -15,7 +15,6 @@ dependencies {
     implementation(projects.coreDatabase)
     implementation(projects.dataDatabase)
     implementation(projects.dataProvider)
-    implementation(projects.dataTmdb)
 
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.provider)

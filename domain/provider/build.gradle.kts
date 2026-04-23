@@ -16,7 +16,6 @@ dependencies {
     implementation(projects.coreStrings)
     implementation(projects.coreNetwork)
     implementation(projects.dataProvider)
-    implementation(projects.dataTmdb)
     implementation(projects.dataDatabase)
     implementation(projects.dataDownloads)
     implementation(projects.domainDownloads)

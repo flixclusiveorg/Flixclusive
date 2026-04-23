@@ -104,7 +104,7 @@ internal class ProviderBackupRestorer @Inject constructor(
 
                 index.putIfAbsent(metadata.id, fileInfo)
                 if (includeDebugSuffixMapping) {
-                    index.putIfAbsent(metadata.id + ProviderPreferences.DEBUG_PREFIX, fileInfo)
+                    index.putIfAbsent(metadata.id + ProviderPreferences.DEBUG_SUFFIX, fileInfo)
                 }
             }
         }

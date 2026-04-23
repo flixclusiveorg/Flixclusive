@@ -155,7 +155,7 @@ internal fun FilmsRow(
                                     },
                                 film = film,
                                 onClick = {
-                                    if (currentFilm.identifier != it.identifier) {
+                                    if (currentFilm.id != it.id) {
                                         onFilmClick(it)
                                     }
                                 }

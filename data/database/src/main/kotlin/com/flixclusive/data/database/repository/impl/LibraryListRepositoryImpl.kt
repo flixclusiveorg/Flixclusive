@@ -82,10 +82,16 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         return listDao.getListsContainingFilmAsFlow(filmId, ownerId)
     }
 
+    override suspend fun isInLibrary(filmId: String, ownerId: String): Boolean {
+        return withContext(appDispatchers.io) {
+            listDao.isInLibrary(filmId, ownerId)
+        }
+    }
+
     override suspend fun deleteItem(itemId: Long) {
         return withContext(appDispatchers.io) {
             val item = itemDao.get(itemId) ?: return@withContext
-            
+
             val list = listDao.get(item.item.listId)
             if (list != null) {
                 listDao.update(list.copy(updatedAt = Date()))

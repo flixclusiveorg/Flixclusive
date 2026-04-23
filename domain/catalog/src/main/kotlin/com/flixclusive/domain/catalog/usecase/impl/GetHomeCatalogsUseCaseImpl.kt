@@ -1,98 +1,53 @@
 package com.flixclusive.domain.catalog.usecase.impl
 
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.session.UserSessionManager
+import android.content.Context
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.data.tmdb.model.TMDBHomeCatalog
-import com.flixclusive.data.tmdb.repository.TMDBHomeCatalogRepository
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
 import com.flixclusive.model.provider.Catalog
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
-import kotlin.random.Random
-
-private const val PREFERRED_MINIMUM_HOME_ITEMS = 15
-private const val PREFERRED_MAXIMUM_HOME_ITEMS = 28
 
 internal class GetHomeCatalogsUseCaseImpl @Inject constructor(
-    private val watchProgressRepository: WatchProgressRepository,
-    private val tmdbHomeCatalogRepository: TMDBHomeCatalogRepository,
-    private val userSessionManager: UserSessionManager,
+    @param:ApplicationContext private val context: Context,
+    private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
 ) : GetHomeCatalogsUseCase {
+    @OptIn(FlowPreview::class)
     private fun getCatalogsFlow(userId: String) =
         providerRepository.getEnabledProvidersAsFlow(userId)
+            .debounce(600) // Debounce to prevent rapid emissions when providers change
             .mapLatest { providers ->
-                val apis = providers.mapNotNull {
-                    providerRepository.getApi(
-                        id = it.id,
-                        ownerId = userId,
-                    )
+                val apis = providers.mapNotNull { provider ->
+                    provider.plugin?.getCatalogApi(context)
                 }
 
-                apis.flatMap { it.catalogs }
+                apis.flatMap { it.getCatalogs() }
             }
 
-    override operator fun invoke(): Flow<List<Catalog>> {
-        return userSessionManager.currentUser.filterNotNull().flatMapLatest { user ->
-            combine(
-                getCatalogsFlow(user.id),
-                watchProgressRepository.getRandoms(
-                    ownerId = user.id,
-                    count = 10,
-                ),
-            ) { providerCatalogs, watchHistoryItems ->
-                val tmdbCatalogs = tmdbHomeCatalogRepository.getAllCatalogs()
-                val allTmdbCatalogs = tmdbCatalogs.all + tmdbCatalogs.tv + tmdbCatalogs.movie
-                val requiredCatalogs = allTmdbCatalogs.filter { it.required }
-
-                val countOfItemsToFetch = Random.nextInt(
-                    from = PREFERRED_MINIMUM_HOME_ITEMS,
-                    until = PREFERRED_MAXIMUM_HOME_ITEMS,
-                )
-
-                val filteredTmdbCatalogs =
-                    allTmdbCatalogs
-                        .filterNot { it.required }
+    override operator fun invoke(): Flow<Async<List<Catalog>>> {
+        return userSessionDataStore.currentUserId.filterNotNull().flatMapLatest { userId ->
+            getCatalogsFlow(userId)
+                .mapLatest { catalogs ->
+                    val list = catalogs
+                        .distinctBy { it.name }
                         .shuffled()
-                        .take(countOfItemsToFetch)
 
-                val dbFilms = watchHistoryItems.map { it.film }
-                val userRecommendations = buildUserRecommendations(dbFilms)
-
-                (
-                    requiredCatalogs +
-                        userRecommendations +
-                        filteredTmdbCatalogs +
-                        providerCatalogs
-                    ).shuffled()
-                    .distinctBy { it.name }
-                    .sortedByDescending {
-                        // Ensure that the trending catalog is always at the top
-                        it is TMDBHomeCatalog && it.url.contains("trending/all")
-                    }
-            }
-        }
-    }
-
-    private fun buildUserRecommendations(watchHistories: List<DBFilm>): List<TMDBHomeCatalog> {
-        return watchHistories.mapNotNull { item ->
-            with(item) {
-                if (isFromTmdb) {
-                    TMDBHomeCatalog(
-                        name = "If you liked $title",
-                        required = false,
-                        url = "${filmType.type}/${item.id}/recommendations?language=en-US",
-                    )
-                } else {
-                    null
+                    Async.Success(list) as Async<List<Catalog>>
                 }
-            }
+                .onStart { emit(Async.Loading) }
+                .catch { e ->
+                    emit(Async.Failure(e))
+                }
         }
     }
 }

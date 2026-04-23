@@ -46,6 +46,7 @@ import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.model.film.common.tv.Episode
+import java.util.Date
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -97,7 +98,6 @@ internal fun EpisodeCard(
             FilmCover.Backdrop(
                 imagePath = data.image,
                 title = data.title,
-                imageSize = "w227_and_h127_bestv2",
                 modifier = Modifier
                     .fillMaxWidth()
             )
@@ -254,7 +254,7 @@ private fun EpisodeCardPreview() {
                 episodeNumber = episode.number,
                 progress = 1200L,
                 duration = 2400L,
-                filmId = sampleShow.identifier,
+                filmId = sampleShow.id,
                 ownerId = "preview-user",
                 status = WatchStatus.WATCHING,
                 seasonNumber = season.number,
@@ -269,7 +269,9 @@ private fun EpisodeCardPreview() {
             Row {
                 EpisodeCard(
                     data = sampleEpisode,
-                    currentEpisodeSelected = Episode(),
+                    currentEpisodeSelected = Episode(
+                        airDate = Date()
+                    ),
                     onEpisodeClick = { _ -> }
                 )
 

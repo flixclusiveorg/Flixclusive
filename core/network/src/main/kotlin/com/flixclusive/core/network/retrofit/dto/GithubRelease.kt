@@ -1,12 +1,14 @@
 package com.flixclusive.core.network.retrofit.dto
 
 import com.flixclusive.core.common.config.PlatformType
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class GithubRelease(
-    @SerializedName("body") val releaseNotes: String,
-    @SerializedName("created_at") val createdAt: String,
-    @SerializedName("tag_name") val tagName: String,
+    @SerialName("body") val releaseNotes: String,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("tag_name") val tagName: String,
     private val assets: List<GithubAsset>,
     val name: String,
 ) {
@@ -27,10 +29,11 @@ data class GithubRelease(
     }
 
     companion object {
+        @Serializable
         data class GithubAsset(
-            @SerializedName("browser_download_url") val downloadUrl: String,
-            @SerializedName("name") val name: String,
-            @SerializedName("content_type") val contentType: String,
+            @SerialName("browser_download_url") val downloadUrl: String,
+            @SerialName("name") val name: String,
+            @SerialName("content_type") val contentType: String,
         ) {
             val isApk: Boolean get() = contentType == APK_CONTENT_TYPE
         }

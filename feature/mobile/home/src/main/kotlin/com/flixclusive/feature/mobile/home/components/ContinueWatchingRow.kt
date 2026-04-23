@@ -157,7 +157,6 @@ private fun ContinueWatchingCard(
             FilmCover.Poster(
                 imagePath = film.posterImage,
                 title = film.title,
-                imageSize = "w300",
                 modifier = Modifier.width(getAdaptiveFilmCardWidth())
                     .clip(MaterialTheme.shapes.small)
             )
@@ -273,7 +272,7 @@ private fun ContinueWatchingRowBasePreview() {
                         progress = progress,
                         duration = duration,
                         status = watchStatus,
-                        filmId = film.identifier
+                        filmId = film.id
                     )
                 )
             } else {
@@ -287,7 +286,7 @@ private fun ContinueWatchingRowBasePreview() {
                         status = watchStatus,
                         episodeNumber = Random.nextInt(24),
                         seasonNumber = Random.nextInt(10),
-                        filmId = film.identifier
+                        filmId = film.id
                     )
                 )
             }

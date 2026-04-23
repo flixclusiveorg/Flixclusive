@@ -385,7 +385,7 @@ private fun LibraryDetailsScreenBasePreview() {
                     metadata = film.toDBFilm(),
                     item = LibraryListItem(
                         id = it.toLong(),
-                        filmId = film.identifier,
+                        filmId = film.id,
                         listId = sampleList.id,
                         createdAt = Date(System.currentTimeMillis() - it * 10000000L),
                     ),
@@ -410,7 +410,7 @@ private fun LibraryDetailsScreenBasePreview() {
                     searchQuery = { searchQuery },
                     onRemoveSelection = {
                         selectedItems.forEach { film ->
-                            films.removeIf { it.metadata.identifier == film.metadata.identifier }
+                            films.removeIf { it.metadata.id == film.metadata.id }
                         }
                     },
                     onStartMultiSelecting = { uiState = uiState.copy(isMultiSelecting = true) },
@@ -421,7 +421,7 @@ private fun LibraryDetailsScreenBasePreview() {
                     onAddItems = {},
                     onRemoveLongClickedItem = {
                         val filmToRemove = uiState.longClickedItem
-                        films.removeIf { filmToRemove?.metadata?.identifier == it.metadata.identifier }
+                        films.removeIf { filmToRemove?.metadata?.id == it.metadata.id }
 
                         uiState = uiState.copy(longClickedItem = null)
                     },

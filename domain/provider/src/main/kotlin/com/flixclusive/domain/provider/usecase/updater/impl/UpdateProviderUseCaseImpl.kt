@@ -43,7 +43,8 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
 
     @Throws(Throwable::class)
     override suspend fun invoke(provider: ProviderMetadata) {
-        if (providerRepository.getPlugin(provider.id) == null) {
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        if (providerRepository.getProvider(userId, provider.id) == null) {
             error(context.getString(R.string.provider_not_found, provider.name, provider.id))
         }
 
@@ -96,7 +97,8 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
         loadProviderUseCase(installedProvider = new).onEach {
             // If the provider failed to load, but it was
             // previously loaded, just log the exception
-            if (it is ProviderResult.Failure && providerRepository.getPlugin(provider.id) != null) {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            if (it is ProviderResult.Failure && providerRepository.getProvider(userId, provider.id) != null) {
                 // If the provider is loaded, just log the exception and continue
                 infoLog("Provider ${provider.name} updated but failed to load with exception: ${it.error}")
                 return@onEach
@@ -167,15 +169,14 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
 
     private suspend fun getOldProviderConfig(id: String): InstalledProvider {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-
-        val old = providerRepository.getInstalledProvider(id, userId) ?: error(
+        val old = providerRepository.getProvider(id, userId) ?: error(
             context.getString(
                 R.string.provider_not_even_installed,
                 id
             )
         )
 
-        return old
+        return old.provider
     }
 
     private suspend fun getNewPreferenceItem(

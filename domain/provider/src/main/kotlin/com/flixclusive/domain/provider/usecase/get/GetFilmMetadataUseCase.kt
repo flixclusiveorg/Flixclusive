@@ -1,8 +1,10 @@
 package com.flixclusive.domain.provider.usecase.get
 
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Use case for fetching detailed metadata of a film.
@@ -17,5 +19,5 @@ interface GetFilmMetadataUseCase {
      * @param film The film for which metadata is to be fetched.
      * @return A [Resource] containing [FilmMetadata] on success or an error message
      * */
-    suspend operator fun invoke(film: Film): Resource<FilmMetadata>
+    operator fun invoke(film: Film): Flow<Async<FilmMetadata>>
 }

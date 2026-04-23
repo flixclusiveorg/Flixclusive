@@ -22,11 +22,10 @@ internal class CheckOutdatedProviderUseCaseImpl @Inject constructor(
 ) : CheckOutdatedProviderUseCase {
     override suspend fun invoke(): List<CheckOutdatedProviderResult> {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val installedProviders = providerRepository.getInstalledProviders(userId)
+        val providers = providerRepository.getProviders(userId)
 
-        return installedProviders.mapNotNull { provider ->
-            val metadata = providerRepository.getMetadata(provider.id)
-                ?: return@mapNotNull null
+        return providers.mapNotNull { provider ->
+            val metadata = provider.metadata ?: return@mapNotNull null
 
             try {
                 if (invoke(metadata)) {
@@ -47,13 +46,12 @@ internal class CheckOutdatedProviderUseCaseImpl @Inject constructor(
         val id = metadata.id
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-        val isDebug = providerRepository.getInstalledProvider(id, userId)?.isDebug ?: false
+        val provider = providerRepository.getProvider(id, userId) ?: return false
+        val isDebug = providerRepository.getProvider(id, userId)?.isDebug ?: false
         if (isDebug) return false
 
-        val provider = providerRepository.getPlugin(id) ?: return false
-
-        val manifest = provider.manifest
-        if (manifest.updateUrl == null || manifest.updateUrl.equals("")) {
+        val manifest = provider.plugin?.manifest
+        if (manifest?.updateUrl == null || manifest.updateUrl.equals("")) {
             return false
         }
 

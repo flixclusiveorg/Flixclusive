@@ -4,10 +4,10 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetRepositoryUseCase
-import com.flixclusive.domain.provider.util.extensions.isUrlOnline
 import com.flixclusive.domain.provider.util.toGithubUrl
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
@@ -54,5 +54,11 @@ internal class GetRepositoryUseCaseImpl @Inject constructor(
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
         return installedRepoRepository.isInstalled(repository.url, userId)
+    }
+
+    private fun OkHttpClient.isUrlOnline(branchUrl: String): Boolean {
+        val response = request(branchUrl).execute()
+
+        return response.isSuccessful
     }
 }

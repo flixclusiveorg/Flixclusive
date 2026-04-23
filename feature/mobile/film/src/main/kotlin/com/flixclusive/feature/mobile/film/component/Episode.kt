@@ -154,7 +154,6 @@ private fun EpisodeThumbnail(
         Box(contentAlignment = Alignment.Center) {
             FilmCover.Backdrop(
                 imagePath = episode.image,
-                imageSize = "w300",
                 title = episode.title,
                 onSuccess = { showPlaceholder = false },
                 contentScale = ContentScale.Crop,
@@ -453,7 +452,7 @@ private fun EpisodeCardBasePreview() {
                             EpisodeWithProgress(
                                 episode = episode,
                                 watchProgress = EpisodeProgress(
-                                    filmId = series.identifier,
+                                    filmId = series.id,
                                     ownerId = "preview-user",
                                     progress = 50000L,
                                     duration = 90000L,

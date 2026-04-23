@@ -177,12 +177,6 @@ private val mobileNavigationItems =
             label = LocaleR.string.home,
         ),
         AppNavigationItem(
-            screen = AppmobileNavGraphs.search,
-            iconSelected = UiCommonR.drawable.search,
-            iconUnselected = UiCommonR.drawable.search_outlined,
-            label = LocaleR.string.search,
-        ),
-        AppNavigationItem(
             screen = AppmobileNavGraphs.library,
             iconSelected = UiCommonR.drawable.round_library,
             iconUnselected = UiCommonR.drawable.library_outline,

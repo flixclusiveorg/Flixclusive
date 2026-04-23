@@ -65,7 +65,7 @@ internal fun PlayerScreen(
     val canSkipLoading by viewModel.canSkipLoading.collectAsStateWithLifecycle()
     val providers by viewModel.providers.collectAsStateWithLifecycle()
     val currentProvider = remember(uiState.currentProvider, providers) {
-        providers.find { it.id == uiState.currentProvider }
+        providers.find { it?.id == uiState.currentProvider }
     }
 
     val snackbarState = rememberPlayerSnackbarState()

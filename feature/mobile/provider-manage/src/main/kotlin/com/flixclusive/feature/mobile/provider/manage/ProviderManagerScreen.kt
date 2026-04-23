@@ -68,12 +68,12 @@ import com.flixclusive.core.presentation.mobile.components.provider.ProviderCras
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.data.provider.util.extensions.isNotUsable
 import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard
 import com.flixclusive.feature.mobile.provider.manage.component.ProviderManagerTopBar
 import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableItem
 import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyGridState
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
@@ -85,6 +85,9 @@ import com.flixclusive.core.strings.R as LocaleR
 private val FabButtonSize = 56.dp
 
 private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array.providers_screen_help)
+
+private val ProviderMetadata.isNotUsable: Boolean
+    get() = status == ProviderStatus.Down || status == ProviderStatus.Maintenance
 
 @Destination<ExternalModuleGraph>
 @Composable
@@ -386,13 +389,13 @@ private fun ProviderManagerScreenBasePreview() {
     val list = remember {
         mutableStateListOf<EnabledProvider>().also {
             it.addAll(
-                List(20) {
+                List(20) { i ->
                     EnabledProvider(
                         metadata = DummyDataForPreview.getProviderMetadata(
-                            id = it.toString(),
-                            name = "Provider #$it",
+                            id = i.toString(),
+                            name = "Provider #$i",
                         ),
-                        isEnabled = it % 3 == 0,
+                        isEnabled = i % 3 == 0,
                     )
                 },
             )

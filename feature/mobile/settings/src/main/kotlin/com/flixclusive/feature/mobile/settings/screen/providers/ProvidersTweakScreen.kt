@@ -7,9 +7,9 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.data.provider.repository.ProviderResponseWrapper
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
@@ -55,13 +55,6 @@ internal class ProvidersTweakScreen(
                 description = { resources.getString(LocaleR.string.providers_button_settings_description) },
                 iconId = UiCommonR.drawable.provider_logo,
                 onClick = navigator::openProviderManagerScreen,
-            ),
-            TweakUI.ClickableTweak(
-                title = stringResource(LocaleR.string.test_providers),
-                enabledProvider = { providers.isNotEmpty() },
-                description = { resources.getString(LocaleR.string.test_providers_button_settings_description) },
-                iconId = UiCommonR.drawable.test,
-                onClick = { navigator.testProviders(arrayListOf()) },
             ),
             TweakUI.Divider(),
             TweakUI.ClickableTweak(
@@ -132,7 +125,7 @@ internal class ProvidersTweakScreen(
     }
 
     @Composable
-    private fun getDataTweaks(providers: () -> List<InstalledProvider>): TweakGroup {
+    private fun getDataTweaks(providers: () -> List<ProviderResponseWrapper>): TweakGroup {
         val resources = LocalResources.current
         val clearCachedLinksLabel = stringResource(LocaleR.string.clear_cached_links)
         val deleteProvidersLabel = stringResource(LocaleR.string.delete_providers)

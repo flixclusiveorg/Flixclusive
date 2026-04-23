@@ -3,15 +3,13 @@ package com.flixclusive.feature.splashScreen
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.data.app.updates.model.AppUpdateInfo
 import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
 import com.flixclusive.data.database.repository.UserRepository
-import com.flixclusive.data.database.session.UserSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -44,8 +42,7 @@ internal sealed interface SplashNavigationEvent {
 @HiltViewModel
 internal class SplashScreenViewModel @Inject constructor(
     dataStoreManager: DataStoreManager,
-    appDispatchers: AppDispatchers,
-    private val userSessionManager: UserSessionManager,
+    private val userSessionDataStore: UserSessionDataStore,
     private val userRepository: UserRepository,
     private val appUpdatesRepository: AppUpdatesRepository,
 ) : ViewModel() {
@@ -96,13 +93,13 @@ internal class SplashScreenViewModel @Inject constructor(
             val snapshot = combine(
                 systemPreferences.filterNotNull(),
                 uiState,
-                userSessionManager.currentUser,
+                userSessionDataStore.currentUserId,
                 userRepository.observeUsers().map { it.isEmpty() }.distinctUntilChanged(),
-            ) { preferences, state, currentUser, hasNoUsers ->
+            ) { preferences, state, currentUserId, hasNoUsers ->
                 NavigationSnapshot(
                     preferences = preferences,
                     uiState = state,
-                    currentUser = currentUser,
+                    currentUserId = currentUserId,
                     noUsersFound = hasNoUsers,
                 )
             }.first { state -> shouldNavigate(state) }
@@ -129,7 +126,7 @@ internal class SplashScreenViewModel @Inject constructor(
             updateInfo != null && hasAutoUpdate -> SplashNavigationEvent.AppUpdate(updateInfo)
             snapshot.preferences.isFirstTimeUserLaunch -> SplashNavigationEvent.Onboarding
             snapshot.noUsersFound -> SplashNavigationEvent.AddProfile
-            snapshot.currentUser == null -> SplashNavigationEvent.ChooseProfile
+            snapshot.currentUserId == null -> SplashNavigationEvent.ChooseProfile
             else -> SplashNavigationEvent.Home
         }
     }
@@ -146,7 +143,7 @@ internal class SplashScreenViewModel @Inject constructor(
 private data class NavigationSnapshot(
     val preferences: SystemPreferences,
     val uiState: SplashScreenUiState,
-    val currentUser: User?,
+    val currentUserId: String?,
     val noUsersFound: Boolean,
 )
 

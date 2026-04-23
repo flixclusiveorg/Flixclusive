@@ -54,11 +54,6 @@ interface WatchProgressRepository {
         ownerId: String,
     ): Flow<List<EpisodeProgress>>
 
-    suspend fun getRandoms(
-        ownerId: String,
-        count: Int,
-    ): Flow<List<WatchProgressWithMetadata>>
-
     suspend fun insert(item: WatchProgress, film: Film? = null): Long
 
     suspend fun delete(item: Long, type: FilmType)

@@ -1,11 +1,12 @@
 package com.flixclusive.feature.mobile.home
 
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
@@ -13,55 +14,53 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.session.UserSessionManager
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
-import com.flixclusive.domain.catalog.usecase.GetHomeHeaderUseCase
-import com.flixclusive.domain.catalog.usecase.PaginateItemsUseCase
+import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
-import com.flixclusive.feature.mobile.home.HomeUiState.Companion.MAX_PAGINATION_PAGES
-import com.flixclusive.feature.mobile.home.HomeUiState.Companion.addItems
-import com.flixclusive.feature.mobile.home.HomeUiState.Companion.updatePagingState
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.provider.Catalog
+import com.flixclusive.model.provider.ProviderStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.PersistentSet
-import kotlinx.collections.immutable.persistentHashMapOf
-import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toPersistentHashMap
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.strings.R as LocaleR
+import kotlin.coroutines.cancellation.CancellationException
+
+private const val MAX_PAGINATION_PAGES = 5
 
 @HiltViewModel
 internal class HomeScreenViewModel @Inject constructor(
-    getHomeCatalogs: GetHomeCatalogsUseCase,
-    userSessionManager: UserSessionManager,
-    appDispatchers: AppDispatchers,
     dataStoreManager: DataStoreManager,
-    private val getHomeHeader: GetHomeHeaderUseCase,
-    private val paginateItems: PaginateItemsUseCase,
-    private val getNextEpisode: GetNextEpisodeUseCase,
+    getCatalogProviders: GetCatalogProvidersUseCase,
+    private val appDispatchers: AppDispatchers,
+    private val getCatalogItems: GetCatalogItemsUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
+    private val getHomeCatalogs: GetHomeCatalogsUseCase,
+    private val getNextEpisode: GetNextEpisodeUseCase,
+    private val providerRepository: ProviderRepository,
+    private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -69,6 +68,30 @@ internal class HomeScreenViewModel @Inject constructor(
 
     /** Cache to store if a film has metadata or not to avoid redundant API queries */
     private val cachedFilmMetadata = HashMap<DBFilm, TvShow>()
+
+    private var observeCatalogsJob: Job? = null
+    private var loadFetchHeaderJob: Job? = null
+    private var toggleJob: Job? = null
+
+    /** Map of jobs for each row catalog loaded on the home screen */
+    private val paginationJobs = HashMap<String, Job?>()
+
+    /** Items to display for continue watching section */
+    val continueWatchingItems = userSessionDataStore.currentUserId
+        .filterNotNull()
+        .flatMapLatest { userId ->
+            watchProgressRepository.getAllAsFlow(
+                ownerId = userId,
+                sort = LibrarySort.Modified(ascending = false),
+            ).mapLatest { list ->
+                list.mapNotNull { item -> filterContinueWatching(item) }
+            }
+        }.stateIn(
+            scope = appDispatchers.ioScope,
+            started = SharingStarted.Lazily,
+            initialValue = emptyList(),
+        )
+
 
     /** Displays the title of the media under the card */
     val showFilmTitles = dataStoreManager
@@ -81,61 +104,36 @@ internal class HomeScreenViewModel @Inject constructor(
             initialValue = false,
         )
 
-    /** Map of jobs for each row catalog loaded on the home screen */
-    private val paginationJobs = HashMap<String, Job?>()
-
-    init {
-        loadHomeHeader()
-    }
-
-    /** List of catalogs to display on the home screen */
-    val catalogs = getHomeCatalogs()
-        .onEach { list ->
-            val items = HashMap<String, PersistentSet<Film>>()
-            val pagingStates = HashMap<String, CatalogPagingState>()
-            paginationJobs.clear()
-
-            list.forEach { catalog ->
-                items[catalog.url] = persistentSetOf()
-                pagingStates[catalog.url] = CatalogPagingState(
-                    hasNext = catalog.canPaginate,
-                    state = when {
-                        !catalog.canPaginate -> PagingDataState.Error(LocaleR.string.end_of_list)
-                        else -> PagingDataState.Loading
-                    },
-                    page = 1,
-                )
-
-                paginationJobs[catalog.url] = null
+    val catalogProviders = getCatalogProviders()
+        .mapLatest {
+            if (it !is Async.Success) {
+                @Suppress("UNCHECKED_CAST")
+                return@mapLatest it as Async<List<CatalogProviderWrapper>>
             }
 
-            _uiState.update {
-                it.copy(
-                    items = items.toPersistentHashMap(),
-                    pagingStates = pagingStates.toPersistentHashMap(),
+            val providers = it.data.fastMap { provider ->
+                CatalogProviderWrapper(
+                    id = provider.id,
+                    name = provider.name ?: "--",
+                    logoUrl = provider.logoUrl,
+                    isEnabled = provider.isEnabled,
+                    versionName = provider.versionName ?: "--",
+                    versionCode = provider.versionCode ?: 0L,
+                    status = provider.status ?: ProviderStatus.Working,
                 )
             }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Lazily,
-            initialValue = emptyList(),
-        )
 
-    /** Items to display for continue watching section */
-    val continueWatchingItems = userSessionManager.currentUser
-        .filterNotNull()
-        .flatMapLatest { user ->
-            watchProgressRepository.getAllAsFlow(
-                ownerId = user.id,
-                sort = LibrarySort.Modified()
-            )
-        }.mapLatest { list ->
-            list.mapNotNull { item -> filterContinueWatching(item) }
-        }.stateIn(
+            Async.Success(providers) as Async<List<CatalogProviderWrapper>>
+        }
+        .stateIn(
             scope = appDispatchers.ioScope,
             started = SharingStarted.Lazily,
-            initialValue = emptyList(),
+            initialValue = Async.Loading,
         )
+
+    init {
+        initialize()
+    }
 
     /**
      * Filters the continue watching list to include only items that are not finished.
@@ -151,10 +149,11 @@ internal class HomeScreenViewModel @Inject constructor(
                 }
 
                 var tvShow: FilmMetadata? = cachedFilmMetadata[item.film]
-
                 if (tvShow == null) {
-                    tvShow = getFilmMetadata(item.film).data?.also {
-                        cachedFilmMetadata[item.film] = it as TvShow
+                    val response = getFilmMetadata(item.film).last()
+                    if (response is Async.Success) {
+                        cachedFilmMetadata[item.film] = response.data as TvShow
+                        tvShow = response.data
                     }
                 }
 
@@ -196,134 +195,212 @@ internal class HomeScreenViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Loads the header item for the home screen.
-     * */
-    fun loadHomeHeader() {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(itemHeaderError = null)
-            }
+    private fun observeCatalogs() {
+        if (observeCatalogsJob?.isActive == true) {
+            return
+        }
 
-            when (val result = getHomeHeader()) {
-                is Resource.Failure -> {
-                    _uiState.update {
-                        it.copy(itemHeaderError = result.error)
+        observeCatalogsJob = viewModelScope.launch {
+            getHomeCatalogs().collect { response ->
+                when (response) {
+                    is Async.Loading -> {
+                        if (_uiState.value.catalogs.isSuccess) {
+                            return@collect
+                        }
+
+                        _uiState.update { state ->
+                            state.copy(catalogs = Async.Loading)
+                        }
                     }
-                }
 
-                Resource.Loading -> Unit
-                is Resource.Success<*> -> {
-                    _uiState.update {
-                        it.copy(
-                            itemHeader = result.data,
-                            itemHeaderError = null,
-                        )
+                    is Async.Success -> {
+                        val catalogs = response.data
+                        val catalogMap = catalogs.associateBy { it.url + it.providerId }
+                            .mapValues { entry ->
+                                CatalogWithPagingState(
+                                    catalog = entry.value,
+                                    page = 1,
+                                    state = PagingState.Idle,
+                                    films = emptyList(),
+                                )
+                            }
+
+                        catalogMap.forEach { (_, data) ->
+                            paginate(data)
+                        }
+
+                        _uiState.update { state ->
+                            state.copy(catalogs = Async.Success(catalogMap))
+                        }
+                    }
+
+                    is Async.Failure -> {
+                        if (response.cause is CancellationException) return@collect
+
+                        _uiState.update { state ->
+                            state.copy(catalogs = Async.Failure(response.message))
+                        }
                     }
                 }
             }
         }
     }
 
-    fun paginate(catalog: Catalog) {
-        if (paginationJobs[catalog.url]?.isActive == true
-            || _uiState.value.pagingStates[catalog.url] == null
-        ) {
+    private fun loadHeaderItem() {
+        if (loadFetchHeaderJob?.isActive == true) {
+            loadFetchHeaderJob?.cancel()
+        }
+
+        loadFetchHeaderJob = viewModelScope.launch {
+            val response = _uiState.map { it.catalogs }
+                .distinctUntilChanged()
+                .first {
+                    if (it.isFailure) return@first true
+
+                    val isSuccessButEmpty = it is Async.Success && it.data.isEmpty()
+                    if (isSuccessButEmpty) return@first true
+
+                    it is Async.Success && it.data.any { entry -> entry.value.films.isNotEmpty() }
+                }
+
+            val catalogs = (response as? Async.Success)?.data?.values ?: emptyList()
+            if (catalogs.isEmpty()) return@launch
+
+            val maxRetries = 5
+            repeat(maxRetries) { i ->
+                val randomCatalog = catalogs.randomOrNull() ?: return@launch
+                val randomFilm = randomCatalog.films.randomOrNull() ?: return@launch
+
+                when (val response = getFilmMetadata(randomFilm).last()) {
+                    is Async.Success -> {
+                        _uiState.update { state ->
+                            state.copy(itemHeader = Async.Success(response.data))
+                        }
+                        return@launch
+                    }
+
+                    is Async.Failure -> {
+                        if (i != maxRetries - 1) return@repeat
+                        if (response.cause is CancellationException) return@launch
+
+                        _uiState.update { state ->
+                            state.copy(
+                                itemHeader = Async.Success(randomFilm)
+                            )
+                        }
+                    }
+
+                    is Async.Loading -> {
+                        _uiState.update { state ->
+                            state.copy(itemHeader = Async.Loading)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun initialize() {
+        observeCatalogs()
+        loadHeaderItem()
+    }
+
+    fun paginate(catalogWithState: CatalogWithPagingState) {
+        if (paginationJobs[catalogWithState.key]?.isActive == true || catalogWithState.state.isExhausted) {
             return
         }
 
-        paginationJobs[catalog.url] = viewModelScope.launch {
-            _uiState.update {
-                val pagingState = it.pagingStates[catalog.url]
-                    ?: CatalogPagingState(
-                        hasNext = catalog.canPaginate,
-                        page = 1,
-                        state = PagingDataState.Loading,
-                    )
-
-                it.updatePagingState(
-                    key = catalog.url,
-                    newState = pagingState.copy(state = PagingDataState.Loading),
-                )
-            }
-
-            val page = _uiState.value.pagingStates[catalog.url]!!.page
-            val response = paginateItems(catalog = catalog, page = page)
-            val data = response.data
-
-            if (data == null || response is Resource.Failure) {
-                _uiState.update {
-                    val oldPagingState = it.pagingStates[catalog.url] ?: return@launch
-
-                    val errorState = when (response) {
-                        is Resource.Failure -> PagingDataState.Error(response.error!!)
-                        else -> PagingDataState.Error()
+        paginationJobs[catalogWithState.key] = viewModelScope.launch {
+            val page = catalogWithState.page
+            val catalog = catalogWithState.catalog
+            getCatalogItems(catalog = catalog, page = page).collect { response ->
+                when (response) {
+                    is Async.Loading -> {
+                        _uiState.update { state ->
+                            state.updateCatalog(
+                                key = catalogWithState.key,
+                                newData = catalogWithState.copy(state = PagingState.Loading)
+                            )
+                        }
                     }
 
-                    it.updatePagingState(
-                        key = catalog.url,
-                        newState = oldPagingState.copy(state = errorState),
-                    )
+                    is Async.Success -> {
+                        val maxPage = minOf(MAX_PAGINATION_PAGES, response.data.totalPages)
+                        val hasNext = page < maxPage && catalogWithState.canPaginate
+
+                        _uiState.update { state ->
+                            state.updateCatalog(
+                                key = catalogWithState.key,
+                                newData = catalogWithState.copy(
+                                    state = if (hasNext) PagingState.Idle else PagingState.Exhausted,
+                                    films = catalogWithState.films + response.data.results,
+                                )
+                            )
+                        }
+                    }
+
+                    is Async.Failure -> {
+                        _uiState.update { state ->
+                            state.updateCatalog(
+                                key = catalogWithState.key,
+                                newData = catalogWithState.copy(state = PagingState.Error(response.message))
+                            )
+                        }
+                    }
                 }
-                return@launch
             }
+        }
+    }
 
-            val maxPage = minOf(MAX_PAGINATION_PAGES, data.totalPages)
-            val hasNext = page < maxPage && catalog.canPaginate
+    fun toggleProvider(id: String) {
+        if (toggleJob?.isActive == true) return
 
-            _uiState.update {
-                val items = response.data?.results ?: emptyList()
-                it
-                    .addItems(key = catalog.url, newItems = items)
-                    .updatePagingState(
-                        key = catalog.url,
-                        newState = CatalogPagingState(
-                            hasNext = hasNext,
-                            page = page + 1, // Add 1 to the current page
-                            state = PagingDataState.Success(isExhausted = !hasNext),
-                        ),
-                    )
-            }
+        toggleJob = appDispatchers.ioScope.launch {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            providerRepository.toggleProvider(id = id, ownerId = userId)
         }
     }
 }
 
 @Stable
 internal data class HomeUiState(
-    val itemHeader: Film? = null,
-    val itemHeaderError: UiText? = null,
-    val items: PersistentMap<String, PersistentSet<Film>> = persistentHashMapOf(),
-    val pagingStates: PersistentMap<String, CatalogPagingState> = persistentHashMapOf(),
+    val itemHeader: Async<Film> = Async.Loading,
+    val catalogs: Async<Map<String, CatalogWithPagingState>> = Async.Loading,
 ) {
-    companion object {
-        const val MAX_PAGINATION_PAGES = 5
-
-        fun HomeUiState.addItems(
-            key: String,
-            newItems: List<Film>,
-        ): HomeUiState {
-            val currentItems = items[key] ?: return this
-
-            return copy(items = items.put(key, currentItems.addAll(newItems)))
+    fun updateCatalog(
+        key: String,
+        newData: CatalogWithPagingState,
+    ): HomeUiState {
+        val currentItems = (catalogs as? Async.Success)?.data ?: emptyMap()
+        val updatedItems = currentItems.toMutableMap().apply {
+            put(key, newData)
         }
 
-        fun HomeUiState.updatePagingState(
-            key: String,
-            newState: CatalogPagingState,
-        ): HomeUiState {
-            if (!pagingStates.containsKey(key)) return this
-
-            return copy(pagingStates = pagingStates.put(key, newState))
-        }
+        return copy(catalogs = Async.Success(updatedItems.toMap()))
     }
 }
 
-/**
- * Holds information about the pagination state for a specific catalog.
- * */
 @Stable
-internal data class CatalogPagingState(
-    val hasNext: Boolean,
-    val page: Int,
-    val state: PagingDataState,
+internal data class CatalogProviderWrapper(
+    val id: String,
+    val name: String,
+    val logoUrl: String?,
+    val isEnabled: Boolean,
+    val versionName: String,
+    val versionCode: Long,
+    val status: ProviderStatus
 )
+
+@Stable
+internal data class CatalogWithPagingState(
+    val catalog: Catalog,
+    val page: Int,
+    val state: PagingState,
+    val films: List<Film>,
+) {
+    val canPaginate: Boolean get() = catalog.canPaginate
+    val url: String get() = catalog.url
+    val providerId: String get() = catalog.providerId
+
+    val key: String get() = url + providerId
+}

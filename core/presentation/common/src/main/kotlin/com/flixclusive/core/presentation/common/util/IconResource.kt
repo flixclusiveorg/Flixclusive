@@ -13,7 +13,7 @@ import androidx.compose.ui.res.painterResource
  * @param imageVector The image vector. Defaults to null.
  */
 class IconResource private constructor(
-    @DrawableRes private val drawableId: Int? = null,
+    @param:DrawableRes private val drawableId: Int? = null,
     private val imageVector: ImageVector? = null
 ) {
     /**

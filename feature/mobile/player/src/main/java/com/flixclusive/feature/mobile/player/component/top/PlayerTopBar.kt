@@ -26,6 +26,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.PlainToolti
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.model.film.common.tv.Episode
+import java.util.Date
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -120,6 +121,7 @@ private fun PlayerTopBarBasePreview() {
                     season = 1,
                     number = 1,
                     title = "Episode Title",
+                    airDate = Date()
                 ),
                 onBack = {}
             )

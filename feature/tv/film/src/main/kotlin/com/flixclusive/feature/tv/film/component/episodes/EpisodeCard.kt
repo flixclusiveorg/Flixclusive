@@ -101,7 +101,6 @@ internal fun EpisodeCard(
                 AsyncImage(
                     model = context.buildTMDBImageUrl(
                         imagePath = episode.image,
-                        imageSize = "w500"
                     ),
                     imageLoader = LocalContext.current.imageLoader,
                     contentDescription = stringResource(

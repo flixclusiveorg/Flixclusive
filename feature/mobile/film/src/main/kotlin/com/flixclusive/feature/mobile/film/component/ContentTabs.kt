@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFold
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -63,7 +63,7 @@ internal fun ContentTabs(
     val contentColor: Color = TabRowDefaults.primaryContentColor
 
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val fillMaxWidth = windowSizeClass.windowWidthSizeClass.isCompact
+    val fillMaxWidth = windowSizeClass.isWidthCompact
 
     Surface(
         modifier = modifier

@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.corePresentationMobile)
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
+    implementation(projects.dataProvider)
     implementation(projects.domainCatalog)
     implementation(projects.domainProvider)
 
@@ -36,6 +37,7 @@ dependencies {
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
+    implementation(libs.stubs.provider)
 
     testImplementation(projects.coreTesting)
 }

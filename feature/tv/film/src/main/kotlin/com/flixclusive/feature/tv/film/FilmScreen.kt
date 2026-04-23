@@ -127,10 +127,7 @@ internal fun FilmScreen(
     )
 
     val backdropPath = remember(film) {
-        context.buildTMDBImageUrl(
-            imagePath = film?.backdropImage,
-            imageSize = "w1280"
-        )
+        context.buildTMDBImageUrl(imagePath = film?.backdropImage)
     }
     val bottomFade = remember(buttonsHasFocus) {
         if (buttonsHasFocus) {

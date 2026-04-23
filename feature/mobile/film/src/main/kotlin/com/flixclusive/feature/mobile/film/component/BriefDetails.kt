@@ -1,10 +1,6 @@
 package com.flixclusive.feature.mobile.film.component
 
 import android.content.Context
-import android.graphics.drawable.AdaptiveIconDrawable
-import android.os.Build
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,18 +25,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.drawable.toBitmap
+import com.flixclusive.core.common.locale.toFormattedString
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
@@ -51,7 +42,6 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.film.R
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.TvShow
@@ -59,7 +49,6 @@ import com.flixclusive.model.film.util.extractYear
 import com.flixclusive.model.provider.ProviderMetadata
 import java.util.Locale
 import com.flixclusive.core.drawables.R as UiCommonR
-import com.flixclusive.core.presentation.mobile.R as UiMobileR
 import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -180,11 +169,7 @@ private fun ProviderUsed(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val providerName = if (provider?.id == DEFAULT_FILM_SOURCE_NAME) {
-        stringResource(LocaleR.string.app_name)
-    } else {
-        provider!!.name
-    }
+    val providerName = provider?.name ?: return
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -192,26 +177,16 @@ private fun ProviderUsed(
             .clickable { onClick() }
             .padding(3.dp),
     ) {
-        if (provider.id != DEFAULT_FILM_SOURCE_NAME) {
-            ImageWithSmallPlaceholder(
-                model = context.buildImageRequest(provider.iconUrl),
-                placeholder = painterResource(UiCommonR.drawable.movie_icon),
-                contentDescription = provider.name,
-                placeholderSize = 12.dp,
-                shape = MaterialTheme.shapes.extraSmall,
-                modifier = Modifier
-                    .height(20.dp)
-                    .aspectRatio(1f),
-            )
-        } else {
-            Image(
-                painter = adaptiveIconPainterResource(UiMobileR.mipmap.ic_launcher),
-                contentDescription = stringResource(LocaleR.string.app_name),
-                modifier = Modifier
-                    .height(20.dp)
-                    .aspectRatio(1f),
-            )
-        }
+        ImageWithSmallPlaceholder(
+            model = context.buildImageRequest(provider.iconUrl),
+            placeholder = painterResource(UiCommonR.drawable.movie_icon),
+            contentDescription = provider.name,
+            placeholderSize = 12.dp,
+            shape = MaterialTheme.shapes.extraSmall,
+            modifier = Modifier
+                .height(20.dp)
+                .aspectRatio(1f),
+        )
 
         Text(
             text = providerName,
@@ -223,33 +198,6 @@ private fun ProviderUsed(
             modifier = Modifier
                 .padding(start = 4.dp),
         )
-    }
-}
-
-/**
- * Aims to load an adaptive icon as a [Painter] if possible, otherwise falls back to [painterResource].
- *
- * Source code from [here](https://gist.github.com/tkuenneth/ddf598663f041dc79960cda503d14448?permalink_comment_id=4660486#gistcomment-4660486)
- * */
-@Composable
-fun adaptiveIconPainterResource(
-    @DrawableRes id: Int,
-): Painter {
-    val res = LocalContext.current.resources
-    val theme = LocalContext.current.theme
-
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        // Android O supports adaptive icons, try loading this first (even though this is least likely to be the format).
-        val adaptiveIcon = ResourcesCompat.getDrawable(res, id, theme) as? AdaptiveIconDrawable
-        if (adaptiveIcon != null) {
-            BitmapPainter(adaptiveIcon.toBitmap().asImageBitmap())
-        } else {
-            // We couldn't load the drawable as an Adaptive Icon, just use painterResource
-            painterResource(id)
-        }
-    } else {
-        // We're not on Android O or later, just use painterResource
-        painterResource(id)
     }
 }
 
@@ -278,9 +226,9 @@ private fun getBriefDetails(
     }
 
     val date = if (film is TvShow) {
-        film.parsedReleaseDate
+        film.releaseDate.toFormattedString()
     } else {
-        film.year?.toString() ?: film.releaseDate?.extractYear()?.toString() ?: film.parsedReleaseDate
+        film.releaseDate?.toString() ?: film.releaseDate?.extractYear()?.toString() ?: film.parsedReleaseDate
     }
 
     val seasons = if (film is TvShow) {

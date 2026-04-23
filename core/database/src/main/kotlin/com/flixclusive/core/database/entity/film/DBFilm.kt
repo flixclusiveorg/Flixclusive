@@ -1,7 +1,6 @@
 package com.flixclusive.core.database.entity.film
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.util.FilmType
@@ -27,8 +26,7 @@ data class DBFilm(
     override val language: String?,
     override val rating: Double?,
     override val backdropImage: String?,
-    override val releaseDate: String?,
-    override val year: Int?,
+    override val releaseDate: Date?,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
 ) : Serializable, Film() {
@@ -37,7 +35,7 @@ data class DBFilm(
 
     companion object {
         fun Film.toDBFilm(): DBFilm = DBFilm(
-            id = identifier,
+            id = id,
             adult = adult,
             overview = overview,
             providerId = providerId,
@@ -48,7 +46,6 @@ data class DBFilm(
             rating = rating,
             backdropImage = backdropImage,
             releaseDate = releaseDate,
-            year = year,
         )
     }
 }
@@ -58,7 +55,12 @@ internal data class DBFilmV213(
     @PrimaryKey
     override val id: String,
     override val providerId: String = "",
+    @Deprecated("Use sourceIds[FilmIdSource.IMDB] instead.", replaceWith = ReplaceWith("sourceIds[FilmIdSource.IMDB]"))
     override val imdbId: String? = null,
+    @Deprecated(
+        "Use sourceIds[FilmIdSource.TMDB]?.toIntOrNull() instead.",
+        replaceWith = ReplaceWith("sourceIds[FilmIdSource.TMDB]?.toIntOrNull()")
+    )
     override val tmdbId: Int? = null,
     override val language: String? = null,
     override val adult: Boolean = false,
@@ -68,7 +70,7 @@ internal data class DBFilmV213(
     override val posterImage: String? = null,
     override val overview: String? = null,
     override val homePage: String? = null,
-    override val releaseDate: String? = null,
+    override val releaseDate: Date? = null,
     override val logoImage: String? = null,
     override val year: Int? = null,
     override val filmType: FilmType = FilmType.MOVIE,

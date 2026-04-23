@@ -65,7 +65,6 @@ import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.model.provider.link.MediaLink.Companion.getOrNull
@@ -380,7 +379,7 @@ private fun MediaLinkItem(
     val uriHandler = LocalUriHandler.current
     val clipboardManager = rememberClipboardManager()
     val trustedFlag = remember {
-        link.flags?.getOrNull(Flag.Trusted::class)
+        link.flags?.getOrNull(Flag.ThirdPartyGateway::class)
     }
     val hasTrustedFlag = trustedFlag != null
 
@@ -498,7 +497,7 @@ private fun MediaLinksBottomSheetPreview() {
         delay(delayTime)
         state = LoadLinksState.Fetching()
         delay(delayTime)
-        state = LoadLinksState.Extracting(DEFAULT_FILM_SOURCE_NAME)
+        state = LoadLinksState.Extracting("The movie db is being scraped for links.")
         while (itemCount < 10) {
             val randomBool = Random.nextBoolean()
             val link =
@@ -510,7 +509,7 @@ private fun MediaLinksBottomSheetPreview() {
                         flags =
                             if (randomBool) {
                                 setOf(
-                                    Flag.Trusted(
+                                    Flag.ThirdPartyGateway(
                                         url = "https://www.google.com",
                                         name = "Netflix",
                                         description = "Description",
@@ -536,7 +535,7 @@ private fun MediaLinksBottomSheetPreview() {
         }
         delay(delayTime)
         state = LoadLinksState.Success(
-            providerId = DEFAULT_FILM_SOURCE_NAME,
+            providerId = "provider-id",
         )
 //        delay(delayTime)
 //        state = MediaLinkResourceState.Unavailable()

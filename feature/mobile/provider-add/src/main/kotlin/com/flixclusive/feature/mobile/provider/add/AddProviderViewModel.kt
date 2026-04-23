@@ -12,13 +12,13 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.common.provider.ProviderWithThrowable
-import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.provider.repository.ProviderResponseWrapper
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.manage.InstallProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
@@ -268,7 +268,7 @@ internal class AddProviderViewModel @Inject constructor(
                 if (it is ProviderResult.Failure) throw it.error
             }
 
-            val installedProvider = getInstalledProvider(provider.id)
+            val installedProvider = getProvider(provider.id)?.provider
                 ?: error("Provider ${provider.name} not found after installation")
 
             loadProvider(installedProvider).collect {
@@ -282,7 +282,7 @@ internal class AddProviderViewModel @Inject constructor(
                 it.copy(providerExceptions = it.providerExceptions + error)
             }
 
-            val isInstalled = providerRepository.getMetadata(provider.id) != null
+            val isInstalled = getProvider(provider.id) != null
             val status = when {
                 isInstalled -> ProviderInstallationStatus.Installed
                 else -> ProviderInstallationStatus.NotInstalled
@@ -294,7 +294,7 @@ internal class AddProviderViewModel @Inject constructor(
 
     private suspend fun uninstallProvider(provider: ProviderMetadata) {
         try {
-            val installedProvider = getInstalledProvider(provider.id)
+            val installedProvider = getProvider(provider.id)?.provider
             if (installedProvider == null) {
                 warnLog("Provider ${provider.name} was not found. Skipping uninstallation...")
                 return
@@ -363,7 +363,7 @@ internal class AddProviderViewModel @Inject constructor(
                         val provider = SearchableProvider.from(it)
                         var status = ProviderInstallationStatus.NotInstalled
 
-                        val metadata = providerRepository.getMetadata(provider.id)
+                        val metadata = getProvider(provider.id)?.metadata
                         val isInstalled = metadata != null
 
                         if (isInstalled && isOutdated(old = metadata, new = provider.metadata)) {
@@ -381,11 +381,11 @@ internal class AddProviderViewModel @Inject constructor(
         }
     }
 
-    private fun isOutdated(
+    private suspend fun isOutdated(
         old: ProviderMetadata,
         new: ProviderMetadata,
     ): Boolean {
-        val provider = providerRepository.getPlugin(old.id) ?: return false
+        val provider = getProvider(old.id)?.plugin ?: return false
 
         val manifest = provider.manifest
         if (manifest.updateUrl == null || manifest.updateUrl.equals("")) {
@@ -395,11 +395,10 @@ internal class AddProviderViewModel @Inject constructor(
         return manifest.versionCode < new.versionCode
     }
 
-    private suspend fun getInstalledProvider(id: String): InstalledProvider? {
+    private suspend fun getProvider(id: String): ProviderResponseWrapper? {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        return providerRepository.getInstalledProvider(
-            id = id,
-            ownerId = userId
+        return providerRepository.getProvider(
+            id = id, ownerId = userId
         )
     }
 }

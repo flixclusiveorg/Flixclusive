@@ -16,7 +16,6 @@ dependencies {
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
     implementation(projects.coreStrings)
-    implementation(projects.dataTmdb)
     implementation(projects.domainCatalog)
 
     implementation(libs.compose.foundation)

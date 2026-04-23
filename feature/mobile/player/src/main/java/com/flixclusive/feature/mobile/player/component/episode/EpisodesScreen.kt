@@ -139,7 +139,7 @@ private fun EpisodesScreenPreview() {
                 episodeNumber = episode.number,
                 progress = 1200L,
                 duration = 2400L,
-                filmId = sampleShow.identifier,
+                filmId = sampleShow.id,
                 ownerId = "preview-user",
                 status = WatchStatus.WATCHING,
                 seasonNumber = season.number,

@@ -24,7 +24,7 @@ import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.model.user.player.CaptionEdgeTypePreference
 import com.flixclusive.core.datastore.model.user.player.CaptionStylePreference
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
+import com.flixclusive.core.util.coroutines.FlxDispatchers.Companion.launchOnIO
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI

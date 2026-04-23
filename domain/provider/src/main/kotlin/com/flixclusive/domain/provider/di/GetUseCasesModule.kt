@@ -1,18 +1,18 @@
 package com.flixclusive.domain.provider.di
 
+import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.get.GetRepositoryUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
+import com.flixclusive.domain.provider.usecase.get.impl.GetCatalogProvidersUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetFilmMetadataUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetMediaLinksUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetNextEpisodeUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetProviderFromRemoteUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetRepositoryUseCaseImpl
-import com.flixclusive.domain.provider.usecase.get.impl.GetSeasonUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetSeasonWithWatchProgressUseCaseImpl
 import dagger.Binds
 import dagger.Module
@@ -46,5 +46,5 @@ internal abstract class GetUseCasesModule {
     ): GetSeasonWithWatchProgressUseCase
 
     @Binds
-    abstract fun bindGetSeasonUseCase(impl: GetSeasonUseCaseImpl): GetSeasonUseCase
+    abstract fun bindGetCatalogProvidersUseCase(impl: GetCatalogProvidersUseCaseImpl): GetCatalogProvidersUseCase
 }

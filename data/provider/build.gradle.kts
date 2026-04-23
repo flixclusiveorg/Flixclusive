@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.stubs.util)
     implementation(libs.stubs.provider)
     implementation(libs.stubs.model.film)
+    implementation(libs.okhttp)
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
     implementation(projects.coreDatabase)

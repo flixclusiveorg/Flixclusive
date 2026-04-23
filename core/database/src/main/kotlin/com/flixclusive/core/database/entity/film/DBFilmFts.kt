@@ -13,7 +13,7 @@ data class DBFilmFts(
 ) {
     companion object {
         fun Film.toDBFilmFts() = DBFilmFts(
-            filmId = identifier,
+            filmId = id,
             overview = overview ?: "",
             title = title,
         )

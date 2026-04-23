@@ -2,10 +2,33 @@ package com.flixclusive.data.provider.repository
 
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.provider.Provider
-import com.flixclusive.provider.ProviderApi
+import com.flixclusive.model.provider.ProviderStatus
+import com.flixclusive.provider.ProviderPlugin
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
+import java.util.Date
+
+data class ProviderResponseWrapper(
+    val provider: InstalledProvider,
+    val plugin: ProviderPlugin?,
+    val metadata: ProviderMetadata?,
+) {
+    val id: String get() = provider.id
+    val name: String? get() = metadata?.name
+
+    val logoUrl: String? get() = metadata?.iconUrl
+    val versionName: String? get() = metadata?.versionName
+    val versionCode: Long? get() = metadata?.versionCode
+
+    val status: ProviderStatus? get() = metadata?.status
+
+    val sortOrder: Double get() = provider.sortOrder
+    val createdAt: Date get() = provider.createdAt
+
+    val isEnabled: Boolean get() = provider.isEnabled
+
+    val isDebug: Boolean get() = provider.isDebug
+}
 
 interface ProviderRepository {
     suspend fun install(
@@ -18,28 +41,22 @@ interface ProviderRepository {
     suspend fun unload(id: String)
 
     suspend fun load(
-        provider: Provider,
+        provider: ProviderPlugin,
         classLoader: PathClassLoader,
         metadata: ProviderMetadata,
     )
 
-    suspend fun getApi(id: String, ownerId: String): ProviderApi?
+    suspend fun getProvider(id: String, ownerId: String): ProviderResponseWrapper?
 
-    fun getMetadata(id: String): ProviderMetadata?
+    fun getEnabledProvidersAsFlow(ownerId: String): Flow<List<ProviderResponseWrapper>>
 
-    fun getPlugin(id: String): Provider?
-
-    suspend fun getInstalledProvider(id: String, ownerId: String): InstalledProvider?
-
-    fun getEnabledProvidersAsFlow(ownerId: String): Flow<List<InstalledProvider>>
-
-    suspend fun getEnabledProviders(ownerId: String): List<InstalledProvider>
+    suspend fun getEnabledProviders(ownerId: String): List<ProviderResponseWrapper>
 
     suspend fun isEnabled(id: String, ownerId: String): Boolean
 
-    suspend fun getInstalledProviders(ownerId: String): List<InstalledProvider>
+    suspend fun getProviders(ownerId: String): List<ProviderResponseWrapper>
 
-    fun getInstalledProvidersAsFlow(ownerId: String): Flow<List<InstalledProvider>>
+    fun getProvidersAsFlow(ownerId: String): Flow<List<ProviderResponseWrapper>>
 
     suspend fun getMaxSortOrder(ownerId: String): Double
 

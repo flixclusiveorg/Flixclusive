@@ -2,13 +2,16 @@ package com.flixclusive.feature.mobile.player
 
 import android.content.Context
 import androidx.annotation.MainThread
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import androidx.media3.common.listenTo
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
@@ -16,6 +19,7 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
@@ -24,11 +28,10 @@ import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.PlayerServer.Companion.getIndexOfPreferredQuality
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.provider.repository.CacheKey
-import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
-import com.flixclusive.data.provider.repository.CachedLinks
-import com.flixclusive.data.provider.repository.CachedLinksRepository
+import com.flixclusive.data.provider.repository.MediaLinks
+import com.flixclusive.data.provider.repository.MediaLinksCacheKey
+import com.flixclusive.data.provider.repository.MediaLinksCacheKey.Companion.toCacheKey
+import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
@@ -72,13 +75,13 @@ import javax.inject.Inject
 @HiltViewModel
 internal class PlayerScreenViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
-    private val cachedLinksRepository: CachedLinksRepository,
+    private val mediaLinksRepository: MediaLinksRepository,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val providerRepository: ProviderRepository,
     private val setWatchProgress: SetWatchProgressUseCase,
-    private val userSessionManager: UserSessionManager,
+    private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
     private val dataStoreManager: DataStoreManager,
     private val playerDataSourceFactory: AppDataSourceFactory,
@@ -132,31 +135,14 @@ internal class PlayerScreenViewModel @Inject constructor(
      * */
     val filmMetadata = navArgs.film
 
-    private val userId: String
-        get() {
-            val user = userSessionManager.currentUser.value
-            requireNotNull(user) {
-                "User must be logged in to use the player"
-            }
-
-            return user.id
-        }
-
     // Only using non-suspend function since we don't need to observe changes here
-    val providers = userSessionManager.currentUser
+    val providers = userSessionDataStore.currentUserId
         .filterNotNull()
-        .flatMapLatest { user ->
-            if (!filmMetadata.isFromTmdb) {
-                val metadata = providerRepository.getMetadata(filmMetadata.providerId)
-                    ?: return@flatMapLatest flowOf(emptyList())
-
-                return@flatMapLatest flowOf(listOf(metadata))
-            }
-
-            providerRepository.getEnabledProvidersAsFlow(ownerId = user.id)
-                .map { list ->
-                    list.mapNotNull { provider ->
-                        providerRepository.getMetadata(provider.id)
+        .flatMapLatest { userId ->
+            providerRepository.getEnabledProvidersAsFlow(ownerId = userId)
+                .mapLatest { list ->
+                    list.fastMapNotNull { provider ->
+                        provider.metadata
                     }
                 }
         }
@@ -168,7 +154,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         value = PlayerUiState(
-            currentProvider = cachedLinksRepository.currentCache.value?.providerId ?: "",
+            currentProvider = mediaLinksRepository.currentObservable.value?.providerId ?: "",
             currentEpisode = navArgs.episode,
             currentSeason = navArgs.episode?.season,
         )
@@ -184,18 +170,18 @@ internal class PlayerScreenViewModel @Inject constructor(
         .map { it.currentProvider }
         .distinctUntilChanged()
 
-    private val currentCacheKey = distinctProviderFlow
+    private val currentMediaLinksCacheKey = distinctProviderFlow
         .combine(distinctEpisodeFlow) { providerId, episode ->
-            CacheKey.create(
-                filmId = filmMetadata.identifier,
+            MediaLinksCacheKey.create(
+                filmId = filmMetadata.id,
                 providerId = providerId,
                 episode = episode,
             )
         }
 
-    val servers = currentCacheKey
+    val servers = currentMediaLinksCacheKey
         .flatMapLatest { cacheKey ->
-            cachedLinksRepository.observeCache(cacheKey)
+            mediaLinksRepository.observeLinks(cacheKey)
                 .mapLatest { cache ->
                     cache?.streams?.fastMap {
                         it.toPlayerServer()
@@ -205,16 +191,16 @@ internal class PlayerScreenViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = cachedLinksRepository.currentCache.value?.let { cache ->
+            initialValue = mediaLinksRepository.currentObservable.value?.let { cache ->
                 cache.streams.fastMap {
                     it.toPlayerServer()
                 }
             } ?: emptyList(),
         )
 
-    val failedStreamUrls = currentCacheKey
+    val failedStreamUrls = currentMediaLinksCacheKey
         .flatMapLatest { cacheKey ->
-            cachedLinksRepository.observeCache(cacheKey)
+            mediaLinksRepository.observeLinks(cacheKey)
                 .mapLatest { cache ->
                     cache?.failedStreamUrls ?: emptySet()
                 }
@@ -222,13 +208,13 @@ internal class PlayerScreenViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = cachedLinksRepository.currentCache.value?.failedStreamUrls ?: emptySet(),
+            initialValue = mediaLinksRepository.currentObservable.value?.failedStreamUrls ?: emptySet(),
         )
 
     val canSkipLoading = _uiState
         .map { state ->
             state.loadLinksState.toCacheKey(
-                filmId = filmMetadata.identifier,
+                filmId = filmMetadata.id,
                 episode = state.currentEpisode,
             )
         }
@@ -237,7 +223,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             if (cacheKey == null) {
                 flowOf(false)
             } else {
-                cachedLinksRepository.observeCache(cacheKey)
+                mediaLinksRepository.observeLinks(cacheKey)
                     .map { it?.hasStreamableLinks == true }
             }
         }
@@ -289,15 +275,15 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     val watchProgress = combine(
         selectedEpisode, // For triggers only
-        userSessionManager.currentUser.filterNotNull(),
-    ) { episode, user ->
-        episode to user
-    }.flatMapLatest { (episode, user) ->
+        userSessionDataStore.currentUserId.filterNotNull()
+    ) { episode, userId ->
+        episode to userId
+    }.flatMapLatest { (episode, userId) ->
         watchProgressRepository
             .getAsFlow(
-                id = filmMetadata.identifier,
+                id = filmMetadata.id,
                 type = filmMetadata.filmType,
-                ownerId = user.id,
+                ownerId = userId,
             ).filterNotNull()
             .map {
                 val progress = it.watchData
@@ -305,11 +291,11 @@ internal class PlayerScreenViewModel @Inject constructor(
                     val isSameEpisode = progress.isSameEpisode(
                         otherEpisode = episode?.number ?: -1,
                         otherSeason = episode?.season ?: -1,
-                        otherFilmId = filmMetadata.identifier,
+                        otherFilmId = filmMetadata.id,
                     )
 
                     if (!isSameEpisode) {
-                        return@map createDefaultWatchProgress()
+                        return@map getDefaultWatchProgress()
                     }
                 }
 
@@ -318,7 +304,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = createDefaultWatchProgress(),
+        initialValue = getDefaultWatchProgress(),
     )
 
     private var changeProviderJob: Job? = null
@@ -340,13 +326,13 @@ internal class PlayerScreenViewModel @Inject constructor(
     fun onServerChange(serverIndex: Int) {
         if (changeServerJob?.isActive == true) return
 
-        val cacheKey = CacheKey.create(
-            filmId = filmMetadata.identifier,
+        val mediaLinksCacheKey = MediaLinksCacheKey.create(
+            filmId = filmMetadata.id,
             providerId = _uiState.value.currentProvider,
             episode = _uiState.value.currentEpisode,
         )
 
-        val cache = cachedLinksRepository.getCache(cacheKey) ?: return
+        val cache = mediaLinksRepository.getLinks(mediaLinksCacheKey) ?: return
         if (serverIndex !in cache.streams.indices) return
 
         _uiState.update { it.copy(currentServer = serverIndex) }
@@ -396,7 +382,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             //     _uiState.update { it.copy(nextEpisode = nextEpisode) }
             // }
 
-            cachedLinksRepository.setCurrentCache(key)
+            mediaLinksRepository.setCurrentObservable(key)
             withContext(appDispatchers.main) {
                 player.prepare(
                     cache = cache,
@@ -420,14 +406,14 @@ internal class PlayerScreenViewModel @Inject constructor(
     fun onSkipProviderLoading() {
         val state = _uiState.value.loadLinksState
         val cacheKey = state.toCacheKey(
-            filmId = filmMetadata.identifier,
+            filmId = filmMetadata.id,
             episode = selectedEpisode.value,
         ) ?: return
 
-        val cache = cachedLinksRepository.getCache(cacheKey)
+        val cache = mediaLinksRepository.getLinks(cacheKey)
         if (cache == null || !cache.hasStreamableLinks) return
 
-        cachedLinksRepository.setCurrentCache(cacheKey)
+        mediaLinksRepository.setCurrentObservable(cacheKey)
 
         val providerId = when (state) {
             is LoadLinksState.Extracting -> state.providerId
@@ -452,13 +438,13 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     fun onServerFail(serverIndex: Int) {
         val server = servers.value.getOrNull(serverIndex) ?: return
-        val cacheKey = CacheKey.create(
-            filmId = filmMetadata.identifier,
+        val mediaLinksCacheKey = MediaLinksCacheKey.create(
+            filmId = filmMetadata.id,
             providerId = _uiState.value.currentProvider,
             episode = _uiState.value.currentEpisode,
         )
 
-        cachedLinksRepository.markStreamAsFailed(cacheKey, server.url)
+        mediaLinksRepository.markStreamAsFailed(mediaLinksCacheKey, server.url)
     }
 
     fun onCancelLoading() {
@@ -505,7 +491,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             )
 
             if (cache != null) {
-                cachedLinksRepository.setCurrentCache(key)
+                mediaLinksRepository.setCurrentObservable(key)
                 withContext(appDispatchers.main) {
                     player.prepare(
                         cache = cache,
@@ -531,40 +517,22 @@ internal class PlayerScreenViewModel @Inject constructor(
         providerId: String,
         episode: Episode?,
         quiet: Boolean = false,
-    ): Pair<CacheKey, CachedLinks?> {
-        val cacheKey = CacheKey.create(
-            filmId = filmMetadata.identifier,
+    ): Pair<MediaLinksCacheKey, MediaLinks?> {
+        val mediaLinksCacheKey = MediaLinksCacheKey.create(
+            filmId = filmMetadata.id,
             providerId = providerId,
             episode = episode,
         )
 
-        val cache = cachedLinksRepository.getCache(cacheKey)
+        val cache = mediaLinksRepository.getLinks(mediaLinksCacheKey)
         if (cache?.hasExtractedSuccessfully == true) {
-            return cacheKey to cache
+            return mediaLinksCacheKey to cache
         }
 
-        val response = when (filmMetadata) {
-            is Movie -> {
-                getMediaLinks(
-                    movie = filmMetadata,
-                    providerId = providerId,
-                )
-            }
-
-            is TvShow -> {
-                requireNotNull(episode) {
-                    "Selected episode must not be null when loading links for a TV show"
-                }
-
-                getMediaLinks(
-                    tvShow = filmMetadata,
-                    episode = episode,
-                    providerId = providerId,
-                )
-            }
-
-            else -> throw IllegalStateException("Unsupported film type: $filmMetadata")
-        }
+        val response = getMediaLinks(
+            film = filmMetadata,
+            episode = episode,
+        )
 
         response
             .catch { error ->
@@ -589,12 +557,12 @@ internal class PlayerScreenViewModel @Inject constructor(
                 }
             }
 
-        return cacheKey to cachedLinksRepository.getCache(cacheKey)
+        return mediaLinksCacheKey to mediaLinksRepository.getLinks(mediaLinksCacheKey)
     }
 
     @MainThread
     private fun AppPlayer.prepare(
-        cache: CachedLinks,
+        cache: MediaLinks,
         startPositionMs: Long,
     ) {
         val servers = cache.streams.cleanDuplicates {
@@ -632,17 +600,20 @@ internal class PlayerScreenViewModel @Inject constructor(
         )
     }
 
-    private fun createDefaultWatchProgress(): WatchProgress {
+    private fun getDefaultWatchProgress(): WatchProgress {
+        // Careful here - reconsider this in the future
+        val userId = runBlocking { userSessionDataStore.currentUserId.filterNotNull().first() }
+
         return when (filmMetadata) {
             is Movie -> MovieProgress(
-                filmId = filmMetadata.identifier,
+                filmId = filmMetadata.id,
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
             )
 
             is TvShow -> EpisodeProgress(
-                filmId = filmMetadata.identifier,
+                filmId = filmMetadata.id,
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
@@ -654,6 +625,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
     }
 
+    @OptIn(UnstableApi::class)
     private fun AppPlayer.observePlaybackProgress() {
         viewModelScope.launch(appDispatchers.main) {
             listenTo(Player.EVENT_PLAYBACK_STATE_CHANGED) { events ->
@@ -722,15 +694,16 @@ internal class PlayerScreenViewModel @Inject constructor(
      * @return The saved start position in milliseconds.
      * */
     private suspend fun getSavedStartPositionMs(episode: Episode? = null): Long {
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val watchProgress = if (episode == null) {
             watchProgressRepository.get(
-                id = filmMetadata.identifier,
+                id = filmMetadata.id,
                 type = filmMetadata.filmType,
                 ownerId = userId,
             )?.watchData
         } else {
             watchProgressRepository.getEpisodeProgress(
-                tvShowId = filmMetadata.identifier,
+                tvShowId = filmMetadata.id,
                 seasonNumber = episode.season,
                 episodeNumber = episode.number,
                 ownerId = userId,
@@ -746,18 +719,18 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     private fun initialize() {
         viewModelScope.launch {
-            val cacheKey = CacheKey.create(
-                filmId = filmMetadata.identifier,
+            val mediaLinksCacheKey = MediaLinksCacheKey.create(
+                filmId = filmMetadata.id,
                 providerId = _uiState.value.currentProvider,
                 episode = _uiState.value.currentEpisode,
             )
 
-            val cache = cachedLinksRepository.getCache(cacheKey)
+            val cache = mediaLinksRepository.getLinks(mediaLinksCacheKey)
             if (cache == null || !cache.hasStreamableLinks) {
                 return@launch
             }
 
-            cachedLinksRepository.setCurrentCache(cacheKey)
+            mediaLinksRepository.setCurrentObservable(mediaLinksCacheKey)
             val nextEpisode = getNextEpisode(navArgs.episode)
             _uiState.update {
                 it.copy(nextEpisode = nextEpisode)

@@ -7,26 +7,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.BuildConfig
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.monitor.NetworkMonitor
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
-import com.flixclusive.data.provider.repository.CachedLinksRepository
+import com.flixclusive.data.provider.repository.MediaLinksCacheKey.Companion.toCacheKey
+import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
@@ -34,7 +33,6 @@ import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseC
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,6 +47,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
@@ -68,15 +67,14 @@ internal sealed class ProviderUpdateInfo {
 internal class MobileAppViewModel @Inject constructor(
     private val _getFilmMetadata: GetFilmMetadataUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
-    private val getSeason: GetSeasonUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val watchProgressRepository: WatchProgressRepository,
     private val dataStoreManager: DataStoreManager,
-    private val userSessionManager: UserSessionManager,
+    private val userSessionDataStore: UserSessionDataStore,
     private val libraryListRepository: LibraryListRepository,
     private val appDispatchers: AppDispatchers,
     private val playerCache: PlayerCache,
-    private val cachedLinksRepository: CachedLinksRepository,
+    private val mediaLinksRepository: MediaLinksRepository,
     private val initializeProviders: InitializeProvidersUseCase,
     private val checkOutdatedProviders: CheckOutdatedProviderUseCase,
     private val updateProvider: UpdateProviderUseCase,
@@ -91,7 +89,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val _providerUpdateInfo = MutableSharedFlow<ProviderUpdateInfo?>()
     val providerUpdateInfo = _providerUpdateInfo.asSharedFlow()
 
-    val currentLinksCache = cachedLinksRepository.currentCache
+    val currentLinksCache = mediaLinksRepository.currentObservable
 
     /**
      * A WebView driver instance that is shared across the app.
@@ -128,12 +126,12 @@ internal class MobileAppViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val user = userSessionManager.currentUser.filterNotNull().first().name
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
             // Ensure that the onboarding process has been completed before loading providers for the first time
             dataStoreManager.getSystemPrefs().first { prefs -> !prefs.isFirstTimeUserLaunch }
 
-            infoLog("Loading $user's providers for the first time...")
+            infoLog("Loading $userId's providers for the first time...")
             initProviders()
             updateProviders()
         }
@@ -217,9 +215,9 @@ internal class MobileAppViewModel @Inject constructor(
         if (onFilmLongClickJob?.isActive == true) return
 
         onFilmLongClickJob = viewModelScope.launch {
-            val userId = userSessionManager.currentUser.filterNotNull().first().id
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val libraryItem = libraryListRepository.getListsContainingFilm(
-                filmId = film.identifier,
+                filmId = film.id,
                 ownerId = userId
             ).first()
             val isInLibrary = libraryItem.isNotEmpty()
@@ -244,7 +242,7 @@ internal class MobileAppViewModel @Inject constructor(
         onFetchMediaLinksJob?.cancel()
         onFetchMediaLinksJob = viewModelScope.launch {
             _uiState.update { it.copy(playerData = PlayerData(film, episode)) }
-            cachedLinksRepository.setCurrentCache(null)
+            mediaLinksRepository.setCurrentObservable(null)
             updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.film_data_fetching))
 
             val metadata = getFilmMetadata(film = film)
@@ -256,35 +254,30 @@ internal class MobileAppViewModel @Inject constructor(
             // Data to be passed to the player screen
             var playerData = PlayerData(film = metadata)
 
-            val responseFlow = when (metadata) {
-                is Movie -> getMediaLinks(movie = metadata)
-                is TvShow -> {
-                    var episodeToLoad = episode
-                    if (episode == null) {
-                        episodeToLoad = getEpisodeToWatch(tvShow = metadata)
-                    }
-
-                    if (episodeToLoad == null) {
-                        updateLoadLinksState(LoadLinksState.Error(LocaleR.string.failed_to_load_episode))
-                        return@launch
-                    }
-
-                    playerData = playerData.copy(episode = episodeToLoad)
-
-                    getMediaLinks(
-                        tvShow = metadata,
-                        episode = episodeToLoad,
-                    )
+            var episodeToLoad = episode
+            if (metadata is TvShow) {
+                if (episode == null) {
+                    episodeToLoad = getEpisodeToWatch(tvShow = metadata)
                 }
 
-                else -> error("This is not a valid FilmMetadata subclass: $metadata")
+                if (episodeToLoad == null) {
+                    updateLoadLinksState(LoadLinksState.Error(LocaleR.string.failed_to_load_episode))
+                    return@launch
+                }
+
+                playerData = playerData.copy(episode = episodeToLoad)
             }
 
+            val response = getMediaLinks(
+                film = metadata,
+                episode = episodeToLoad,
+            )
+
             _uiState.update { it.copy(playerData = playerData) }
-            responseFlow.collect(::updateLoadLinksState)
+            response.collect(::updateLoadLinksState)
 
             if (isFailureButHasLinks()) {
-                cachedLinksRepository.setCurrentCache(null)
+                mediaLinksRepository.setCurrentObservable(null)
             }
         }
     }
@@ -297,16 +290,16 @@ internal class MobileAppViewModel @Inject constructor(
     private suspend fun getFilmMetadata(film: Film): FilmMetadata? {
         if (film is FilmMetadata) return film
 
-        return when (val response = _getFilmMetadata(film = film)) {
-            is Resource.Success -> response.data
+        return when (val response = _getFilmMetadata(film = film).last()) {
+            is Async.Success -> response.data
             else -> null
         }
     }
 
     private suspend fun getEpisodeToWatch(tvShow: TvShow): Episode? {
-        val userId = userSessionManager.currentUser.filterNotNull().first().id
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val progress = watchProgressRepository.get(
-            id = tvShow.identifier,
+            id = tvShow.id,
             ownerId = userId,
             type = tvShow.filmType,
         ) as? EpisodeProgressWithMetadata
@@ -323,15 +316,12 @@ internal class MobileAppViewModel @Inject constructor(
         val seasonNumber = progress?.watchData?.seasonNumber ?: 1
         val episodeNumber = progress?.watchData?.episodeNumber ?: 1
 
-        val season = getSeason(
-            tvShow = tvShow,
-            number = seasonNumber,
-        ).let { response ->
-            when (response) {
-                is Resource.Success -> response.data
-                else -> null
-            }
+
+        val seasonIndex = tvShow.seasons.binarySearch {
+            it.number.compareTo(seasonNumber)
         }
+
+        val season = tvShow.seasons.getOrNull(seasonIndex)
 
         val episode = season?.episodes?.binarySearch {
             it.number.compareTo(episodeNumber)
@@ -373,12 +363,12 @@ internal class MobileAppViewModel @Inject constructor(
         val playerData = _uiState.value.playerData
         if (state.hasProviderId && playerData != null) {
             val cache = state.toCacheKey(
-                filmId = playerData.film.identifier,
+                filmId = playerData.film.id,
                 episode = playerData.episode,
             )
 
             if (cache != null) {
-                cachedLinksRepository.setCurrentCache(cache)
+                mediaLinksRepository.setCurrentObservable(cache)
             }
         }
 

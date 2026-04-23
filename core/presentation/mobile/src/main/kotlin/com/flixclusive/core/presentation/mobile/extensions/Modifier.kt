@@ -8,7 +8,6 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
@@ -47,14 +46,11 @@ fun Modifier.fillMaxAdaptiveWidth(
     expanded: Float = (medium - 0.2F).coerceAtLeast(0f),
 ): Modifier {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
-    val windowHeightSizeClass = windowSizeClass.windowHeightSizeClass
 
     val fraction = when {
-        windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact -> compact
-        windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
-        windowWidthSizeClass.isExpanded -> expanded
-        else -> compact
+        windowSizeClass.isWidthCompact || windowSizeClass.isHeightCompact -> compact
+        windowSizeClass.isWidthMedium || windowSizeClass.isHeightMedium -> medium
+        else -> expanded
     }
 
     return fillMaxWidth(fraction)

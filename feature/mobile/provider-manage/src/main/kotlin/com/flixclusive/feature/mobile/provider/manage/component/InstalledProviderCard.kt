@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderTopCardContent
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.model.provider.Status
+import com.flixclusive.model.provider.ProviderStatus
 
 @Composable
 internal fun InstalledProviderCard(
@@ -74,8 +74,8 @@ internal fun InstalledProviderCard(
                 openSettings = openSettings,
                 unloadProvider = uninstallProvider,
                 toggleUsage = {
-                    if (providerMetadata.status != Status.Maintenance &&
-                        providerMetadata.status != Status.Down
+                    if (providerMetadata.status != ProviderStatus.Maintenance &&
+                        providerMetadata.status != ProviderStatus.Down
                     ) {
                         onToggleProvider()
                     }

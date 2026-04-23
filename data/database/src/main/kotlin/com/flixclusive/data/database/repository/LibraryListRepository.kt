@@ -31,6 +31,8 @@ interface LibraryListRepository {
 
     fun getListsContainingFilm(filmId: String, ownerId: String): Flow<List<LibraryList>>
 
+    suspend fun isInLibrary(filmId: String, ownerId: String): Boolean
+
     suspend fun deleteItem(itemId: Long)
 
     fun getItems(listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>

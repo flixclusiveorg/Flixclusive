@@ -17,11 +17,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,21 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.provider.getProviderStatusContainerColor
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-
-@Stable
-private fun getProviderStatusColor(status: Status) =
-    when (status) {
-        Status.Down -> Color(0xFFFF3030)
-        Status.Maintenance -> Color(0xFFFFBF1B)
-        Status.Beta -> Color(0xFF00C4FF)
-        Status.Working -> Color(0xFF00FF04)
-    }
 
 @Composable
 internal fun ProviderBottomCardContent(
@@ -58,7 +48,7 @@ internal fun ProviderBottomCardContent(
         horizontalArrangement = if (providerMetadata.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val color = getProviderStatusColor(providerMetadata.status)
+        val color = getProviderStatusContainerColor(providerMetadata.status)
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),

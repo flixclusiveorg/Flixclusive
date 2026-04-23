@@ -28,7 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -42,7 +42,6 @@ import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.Catalog
-import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -73,10 +72,9 @@ internal fun InternalSeeAllScreen(
     SeeAllScreenContent(
         items = {
             if (searchQuery.isNotBlank() && uiState.isSearching) {
-                viewModel.items
-                    .filter {
-                        it.title.contains(searchQuery, ignoreCase = true)
-                    }.toImmutableSet()
+                viewModel.items.filter {
+                    it.title.contains(searchQuery, ignoreCase = true)
+                }
             } else {
                 viewModel.items
             }
@@ -96,7 +94,7 @@ internal fun InternalSeeAllScreen(
 
 @Composable
 private fun SeeAllScreenContent(
-    items: () -> ImmutableSet<Film>,
+    items: () -> Collection<Film>,
     uiState: SeeAllUiState,
     showFilmTitles: Boolean,
     catalog: Catalog,
@@ -162,7 +160,7 @@ private fun SeeAllScreenContent(
                 items().size,
                 key = {
                     val film = items().elementAt(it)
-                    film.identifier
+                    film.id
                 },
             ) {
                 val film = items().elementAt(it)
@@ -188,7 +186,7 @@ private fun SeeAllScreenContent(
                 }
             }
 
-            if (uiState.pagingState is PagingDataState.Error) {
+            if (uiState.pagingState is PagingState.Error) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     RetryButton(
                         error = uiState.pagingState.error.asString(),
@@ -220,7 +218,7 @@ private fun SeeAllScreenBasePreview() {
                 page = 1,
                 maxPage = 1,
                 canPaginate = false,
-                pagingState = PagingDataState.Success(isExhausted = true),
+                pagingState = PagingState.Exhausted,
             ),
         )
     }
@@ -241,12 +239,13 @@ private fun SeeAllScreenBasePreview() {
                 uiState = uiState,
                 showFilmTitles = true,
                 catalog = remember {
-                    object : Catalog() {
-                        override val canPaginate: Boolean = true
-                        override val image: String? = null
-                        override val name: String = "Netflix"
-                        override val url: String = ""
-                    }
+                    Catalog(
+                        name = "Netflix",
+                        image = null,
+                        url = "",
+                        canPaginate = true,
+                        providerId = "netflix",
+                    )
                 },
                 searchQuery = { searchQuery },
                 onQueryChange = { searchQuery = it },

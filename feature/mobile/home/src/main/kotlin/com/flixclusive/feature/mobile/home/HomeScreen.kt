@@ -1,31 +1,53 @@
 package com.flixclusive.feature.mobile.home
 
+import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
@@ -33,21 +55,33 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
+import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.feature.mobile.home.components.CatalogProvidersBottomSheet
 import com.flixclusive.feature.mobile.home.components.CatalogRow
 import com.flixclusive.feature.mobile.home.components.ContinueWatchingRow
-import com.flixclusive.feature.mobile.home.components.DisplayHeader
+import com.flixclusive.feature.mobile.home.components.HomeFilmHeader
+import com.flixclusive.feature.mobile.home.components.HomeScreenTopBar
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Catalog
+import com.flixclusive.model.provider.ProviderStatus
+import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import kotlinx.collections.immutable.persistentHashMapOf
-import kotlinx.collections.immutable.toPersistentSet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.flixclusive.core.strings.R as LocaleR
 
 @Destination<ExternalModuleGraph>(start = true)
 @Composable
@@ -57,32 +91,175 @@ internal fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
+    val catalogProviders by viewModel.catalogProviders.collectAsStateWithLifecycle()
     val continueWatchingItems by viewModel.continueWatchingItems.collectAsStateWithLifecycle()
-    val catalogs by viewModel.catalogs.collectAsStateWithLifecycle()
 
     HomeScreenContent(
         navigator = navigator,
         uiState = uiState,
         showFilmTitles = showFilmTitles,
-        catalogs = catalogs,
+        providers = catalogProviders,
         continueWatchingItems = continueWatchingItems,
+        onToggle = { viewModel.toggleProvider(it.id) },
         paginate = viewModel::paginate,
-        onRetryFetchingHeaderItem = viewModel::loadHomeHeader,
+        onRetry = viewModel::initialize,
     )
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun HomeScreenContent(
     navigator: HomeNavigator,
     uiState: HomeUiState,
     showFilmTitles: Boolean,
-    catalogs: List<Catalog>,
-    paginate: (Catalog) -> Unit,
+    providers: Async<List<CatalogProviderWrapper>>,
+    onToggle: (CatalogProviderWrapper) -> Unit,
+    paginate: (CatalogWithPagingState) -> Unit,
+    onRetry: () -> Unit,
     continueWatchingItems: List<WatchProgressWithMetadata>,
-    onRetryFetchingHeaderItem: () -> Unit,
+) {
+    var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
+    var isSheetOpen by remember { mutableStateOf(false) }
+
+    val listState = rememberLazyListState()
+    val windowInfo = LocalWindowInfo.current
+    val screenWidth = windowInfo.containerSize.width
+
+    val backdropAspectRatio = getBackdropAspectRatio()
+
+    // Get the scroll offset of the first item to change the TopAppBar's background alpha
+    LaunchedEffect(listState, windowInfo) {
+        snapshotFlow {
+            Triple(
+                listState.firstVisibleItemScrollOffset.toFloat(),
+                listState.firstVisibleItemIndex,
+                screenWidth.toFloat()
+            )
+        }.collect { (offset, index, screenWidth) ->
+            val headerHeight = screenWidth / backdropAspectRatio
+            val coercedOffset = offset.coerceIn(0f, headerHeight)
+
+            appBarContainerAlpha =
+                when {
+                    index == 0 && headerHeight > coercedOffset -> coercedOffset / headerHeight
+                    else -> 1F
+                }
+        }
+    }
+
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(LocalGlobalScaffoldPadding.current),
+        topBar = {
+            HomeScreenTopBar(
+                title = stringResource(LocaleR.string.home),
+                containerAlpha = { appBarContainerAlpha },
+                onSearch = navigator::openSearchScreen,
+                onFilterClick = { isSheetOpen = true },
+            )
+        },
+    ) {
+        AnimatedContent(
+            targetState = uiState.catalogs,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            modifier = Modifier.fillMaxSize(),
+        ) { state ->
+            when (state) {
+                is Async.Loading -> LoadingScreen()
+
+                is Async.Success -> {
+                    AnimatedContent(
+                        targetState = state.data,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        modifier = Modifier.fillMaxSize(),
+                    ) { catalogs ->
+                        if (catalogs.isEmpty()) {
+                            EmptyScreenContent(
+                                openAddProviderScreen = navigator::openAddProviderScreen,
+                            )
+                        } else {
+                            val catalogValues by remember {
+                                derivedStateOf { catalogs.values.toList() }
+                            }
+
+                            NonEmptyScreenContent(
+                                navigator = navigator,
+                                showFilmTitles = showFilmTitles,
+                                paginate = paginate,
+                                continueWatchingItems = continueWatchingItems,
+                                catalogs = catalogValues,
+                                headerItem = uiState.itemHeader,
+                                listState = listState,
+                            )
+                        }
+                    }
+                }
+
+                is Async.Failure -> {
+                    RetryButton(
+                        error = state.message.asString(),
+                        modifier = Modifier.fillMaxSize(),
+                        onRetry = onRetry,
+                    )
+                }
+            }
+        }
+    }
+
+    if (isSheetOpen) {
+        CatalogProvidersBottomSheet(
+            onDismiss = { isSheetOpen = false },
+            providers = providers,
+            onToggle = onToggle
+        )
+    }
+}
+
+@Composable
+private fun EmptyScreenContent(
+    openAddProviderScreen: () -> Unit
+) {
+    EmptyDataMessage(
+        modifier = Modifier.fillMaxSize(),
+        title = stringResource(R.string.empty_catalogs_label),
+        description = stringResource(R.string.empty_catalog_providers_msg)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+            modifier = Modifier.padding(bottom = 6.dp),
+        ) {
+            Text(
+                text = "🤔",
+                modifier = Modifier.padding(bottom = 6.dp),
+                style = MaterialTheme.typography.displayMedium.copy(
+                    shadow = Shadow(offset = Offset(4F, 5F)),
+                    color = MaterialTheme.colorScheme.primary
+                ).asAdaptiveTextStyle(),
+            )
+
+            OutlinedButton(
+                onClick = openAddProviderScreen,
+                modifier = Modifier,
+            ) {
+                Text(text = stringResource(LocaleR.string.add_providers))
+            }
+        }
+    }
+}
+
+@Composable
+private fun NonEmptyScreenContent(
+    navigator: HomeNavigator,
+    catalogs: List<CatalogWithPagingState>,
+    headerItem: Async<Film>,
+    showFilmTitles: Boolean,
+    listState: LazyListState,
+    paginate: (CatalogWithPagingState) -> Unit,
+    continueWatchingItems: List<WatchProgressWithMetadata>,
 ) {
     val scope = rememberCoroutineScope()
-    val listState = rememberLazyListState()
 
     val canScrollToTop by remember {
         derivedStateOf {
@@ -101,14 +278,13 @@ private fun HomeScreenContent(
     LazyColumn(
         state = listState,
         contentPadding = LocalGlobalScaffoldPadding.current,
+        modifier = Modifier.fillMaxSize(),
     ) {
         item {
-            DisplayHeader(
-                film = uiState.itemHeader,
+            HomeFilmHeader(
+                film = headerItem,
                 onFilmClick = navigator::openFilmScreen,
                 onFilmLongClick = navigator::previewFilm,
-                onRetry = onRetryFetchingHeaderItem,
-                error = uiState.itemHeaderError,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -124,25 +300,72 @@ private fun HomeScreenContent(
             }
         }
 
-        items(
-            count = catalogs.size,
-            key = { catalogs.elementAt(it).url },
-        ) { i ->
-            val catalog = catalogs.elementAt(i)
-            val pagingState = uiState.pagingStates[catalog.url] ?: return@items
-            val items = uiState.items[catalog.url] ?: return@items
-
+        items(catalogs) { data ->
             CatalogRow(
-                catalog = catalog,
-                pagingState = pagingState,
-                items = items,
+                catalog = data.catalog,
+                pagingState = data.state,
+                items = data.films,
                 onFilmClick = navigator::openFilmScreen,
                 showTitles = showFilmTitles,
                 onFilmLongClick = navigator::previewFilm,
-                paginate = { paginate(catalog) },
-                onSeeAllItems = { navigator.openSeeAllScreen(item = catalog) },
+                paginate = { paginate(data) },
+                onSeeAllItems = { navigator.openSeeAllScreen(item = data.catalog) },
             )
         }
+    }
+}
+
+@Composable
+private fun LoadingScreen(
+    modifier: Modifier = Modifier,
+    message: String? = null
+) {
+    var showLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(true) {
+        // Add a slight delay before showing the loading indicator to prevent flickering on fast loads
+        delay(600)
+        showLoading = true
+    }
+
+    AnimatedVisibility(
+        visible = showLoading,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = modifier.fillMaxSize(),
+    ) {
+        Column(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+        ) {
+            GradientCircularProgressIndicator(
+                modifier = Modifier.size(getAdaptiveDp(48.dp)),
+                colors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.tertiary,
+                )
+            )
+
+            if (message != null) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun getBackdropAspectRatio(): Float {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val usePortraitView = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
+
+    return when {
+        windowSizeClass.isWidthMedium -> 2.4f / 3f
+        usePortraitView -> FilmCover.Poster.ratio
+        else -> 16f / 6f
     }
 }
 
@@ -159,17 +382,12 @@ private fun HomeScreenBasePreview() {
 
             val dummyNavigator = object : HomeNavigator {
                 override fun openFilmScreen(film: Film) {}
-
                 override fun openSeeAllScreen(item: Catalog) {}
-
                 override fun goBack() {}
-
                 override fun previewFilm(film: Film) {}
-
-                override fun play(
-                    film: Film,
-                    episode: Episode?,
-                ) {}
+                override fun play(film: Film, episode: Episode?) {}
+                override fun openAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {}
+                override fun openSearchScreen() {}
             }
 
             var previewState by remember { mutableIntStateOf(readyState) }
@@ -180,91 +398,82 @@ private fun HomeScreenBasePreview() {
                         navigator = dummyNavigator,
                         uiState = HomeUiState(),
                         showFilmTitles = true,
-                        catalogs = emptyList(),
                         paginate = { },
+                        onRetry = { },
                         continueWatchingItems = emptyList(),
-                        onRetryFetchingHeaderItem = { previewState = readyState },
+                        onToggle = { },
+                        providers = Async.Loading,
                     )
                 }
 
                 errorState -> {
                     HomeScreenContent(
                         navigator = dummyNavigator,
-                        uiState = HomeUiState(itemHeaderError = UiText.from(R.string.failed_to_get_header_item)),
+                        uiState = HomeUiState(
+                            catalogs = Async.Failure(stringResource(LocaleR.string.something_went_wrong))
+                        ),
                         showFilmTitles = true,
-                        catalogs = emptyList(),
                         paginate = { },
+                        onRetry = { },
                         continueWatchingItems = emptyList(),
-                        onRetryFetchingHeaderItem = { previewState = readyState },
+                        onToggle = { },
+                        providers = Async.Failure(stringResource(LocaleR.string.something_went_wrong))
                     )
                 }
 
                 readyState -> {
                     val dummyCatalogs = remember {
                         listOf(
-                            object : Catalog() {
-                                override val name: String = "Popular Movies"
-                                override val url: String = "popular_movies"
-                                override val image: String? = null
-                                override val canPaginate: Boolean = true
-                            },
-                            object : Catalog() {
-                                override val name: String = "Trending TV Shows"
-                                override val url: String = "trending_tv"
-                                override val image: String? = null
-                                override val canPaginate: Boolean = true
-                            },
-                            object : Catalog() {
-                                override val name: String = "Action Movies"
-                                override val url: String = "action_movies"
-                                override val image: String? = null
-                                override val canPaginate: Boolean = false
-                            },
+                            Catalog(
+                                name = "Popular Movies",
+                                url = "popular_movies",
+                                canPaginate = true,
+                                providerId = "dummy_provider",
+                            ),
+                            Catalog(
+                                name = "Trending TV Shows",
+                                url = "trending_tv",
+                                canPaginate = true,
+                                providerId = "dummy_provider",
+                            ),
+                            Catalog(
+                                name = "Action Movies",
+                                url = "action_movies",
+                                canPaginate = false,
+                                providerId = "dummy_provider",
+                            ),
                         )
                     }
 
                     val dummyItems = remember {
-                        persistentHashMapOf(
-                            "popular_movies" to List(8) { index ->
-                                DummyDataForPreview.getFilm(
-                                    id = "movie_$index",
-                                    title = "Popular Movie ${index + 1}",
-                                    filmType = FilmType.MOVIE,
-                                )
-                            }.toPersistentSet(),
-                            "trending_tv" to List(6) { index ->
-                                DummyDataForPreview.getFilm(
-                                    id = "tv_$index",
-                                    title = "TV Show ${index + 1}",
-                                    filmType = FilmType.TV_SHOW,
-                                )
-                            }.toPersistentSet(),
-                            "action_movies" to List(4) { index ->
-                                DummyDataForPreview.getFilm(
-                                    id = "action_$index",
-                                    title = "Action Film ${index + 1}",
-                                    filmType = FilmType.MOVIE,
-                                )
-                            }.toPersistentSet(),
-                        )
+                        List(8) { index ->
+                            DummyDataForPreview.getFilm(
+                                id = "movie_$index",
+                                title = "Popular Movie ${index + 1}",
+                                filmType = FilmType.MOVIE,
+                            )
+                        }
                     }
 
                     val dummyPagingStates = remember {
-                        persistentHashMapOf(
-                            "popular_movies" to CatalogPagingState(
-                                hasNext = true,
+                        mapOf(
+                            "popular_movies" to CatalogWithPagingState(
                                 page = 1,
-                                state = PagingDataState.Success(isExhausted = false),
+                                state = PagingState.Exhausted,
+                                films = dummyItems,
+                                catalog = dummyCatalogs[0],
                             ),
-                            "trending_tv" to CatalogPagingState(
-                                hasNext = true,
+                            "trending_tv" to CatalogWithPagingState(
                                 page = 1,
-                                state = PagingDataState.Success(isExhausted = false),
+                                state = PagingState.Exhausted,
+                                films = dummyItems,
+                                catalog = dummyCatalogs[1],
                             ),
-                            "action_movies" to CatalogPagingState(
-                                hasNext = false,
+                            "action_movies" to CatalogWithPagingState(
                                 page = 1,
-                                state = PagingDataState.Error(com.flixclusive.core.strings.R.string.end_of_list),
+                                state = PagingState.Error(LocaleR.string.end_of_list),
+                                films = dummyItems,
+                                catalog = dummyCatalogs[2],
                             ),
                         )
                     }
@@ -318,15 +527,36 @@ private fun HomeScreenBasePreview() {
                     HomeScreenContent(
                         navigator = dummyNavigator,
                         uiState = HomeUiState(
-                            itemHeader = dummyHeaderFilm,
-                            items = dummyItems,
-                            pagingStates = dummyPagingStates,
+                            itemHeader = Async.Success(dummyHeaderFilm),
+                            catalogs = Async.Success(dummyPagingStates),
                         ),
                         showFilmTitles = true,
-                        catalogs = dummyCatalogs,
-                        paginate = {  },
+                        paginate = { },
+                        onRetry = { },
+                        onToggle = { },
                         continueWatchingItems = continueWatchingItems,
-                        onRetryFetchingHeaderItem = { previewState = loadingState },
+                        providers = Async.Success(
+                            listOf(
+                                CatalogProviderWrapper(
+                                    id = "provider_1",
+                                    name = "Provider One",
+                                    isEnabled = true,
+                                    versionCode = 42,
+                                    versionName = "1.2.3",
+                                    logoUrl = "https://example.com/logo.png",
+                                    status = ProviderStatus.Working
+                                ),
+                                CatalogProviderWrapper(
+                                    id = "provider_2",
+                                    name = "Provider Two",
+                                    isEnabled = false,
+                                    versionCode = 42,
+                                    versionName = "1.2.3",
+                                    logoUrl = "https://example.com/logo.png",
+                                    status = ProviderStatus.Working
+                                ),
+                            )
+                        ),
                     )
                 }
             }
@@ -335,8 +565,10 @@ private fun HomeScreenBasePreview() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
                 repeat(3) {
                     val state = when (it) {

@@ -32,10 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -54,9 +54,8 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isExpanded
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -71,13 +70,11 @@ fun ProviderCrashBottomSheet(
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
 
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val screenWidth = LocalWindowInfo.current.containerSize.width.dp
     val maxWidth = when {
-        windowWidthSizeClass.isMedium -> screenWidth / 2.5f
-        windowWidthSizeClass.isExpanded -> screenWidth / 3
+        windowSizeClass.isWidthMedium -> screenWidth / 2.5f
+        !windowSizeClass.isWidthCompact -> screenWidth / 3
         else -> screenWidth
     }
 
@@ -120,7 +117,7 @@ fun ProviderCrashBottomSheet(
                         onClick = { detailedCrashLog = error },
                     )
 
-                    if (i < errors.lastIndex && windowWidthSizeClass.isCompact) {
+                    if (i < errors.lastIndex && windowSizeClass.isWidthCompact) {
                         HorizontalDivider(
                             thickness = 0.5.dp,
                             color = LocalContentColor.current.copy(0.4f),
@@ -128,7 +125,7 @@ fun ProviderCrashBottomSheet(
                                 .fillMaxWidth()
                                 .padding(vertical = 15.dp),
                         )
-                    } else if (!windowWidthSizeClass.isCompact) {
+                    } else if (!windowSizeClass.isWidthCompact) {
                         Spacer(modifier = Modifier.padding(vertical = 15.dp))
                     }
                 }

@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +51,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.imageLoader
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.navigation.navigator.PinAction
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
@@ -83,29 +85,36 @@ fun AddUserScreen(
     navigator: AddUserScreenNavigator,
     avatarResultRecipient: OpenResultRecipient<Int>,
     pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
+    viewModel: AddUserViewModel = hiltViewModel(),
 ) {
-    AddUserScreen(
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    AddUserScreenContent(
         isInitializing = isInitializing,
         navigator = navigator,
         avatarResultRecipient = avatarResultRecipient,
         pinResultRecipient = pinResultRecipient,
-        viewModel = hiltViewModel()
+        state = state,
+        onAddUser = viewModel::addUser,
+        images = viewModel.images,
+        user = viewModel.user,
     )
 }
 
 @Composable
-internal fun AddUserScreen(
+internal fun AddUserScreenContent(
     isInitializing: Boolean,
     navigator: AddUserScreenNavigator,
     avatarResultRecipient: OpenResultRecipient<Int>,
     pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
-    viewModel: AddUserViewModel,
+    images: List<String>,
+    state: AddUserState,
+    user: MutableState<User>,
+    onAddUser: (User, Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation
     val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
-    val images by viewModel.images.collectAsStateWithLifecycle()
-    val state by viewModel.state.collectAsStateWithLifecycle()
 
     var currentScreen by rememberSaveable { mutableIntStateOf(0) }
     var canSkip by rememberSaveable { mutableStateOf(false) }
@@ -126,7 +135,7 @@ internal fun AddUserScreen(
         }
     }
 
-    ProvideUserToAdd(user = viewModel.user) {
+    ProvideUserToAdd(user = user) {
         val user = LocalUserToAdd.current
 
         pinResultRecipient.onNavResult {
@@ -195,7 +204,6 @@ internal fun AddUserScreen(
                 LaunchedEffect(true) {
                     val request = context.buildImageRequest(
                         imagePath = images.getOrNull(currentScreen + 1),
-                        imageSize = "original",
                     )
 
                     if (request != null) {
@@ -297,10 +305,7 @@ internal fun AddUserScreen(
                     isFinalStep = currentScreen == screens.lastIndex,
                     onNext = {
                         if (currentScreen == screens.lastIndex) {
-                            viewModel.addUser(
-                                user = user.value,
-                                isSigningIn = isInitializing,
-                            )
+                            onAddUser(user.value, isInitializing)
                         } else {
                             currentScreen++
                         }
@@ -430,10 +435,7 @@ private fun OnBoardingBackground(
     ) {
         ProvideAsyncImagePreviewHandler {
             AsyncImage(
-                model = LocalContext.current.buildImageRequest(
-                    imagePath = backgroundUrl,
-                    imageSize = "original",
-                ),
+                model = LocalContext.current.buildImageRequest(imagePath = backgroundUrl),
                 contentDescription = stringResource(LocaleR.string.on_boarding_background_content_desc),
                 contentScale = ContentScale.Crop,
                 modifier =
@@ -450,7 +452,7 @@ private fun OnBoardingBackground(
 private fun AddUserScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
-            AddUserScreen(
+            AddUserScreenContent(
                 isInitializing = false,
                 navigator =
                     object : AddUserScreenNavigator {
@@ -484,6 +486,10 @@ private fun AddUserScreenBasePreview() {
                             listener: @DisallowComposableCalls ((NavResult<PinWithHintResult>) -> Unit)
                         ) = Unit
                     },
+                state = AddUserState.NotAdded,
+                onAddUser = { _, _ -> },
+                images = listOf(),
+                user = remember { mutableStateOf(User.Empty) },
             )
         }
     }

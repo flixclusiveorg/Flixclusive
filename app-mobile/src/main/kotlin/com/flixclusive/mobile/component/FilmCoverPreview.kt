@@ -18,7 +18,6 @@ internal fun FilmCoverPreview(
     ) {
         FilmCover.Poster(
             imagePath = imagePath,
-            imageSize = "original",
             title = "",
             modifier = Modifier.fillMaxWidth()
         )

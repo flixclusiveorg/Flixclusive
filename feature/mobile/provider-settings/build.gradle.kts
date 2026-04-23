@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.coreDatastore)
     implementation(projects.coreNavigation)
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)

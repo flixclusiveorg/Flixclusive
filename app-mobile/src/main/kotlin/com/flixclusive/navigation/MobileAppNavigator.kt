@@ -14,7 +14,6 @@ import com.flixclusive.core.navigation.navigator.OpenPinScreenAction
 import com.flixclusive.core.navigation.navigator.PinAction
 import com.flixclusive.core.navigation.navigator.SelectAvatarAction
 import com.flixclusive.core.navigation.navigator.StartPlayerAction
-import com.flixclusive.core.navigation.navigator.TestProvidersAction
 import com.flixclusive.core.navigation.navigator.ViewAllFilmsAction
 import com.flixclusive.core.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.navigation.navigator.ViewFilmPreviewAction
@@ -33,7 +32,6 @@ import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
 import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
-import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenNavigator
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
@@ -50,13 +48,10 @@ import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeApp
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelSeeAllScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelFilmScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelSeeAllScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchAppLevelFilmScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchAppLevelSeeAllScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.HomeGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.LibraryGraph
-import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SearchGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
@@ -66,9 +61,8 @@ import com.ramcosta.composedestinations.generated.provideradd.destinations.AddPr
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
 import com.ramcosta.composedestinations.generated.providermanage.destinations.ProviderManagerScreenDestination
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
-import com.ramcosta.composedestinations.generated.providertest.destinations.ProviderTestScreenDestination
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
-import com.ramcosta.composedestinations.generated.searchexpanded.destinations.SearchExpandedScreenDestination
+import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
@@ -101,13 +95,11 @@ internal class MobileAppNavigator(
     OpenPinScreenAction,
     ProviderDetailsNavigator,
     ProviderManagerScreenNavigator,
-    SearchExpandedScreenNavigator,
     SearchScreenNavigator,
     SeeAllScreenNavigator,
     SelectAvatarAction,
     SettingsScreenNavigator,
     SplashScreenNavigator,
-    TestProvidersAction,
     UserEditScreenNavigator,
     UserProfilesScreenNavigator,
     ViewAllFilmsAction,
@@ -130,17 +122,10 @@ internal class MobileAppNavigator(
         navigator.navigateUp()
     }
 
-    override fun openSearchExpandedScreen() {
-        runOnResumed {
-            navigator.navigate(SearchExpandedScreenDestination)
-        }
-    }
-
     override fun openSeeAllScreen(item: Catalog) {
         runOnResumed {
             when (currentNavGraph) {
                 is HomeGraph -> navigator.navigate(HomeAppLevelSeeAllScreenDestination(catalog = item))
-                is SearchGraph -> navigator.navigate(SearchAppLevelSeeAllScreenDestination(catalog = item))
                 is LibraryGraph -> navigator.navigate(LibraryAppLevelSeeAllScreenDestination(catalog = item))
             }
         }
@@ -150,7 +135,6 @@ internal class MobileAppNavigator(
         runOnResumed {
             when (currentNavGraph) {
                 is HomeGraph -> navigator.navigate(HomeAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
-                is SearchGraph -> navigator.navigate(SearchAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
                 is LibraryGraph -> navigator.navigate(LibraryAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
             }
         }
@@ -271,14 +255,6 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun testProviders(providers: ArrayList<ProviderMetadata>) {
-        runOnResumed {
-            navigator.navigate(
-                ProviderTestScreenDestination(providers = providers),
-            )
-        }
-    }
-
     override fun openProviderDetails(providerMetadata: ProviderMetadata) {
         runOnResumed {
             navigator.navigate(
@@ -331,6 +307,12 @@ internal class MobileAppNavigator(
             navigator.navigate(
                 AddProviderScreenDestination(initialSelectedRepositoryFilter = initialSelectedRepositoryFilter),
             )
+        }
+    }
+
+    override fun openSearchScreen() {
+        runOnResumed {
+            navigator.navigate(SearchScreenDestination)
         }
     }
 }

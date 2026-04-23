@@ -44,7 +44,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.PlainToolti
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.UnsafeInstallAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.extensions.showMessage
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
@@ -80,13 +80,6 @@ internal fun ProviderDetailsScreen(
         onDisableInstallationWarning = viewModel::disableWarnOnInstall,
         onViewMarkdown = navigator::openMarkdownScreen,
         onConsumeInstallationError = viewModel::onConsumeInstallationError,
-        onTestProviders = {
-            if (uiState.installationStatus.isOutdated) {
-                navigator.testProviders(arrayListOf(args.metadata))
-            } else if (uiState.installationStatus.isInstalled) {
-                navigator.testProviders(arrayListOf(uiState.metadata))
-            }
-        },
         onGoToProviderSettings = {
             if (uiState.installationStatus.isOutdated) {
                 navigator.openProviderSettings(args.metadata)
@@ -113,7 +106,6 @@ private fun ProviderDetailsScreenContent(
     onGoBack: () -> Unit,
     onGoToProviderSettings: () -> Unit,
     onGoToRepository: () -> Unit,
-    onTestProviders: () -> Unit,
     onToggleInstallation: () -> Unit,
     onConsumeInstallationError: () -> Unit,
     onDisableInstallationWarning: (Boolean) -> Unit,
@@ -122,7 +114,7 @@ private fun ProviderDetailsScreenContent(
     val uriHandler = LocalUriHandler.current
     val resources = LocalResources.current
 
-    val windowWidthSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -210,7 +202,7 @@ private fun ProviderDetailsScreenContent(
                     }
 
                     // Only show the big install/update button in portrait or compact mode
-                    if (windowWidthSizeClass.isCompact) {
+                    if (windowSizeClass.isWidthCompact) {
                         item {
                             MainButtons(
                                 modifier = Modifier
@@ -225,15 +217,6 @@ private fun ProviderDetailsScreenContent(
 
                                     onToggleInstallation()
                                 },
-                            )
-                        }
-                    }
-
-                    if (!uiState.installationStatus.isNotInstalled) {
-                        item {
-                            NavigationItem(
-                                label = stringResource(id = LocaleR.string.run_tests),
-                                onClick = onTestProviders,
                             )
                         }
                     }
@@ -332,7 +315,6 @@ private fun ProviderDetailsScreenBasePreview() {
                 onGoBack = {},
                 onGoToProviderSettings = {},
                 onGoToRepository = {},
-                onTestProviders = {},
                 onToggleInstallation = {},
                 onConsumeInstallationError = {},
                 onDisableInstallationWarning = {},

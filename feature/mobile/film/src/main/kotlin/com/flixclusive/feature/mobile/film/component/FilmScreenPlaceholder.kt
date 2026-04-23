@@ -24,8 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.Placeholder
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.feature.mobile.film.getBackdropAspectRatio
@@ -33,8 +33,7 @@ import com.flixclusive.feature.mobile.film.getBackdropAspectRatio
 @Composable
 internal fun FilmScreenPlaceholder() {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact ||
-        windowSizeClass.windowWidthSizeClass.isMedium
+    val usePortraitView = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
     val surface = MaterialTheme.colorScheme.surface
     val backdropAspectRatio = remember(usePortraitView) {

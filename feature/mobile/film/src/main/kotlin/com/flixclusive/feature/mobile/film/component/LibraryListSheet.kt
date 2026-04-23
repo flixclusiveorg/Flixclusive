@@ -248,10 +248,7 @@ private fun ItemContent(
             ?.metadata
             ?.posterImage
 
-        context.buildImageRequest(
-            imagePath = image,
-            imageSize = "w45", // Small size for list icon
-        )
+        context.buildImageRequest(imagePath = image)
     }
 
     TextButton(

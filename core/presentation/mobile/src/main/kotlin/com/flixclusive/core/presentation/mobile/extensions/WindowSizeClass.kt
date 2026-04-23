@@ -1,7 +1,6 @@
 package com.flixclusive.core.presentation.mobile.extensions
 
-import androidx.window.core.layout.WindowHeightSizeClass
-import androidx.window.core.layout.WindowWidthSizeClass
+import androidx.window.core.layout.WindowSizeClass
 
 /*
 * Helpers to check the current Window Size Class
@@ -12,10 +11,13 @@ import androidx.window.core.layout.WindowWidthSizeClass
 * Expanded = 840dp+ (larger tablets, desktops)
 * */
 
-val WindowWidthSizeClass.isCompact get() = this == WindowWidthSizeClass.COMPACT
-val WindowWidthSizeClass.isMedium get() = this == WindowWidthSizeClass.MEDIUM
-val WindowWidthSizeClass.isExpanded get() = this == WindowWidthSizeClass.EXPANDED
+private const val WIDTH_COMPACT_BREAKPOINT = 600
+private const val WIDTH_MEDIUM_BREAKPOINT = 840
 
-val WindowHeightSizeClass.isCompact get() = this == WindowHeightSizeClass.COMPACT
-val WindowHeightSizeClass.isMedium get() = this == WindowHeightSizeClass.MEDIUM
-val WindowHeightSizeClass.isExpanded get() = this == WindowHeightSizeClass.EXPANDED
+private const val HEIGHT_COMPACT_BREAKPOINT = 480
+private const val HEIGHT_MEDIUM_BREAKPOINT = 900
+
+val WindowSizeClass.isWidthCompact get() = minWidthDp < WIDTH_COMPACT_BREAKPOINT
+val WindowSizeClass.isWidthMedium get() = minWidthDp < WIDTH_MEDIUM_BREAKPOINT
+val WindowSizeClass.isHeightCompact get() = minHeightDp < HEIGHT_COMPACT_BREAKPOINT
+val WindowSizeClass.isHeightMedium get() = minHeightDp < HEIGHT_MEDIUM_BREAKPOINT

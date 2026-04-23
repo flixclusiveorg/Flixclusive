@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.home.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
@@ -40,12 +41,10 @@ import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
-import com.flixclusive.feature.mobile.home.CatalogPagingState
+import com.flixclusive.feature.mobile.home.CatalogWithPagingState
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Catalog
-import kotlinx.collections.immutable.PersistentSet
-import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -55,9 +54,9 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun CatalogRow(
     catalog: Catalog,
-    pagingState: CatalogPagingState,
+    pagingState: PagingState,
     showTitles: Boolean,
-    items: PersistentSet<Film>,
+    items: List<Film>,
     onFilmClick: (Film) -> Unit,
     onFilmLongClick: (Film) -> Unit,
     paginate: () -> Unit,
@@ -68,7 +67,7 @@ internal fun CatalogRow(
 
     LaunchedEffect(listState, paginate, pagingState) {
         snapshotFlow {
-            pagingState.hasNext && (listState.shouldPaginate() || items.isEmpty() && pagingState.page == 1)
+            pagingState.isIdle && (listState.shouldPaginate() || items.isEmpty())
         }.distinctUntilChanged()
             .filter { it }
             .collect {
@@ -126,7 +125,7 @@ internal fun CatalogRow(
         LazyRow(state = listState) {
             items(
                 count = items.size,
-                key = { items.elementAt(it).identifier },
+                key = { items.elementAt(it).id },
             ) {
                 FilmCard(
                     modifier = Modifier.width(getAdaptiveFilmCardWidth()),
@@ -138,8 +137,8 @@ internal fun CatalogRow(
             }
 
             if (
-                pagingState.state.isLoading ||
-                pagingState.state.isError ||
+                pagingState.isLoading ||
+                pagingState.isError ||
                 items.isEmpty()
             ) {
                 items(20) {
@@ -155,6 +154,7 @@ internal fun CatalogRow(
     }
 }
 
+@SuppressLint("MutableCollectionMutableState")
 @Preview
 @Composable
 private fun CatalogRowBasePreview() {
@@ -164,13 +164,13 @@ private fun CatalogRowBasePreview() {
         ) {
             var items by remember {
                 mutableStateOf(
-                    List(6) { index ->
+                    MutableList(6) { index ->
                         DummyDataForPreview.getFilm(
                             id = "film_$index",
                             title = "Sample Film ${index + 1}",
                             filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
                         )
-                    }.toPersistentSet(),
+                    }
                 )
             }
             var currentPage by remember { mutableIntStateOf(1) }
@@ -178,29 +178,31 @@ private fun CatalogRowBasePreview() {
             var requestedPage by remember { mutableIntStateOf(-1) }
 
             val dummyCatalog = remember {
-                object : Catalog() {
-                    override val name: String = "Popular Movies"
-                    override val url: String = "https://example.com/popular"
-                    override val image: String? = null
-                    override val canPaginate: Boolean = true
-                }
+                Catalog(
+                    name = "Dummy Catalog",
+                    url = "https://example.com/catalog",
+                    image = null,
+                    canPaginate = true,
+                    providerId = "dummy_provider",
+                )
             }
 
             val pagingState = remember(currentPage, isLoading) {
-                CatalogPagingState(
-                    hasNext = currentPage < 3, // Simulate max 3 pages
+                CatalogWithPagingState(
                     page = currentPage,
+                    catalog = dummyCatalog,
+                    films = items,
                     state = when {
-                        isLoading -> PagingDataState.Loading
-                        currentPage >= 3 -> PagingDataState.Error("End of list")
-                        else -> PagingDataState.Success(isExhausted = false)
+                        isLoading -> PagingState.Loading
+                        currentPage >= 3 -> PagingState.Error("End of list")
+                        else -> PagingState.Exhausted
                     },
                 )
             }
 
             // Handle pagination simulation with LaunchedEffect
             LaunchedEffect(requestedPage) {
-                if (requestedPage > 0 && requestedPage <= 3 && !isLoading) {
+                if (requestedPage in 1..3 && !isLoading) {
                     isLoading = true
                     delay(1000) // Simulate loading
 
@@ -212,7 +214,7 @@ private fun CatalogRowBasePreview() {
                             filmType = if (itemIndex % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
                         )
                     }
-                    items = items.addAll(newItems)
+                    items += newItems
                     currentPage = requestedPage
                     isLoading = false
                     requestedPage = -1 // Reset
@@ -221,7 +223,7 @@ private fun CatalogRowBasePreview() {
 
             CatalogRow(
                 catalog = dummyCatalog,
-                pagingState = pagingState,
+                pagingState = pagingState.state,
                 showTitles = true,
                 items = items,
                 onFilmClick = { },

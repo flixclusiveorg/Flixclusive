@@ -1,14 +1,11 @@
 package com.flixclusive.domain.provider.usecase.get.impl
 
-import com.flixclusive.data.tmdb.repository.TMDBMetadataRepository
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import javax.inject.Inject
 
-internal class GetNextEpisodeUseCaseImpl @Inject constructor(
-    private val tmdbMetadataRepository: TMDBMetadataRepository,
-) : GetNextEpisodeUseCase {
+internal class GetNextEpisodeUseCaseImpl @Inject constructor() : GetNextEpisodeUseCase {
     override suspend operator fun invoke(
         tvShow: TvShow,
         season: Int,
@@ -19,13 +16,7 @@ internal class GetNextEpisodeUseCaseImpl @Inject constructor(
             it.number.compareTo(season)
         }
 
-        var seasonData = tvShow.seasons.getOrNull(seasonIndex)
-        if ((seasonData == null || seasonData.episodes.isEmpty()) && tvShow.isFromTmdb && tvShow.tmdbId != null) {
-            seasonData = tmdbMetadataRepository.getSeason(
-                id = tvShow.tmdbId!!,
-                seasonNumber = season,
-            ).data
-        }
+        val seasonData = tvShow.seasons.getOrNull(seasonIndex)
 
         if (seasonData == null || seasonData.episodes.isEmpty()) return null
 

@@ -42,9 +42,7 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 userId = userId,
             )
 
-            val alreadyInstalled = providerRepository.getInstalledProvider(
-                id = metadata.id, ownerId = userId
-            ) != null
+            val alreadyInstalled = providerRepository.getProvider(id = metadata.id, ownerId = userId) != null
             if (alreadyInstalled) {
                 emit(
                     ProviderResult.Failure(
@@ -94,7 +92,7 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 id = metadata.id,
                 filePath = file.absolutePath,
                 repositoryUrl = metadata.repositoryUrl,
-                sortOrder = providerRepository.getInstalledProviders(userId).size.toDouble()
+                sortOrder = providerRepository.getProviders(userId).size.toDouble()
             )
 
             providerRepository.install(installedProvider, metadata)

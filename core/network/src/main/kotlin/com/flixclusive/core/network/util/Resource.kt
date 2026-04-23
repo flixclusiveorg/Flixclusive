@@ -20,6 +20,10 @@ import com.flixclusive.core.strings.R as LocaleR
  * @property error The error associated with the resource. It's nullable and defaults to null.
  * @property isLoading Indicates whether the resource is in a loading state. It defaults to false.
  */
+@Deprecated(
+    message = "Resource is deprecated in favor of Result and custom error handling and Async<T> for loading state. ",
+    replaceWith = ReplaceWith("com.flixclusive.core.common.domain.Async<T>")
+)
 sealed class Resource<out T>(
     val data: T? = null,
     val error: UiText? = null,
@@ -44,10 +48,10 @@ sealed class Resource<out T>(
                 else -> UiText.StringValue(error.stackTraceToString())
             }
         )
-        constructor(error: String?) : this(
+        constructor(errorMsg: String?) : this(
             when {
-                error.isNullOrEmpty() -> null
-                else -> UiText.StringValue(error)
+                errorMsg.isNullOrEmpty() -> null
+                else -> UiText.StringValue(errorMsg)
             }
         )
 

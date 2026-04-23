@@ -82,7 +82,6 @@ import com.ramcosta.composedestinations.generated.appmobile.AppmobileNavGraphs
 import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelFilmScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelFilmScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchAppLevelFilmScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
@@ -90,7 +89,7 @@ import com.ramcosta.composedestinations.generated.onboarding.destinations.Onboar
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
-import com.ramcosta.composedestinations.generated.searchexpanded.destinations.SearchExpandedScreenDestination
+import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
 import com.ramcosta.composedestinations.generated.splashscreen.destinations.SplashScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
@@ -317,14 +316,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                             )
                         )
                     }
-                    AppmobileNavGraphs.search -> {
-                        destinationsNavigator.navigate(
-                            direction = SearchAppLevelFilmScreenDestination(
-                                film = film,
-                                isTogglingLibrary = true,
-                            )
-                        )
-                    }
+
                     AppmobileNavGraphs.library -> {
                         destinationsNavigator.navigate(
                             direction = LibraryAppLevelFilmScreenDestination(
@@ -463,7 +455,7 @@ private fun shouldHideBottomBar(route: Route): Boolean {
         )
 
     val noBottomBarNestedScreens =
-        listOf(SearchExpandedScreenDestination.route)
+        listOf(SearchScreenDestination.route)
 
     return noBottomBarNestedScreens.none { it == route.route } &&
         noBottomBarScreens.none { it == route }
@@ -476,27 +468,24 @@ private fun WebViewDriverDialog(
     onDismiss: () -> Unit,
 ) {
     BasicAlertDialog(
-        properties =
-            DialogProperties(
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false,
-            ),
         onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false,
+        ),
     ) {
         Column(
-            modifier =
-                Modifier
-                    .fillMaxHeight(0.9F)
-                    .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxHeight(0.9F)
+                .fillMaxWidth(),
         ) {
             Surface(tonalElevation = 3.dp) {
                 Box(
-                    modifier =
-                        Modifier
-                            .background(MaterialTheme.colorScheme.surface)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .padding(bottom = 6.dp),
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clip(MaterialTheme.shapes.extraSmall)
+                        .padding(bottom = 6.dp),
                 ) {
                     Text(
                         text = webView.name,
@@ -505,20 +494,18 @@ private fun WebViewDriverDialog(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                             ),
-                        modifier =
-                            Modifier
-                                .padding(10.dp),
+                        modifier = Modifier
+                            .padding(10.dp),
                     )
                 }
             }
 
             AndroidView(
-                modifier =
-                    Modifier
-                        .weight(0.7F)
-                        .alpha(0.99F)
-                        .fillMaxWidth()
-                        .padding(26.dp),
+                modifier = Modifier
+                    .weight(0.7F)
+                    .alpha(0.99F)
+                    .fillMaxWidth()
+                    .padding(26.dp),
                 factory = {
                     webView.apply {
                         layoutParams =

@@ -4,12 +4,10 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.tmdb.repository.TMDBMetadataRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.domain.provider.util.extensions.isFromTmdbSource
 import com.flixclusive.model.film.TvShow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -18,7 +16,6 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 internal class GetSeasonWithWatchProgressUseCaseImpl @Inject constructor(
-    private val tmdbMetadataRepository: TMDBMetadataRepository,
     private val watchProgressRepository: WatchProgressRepository,
     private val userSessionDataStore: UserSessionDataStore
 ) : GetSeasonWithWatchProgressUseCase {
@@ -30,21 +27,11 @@ internal class GetSeasonWithWatchProgressUseCaseImpl @Inject constructor(
             trySend(Resource.Loading)
 
             // Try to get the season from the TvShow.seasons property first
-            var season = tvShow.seasons.find { it.number == number }
-
-            if ((season == null || season.episodes.isEmpty()) && tvShow.isFromTmdbSource) {
-                val tmdbSeason = tmdbMetadataRepository.getSeason(
-                    id = tvShow.tmdbId!!,
-                    seasonNumber = number,
-                )
-
-                if (tmdbSeason is Resource.Success) {
-                    season = tmdbSeason.data
-                } else if (tmdbSeason is Resource.Failure) {
-                    trySend(Resource.Failure(tmdbSeason.error))
-                    return@channelFlow
-                }
+            val seasonIndex = tvShow.seasons.binarySearch {
+                it.number.compareTo(number)
             }
+
+            val season = tvShow.seasons.getOrNull(seasonIndex)
 
             if (season == null) {
                 trySend(Resource.Failure(UiText.from(R.string.failed_to_fetch_season_message, number)))
@@ -53,7 +40,7 @@ internal class GetSeasonWithWatchProgressUseCaseImpl @Inject constructor(
 
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             watchProgressRepository.getSeasonProgressAsFlow(
-                tvShowId = tvShow.identifier,
+                tvShowId = tvShow.id,
                 seasonNumber = number,
                 ownerId = userId,
             ).collect { list ->

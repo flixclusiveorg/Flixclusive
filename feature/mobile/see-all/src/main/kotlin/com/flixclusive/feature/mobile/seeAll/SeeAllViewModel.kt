@@ -1,26 +1,22 @@
 package com.flixclusive.feature.mobile.seeAll
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.pagination.PagingDataState
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.domain.catalog.usecase.PaginateItemsUseCase
+import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.model.provider.Catalog
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,7 +30,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel(assistedFactory = SeeAllViewModel.Factory::class)
 internal class SeeAllViewModel @AssistedInject constructor(
-    private val paginateItems: PaginateItemsUseCase,
+    private val getCatalogItems: GetCatalogItemsUseCase,
     dataStoreManager: DataStoreManager,
     @Assisted private val navArgs: Catalog,
 ) : ViewModel() {
@@ -45,8 +41,7 @@ internal class SeeAllViewModel @AssistedInject constructor(
 
     private var paginatingJob: Job? = null
 
-    var items by mutableStateOf(persistentSetOf<Film>())
-        private set
+    val items = mutableStateSetOf<Film>()
 
     private val _uiState = MutableStateFlow(SeeAllUiState())
     val uiState = _uiState.asStateFlow()
@@ -82,51 +77,42 @@ internal class SeeAllViewModel @AssistedInject constructor(
         paginatingJob = viewModelScope.launch {
             if (isDonePaginating()) return@launch
 
-            _uiState.update {
-                it.copy(pagingState = PagingDataState.Loading)
-            }
-
-            when (
-                val result = paginateItems(
-                    catalog = navArgs,
-                    page = _uiState.value.page,
-                )
-            ) {
-                Resource.Loading -> Unit
-                is Resource.Success -> {
-                    val data = result.data ?: SearchResponseData(
-                        page = 1,
-                        totalPages = 1,
-                        hasNextPage = false,
-                        results = emptyList(),
-                    )
-                    val canPaginate = data.results.size == 20 || data.page < data.totalPages
-
-                    if (data.page == 1) {
-                        items = items.clear()
-                    }
-
-                    items = items.addAll(data.results)
-
-                    _uiState.update {
+            val page = _uiState.value.page
+            getCatalogItems(catalog = navArgs, page = page).collect { response ->
+                when (response) {
+                    Async.Loading -> _uiState.update { it.copy(pagingState = PagingState.Loading) }
+                    is Async.Failure -> _uiState.update {
                         it.copy(
-                            page = it.page + 1,
-                            maxPage = data.totalPages,
-                            canPaginate = canPaginate,
-                            pagingState = PagingDataState.Success(isExhausted = !canPaginate),
-                        )
-                    }
-                }
-
-                is Resource.Failure -> {
-                    val errorMessage = result.error ?: UiText.from(LocaleR.string.failed_to_paginate_items)
-                    _uiState.update {
-                        it.copy(
-                            pagingState = when (it.page) {
-                                1 -> PagingDataState.Error(errorMessage)
-                                else -> PagingDataState.Success(isExhausted = true)
+                            pagingState = when (page) {
+                                1 -> PagingState.Error(UiText.from(LocaleR.string.failed_to_paginate_items))
+                                else -> PagingState.Exhausted
                             },
                         )
+                    }
+
+                    is Async.Success -> {
+                        val data = response.data
+                        val canPaginate = data.results.size == 20 || data.page < data.totalPages
+
+                        if (data.page == 1) {
+                            items.clear()
+                        }
+
+                        items.addAll(data.results)
+
+                        val pagingState = when {
+                            canPaginate -> PagingState.Idle
+                            else -> PagingState.Exhausted
+                        }
+
+                        _uiState.update {
+                            it.copy(
+                                page = it.page + 1,
+                                maxPage = data.totalPages,
+                                canPaginate = canPaginate,
+                                pagingState = pagingState,
+                            )
+                        }
                     }
                 }
             }
@@ -144,13 +130,13 @@ internal class SeeAllViewModel @AssistedInject constructor(
      * */
     private fun isDonePaginating(): Boolean =
         _uiState.value.let {
-            (it.page != 1 && (!it.canPaginate || it.pagingState.isDone))
+            (it.page != 1 && (!it.canPaginate || it.pagingState.isExhausted))
         }
 }
 
 @Immutable
 internal data class SeeAllUiState(
-    val pagingState: PagingDataState = PagingDataState.Loading,
+    val pagingState: PagingState = PagingState.Loading,
     val page: Int = 1,
     val maxPage: Int = 1,
     val canPaginate: Boolean = false,

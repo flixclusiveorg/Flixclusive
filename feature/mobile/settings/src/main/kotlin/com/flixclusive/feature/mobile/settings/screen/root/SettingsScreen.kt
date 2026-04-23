@@ -61,7 +61,6 @@ import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakSc
 import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
-import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentMapOf
@@ -265,8 +264,6 @@ private fun TabletPreview() {
         Surface {
             SettingsScreen(
                 navigator = object : SettingsScreenNavigator {
-                    override fun testProviders(providers: ArrayList<ProviderMetadata>) = Unit
-
                     override fun openProviderManagerScreen() = Unit
 
                     override fun openRepositoryManagerScreen() = Unit
@@ -291,8 +288,6 @@ private fun PhonePreview() {
         Surface {
             SettingsScreen(
                 navigator = object : SettingsScreenNavigator {
-                    override fun testProviders(providers: ArrayList<ProviderMetadata>) = Unit
-
                     override fun openProviderManagerScreen() = Unit
 
                     override fun openRepositoryManagerScreen() = Unit

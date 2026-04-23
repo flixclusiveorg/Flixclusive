@@ -31,9 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,8 +58,8 @@ import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
@@ -77,7 +77,6 @@ import com.flixclusive.feature.mobile.film.component.HeaderButtons
 import com.flixclusive.feature.mobile.film.component.LibraryListSheet
 import com.flixclusive.feature.mobile.film.component.seriesContent
 import com.flixclusive.feature.mobile.film.util.FilmScreenUtils
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmSearchItem
@@ -165,10 +164,10 @@ private fun FilmScreenContent(
     val context = LocalContext.current
     val resources = LocalResources.current
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact ||
-        windowSizeClass.windowWidthSizeClass.isMedium
+    val usePortraitView = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
-    val configuration = LocalConfiguration.current
+    val windowInfo = LocalWindowInfo.current
+    val screenWidth = windowInfo.containerSize.width
 
     val backdropAspectRatio = remember(usePortraitView) { getBackdropAspectRatio(usePortraitView) }
 
@@ -209,11 +208,11 @@ private fun FilmScreenContent(
     }
 
     // Get the scroll offset of the first item to change the TopAppBar's background alpha
-    LaunchedEffect(listState, configuration, uiState.screenState) {
+    LaunchedEffect(listState, windowInfo, uiState.screenState) {
         snapshotFlow {
             Pair(
                 listState.firstVisibleItemScrollOffset.toFloat() to listState.firstVisibleItemIndex,
-                configuration.screenWidthDp.toFloat() to uiState.screenState,
+                screenWidth.toFloat() to uiState.screenState,
             )
         }.collect {
             val (offset, index) = it.first
@@ -280,13 +279,9 @@ private fun FilmScreenContent(
                                 BriefDetails(
                                     metadata = metadata,
                                     onProviderClick = {
-                                        if (uiState.provider != null
-                                            && uiState.provider.id != DEFAULT_FILM_SOURCE_NAME) {
-                                            navigator.openProviderDetails(uiState.provider)
-                                            return@BriefDetails
-                                        }
+                                        if (uiState.provider == null) return@BriefDetails
 
-                                        showDefaultProviderDialog = true
+                                        navigator.openProviderDetails(uiState.provider)
                                     },
                                     onGenreClick = { /*TODO: Implement GenreCatalogs*/ },
                                     provider = uiState.provider,
@@ -362,7 +357,7 @@ private fun FilmScreenContent(
                         if (currentTabSelected?.isOnFilmsSection == true && extraFilmCards != null) {
                             items(
                                 items = extraFilmCards,
-                                key = { film -> film.identifier },
+                                key = { film -> film.id },
                             ) { film ->
                                 FilmCard(
                                     isShowingTitle = showFilmTitles,
@@ -513,7 +508,7 @@ private fun FilmScreenBasePreview() {
 
             EpisodeProgress(
                 ownerId = "preview-user",
-                filmId = metadata.identifier,
+                filmId = metadata.id,
                 progress = Random.nextLong(900, duration),
                 duration = duration,
                 seasonNumber = 2,
@@ -523,7 +518,7 @@ private fun FilmScreenBasePreview() {
         } else {
             MovieProgress(
                 ownerId = "preview-user",
-                filmId = metadata.identifier,
+                filmId = metadata.id,
                 progress = 5400L,
                 duration = 7200L,
                 status = WatchStatus.WATCHING,
@@ -577,7 +572,7 @@ private fun FilmScreenBasePreview() {
                                         watchProgress = EpisodeProgress(
                                             id = episode.number.toLong(),
                                             ownerId = "preview-user",
-                                            filmId = metadata.identifier,
+                                            filmId = metadata.id,
                                             progress = Random.nextLong(900, duration),
                                             duration = duration,
                                             seasonNumber = season.number,

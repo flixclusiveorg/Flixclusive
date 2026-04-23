@@ -39,6 +39,18 @@ interface LibraryListDao {
     """)
     fun getListsContainingFilmAsFlow(filmId: String, ownerId: String): Flow<List<LibraryList>>
 
+
+    @Transaction
+    @Query("""
+        SELECT EXISTS(
+            SELECT 1
+            FROM library_lists list
+            INNER JOIN library_list_items listItem ON list.id = listItem.listId
+            WHERE listItem.filmId = :filmId AND list.ownerId = :ownerId
+        )
+    """)
+    suspend fun isInLibrary(filmId: String, ownerId: String): Boolean
+
     @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")
     suspend fun getWatchedList(ownerId: String): LibraryList
 

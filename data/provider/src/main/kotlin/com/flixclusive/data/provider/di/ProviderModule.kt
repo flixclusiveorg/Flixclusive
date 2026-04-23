@@ -1,10 +1,10 @@
 package com.flixclusive.data.provider.di
 
-import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
+import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.data.provider.repository.impl.CachedLinksRepositoryImpl
 import com.flixclusive.data.provider.repository.impl.InstalledRepoRepositoryImpl
+import com.flixclusive.data.provider.repository.impl.MediaLinksRepositoryImpl
 import com.flixclusive.data.provider.repository.impl.ProviderRepositoryImpl
 import dagger.Binds
 import dagger.Module
@@ -18,8 +18,8 @@ internal abstract class ProviderModule {
     @Singleton
     @Binds
     abstract fun provideCachedLinksRepository(
-        cachedLinksRepository: CachedLinksRepositoryImpl
-    ): CachedLinksRepository
+        cachedLinksRepository: MediaLinksRepositoryImpl
+    ): MediaLinksRepository
 
     @Singleton
     @Binds

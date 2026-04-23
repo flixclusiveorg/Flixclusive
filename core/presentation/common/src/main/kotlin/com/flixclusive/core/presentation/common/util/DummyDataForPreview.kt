@@ -1,6 +1,6 @@
 package com.flixclusive.core.presentation.common.util
 
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.film.FilmIdSource
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.Movie
@@ -9,12 +9,12 @@ import com.flixclusive.model.film.common.details.Company
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.model.film.util.extractYear
 import com.flixclusive.model.provider.Author
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
-import com.flixclusive.model.provider.Status
+import java.util.Date
 
 /**
  * Dummy data for compose previews
@@ -22,7 +22,7 @@ import com.flixclusive.model.provider.Status
 object DummyDataForPreview {
     fun getProviderMetadata(
         id: String = "TEST-FLX-PROVIDER",
-        name: String = DEFAULT_FILM_SOURCE_NAME,
+        name: String = "id-tmdb-123",
         description: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         repositoryUrl: String = "https://github.com/flixclusiveorg/123Movies",
         buildUrl: String = "https://raw.githubusercontent.com/flixclusiveorg/plugins-template/builds/updater.json",
@@ -37,7 +37,7 @@ object DummyDataForPreview {
         versionCode: Long = 10000,
         iconUrl: String? = "https://i.imgur.com/qd6zqII.png", // TMDB Icon
         providerType: ProviderType = ProviderType.All,
-        status: Status = Status.Working,
+        status: ProviderStatus = ProviderStatus.Working,
         language: Language = Language.Multiple,
         authors: List<Author> = List(5) { Author("FLX $it") },
     ) =
@@ -58,24 +58,25 @@ object DummyDataForPreview {
         )
 
     fun getFilm(
-        id: String? = null,
-        tmdbId: Int = 123,
-        imdbId: String = "tt1234567",
+        id: String = "123",
         title: String = "Sample item",
-        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        providerId: String = "id-tmdb-123",
         filmType: FilmType = FilmType.MOVIE,
         genres: List<String> = listOf("Action", "Adventure"),
         posterImage: String? = "/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
         backdropImage: String? = "/4kTINu9mv2YV1PqFqPGG1FZMnhi.jpg",
         logoImage: String? = "/6pObznbCoxVpY1lPQwJxETd7Phe.png",
         rating: Double? = 7.5,
-        releaseDate: String? = "2023-10-10",
+        releaseDate: Date? = Date(),
         overview: String? = "This is a sample overview for the film.",
         homePage: String? = null,
+        externalIds: Map<FilmIdSource, String> = mapOf(
+            FilmIdSource.IMDB to "tt1234567",
+            FilmIdSource.TMDB to "123",
+        ),
     ) = FilmSearchItem(
         id = id,
-        tmdbId = tmdbId,
-        imdbId = imdbId,
+        externalIds = externalIds,
         title = title,
         posterImage = posterImage,
         backdropImage = backdropImage,
@@ -95,11 +96,9 @@ object DummyDataForPreview {
     )
 
     fun getMovie(
-        id: String? = null,
-        tmdbId: Int = 123,
-        imdbId: String = "tt1234567",
+        id: String = "123",
         title: String = "Sample item",
-        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        providerId: String = "id-tmdb-123",
         genres: List<String> = listOf("Action", "Adventure"),
         posterImage: String? = "/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
         backdropImage: String? = "/4kTINu9mv2YV1PqFqPGG1FZMnhi.jpg",
@@ -107,27 +106,29 @@ object DummyDataForPreview {
         rating: Double? = 7.5,
         runtime: Int? = 100,
         language: String? = "en",
-        releaseDate: String? = "2023-10-10",
+        releaseDate: Date? = Date(),
         overview: String? = "This is a sample overview for the film.",
         productionCompanies: List<String> = listOf("Marvel Studios", "Pixar"),
         homePage: String? = null,
+        externalIds: Map<FilmIdSource, String> = mapOf(
+            FilmIdSource.IMDB to "tt1234567",
+            FilmIdSource.TMDB to "123",
+        ),
     ) = Movie(
         id = id,
-        tmdbId = tmdbId,
-        imdbId = imdbId,
         title = title,
         posterImage = posterImage,
         backdropImage = backdropImage,
         logoImage = logoImage,
         providerId = providerId,
         releaseDate = releaseDate,
-        year = releaseDate?.extractYear(),
         rating = rating,
         overview = overview,
         homePage = homePage,
         runtime = runtime,
         language = language,
         recommendations = List(20) { getFilm(id = "$it") },
+        externalIds = externalIds,
         producers = productionCompanies.map {
             Company(
                 id = it.hashCode(),
@@ -144,11 +145,9 @@ object DummyDataForPreview {
     )
 
     fun getTvShow(
-        id: String? = null,
-        tmdbId: Int = 123,
-        imdbId: String = "tt1234567",
+        id: String = "123",
         title: String = "Sample item",
-        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        providerId: String = "id-tmdb-123",
         genres: List<String> = listOf("Action", "Adventure"),
         posterImage: String? = "/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
         backdropImage: String? = "/4kTINu9mv2YV1PqFqPGG1FZMnhi.jpg",
@@ -156,11 +155,15 @@ object DummyDataForPreview {
         rating: Double? = 7.5,
         runtime: Int? = 100,
         language: String? = "en",
-        releaseDate: String? = "2023-10-10",
+        releaseDate: Date? = Date(),
         overview: String? = "This is a sample overview for the film.",
         homePage: String? = null,
         productionCompanies: List<String> = listOf("Marvel Studios", "Pixar"),
         networks: List<String> = listOf("Netflix", "HBO"),
+        externalIds: Map<FilmIdSource, String> = mapOf(
+            FilmIdSource.IMDB to "tt1234567",
+            FilmIdSource.TMDB to "123",
+        ),
         seasons: List<Season> = List(3) {
             val season = it + 1
             val episodes = List(10) { ep ->
@@ -170,7 +173,7 @@ object DummyDataForPreview {
                     number = ep + 1,
                     season = season,
                     overview = "This is a sample overview for episode ${ep + 1}.",
-                    airDate = "202$season-10-${ep + 1}",
+                    airDate = Date(),
                     runtime = 20 + ep,
                     image = "/9hGF3WUkBf7cSjMg0cdMDHJkByd.jpg",
                     rating = 5.0 + (ep * 0.1),
@@ -190,15 +193,12 @@ object DummyDataForPreview {
         },
     ) = TvShow(
         id = id,
-        tmdbId = tmdbId,
-        imdbId = imdbId,
         title = title,
         posterImage = posterImage,
         backdropImage = backdropImage,
         logoImage = logoImage,
         providerId = providerId,
         releaseDate = releaseDate,
-        year = releaseDate?.extractYear(),
         rating = rating,
         overview = overview,
         homePage = homePage,
@@ -208,6 +208,7 @@ object DummyDataForPreview {
         seasons = seasons,
         totalEpisodes = seasons.sumOf { it.episodes.size },
         totalSeasons = seasons.size,
+        externalIds = externalIds,
         producers = productionCompanies.map {
             Company(
                 id = it.hashCode(),

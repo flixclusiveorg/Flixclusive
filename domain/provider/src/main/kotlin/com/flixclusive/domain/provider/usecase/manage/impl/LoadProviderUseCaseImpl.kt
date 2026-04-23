@@ -25,9 +25,9 @@ import com.flixclusive.domain.provider.util.extensions.getProviderInstance
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import com.flixclusive.model.provider.Status
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
@@ -61,7 +61,9 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
     //       since `InitializeProvidersUseCase` also needs to load providers
     override fun invoke(installedProvider: InstalledProvider): Flow<ProviderResult> =
         flow {
-            val metadata = providerRepository.getMetadata(installedProvider.id)
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val metadata = providerRepository.getProvider(installedProvider.id, userId)
+                ?.metadata
                 ?: getMetadataFromFile(installedProvider)
 
             if (metadata == null) {
@@ -76,7 +78,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 return@flow
             }
 
-            if (isProviderAlreadyLoaded(metadata)) {
+            if (isProviderAlreadyLoaded(userId, metadata)) {
                 emit(
                     ProviderResult.Failure(
                         provider = metadata,
@@ -117,12 +119,20 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 infoLog("Loading provider: ${metadata.name} [${file.name}]")
 
                 val loader = PathClassLoader(file.absolutePath, context.classLoader)
-                val manifest: ProviderManifest = withContext(appDispatchers.io) {
+                val manifest: ProviderManifest = withContext<ProviderManifest>(appDispatchers.io) {
                     loader.getFileFromPath(MANIFEST_FILE)
+                }.let {
+                    if (!metadata.id.endsWith(ProviderPreferences.DEBUG_SUFFIX))
+                        return@let it
+
+                    it.copy(
+                        id = "${it.id}${ProviderPreferences.DEBUG_SUFFIX}",
+                        name = "${it.id}${ProviderPreferences.DEBUG_SUFFIX}"
+                    )
                 }
                 val settingsDirPath = createSettingsDirPath(
                     repositoryUrl = metadata.repositoryUrl,
-                    isDebugProvider = metadata.id.endsWith(ProviderConstants.PROVIDER_DEBUG),
+                    isDebugProvider = metadata.id.endsWith(ProviderPreferences.DEBUG_SUFFIX),
                 )
 
                 if (getProviderPrefs().canMigrateSettingsFile(metadata)) {
@@ -184,8 +194,11 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         return "${context.getExternalFilesDir(null)}/$finalPathPrefix"
     }
 
-    private fun isProviderAlreadyLoaded(metadata: ProviderMetadata): Boolean {
-        if (providerRepository.getPlugin(metadata.id) != null) {
+    private suspend fun isProviderAlreadyLoaded(
+        userId: String,
+        metadata: ProviderMetadata
+    ): Boolean {
+        if (providerRepository.getProvider(metadata.id, userId)?.plugin != null) {
             warnLog("Provider with name ${metadata.name} already exists")
             return true
         }
@@ -272,6 +285,6 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
             iconUrl = "",
             language = Language("Unknown"),
             providerType = ProviderType("Unknown"),
-            status = Status.Down,
+            status = ProviderStatus.Down,
         )
 }
