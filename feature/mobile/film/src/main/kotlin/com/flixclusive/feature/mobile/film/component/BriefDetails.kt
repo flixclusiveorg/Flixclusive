@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.common.locale.toFormattedString
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
@@ -203,7 +202,7 @@ private fun ProviderUsed(
 
 @Immutable
 private data class ImportantInfo(
-    val rating: String,
+    val rating: String?,
     val adult: String?,
     val runtime: String?,
     val language: String?,
@@ -223,12 +222,6 @@ private fun getBriefDetails(
     val language = film.language?.let {
         val locale = Locale.Builder().setLanguage(it).build()
         if (locale.language != "und") locale.displayLanguage else null
-    }
-
-    val date = if (film is TvShow) {
-        film.releaseDate.toFormattedString()
-    } else {
-        film.releaseDate?.toString() ?: film.releaseDate?.extractYear()?.toString() ?: film.parsedReleaseDate
     }
 
     val seasons = if (film is TvShow) {
@@ -254,11 +247,11 @@ private fun getBriefDetails(
     val adult = if (film.adult) context.getString(R.string.adult) else null
 
     return ImportantInfo(
-        rating = film.rating?.formatAsRating()?.asString(context) ?: "0.0",
+        rating = film.rating?.formatAsRating()?.asString(context),
         runtime = film.runtime?.formatAsRuntime()?.asString(context),
+        releaseDate = film.releaseDate?.extractYear()?.toString(),
         adult = adult,
         language = language,
-        releaseDate = date ?: context.getString(LocaleR.string.no_release_date),
         seasons = seasons,
         episodes = episodes,
     )

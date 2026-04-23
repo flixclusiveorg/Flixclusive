@@ -84,6 +84,7 @@ import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -283,7 +284,9 @@ private fun FilmScreenContent(
 
                                         navigator.openProviderDetails(uiState.provider)
                                     },
-                                    onGenreClick = { /*TODO: Implement GenreCatalogs*/ },
+                                    onGenreClick = { genre ->
+                                        genre.catalog?.let(navigator::openSeeAllScreen)
+                                    },
                                     provider = uiState.provider,
                                     modifier = Modifier
                                         .aspectRatio(backdropAspectRatio * 0.95f)
@@ -432,14 +435,11 @@ internal fun getBackdropAspectRatio(usePortraitView: Boolean) =
 private fun FilmScreenBasePreview() {
     val navigator = object : FilmScreenNavigator {
         override fun openFilmScreen(film: Film) {}
-
         override fun previewFilm(film: Film) {}
-
         override fun play(film: Film, episode: Episode?) {}
-
         override fun openProviderDetails(providerMetadata: ProviderMetadata) {}
-
         override fun goBack() {}
+        override fun openSeeAllScreen(item: Catalog) {}
     }
     var uiState by remember {
         mutableStateOf(
