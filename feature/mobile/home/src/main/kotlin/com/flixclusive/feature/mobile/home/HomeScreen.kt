@@ -363,7 +363,7 @@ internal fun getBackdropAspectRatio(): Float {
     val usePortraitView = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
     return when {
-        windowSizeClass.isWidthMedium -> 2.4f / 3f
+        windowSizeClass.isWidthMedium -> 2.1f / 3f
         usePortraitView -> FilmCover.Poster.ratio
         else -> 16f / 6f
     }

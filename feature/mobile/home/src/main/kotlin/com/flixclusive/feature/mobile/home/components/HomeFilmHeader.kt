@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -188,9 +189,10 @@ private fun FilmContent(
                         textAlign = TextAlign.Center,
                         softWrap = true,
                         modifier = Modifier.padding(
-                            top = 23.dp,
+                            top = 22.dp,
                             start = 5.dp,
                             end = 5.dp,
+                            bottom = if (film.genres.isEmpty()) 40.dp else Dp.Unspecified
                         ),
                     )
                 } else {
@@ -248,17 +250,15 @@ private fun BoxScope.ScrimOverlay(usePortraitView: Boolean) {
     Box(
         modifier = Modifier
             .matchParentSize()
-            .statusBarsPadding()
             .drawWithCache {
                 onDrawWithContent {
                     drawContent()
+
                     drawRect(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                backgroundColor,
-                            ),
-                            endY = size.height.times(0.9F),
+                        brush = Brush.verticalGradient(
+                            0f to backgroundColor,
+                            0.3f to Color.Transparent,
+                            1f to backgroundColor
                         ),
                     )
 
@@ -281,7 +281,8 @@ private fun BoxScope.ScrimOverlay(usePortraitView: Boolean) {
                         )
                     }
                 }
-            },
+            }
+            .statusBarsPadding(),
     )
 }
 
