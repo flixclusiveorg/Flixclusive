@@ -29,13 +29,15 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         return listDao.getAllAsFlow(userId)
     }
 
-    override fun getList(listId: Int): Flow<LibraryList?> {
+    override fun getList(listId: String): Flow<LibraryList?> {
         return listDao.getAsFlow(listId)
     }
 
-    override suspend fun insertList(list: LibraryList): Int {
+    override suspend fun insertList(list: LibraryList): String {
         return withContext(appDispatchers.io) {
-            listDao.insert(list.copy(updatedAt = Date())).toInt()
+            val updatedList = list.copy(updatedAt = Date())
+            listDao.insert(updatedList)
+            updatedList.id
         }
     }
 
@@ -45,7 +47,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteListById(listId: Int) {
+    override suspend fun deleteListById(listId: String) {
         return withContext(appDispatchers.io) {
             listDao.deleteSafe(listId)
         }
@@ -103,7 +105,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
 
     override fun searchItems(
         query: String,
-        listId: Int,
+        listId: String,
         sort: LibrarySort
     ): Flow<List<LibraryListItemWithMetadata>> {
         val column = when (sort) {
@@ -120,7 +122,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun getItems(listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>> {
+    override fun getItems(listId: String, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>> {
         val column = when (sort) {
             is LibrarySort.Added -> "item_createdAt"
             is LibrarySort.Modified -> "item_updatedAt"

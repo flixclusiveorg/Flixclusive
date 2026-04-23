@@ -99,7 +99,7 @@ object DatabaseTestDefaults {
     )
 
     fun getLibraryList(
-        id: Int = 0,
+        id: String = "test-list-id",
         name: String = "Test List",
         description: String = "Test Description",
         ownerId: String = TEST_USER_ID,
@@ -119,7 +119,7 @@ object DatabaseTestDefaults {
     fun getLibraryListItem(
         id: Long = 0,
         filmId: String = getDBFilm().id,
-        listId: Int = 1,
+        listId: String = "test-list-id",
     ) = LibraryListItem(
         id = id,
         filmId = filmId,

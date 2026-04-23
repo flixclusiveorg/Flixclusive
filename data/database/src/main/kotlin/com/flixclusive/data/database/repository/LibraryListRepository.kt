@@ -15,13 +15,13 @@ import kotlinx.coroutines.flow.Flow
 interface LibraryListRepository {
     fun getLists(userId: String): Flow<List<LibraryList>>
 
-    fun getList(listId: Int): Flow<LibraryList?>
+    fun getList(listId: String): Flow<LibraryList?>
 
-    suspend fun insertList(list: LibraryList): Int
+    suspend fun insertList(list: LibraryList): String
 
     suspend fun updateList(list: LibraryList)
 
-    suspend fun deleteListById(listId: Int)
+    suspend fun deleteListById(listId: String)
 
     fun getItemAsFlow(itemId: Long): Flow<LibraryListItemWithMetadata?>
 
@@ -35,11 +35,11 @@ interface LibraryListRepository {
 
     suspend fun deleteItem(itemId: Long)
 
-    fun getItems(listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
+    fun getItems(listId: String, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
 
     fun getListsAndItems(userId: String, sort: LibrarySort): Flow<List<LibraryListWithItems>>
 
-    fun searchItems(query: String, listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
+    fun searchItems(query: String, listId: String, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
 
     suspend fun deleteAllExceptWatched(ownerId: String)
 

@@ -32,7 +32,7 @@ data class LibraryListItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val filmId: String,
-    val listId: Int,
+    val listId: String,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
 )

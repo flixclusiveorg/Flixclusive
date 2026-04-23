@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 import com.flixclusive.core.database.entity.user.User
 import java.io.Serializable
 import java.util.Date
+import java.util.UUID
 
 enum class LibraryListType {
     WATCHED,
@@ -31,7 +32,7 @@ enum class LibraryListType {
     ]
 )
 data class LibraryList(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val ownerId: String,
     val name: String,
     val description: String? = null,

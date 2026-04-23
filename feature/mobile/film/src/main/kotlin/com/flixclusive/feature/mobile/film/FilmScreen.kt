@@ -156,7 +156,7 @@ private fun FilmScreenContent(
     searchResults: () -> List<LibraryListAndState>,
     onQueryChange: (String) -> Unit,
     onSeasonChange: (Season) -> Unit,
-    toggleOnLibrary: (Int, LibraryListType) -> Unit,
+    toggleOnLibrary: (String, LibraryListType) -> Unit,
     toggleEpisodeOnLibrary: (EpisodeWithProgress) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onRetry: () -> Unit,
@@ -475,7 +475,7 @@ private fun FilmScreenBasePreview() {
         val items = if (film != null) {
             listOf(
                 LibraryListItemWithMetadata(
-                    item = LibraryListItem(listId = 1, filmId = film.id),
+                    item = LibraryListItem(listId = "1", filmId = film.id),
                     metadata = film,
                     externalIds = emptyList()
                 ),
@@ -489,7 +489,7 @@ private fun FilmScreenBasePreview() {
                 listWithItems = LibraryListWithItems(
                     items = items,
                     list = LibraryList(
-                        id = it,
+                        id = it.toString(),
                         name = "List $it",
                         ownerId = "preview-user",
                         description = "Description $it",

@@ -43,22 +43,22 @@ internal class LibraryListBackupRestorer @Inject constructor(
             items
                 .filter { it.listType == LibraryListType.CUSTOM }
                 .forEach { list ->
-                    val newListId = libraryListDao.insert(
-                        LibraryList(
-                            ownerId = userId,
-                            name = list.name,
-                            description = list.description,
-                            listType = list.listType,
-                            createdAt = Date(list.createdAt),
-                            updatedAt = Date(list.updatedAt),
-                        )
-                    ).toInt()
+                    val newList = LibraryList(
+                        ownerId = userId,
+                        name = list.name,
+                        description = list.description,
+                        listType = list.listType,
+                        createdAt = Date(list.createdAt),
+                        updatedAt = Date(list.updatedAt),
+                    )
+
+                    libraryListDao.insert(newList)
 
                     list.items.forEach { item ->
                         libraryListItemDao.insertItem(
                             LibraryListItem(
                                 filmId = item.film.id,
-                                listId = newListId,
+                                listId = newList.id,
                                 createdAt = Date(item.createdAt),
                                 updatedAt = Date(item.updatedAt),
                             )

@@ -280,7 +280,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
      *
      * @param id The ID of the library list to toggle the film in.
      * */
-    fun toggleOnLibrary(id: Int, type: LibraryListType) {
+    fun toggleOnLibrary(id: String, type: LibraryListType) {
         appDispatchers.ioScope.launch {
             val film = _metadata.value
             requireNotNull(film) {

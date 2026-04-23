@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -157,7 +156,7 @@ fun RetryButton(
 
         Button(
             onClick = onRetry,
-            shape = ShapeDefaults.ExtraSmall,
+            shape = MaterialTheme.shapes.small,
         ) {
             Text(
                 text = stringResource(LocaleR.string.retry),

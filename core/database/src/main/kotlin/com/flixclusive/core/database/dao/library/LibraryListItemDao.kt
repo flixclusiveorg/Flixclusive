@@ -37,10 +37,10 @@ interface LibraryListItemDao {
         WHERE item_listId = :listId AND item_filmId = :filmId
         LIMIT 1
     """)
-    suspend fun getByListIdAndFilmId(listId: Int, filmId: String): LibraryListItemWithMetadata?
+    suspend fun getByListIdAndFilmId(listId: String, filmId: String): LibraryListItemWithMetadata?
 
     fun getByListId(
-        listId: Int,
+        listId: String,
         columnSort: String,
         ascending: Boolean,
     ): Flow<List<LibraryListItemWithMetadata>> {
@@ -54,7 +54,7 @@ interface LibraryListItemDao {
             RoomRawQuery(
                 sql = query,
                 onBindStatement = { statement ->
-                    statement.bindInt(1, listId)
+                    statement.bindText(1, listId)
                 }
             )
         )
@@ -65,7 +65,7 @@ interface LibraryListItemDao {
 
     fun searchItems(
         query: String,
-        listId: Int,
+        listId: String,
         columnSort: String,
         ascending: Boolean,
     ): Flow<List<LibraryListItemWithMetadata>> {
@@ -85,7 +85,7 @@ interface LibraryListItemDao {
                 """.trimIndent(),
                 onBindStatement = { statement ->
                     statement.bindText(1, ftsQuery)
-                    statement.bindInt(2, listId)
+                    statement.bindText(2, listId)
                 }
             )
         )
@@ -109,7 +109,7 @@ interface LibraryListItemDao {
     suspend fun delete(id: Long)
 
     @Query("DELETE FROM library_list_items WHERE listId = :listId AND filmId = :filmId")
-    suspend fun deleteByListIdAndFilmId(listId: Int, filmId: String)
+    suspend fun deleteByListIdAndFilmId(listId: String, filmId: String)
 
 
     @Upsert

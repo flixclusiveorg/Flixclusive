@@ -133,7 +133,7 @@ private fun LibraryCardBasePreview() {
         List(20) {
             LibraryListWithPreview(
                 list = LibraryList(
-                    id = it,
+                    id = it.toString(),
                     ownerId = "preview-user",
                     name = "My List #$it",
                     description = "This is my favorite list number $it",

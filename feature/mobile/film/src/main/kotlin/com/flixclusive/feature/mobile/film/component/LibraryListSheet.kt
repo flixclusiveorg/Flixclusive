@@ -78,7 +78,7 @@ internal fun LibraryListSheet(
     libraryListStates: () -> List<LibraryListAndState>,
     query: () -> String,
     onQueryChange: (String) -> Unit,
-    toggleOnLibrary: (Int, LibraryListType) -> Unit,
+    toggleOnLibrary: (String, LibraryListType) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -366,7 +366,7 @@ private fun LibraryListSheetPreview() {
         val items = if (metadata != null) {
             listOf(
                 LibraryListItemWithMetadata(
-                    item = LibraryListItem(listId = 1, filmId = metadata.id),
+                    item = LibraryListItem(listId = "1", filmId = metadata.id),
                     metadata = metadata,
                     externalIds = emptyList(),
                 ),
@@ -380,7 +380,7 @@ private fun LibraryListSheetPreview() {
                 listWithItems = LibraryListWithItems(
                     items = items,
                     list = LibraryList(
-                        id = it,
+                        id = it.toString(),
                         name = "List $it",
                         ownerId = "preview-user",
                         description = "Description $it",
@@ -406,7 +406,7 @@ private fun LibraryListSheetPreview() {
                         listWithItems = LibraryListWithItems(
                             items = emptyList(),
                             list = LibraryList(
-                                id = lists.size + 1,
+                                id = (lists.size + 1).toString(),
                                 name = name,
                                 ownerId = "preview-user",
                                 description = description,

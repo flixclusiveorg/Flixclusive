@@ -410,7 +410,7 @@ private fun ManageLibraryScreenBasePreview() {
 
                 val list =
                     LibraryList(
-                        id = it,
+                        id = it.toString(),
                         ownerId = "preview-user",
                         name = "Library $it",
                         description = description,
