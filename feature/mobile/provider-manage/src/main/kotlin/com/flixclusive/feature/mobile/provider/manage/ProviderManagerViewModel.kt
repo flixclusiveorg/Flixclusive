@@ -12,6 +12,7 @@ import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
@@ -40,6 +41,7 @@ internal class ProviderManagerViewModel @Inject constructor(
     private val unloadProvider: UnloadProviderUseCase,
     private val dataStoreManager: DataStoreManager,
     private val userSessionDataStore: UserSessionDataStore,
+    private val getInstalledProvider: GetInstalledProviderUseCase,
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
     private val toggleProvider: ToggleProviderUseCase
@@ -154,18 +156,14 @@ internal class ProviderManagerViewModel @Inject constructor(
         if (uninstallJob?.isActive == true) return
 
         uninstallJob = appDispatchers.ioScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val providerWrapper = providerRepository.getProvider(
-                id = metadata.id,
-                ownerId = userId
-            )
+            val provider = getInstalledProvider(metadata.id)
 
-            if (providerWrapper == null) {
+            if (provider == null) {
                 warnLog("Failed to get provider config for provider with id ${metadata.id}, aborting uninstall.")
                 return@launch
             }
 
-            unloadProvider(providerWrapper.provider)
+            unloadProvider(provider)
         }
     }
 

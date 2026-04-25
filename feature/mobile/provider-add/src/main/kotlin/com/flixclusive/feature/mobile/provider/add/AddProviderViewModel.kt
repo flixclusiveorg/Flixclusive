@@ -17,9 +17,10 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
-import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.data.provider.repository.ProviderResponseWrapper
+import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.manage.InstallProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
@@ -66,12 +67,17 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 
+// TODO: Make installAndLoadProvider a use case so it can work
+//  seamlessly with the provider details screen when installing from there as well
+
 @HiltViewModel
 internal class AddProviderViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val installedRepoRepository: InstalledRepoRepository,
-    private val providerRepository: ProviderRepository,
     private val getProviderFromRemote: GetProviderFromRemoteUseCase,
+    private val getProviderMetadata: GetProviderMetadataUseCase,
+    private val getProviderPlugin: GetProviderPluginUseCase,
+    private val getInstalledProvider: GetInstalledProviderUseCase,
     private val _updateProvider: UpdateProviderUseCase,
     private val installProvider: InstallProviderUseCase,
     private val loadProvider: LoadProviderUseCase,
@@ -268,7 +274,7 @@ internal class AddProviderViewModel @Inject constructor(
                 if (it is ProviderResult.Failure) throw it.error
             }
 
-            val installedProvider = getProvider(provider.id)?.provider
+            val installedProvider = getInstalledProvider(provider.id)
                 ?: error("Provider ${provider.name} not found after installation")
 
             loadProvider(installedProvider).collect {
@@ -282,7 +288,7 @@ internal class AddProviderViewModel @Inject constructor(
                 it.copy(providerExceptions = it.providerExceptions + error)
             }
 
-            val isInstalled = getProvider(provider.id) != null
+            val isInstalled = getInstalledProvider(provider.id) != null
             val status = when {
                 isInstalled -> ProviderInstallationStatus.Installed
                 else -> ProviderInstallationStatus.NotInstalled
@@ -294,7 +300,7 @@ internal class AddProviderViewModel @Inject constructor(
 
     private suspend fun uninstallProvider(provider: ProviderMetadata) {
         try {
-            val installedProvider = getProvider(provider.id)?.provider
+            val installedProvider = getInstalledProvider(provider.id)
             if (installedProvider == null) {
                 warnLog("Provider ${provider.name} was not found. Skipping uninstallation...")
                 return
@@ -363,7 +369,7 @@ internal class AddProviderViewModel @Inject constructor(
                         val provider = SearchableProvider.from(it)
                         var status = ProviderInstallationStatus.NotInstalled
 
-                        val metadata = getProvider(provider.id)?.metadata
+                        val metadata = getProviderMetadata(provider.id)
                         val isInstalled = metadata != null
 
                         if (isInstalled && isOutdated(old = metadata, new = provider.metadata)) {
@@ -385,7 +391,7 @@ internal class AddProviderViewModel @Inject constructor(
         old: ProviderMetadata,
         new: ProviderMetadata,
     ): Boolean {
-        val provider = getProvider(old.id)?.plugin ?: return false
+        val provider = getProviderPlugin(old.id) ?: return false
 
         val manifest = provider.manifest
         if (manifest.updateUrl == null || manifest.updateUrl.equals("")) {
@@ -393,13 +399,6 @@ internal class AddProviderViewModel @Inject constructor(
         }
 
         return manifest.versionCode < new.versionCode
-    }
-
-    private suspend fun getProvider(id: String): ProviderResponseWrapper? {
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        return providerRepository.getProvider(
-            id = id, ownerId = userId
-        )
     }
 }
 

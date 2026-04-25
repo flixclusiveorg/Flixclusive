@@ -20,7 +20,6 @@ dependencies {
     implementation(projects.corePresentationMobile)
     implementation(projects.dataDatabase)
     implementation(projects.domainDatabase)
-    implementation(projects.dataProvider)
     implementation(projects.domainProvider)
     implementation(projects.feature.mobile.libraryCommon)
 

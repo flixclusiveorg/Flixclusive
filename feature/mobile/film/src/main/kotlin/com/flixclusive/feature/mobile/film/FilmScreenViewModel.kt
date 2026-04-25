@@ -23,11 +23,11 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
@@ -64,10 +64,10 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
     private val libraryListRepository: LibraryListRepository,
-    private val providerRepository: ProviderRepository,
     private val toggleWatchProgressStatus: ToggleWatchProgressStatusUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
+    private val getProviderMetadata: GetProviderMetadataUseCase,
     @Assisted private val navArgFilm: Film,
 ) : ViewModel() {
     @AssistedFactory
@@ -232,8 +232,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
 
     private suspend fun fetchProviderUsed() {
         val providerId = _metadata.value?.providerId
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val provider = providerId?.let { providerRepository.getProvider(it, userId) }
+        val provider = providerId?.let { getProviderMetadata(it) }
 
         if (provider == null) {
             _uiState.update {
@@ -242,7 +241,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             return
         }
 
-        _uiState.update { it.copy(provider = provider.metadata) }
+        _uiState.update { it.copy(provider = provider) }
     }
 
     private suspend fun setInitialSelectedSeason() {

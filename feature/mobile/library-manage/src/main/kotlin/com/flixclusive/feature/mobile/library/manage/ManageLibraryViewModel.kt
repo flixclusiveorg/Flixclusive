@@ -17,8 +17,8 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
-import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.provider.repository.ProviderResponseWrapper
+import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
@@ -28,6 +28,7 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.provider.capability.TrackerFeature
+import com.flixclusive.provider.tracker.TrackerList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
@@ -59,8 +60,8 @@ internal class ManageLibraryViewModel @Inject constructor(
     private val getTrackerProviders: GetTrackerProvidersUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val appDispatchers: AppDispatchers,
-    private val providerRepository: ProviderRepository,
     private val toggleProvider: ToggleProviderUseCase,
+    private val getProviderPlugin: GetProviderPluginUseCase,
 ) : ViewModel() {
     private var loadLibrariesJob: Job? = null
     private var loadProvidersJob: Job? = null
@@ -163,7 +164,7 @@ internal class ManageLibraryViewModel @Inject constructor(
         }
     }
 
-    private fun loadProviders() {
+    private fun loadTrackers() {
         if (loadProvidersJob?.isActive == true) {
             loadProvidersJob?.cancel()
             verifyAuthJob?.cancel()
@@ -241,7 +242,7 @@ internal class ManageLibraryViewModel @Inject constructor(
     }
 
     fun initialize() {
-        loadProviders()
+        loadTrackers()
         loadLibraries()
     }
 
@@ -249,8 +250,7 @@ internal class ManageLibraryViewModel @Inject constructor(
         if (verifyAuthJob?.isActive == true) return
 
         verifyAuthJob = viewModelScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val plugin = providerRepository.getProvider(provider.id, userId)?.plugin
+            val plugin = getProviderPlugin(provider.id)
 
             val isAuthenticated = safeCall {
                 plugin?.getTrackerApi(context)?.isAuthenticated()
@@ -309,7 +309,23 @@ internal class ManageLibraryViewModel @Inject constructor(
 
         removeSelectionJob = appDispatchers.ioScope.launch {
             selectedLibraries.forEach {
-                libraryListRepository.deleteListById(it.id)
+                if (it.isFromTracker) {
+                    val providerId = it.provider?.id ?: return@forEach
+                    val plugin = getProviderPlugin(providerId) ?: return@forEach
+                    val api = plugin.getTrackerApi(context) ?: return@forEach
+
+                    api.deleteList(
+                        list = TrackerList(
+                            id = it.id,
+                            name = it.name,
+                            description = it.description,
+                            itemCount = it.itemsCount,
+                            providerId = providerId,
+                        )
+                    )
+                } else {
+                    libraryListRepository.deleteListById(it.id)
+                }
             }
 
             selectedLibraries.clear()
@@ -431,6 +447,8 @@ internal data class LibraryListWithPreview(
     val name get() = list.name
     val description get() = list.description
     val id get() = list.id
+
+    val isFromTracker get() = provider != null
 
     companion object {
         fun LibraryListWithItems.toPreview(): LibraryListWithPreview {

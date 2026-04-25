@@ -19,7 +19,6 @@ dependencies {
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
     implementation(projects.coreStrings)
-    implementation(projects.dataProvider)
     implementation(projects.domainProvider)
 
     implementation(libs.coil.compose)

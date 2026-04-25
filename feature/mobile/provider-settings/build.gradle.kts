@@ -14,7 +14,7 @@ dependencies {
     implementation(projects.coreNavigation)
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
-    implementation(projects.dataProvider)
+    implementation(projects.domainProvider)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
