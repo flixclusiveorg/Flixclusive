@@ -1,12 +1,20 @@
 package com.flixclusive.feature.mobile.film.component
 
 import android.content.Context
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -28,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +68,7 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiv
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmReleaseStatus
+import kotlinx.coroutines.delay
 import java.util.Date
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -234,27 +244,44 @@ private fun PlayButton(
             .clickable { onClick() },
         propagateMinConstraints = true
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-            modifier = Modifier
-                .padding(
-                    vertical = 10.dp,
-                    horizontal = 16.dp
+        AnimatedContent(
+            targetState = label,
+            transitionSpec = {
+                val slideInSpec = fadeIn() + slideInHorizontally(
+                    animationSpec = tween(300, easing = LinearEasing),
+                    initialOffsetX = { fullWidth -> -fullWidth / 8 }
                 )
-                .align(Alignment.Center),
-        ) {
-            AdaptiveIcon(
-                painter = painterResource(UiCommonR.drawable.play),
-                contentDescription = label,
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
+                val slideOutSpec = slideOutHorizontally(
+                    animationSpec = tween(300, easing = LinearEasing),
+                    targetOffsetX = { fullWidth -> -fullWidth / 8 }
+                ) + fadeOut()
 
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
-                color = MaterialTheme.colorScheme.onPrimary,
-            )
+                (slideInSpec togetherWith slideOutSpec).using(SizeTransform(clip = true))
+            }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+                modifier = Modifier
+                    .padding(
+                        vertical = 10.dp,
+                        horizontal = 16.dp
+                    )
+                    .animateContentSize()
+                    .align(Alignment.Center),
+            ) {
+                AdaptiveIcon(
+                    painter = painterResource(UiCommonR.drawable.play),
+                    contentDescription = label,
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
         }
     }
 }
@@ -395,21 +422,27 @@ private fun getPlayButtonLabel(
 private fun HeaderButtonsPreview() {
     val metadata = remember { DummyDataForPreview.getMovie() }
     var isInLibrary by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf<WatchProgress?>(null) }
+
+    LaunchedEffect(true) {
+        delay(1500)
+        isInLibrary = true
+        delay(1500)
+        progress = MovieProgress(
+            filmId = metadata.id,
+            ownerId = "preview-user",
+            progress = 500L,
+            status = WatchStatus.WATCHING,
+            duration = 6000L,
+        )
+    }
 
     FlixclusiveTheme {
         Surface {
             Column {
                 HeaderButtons(
                     metadata = metadata,
-                    watchProgress = remember {
-                        MovieProgress(
-                            filmId = metadata.id,
-                            ownerId = "preview-user",
-                            progress = 500L,
-                            status = WatchStatus.WATCHING,
-                            duration = 6000L,
-                        )
-                    },
+                    watchProgress = progress,
                     isInLibrary = isInLibrary,
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onPlay = {},
