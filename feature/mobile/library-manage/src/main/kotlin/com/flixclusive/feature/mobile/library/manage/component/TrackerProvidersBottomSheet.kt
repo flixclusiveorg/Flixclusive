@@ -1,6 +1,9 @@
-package com.flixclusive.feature.mobile.home.components
+package com.flixclusive.feature.mobile.library.manage.component
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.common.theme.Elevations
@@ -58,37 +62,44 @@ import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceho
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.feature.mobile.home.CatalogProvider
-import com.flixclusive.feature.mobile.home.R
+import com.flixclusive.feature.mobile.library.manage.R
+import com.flixclusive.feature.mobile.library.manage.TrackerProvider
 import com.flixclusive.model.provider.ProviderStatus
 import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
+private enum class TrackerAuthState {
+    Unauthenticated,
+    Authenticated,
+    Authenticating;
+}
+
 @Composable
-internal fun CatalogProvidersBottomSheet(
-    providers: Async<List<CatalogProvider>>,
+internal fun TrackerProvidersBottomSheet(
+    trackers: () -> Async<List<TrackerProvider>>,
     onDismiss: () -> Unit,
-    onToggle: (CatalogProvider) -> Unit,
+    onToggle: (TrackerProvider) -> Unit,
+    onSignIn: (TrackerProvider) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
 
     CommonBottomSheet(onDismiss) {
         Text(
-            text = stringResource(R.string.catalog_providers_sheet_label),
+            text = stringResource(R.string.tracker_providers_sheet_label),
             style = MaterialTheme.typography.titleMedium,
         )
 
         Text(
-            text = stringResource(R.string.catalog_providers_sheet_desc),
+            text = stringResource(R.string.tracker_providers_sheet_desc),
             style = MaterialTheme.typography.bodySmall,
             color = LocalContentColor.current.copy(0.7f),
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
         AnimatedContent(
-            targetState = providers,
+            targetState = trackers(),
             modifier = modifier.padding(vertical = 12.dp)
         ) { state ->
             when (state) {
@@ -99,13 +110,14 @@ internal fun CatalogProvidersBottomSheet(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         repeat(4) {
-                            CatalogProviderCardPlaceholder()
+                            TrackerProviderCardPlaceholder()
                         }
                     }
                 }
 
-                is Async.Success -> CatalogProvidersList(
-                    providers = state.data,
+                is Async.Success -> TrackerProvidersList(
+                    trackers = state.data,
+                    onSignIn = onSignIn,
                     onSave = { list ->
                         scope.launch { list.forEach(onToggle) }
                         onDismiss()
@@ -133,30 +145,31 @@ internal fun CatalogProvidersBottomSheet(
 }
 
 @Composable
-private fun CatalogProvidersList(
-    providers: List<CatalogProvider>,
-    onSave: (List<CatalogProvider>) -> Unit,
+private fun TrackerProvidersList(
+    trackers: List<TrackerProvider>,
+    onSignIn: (TrackerProvider) -> Unit,
+    onSave: (List<TrackerProvider>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
-    val currentProviders = remember {
-        mutableStateMapOf<String, CatalogProvider>().also {
-            providers.forEach { provider ->
+    val currentTrackers = remember {
+        mutableStateMapOf<String, TrackerProvider>().also {
+            trackers.forEach { provider ->
                 it[provider.id] = provider
             }
         }
     }
 
-    val sortedProviders by remember {
-        derivedStateOf { currentProviders.values.sortedBy { it.name } }
+    val sortedTrackers by remember {
+        derivedStateOf { currentTrackers.values.sortedBy { it.name } }
     }
 
     val density = LocalDensity.current
     var buttonHeight by remember { mutableStateOf(40.dp) }
     val isButtonEnabled by remember {
         derivedStateOf {
-            currentProviders.values.forEachIndexed { index, wrapper ->
-                if (wrapper.isEnabled != providers[index].isEnabled) {
+            currentTrackers.values.forEachIndexed { index, wrapper ->
+                if (wrapper.isEnabled != trackers[index].isEnabled) {
                     return@derivedStateOf true
                 }
             }
@@ -181,15 +194,16 @@ private fun CatalogProvidersList(
             )
         ) {
             items(
-                sortedProviders,
+                sortedTrackers,
                 key = { it.id }
-            ) { provider ->
-                CatalogProviderCard(
-                    provider = provider,
-                    enabled = { provider.isEnabled },
+            ) { tracker ->
+                TrackerCard(
+                    tracker = tracker,
+                    enabled = { tracker.isEnabled },
+                    onSignIn = { onSignIn(tracker) },
                     onToggle = {
-                        val updatedProvider = provider.copy(isEnabled = !provider.isEnabled)
-                        currentProviders[provider.id] = updatedProvider
+                        val updatedTracker = tracker.copy(isEnabled = !tracker.isEnabled)
+                        currentTrackers[tracker.id] = updatedTracker
                     },
                 )
             }
@@ -207,7 +221,7 @@ private fun CatalogProvidersList(
             Button(
                 enabled = isButtonEnabled,
                 shape = MaterialTheme.shapes.small,
-                onClick = { onSave(sortedProviders) },
+                onClick = { onSave(sortedTrackers) },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -221,13 +235,16 @@ private fun CatalogProvidersList(
 
 
 @Composable
-private fun CatalogProviderCard(
-    provider: CatalogProvider,
+private fun TrackerCard(
+    tracker: TrackerProvider,
     enabled: () -> Boolean,
     onToggle: () -> Unit,
+    onSignIn: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    var signInButtonState by remember { mutableStateOf(TrackerAuthState.Unauthenticated) }
 
     Card(
         modifier = modifier,
@@ -242,9 +259,9 @@ private fun CatalogProviderCard(
             modifier = Modifier.padding(12.dp),
         ) {
             ImageWithSmallPlaceholder(
-                model = remember { context.buildImageRequest(provider.iconUrl) },
+                model = remember { context.buildImageRequest(tracker.iconUrl) },
                 placeholder = painterResource(UiCommonR.drawable.provider_logo),
-                contentDescription = provider.name,
+                contentDescription = tracker.name,
                 shape = MaterialTheme.shapes.small,
                 modifier = Modifier.size(40.dp),
             )
@@ -255,7 +272,7 @@ private fun CatalogProviderCard(
                     .padding(horizontal = 8.dp)
             ) {
                 Text(
-                    text = provider.name,
+                    text = tracker.name,
                     style = MaterialTheme.typography.labelMedium
                 )
 
@@ -264,18 +281,18 @@ private fun CatalogProviderCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "v${provider.versionName} (${provider.versionCode})",
+                        text = "v${tracker.versionName} (${tracker.versionCode})",
                         style = MaterialTheme.typography.labelSmall,
                         color = LocalContentColor.current.copy(0.6F)
                     )
 
 
-                    if (provider.status != ProviderStatus.Working) {
+                    if (tracker.status != ProviderStatus.Working) {
                         Text(
-                            text = provider.status.name,
+                            text = tracker.status.name,
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
-                            color = getProviderStatusContainerColor(provider.status),
+                            color = getProviderStatusContainerColor(tracker.status),
                             modifier = Modifier
                                 .graphicsLayer { alpha = 0.6F }
                         )
@@ -283,30 +300,65 @@ private fun CatalogProviderCard(
                 }
             }
 
-            Switch(
-                checked = enabled(),
-                enabled = provider.status != ProviderStatus.Maintenance && provider.status != ProviderStatus.Down,
-                colors = SwitchDefaults.colors(
-                    disabledCheckedThumbColor =
-                        MaterialTheme.colorScheme.surface
-                            .copy(1F)
-                            .compositeOver(MaterialTheme.colorScheme.surface),
-                    disabledCheckedTrackColor =
-                        MaterialTheme.colorScheme.onSurface
-                            .copy(0.12F)
-                            .compositeOver(MaterialTheme.colorScheme.surface),
-                ),
-                onCheckedChange = { onToggle() },
-                modifier = Modifier
-                    .scale(0.7F)
-                    .width(40.dp),
-            )
+            AnimatedContent(
+                targetState = signInButtonState,
+                transitionSpec = { fadeIn() togetherWith fadeOut() }
+            ) { status ->
+                when (status) {
+                    TrackerAuthState.Authenticating -> {
+                        GradientCircularProgressIndicator(
+                            size = 8.dp,
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiary,
+                            )
+                        )
+                    }
+                    TrackerAuthState.Unauthenticated -> {
+                        Button(
+                            onClick = {
+                                signInButtonState = TrackerAuthState.Authenticating
+                                onSignIn()
+                            },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.height(28.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.sign_in),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+                    }
+                    TrackerAuthState.Authenticated -> {
+                        Switch(
+                            checked = enabled(),
+                            enabled = tracker.status != ProviderStatus.Maintenance && tracker.status != ProviderStatus.Down,
+                            colors = SwitchDefaults.colors(
+                                disabledCheckedThumbColor =
+                                    MaterialTheme.colorScheme.surface
+                                        .copy(1F)
+                                        .compositeOver(MaterialTheme.colorScheme.surface),
+                                disabledCheckedTrackColor =
+                                    MaterialTheme.colorScheme.onSurface
+                                        .copy(0.12F)
+                                        .compositeOver(MaterialTheme.colorScheme.surface),
+                            ),
+                            onCheckedChange = { onToggle() },
+                            modifier = Modifier
+                                .scale(0.7F)
+                                .width(40.dp),
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun CatalogProviderCardPlaceholder() {
+private fun TrackerProviderCardPlaceholder() {
     Placeholder(
         elevation = Elevations.LEVEL_3,
         modifier = Modifier
@@ -318,23 +370,27 @@ private fun CatalogProviderCardPlaceholder() {
 
 @Preview
 @Composable
-private fun CatalogProvidersBottomSheetPreview() {
+private fun TrackerProvidersBottomSheetPreview() {
     FlixclusiveTheme {
         Surface {
-            CatalogProvidersBottomSheet(
-                providers = Async.Success(
-                    List(20) {
-                        CatalogProvider(
-                            isEnabled = true,
-                            provider = DummyDataForPreview.getProviderMetadata(
-                                id = "provider_$it",
-                                name = "Provider ${it + 1}",
+            TrackerProvidersBottomSheet(
+                trackers = {
+                    Async.Success(
+                        List(20) {
+                            TrackerProvider(
+                                isEnabled = true,
+                                isAuthenticated = false,
+                                metadata = DummyDataForPreview.getProviderMetadata(
+                                    id = "provider_$it",
+                                    name = "Provider ${it + 1}",
+                                ),
                             )
-                        )
-                    }
-                ),
+                        }
+                    )
+                },
                 onDismiss = {},
-                onToggle = {}
+                onToggle = {},
+                onSignIn = {},
             )
         }
     }
@@ -342,7 +398,7 @@ private fun CatalogProvidersBottomSheetPreview() {
 
 @Preview
 @Composable
-private fun CatalogProviderCardPreview() {
+private fun TrackerCardPreview() {
     FlixclusiveTheme {
         Surface {
             LazyColumn {
@@ -357,13 +413,15 @@ private fun CatalogProviderCardPreview() {
                         )
                     }
 
-                    CatalogProviderCard(
-                        provider = CatalogProvider(
+                    TrackerCard(
+                        tracker = TrackerProvider(
                             isEnabled = true,
-                            provider = item
+                            isAuthenticated = false,
+                            metadata = item,
                         ),
                         enabled = { true },
                         onToggle = {},
+                        onSignIn = {},
                         modifier = Modifier.padding(8.dp)
                     )
                 }

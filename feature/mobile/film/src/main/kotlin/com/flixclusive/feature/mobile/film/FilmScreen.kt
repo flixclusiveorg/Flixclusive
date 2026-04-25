@@ -549,7 +549,7 @@ private fun FilmScreenBasePreview() {
                         listWithItems = LibraryListWithItems(
                             items = emptyList(),
                             list = LibraryList(
-                                id = lists.size + 1,
+                                id = (lists.size + 1).toString(),
                                 name = name,
                                 ownerId = "preview-user",
                                 description = description,

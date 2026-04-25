@@ -12,6 +12,7 @@ import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,9 +42,9 @@ internal class ProviderManagerViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
+    private val toggleProvider: ToggleProviderUseCase
 ) : ViewModel() {
     private var uninstallJob: Job? = null
-    private var toggleJob: Job? = null
 
     private val _uiState = MutableStateFlow(ProviderManageUiState())
     val uiState = _uiState.asStateFlow()
@@ -145,13 +146,8 @@ internal class ProviderManagerViewModel @Inject constructor(
         )
     }
 
-    fun toggleProvider(id: String) {
-        if (toggleJob?.isActive == true) return
-
-        toggleJob = appDispatchers.ioScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            providerRepository.toggleProvider(id = id, ownerId = userId)
-        }
+    fun onToggleProvider(id: String) {
+        toggleProvider(id)
     }
 
     fun uninstallProvider(metadata: ProviderMetadata) {

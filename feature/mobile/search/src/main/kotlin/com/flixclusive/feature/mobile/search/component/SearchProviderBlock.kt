@@ -59,7 +59,7 @@ internal fun SearchProviderBlock(
             modifier = Modifier.padding(12.dp),
         ) {
             ImageWithSmallPlaceholder(
-                model = remember { context.buildImageRequest(provider.metadata.iconUrl) },
+                model = remember { context.buildImageRequest(provider.iconUrl) },
                 placeholder = painterResource(UiCommonR.drawable.provider_logo),
                 contentDescription = provider.name,
                 shape = MaterialTheme.shapes.small,

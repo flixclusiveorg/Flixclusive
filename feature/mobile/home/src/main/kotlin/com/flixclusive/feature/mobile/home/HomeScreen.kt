@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -76,7 +77,6 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Catalog
-import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
@@ -97,10 +97,10 @@ internal fun HomeScreen(
     HomeScreenContent(
         navigator = navigator,
         uiState = uiState,
-        showFilmTitles = showFilmTitles,
-        providers = catalogProviders,
-        continueWatchingItems = continueWatchingItems,
-        onToggle = { viewModel.toggleProvider(it.id) },
+        showFilmTitles = { showFilmTitles },
+        providers = { catalogProviders },
+        continueWatchingItems = { continueWatchingItems },
+        onToggle = { viewModel.onToggleProvider(it.id) },
         paginate = viewModel::paginate,
         onRetry = viewModel::initialize,
     )
@@ -111,12 +111,12 @@ internal fun HomeScreen(
 private fun HomeScreenContent(
     navigator: HomeNavigator,
     uiState: HomeUiState,
-    showFilmTitles: Boolean,
-    providers: Async<List<CatalogProviderWrapper>>,
-    onToggle: (CatalogProviderWrapper) -> Unit,
+    showFilmTitles: () -> Boolean,
+    providers: () -> Async<List<CatalogProvider>>,
+    onToggle: (CatalogProvider) -> Unit,
     paginate: (CatalogWithPagingState) -> Unit,
     onRetry: () -> Unit,
-    continueWatchingItems: List<WatchProgressWithMetadata>,
+    continueWatchingItems: () -> List<WatchProgressWithMetadata>,
 ) {
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
     var isSheetOpen by remember { mutableStateOf(false) }
@@ -157,6 +157,7 @@ private fun HomeScreenContent(
                 containerAlpha = { appBarContainerAlpha },
                 onSearch = navigator::openSearchScreen,
                 onFilterClick = { isSheetOpen = true },
+                enableFilterButton = { providers().let { it is Async.Success && it.data.isNotEmpty() } },
             )
         },
     ) {
@@ -170,17 +171,17 @@ private fun HomeScreenContent(
 
                 is Async.Success -> {
                     AnimatedContent(
-                        targetState = state.data,
+                        targetState = state.data.isEmpty(),
                         transitionSpec = { fadeIn() togetherWith fadeOut() },
                         modifier = Modifier.fillMaxSize(),
-                    ) { catalogs ->
-                        if (catalogs.isEmpty()) {
+                    ) { isEmpty ->
+                        if (isEmpty) {
                             EmptyScreenContent(
                                 openAddProviderScreen = navigator::openAddProviderScreen,
                             )
                         } else {
                             val catalogValues by remember {
-                                derivedStateOf { catalogs.values.toList() }
+                                derivedStateOf { state.data.values.toList() }
                             }
 
                             NonEmptyScreenContent(
@@ -210,7 +211,7 @@ private fun HomeScreenContent(
     if (isSheetOpen) {
         CatalogProvidersBottomSheet(
             onDismiss = { isSheetOpen = false },
-            providers = providers,
+            providers = providers(),
             onToggle = onToggle
         )
     }
@@ -254,10 +255,10 @@ private fun NonEmptyScreenContent(
     navigator: HomeNavigator,
     catalogs: List<CatalogWithPagingState>,
     headerItem: Async<Film>,
-    showFilmTitles: Boolean,
+    showFilmTitles: () -> Boolean,
     listState: LazyListState,
     paginate: (CatalogWithPagingState) -> Unit,
-    continueWatchingItems: List<WatchProgressWithMetadata>,
+    continueWatchingItems: () -> List<WatchProgressWithMetadata>,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -289,11 +290,11 @@ private fun NonEmptyScreenContent(
             )
         }
 
-        if (continueWatchingItems.isNotEmpty()) {
+        if (continueWatchingItems().isNotEmpty()) {
             item {
                 ContinueWatchingRow(
                     items = continueWatchingItems,
-                    showCardTitle = showFilmTitles,
+                    showCardTitle = showFilmTitles(),
                     onSeeMoreClick = navigator::previewFilm,
                     onItemClick = { navigator.play(it.film) },
                 )
@@ -306,7 +307,7 @@ private fun NonEmptyScreenContent(
                 pagingState = data.state,
                 items = data.films,
                 onFilmClick = navigator::openFilmScreen,
-                showTitles = showFilmTitles,
+                showTitles = showFilmTitles(),
                 onFilmLongClick = navigator::previewFilm,
                 paginate = { paginate(data) },
                 onSeeAllItems = { navigator.openSeeAllScreen(item = data.catalog) },
@@ -364,6 +365,8 @@ internal fun getBackdropAspectRatio(): Float {
 @Preview
 @Composable
 private fun HomeScreenBasePreview() {
+    val resources = LocalResources.current
+
     FlixclusiveTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -389,12 +392,12 @@ private fun HomeScreenBasePreview() {
                     HomeScreenContent(
                         navigator = dummyNavigator,
                         uiState = HomeUiState(),
-                        showFilmTitles = true,
+                        showFilmTitles = { true },
                         paginate = { },
                         onRetry = { },
-                        continueWatchingItems = emptyList(),
+                        continueWatchingItems = { emptyList() },
                         onToggle = { },
-                        providers = Async.Loading,
+                        providers = { Async.Loading },
                     )
                 }
 
@@ -404,12 +407,12 @@ private fun HomeScreenBasePreview() {
                         uiState = HomeUiState(
                             catalogs = Async.Failure(stringResource(LocaleR.string.something_went_wrong))
                         ),
-                        showFilmTitles = true,
+                        showFilmTitles = { true },
                         paginate = { },
                         onRetry = { },
-                        continueWatchingItems = emptyList(),
+                        continueWatchingItems = { emptyList() },
                         onToggle = { },
-                        providers = Async.Failure(stringResource(LocaleR.string.something_went_wrong))
+                        providers = { Async.Failure(resources.getString(LocaleR.string.something_went_wrong)) }
                     )
                 }
 
@@ -522,33 +525,24 @@ private fun HomeScreenBasePreview() {
                             itemHeader = Async.Success(dummyHeaderFilm),
                             catalogs = Async.Success(dummyPagingStates),
                         ),
-                        showFilmTitles = true,
+                        showFilmTitles = { true },
                         paginate = { },
                         onRetry = { },
                         onToggle = { },
-                        continueWatchingItems = continueWatchingItems,
-                        providers = Async.Success(
-                            listOf(
-                                CatalogProviderWrapper(
-                                    id = "provider_1",
-                                    name = "Provider One",
-                                    isEnabled = true,
-                                    versionCode = 42,
-                                    versionName = "1.2.3",
-                                    logoUrl = "https://example.com/logo.png",
-                                    status = ProviderStatus.Working
-                                ),
-                                CatalogProviderWrapper(
-                                    id = "provider_2",
-                                    name = "Provider Two",
-                                    isEnabled = false,
-                                    versionCode = 42,
-                                    versionName = "1.2.3",
-                                    logoUrl = "https://example.com/logo.png",
-                                    status = ProviderStatus.Working
-                                ),
+                        continueWatchingItems = { continueWatchingItems },
+                        providers = {
+                            Async.Success(
+                                List(3) {
+                                    CatalogProvider(
+                                        isEnabled = true,
+                                        provider = DummyDataForPreview.getProviderMetadata(
+                                            id = "provider_$it",
+                                            name = "Provider ${it + 1}",
+                                        )
+                                    )
+                                }
                             )
-                        ),
+                        },
                     )
                 }
             }

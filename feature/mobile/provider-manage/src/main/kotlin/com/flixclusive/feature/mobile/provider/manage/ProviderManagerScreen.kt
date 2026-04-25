@@ -108,7 +108,7 @@ internal fun ProviderManagerScreen(
         onQueryChange = viewModel::onQueryChange,
         onMove = viewModel::onMove,
         goBack = navigator::goBack,
-        toggleProvider = { id -> viewModel.toggleProvider(id) },
+        toggleProvider = { id -> viewModel.onToggleProvider(id) },
         openProviderSettings = navigator::openProviderSettings,
         onConsumeError = viewModel::onConsumeError,
         openProviderDetails = navigator::openProviderDetails,

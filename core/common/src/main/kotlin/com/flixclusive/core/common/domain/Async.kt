@@ -8,7 +8,17 @@ sealed class Async<out T> {
     data object Loading : Async<Nothing>()
 
     @Stable
-    data class Success<T>(val data: T) : Async<T>()
+    data class Success<T>(val data: T) : Async<T>() {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Success<*>) return false
+            return data == other.data
+        }
+
+        override fun hashCode(): Int {
+            return data?.hashCode() ?: 0
+        }
+    }
 
     @Stable
     data class Failure(
@@ -24,6 +34,18 @@ sealed class Async<out T> {
             message = UiText.from(message),
             cause = null,
         )
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Failure) return false
+            return message == other.message && cause?.message == other.cause?.message
+        }
+
+        override fun hashCode(): Int {
+            var result = message.hashCode()
+            result = 31 * result + (cause?.hashCode() ?: 0)
+            return result
+        }
     }
 
     val isLoading: Boolean get() = this is Loading

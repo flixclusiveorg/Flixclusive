@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -25,19 +27,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 internal val DefaultLibraryCardShape = RoundedCornerShape(4.dp)
@@ -51,6 +59,7 @@ internal fun LibraryCard(
     onLongClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val hapticFeedback = getFeedbackOnLongPress()
 
     Row(
@@ -85,6 +94,19 @@ internal fun LibraryCard(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 modifier = Modifier.align(Alignment.CenterStart),
             ) {
+                libraryListWithPreview.provider?.let {
+                    ImageWithSmallPlaceholder(
+                        model = context.buildImageRequest(it.iconUrl),
+                        placeholder = painterResource(UiCommonR.drawable.movie_icon),
+                        contentDescription = it.name,
+                        placeholderSize = 12.dp,
+                        shape = MaterialTheme.shapes.extraSmall,
+                        modifier = Modifier
+                            .height(18.dp)
+                            .aspectRatio(1f),
+                    )
+                }
+
                 Text(
                     text = libraryListWithPreview.name,
                     style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
@@ -103,7 +125,7 @@ internal fun LibraryCard(
                 }
 
                 Text(
-                    text = context.resources.getQuantityString(
+                    text = resources.getQuantityString(
                         LocaleR.plurals.number_of_items_format,
                         libraryListWithPreview.itemsCount,
                         libraryListWithPreview.itemsCount,
@@ -114,6 +136,66 @@ internal fun LibraryCard(
                     maxLines = 5,
                 )
             }
+        }
+    }
+}
+
+@Composable
+internal fun LibraryCardPlaceholder(modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(25.dp),
+        modifier = modifier
+            .height(getAdaptiveDp(150.dp, 20.dp))
+            .padding(10.dp),
+    ) {
+        StackedPostersPlaceholder(
+            modifier = Modifier.weight(0.25f),
+        )
+
+        Box(
+            modifier = Modifier
+                .weight(0.5f)
+                .fillMaxHeight(),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.align(Alignment.CenterStart),
+            ) {
+                Placeholder(
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(14.dp),
+                )
+
+                Placeholder(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(12.dp),
+                )
+
+                Placeholder(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(12.dp),
+                )
+
+                Placeholder(
+                    modifier = Modifier
+                        .fillMaxWidth(0.3f)
+                        .height(12.dp),
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LibraryCardPlaceholderPreview() {
+    FlixclusiveTheme {
+        Surface {
+            LibraryCardPlaceholder()
         }
     }
 }
@@ -140,6 +222,7 @@ private fun LibraryCardBasePreview() {
                 ),
                 previews = films,
                 itemsCount = films.size,
+                provider = DummyDataForPreview.getProviderMetadata()
             )
         }
     }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,6 +24,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.TopAppBarLayout
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -38,6 +39,7 @@ internal fun HomeScreenTopBar(
     containerAlpha: () -> Float,
     onSearch: () -> Unit,
     onFilterClick: () -> Unit,
+    enableFilterButton: () -> Boolean,
     modifier: Modifier = Modifier,
     expandedHeight: Dp = HomeScreenTopBarDefaultHeight,
 ) {
@@ -82,23 +84,29 @@ internal fun HomeScreenTopBar(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    IconButton(
-                        onClick = onFilterClick,
-                    ) {
-                        Icon(
-                            painter = painterResource(UiCommonR.drawable.filter_list),
-                            contentDescription = stringResource(LocaleR.string.filter_button),
-                        )
+                    PlainTooltipBox(description = stringResource(LocaleR.string.filter_button)) {
+                        ActionButton(
+                            onClick = onFilterClick,
+                            enabled = enableFilterButton()
+                        ) {
+                            Icon(
+                                painter = painterResource(UiCommonR.drawable.filter_list),
+                                contentDescription = stringResource(LocaleR.string.filter_button),
+                            )
+                        }
                     }
 
-                    IconButton(
-                        onClick = onSearch,
-                    ) {
-                        Icon(
-                            painter = painterResource(UiCommonR.drawable.search_outlined),
-                            contentDescription = stringResource(LocaleR.string.search),
-                        )
+                    PlainTooltipBox(description = stringResource(LocaleR.string.search)) {
+                        ActionButton(
+                            onClick = onSearch,
+                        ) {
+                            Icon(
+                                painter = painterResource(UiCommonR.drawable.search_outlined),
+                                contentDescription = stringResource(LocaleR.string.search),
+                            )
+                        }
                     }
+
                 }
             },
         )

@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.home
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -19,16 +19,17 @@ import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
 import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
+import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.provider.Catalog
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -54,14 +55,14 @@ private const val MAX_PAGINATION_PAGES = 5
 internal class HomeScreenViewModel @Inject constructor(
     dataStoreManager: DataStoreManager,
     getCatalogProviders: GetCatalogProvidersUseCase,
-    private val appDispatchers: AppDispatchers,
+    userSessionDataStore: UserSessionDataStore,
+    appDispatchers: AppDispatchers,
     private val getCatalogItems: GetCatalogItemsUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
     private val getHomeCatalogs: GetHomeCatalogsUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
-    private val providerRepository: ProviderRepository,
-    private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
+    private val toggleProvider: ToggleProviderUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
@@ -71,7 +72,6 @@ internal class HomeScreenViewModel @Inject constructor(
 
     private var observeCatalogsJob: Job? = null
     private var loadFetchHeaderJob: Job? = null
-    private var toggleJob: Job? = null
 
     /** Map of jobs for each row catalog loaded on the home screen */
     private val paginationJobs = HashMap<String, Job?>()
@@ -108,22 +108,17 @@ internal class HomeScreenViewModel @Inject constructor(
         .mapLatest {
             if (it !is Async.Success) {
                 @Suppress("UNCHECKED_CAST")
-                return@mapLatest it as Async<List<CatalogProviderWrapper>>
+                return@mapLatest it as Async<List<CatalogProvider>>
             }
 
-            val providers = it.data.fastMap { provider ->
-                CatalogProviderWrapper(
-                    id = provider.id,
-                    name = provider.name ?: "--",
-                    logoUrl = provider.logoUrl,
+            val providers = it.data.fastMapNotNull { provider ->
+                CatalogProvider(
+                    provider = provider.metadata ?: return@fastMapNotNull null,
                     isEnabled = provider.isEnabled,
-                    versionName = provider.versionName ?: "--",
-                    versionCode = provider.versionCode ?: 0L,
-                    status = provider.status ?: ProviderStatus.Working,
                 )
             }
 
-            Async.Success(providers) as Async<List<CatalogProviderWrapper>>
+            Async.Success(providers) as Async<List<CatalogProvider>>
         }
         .stateIn(
             scope = appDispatchers.ioScope,
@@ -348,13 +343,8 @@ internal class HomeScreenViewModel @Inject constructor(
         }
     }
 
-    fun toggleProvider(id: String) {
-        if (toggleJob?.isActive == true) return
-
-        toggleJob = appDispatchers.ioScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            providerRepository.toggleProvider(id = id, ownerId = userId)
-        }
+    fun onToggleProvider(id: String) {
+        toggleProvider(id)
     }
 }
 
@@ -377,15 +367,17 @@ internal data class HomeUiState(
 }
 
 @Stable
-internal data class CatalogProviderWrapper(
-    val id: String,
-    val name: String,
-    val logoUrl: String?,
+internal data class CatalogProvider(
+    val provider: ProviderMetadata,
     val isEnabled: Boolean,
-    val versionName: String,
-    val versionCode: Long,
-    val status: ProviderStatus
-)
+) {
+    val id: String get() = provider.id
+    val name: String get() = provider.name
+    val iconUrl: String? get() = provider.iconUrl
+    val versionName: String get() = provider.versionName
+    val versionCode: Long get() = provider.versionCode
+    val status: ProviderStatus get() = provider.status
+}
 
 @Stable
 internal data class CatalogWithPagingState(

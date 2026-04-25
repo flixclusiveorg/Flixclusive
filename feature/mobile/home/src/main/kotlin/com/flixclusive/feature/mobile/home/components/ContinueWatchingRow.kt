@@ -64,7 +64,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun ContinueWatchingRow(
     showCardTitle: Boolean,
-    items: List<WatchProgressWithMetadata>,
+    items: () -> List<WatchProgressWithMetadata>,
     onItemClick: (WatchProgressWithMetadata) -> Unit,
     onSeeMoreClick: (Film) -> Unit,
     modifier: Modifier = Modifier,
@@ -86,7 +86,7 @@ internal fun ContinueWatchingRow(
 
         LazyRow {
             items(
-                items = items,
+                items = items(),
                 key = { "${it.filmId}-${it.id}" }
             ) { item ->
                 ContinueWatchingCard(
@@ -157,7 +157,8 @@ private fun ContinueWatchingCard(
             FilmCover.Poster(
                 imagePath = film.posterImage,
                 title = film.title,
-                modifier = Modifier.width(getAdaptiveFilmCardWidth())
+                modifier = Modifier
+                    .width(getAdaptiveFilmCardWidth())
                     .clip(MaterialTheme.shapes.small)
             )
 
@@ -298,7 +299,7 @@ private fun ContinueWatchingRowBasePreview() {
             modifier = Modifier.fillMaxSize()
         ) {
             ContinueWatchingRow(
-                items = items,
+                items = { items },
                 showCardTitle = false,
                 onItemClick = {},
                 onSeeMoreClick = {}
