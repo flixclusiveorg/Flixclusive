@@ -46,7 +46,7 @@ internal fun BaseLibraryModificationDialog(
     val textFieldStyle = MaterialTheme.typography.bodyMedium.asAdaptiveTextStyle(increaseBy = 2.sp)
 
     val buttonMinHeight = getAdaptiveDp(50.dp)
-    val buttonShape = MaterialTheme.shapes.medium
+    val buttonShape = MaterialTheme.shapes.small
 
     CommonAlertDialog(
         onDismiss = onCancel,
@@ -118,7 +118,7 @@ internal fun BaseLibraryModificationDialog(
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = textFieldStyle,
                     singleLine = true,
-                    shape = MaterialTheme.shapes.medium,
+                    shape = MaterialTheme.shapes.small,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -138,7 +138,7 @@ internal fun BaseLibraryModificationDialog(
                         .heightIn(min = getAdaptiveDp(100.dp)),
                     maxLines = 4,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    shape = MaterialTheme.shapes.medium,
+                    shape = MaterialTheme.shapes.small,
                 )
             }
         },
