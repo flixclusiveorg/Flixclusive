@@ -193,7 +193,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             viewModel.uiState.map {
                 it.loadLinksState to it.playerData
             }.distinctUntilChanged(),
-            viewModel.currentLinksCache,
+            viewModel.currentObservableLinks,
         ) { screen, (loadLinksState, playerData), linksCache ->
             playerData?.takeIf {
                 screen != PlayerScreenDestination &&
@@ -355,7 +355,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         }
 
         if (!uiState.loadLinksState.isIdle && uiState.playerData != null) {
-            val cachedLinks by viewModel.currentLinksCache.collectAsStateWithLifecycle()
+            val cachedLinks by viewModel.currentObservableLinks.collectAsStateWithLifecycle()
 
             LaunchedEffect(true) {
                 window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

@@ -16,7 +16,6 @@ import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.util.extensions.sendCrossMatchingMessage
 import com.flixclusive.domain.provider.util.extensions.sendExtractingLinksMessage
-import com.flixclusive.domain.provider.util.extensions.sendFetchingFilmMessage
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.ProviderMetadata
@@ -90,6 +89,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 id = provider.id,
                 mediaLinksApi = mediaLinksApi,
                 metadata = provider.metadata!!,
+                episode = episode
             )
             return@channelFlow
         }
@@ -137,6 +137,8 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                     id = provider.id,
                     mediaLinksApi = mediaLinkApi,
                     metadata = provider,
+                    episode = episode,
+                    quiet = true, // Don't send fetching/extracting messages for subtitle-only providers, as it can be confusing to users
                 )
 
                 if (!success) {
@@ -158,6 +160,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 id = provider.id,
                 mediaLinksApi = mediaLinkApi,
                 metadata = provider,
+                episode = episode
             )
 
             if (success) {
@@ -175,10 +178,6 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         mediaLinksApi: MediaLinkProviderApi,
         quiet: Boolean = false,
     ): Boolean {
-        if (quiet) {
-            sendFetchingFilmMessage(provider = metadata.name)
-        }
-
         val key = MediaLinksCacheKey.create(
             providerId = id,
             filmId = film.id,
@@ -200,7 +199,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
         mediaLinksRepository.insertLinks(mediaLinks = mediaLinks, key = key)
 
-        sendExtractingLinksMessage(provider = metadata)
+        if (!quiet) {
+            sendExtractingLinksMessage(provider = metadata)
+        }
 
         try {
             mediaLinksApi.getLinks(

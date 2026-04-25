@@ -89,7 +89,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val _providerUpdateInfo = MutableSharedFlow<ProviderUpdateInfo?>()
     val providerUpdateInfo = _providerUpdateInfo.asSharedFlow()
 
-    val currentLinksCache = mediaLinksRepository.currentObservable
+    val currentObservableLinks = mediaLinksRepository.currentObservable
 
     /**
      * A WebView driver instance that is shared across the app.
@@ -381,7 +381,7 @@ internal class MobileAppViewModel @Inject constructor(
     }
 
     private fun isFailureButHasLinks(): Boolean {
-        val currentCache = currentLinksCache.value
+        val currentCache = currentObservableLinks.value
         val loadLinksState = _uiState.value.loadLinksState
 
         return loadLinksState.isError
