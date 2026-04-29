@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -57,6 +58,7 @@ import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.common.theme.Elevations
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.Placeholder
@@ -200,7 +202,7 @@ private fun TrackerProvidersList(
                 TrackerCard(
                     tracker = tracker,
                     enabled = { tracker.isEnabled },
-                    onSignIn = { onSignIn(tracker) },
+                    openProviderSettings = { onSignIn(tracker) },
                     onToggle = {
                         val updatedTracker = tracker.copy(isEnabled = !tracker.isEnabled)
                         currentTrackers[tracker.id] = updatedTracker
@@ -239,7 +241,7 @@ private fun TrackerCard(
     tracker: TrackerProvider,
     enabled: () -> Boolean,
     onToggle: () -> Unit,
-    onSignIn: () -> Unit,
+    openProviderSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -325,7 +327,7 @@ private fun TrackerCard(
                         Button(
                             onClick = {
                                 signInButtonState = TrackerAuthState.Authenticating
-                                onSignIn()
+                                openProviderSettings()
                             },
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                             shape = MaterialTheme.shapes.small,
@@ -339,24 +341,38 @@ private fun TrackerCard(
                         }
                     }
                     TrackerAuthState.Authenticated -> {
-                        Switch(
-                            checked = enabled(),
-                            enabled = tracker.status != ProviderStatus.Maintenance && tracker.status != ProviderStatus.Down,
-                            colors = SwitchDefaults.colors(
-                                disabledCheckedThumbColor =
-                                    MaterialTheme.colorScheme.surface
-                                        .copy(1F)
-                                        .compositeOver(MaterialTheme.colorScheme.surface),
-                                disabledCheckedTrackColor =
-                                    MaterialTheme.colorScheme.onSurface
-                                        .copy(0.12F)
-                                        .compositeOver(MaterialTheme.colorScheme.surface),
-                            ),
-                            onCheckedChange = { onToggle() },
-                            modifier = Modifier
-                                .scale(0.7F)
-                                .width(40.dp),
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            IconButton(
+                                onClick = openProviderSettings
+                            ) {
+                                AdaptiveIcon(
+                                    painter = painterResource(id = UiCommonR.drawable.provider_settings),
+                                    contentDescription = stringResource(id = LocaleR.string.provider_settings),
+                                    tint = LocalContentColor.current.copy(0.4F)
+                                )
+                            }
+
+                            Switch(
+                                checked = enabled(),
+                                enabled = tracker.status != ProviderStatus.Maintenance && tracker.status != ProviderStatus.Down,
+                                colors = SwitchDefaults.colors(
+                                    disabledCheckedThumbColor =
+                                        MaterialTheme.colorScheme.surface
+                                            .copy(1F)
+                                            .compositeOver(MaterialTheme.colorScheme.surface),
+                                    disabledCheckedTrackColor =
+                                        MaterialTheme.colorScheme.onSurface
+                                            .copy(0.12F)
+                                            .compositeOver(MaterialTheme.colorScheme.surface),
+                                ),
+                                onCheckedChange = { onToggle() },
+                                modifier = Modifier
+                                    .scale(0.7F)
+                                    .width(40.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -386,7 +402,7 @@ private fun TrackerProvidersBottomSheetPreview() {
                         List(20) {
                             TrackerProvider(
                                 isEnabled = true,
-                                isAuthenticated = false,
+                                isAuthenticated = it % 3 == 0,
                                 metadata = DummyDataForPreview.getProviderMetadata(
                                     id = "provider_$it",
                                     name = "Provider ${it + 1}",
@@ -428,7 +444,7 @@ private fun TrackerCardPreview() {
                         ),
                         enabled = { true },
                         onToggle = {},
-                        onSignIn = {},
+                        openProviderSettings = {},
                         modifier = Modifier.padding(8.dp)
                     )
                 }
