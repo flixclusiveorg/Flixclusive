@@ -23,7 +23,6 @@ import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
-import com.flixclusive.feature.mobile.library.manage.extension.containsAny
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
@@ -196,22 +195,22 @@ internal class ManageLibraryViewModel @Inject constructor(
 
     private suspend fun getTrackerLibraries(providers: List<ProviderResponseWrapper>): List<LibraryListWithPreview> {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val requiredFeatures = setOf(
-            TrackerFeature.LISTS_CREATE,
-            TrackerFeature.LISTS_DELETE,
-            TrackerFeature.LISTS_UPDATE,
-            TrackerFeature.LISTS_READ,
-            TrackerFeature.LIST_ITEMS_READ,
-        )
 
         return providers.mapNotNull { provider ->
-            if (provider.isEnabled) return@mapNotNull null
+            if (!provider.isEnabled) return@mapNotNull null
 
             val api = safeCall {
                 provider.plugin?.getTrackerApi(context)
             } ?: return@mapNotNull null
 
-            if (!api.features.containsAny(requiredFeatures)) return@mapNotNull null
+            runCatching {
+                if (!api.getFeatures().contains(TrackerFeature.LIST_MANAGEMENT)) return@mapNotNull null
+            }.onFailure {
+                errorLog("An error occurred while checking tracker provider ${provider.metadata?.name} capabilities: ${it.message}")
+                it.printStackTrace()
+                return@mapNotNull null
+            }
+
             if (!api.isAuthenticated()) return@mapNotNull null
 
             val lists = api.getLists()
@@ -223,8 +222,8 @@ internal class ManageLibraryViewModel @Inject constructor(
                         list = LibraryList(
                             id = list.id,
                             ownerId = userId,
-                            name = "${provider.name} - ${list.name}",
-                            description = list.description,
+                            name = list.name,
+                            description = if (list.description.isNullOrEmpty()) null else list.description,
                         ),
                         itemsCount = list.itemCount ?: -1,
                         provider = provider.metadata,

@@ -244,7 +244,14 @@ private fun TrackerCard(
 ) {
     val context = LocalContext.current
 
-    var signInButtonState by remember { mutableStateOf(TrackerAuthState.Unauthenticated) }
+    var signInButtonState by remember {
+        mutableStateOf(
+            when {
+                tracker.isAuthenticated -> TrackerAuthState.Authenticated
+                else -> TrackerAuthState.Unauthenticated
+            }
+        )
+    }
 
     Card(
         modifier = modifier,

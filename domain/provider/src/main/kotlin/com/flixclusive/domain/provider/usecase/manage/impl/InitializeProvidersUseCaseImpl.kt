@@ -24,6 +24,9 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Date
@@ -42,18 +45,35 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
     private val installedRepoRepository: InstalledRepoRepository,
     private val appDispatchers: AppDispatchers,
 ) : InitializeProvidersUseCase {
+    private val mutex = Mutex()
+    private var isInitialized = false
     override fun invoke() = channelFlow {
+        if (isInitialized) {
+            warnLog("Providers have already been initialized. Skipping initialization...")
+            return@channelFlow
+        }
+
+        if (mutex.isLocked) {
+            warnLog("Provider initialization is already in progress. Skipping initialization...")
+            return@channelFlow
+        }
+
+        // lock to prevent multiple initializations at the same time
         withContext(appDispatchers.io) {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            mutex.withLock {
+                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            initializeDebugProviders(userId)
-            val providers = providerRepository.getProviders(userId)
+                initializeDebugProviders(userId)
+                val providers = providerRepository.getProviders(userId)
 
-            providers.forEach { providerWrapper ->
-                loadProviderUseCase(installedProvider = providerWrapper.provider)
-                    .collect(::send)
+                providers.forEach { providerWrapper ->
+                    loadProviderUseCase(installedProvider = providerWrapper.provider)
+                        .collect(::send)
+                }
             }
         }
+    }.onCompletion {
+        isInitialized = true
     }
 
     /**

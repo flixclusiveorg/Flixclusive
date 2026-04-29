@@ -240,9 +240,7 @@ internal class MobileAppNavigator(
     override fun openProviderSettings(providerMetadata: ProviderMetadata) {
         runOnResumed {
             navigator.navigate(
-                ProviderSettingsScreenDestination(
-                    metadata = providerMetadata,
-                ),
+                ProviderSettingsScreenDestination(id = providerMetadata.id),
             )
         }
     }

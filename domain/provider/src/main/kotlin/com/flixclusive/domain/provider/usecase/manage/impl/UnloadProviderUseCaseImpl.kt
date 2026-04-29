@@ -23,28 +23,28 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
         provider: InstalledProvider,
         uninstall: Boolean,
     ) {
-        val metadata = providerRepository.getProvider(id = provider.id, ownerId = provider.ownerId)
+        val providerWrapper = providerRepository.getProvider(id = provider.id, ownerId = provider.ownerId)
             ?: error(context.getString(R.string.provider_not_even_installed, provider.id))
 
         val file = provider.file
         if (!file.exists()) {
-            error(context.getString(R.string.provider_not_found, metadata.name, metadata.id))
+            error(context.getString(R.string.provider_not_found, providerWrapper.name, providerWrapper.id))
         }
 
-        infoLog("Unloading provider: ${metadata.name}")
+        infoLog("Unloading provider: ${providerWrapper.name}")
         try {
             if (uninstall) {
                 providerRepository.uninstall(provider = provider)
             } else {
-                providerRepository.unload(id = metadata.id)
+                providerRepository.unload(id = provider.id)
             }
         } catch (e: Throwable) {
             throw Throwable(
                 cause = e,
                 message = context.getString(
                     R.string.unload_exception_message,
-                    metadata.name,
-                    metadata.id,
+                    providerWrapper.name,
+                    providerWrapper.id,
                     e.localizedMessage,
                 ),
             )

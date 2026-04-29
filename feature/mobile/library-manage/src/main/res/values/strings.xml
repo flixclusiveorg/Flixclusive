@@ -5,6 +5,6 @@
     <string name="trackers">Trackers</string>
 
     <string name="tracker_providers_sheet_label">Tracker providers</string>
-    <string name="tracker_providers_sheet_desc">Here are all the tracker providers that are currently being used in this library. Trackers are used here to sync your library with other services, such as MAL, Kitsu, etc. You can enable or disable trackers here to control which trackers are used for syncing your library.</string>
+    <string name="tracker_providers_sheet_desc">Here are all the tracker providers that are currently being used in this library. You can enable or disable trackers here to control which trackers are used for syncing your library.</string>
     <string name="sign_in">Sign in</string>
 </resources>
