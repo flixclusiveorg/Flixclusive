@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.corePresentationMobile)
     implementation(projects.dataDatabase)
     implementation(projects.domainDatabase)
+    implementation(projects.dataProvider)
     implementation(projects.domainProvider)
     implementation(projects.feature.mobile.libraryCommon)
 
@@ -35,8 +36,10 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.kotlinx.immutables)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.stubs.util)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
+    implementation(libs.stubs.provider)
 
     testImplementation(projects.coreTesting)
 }

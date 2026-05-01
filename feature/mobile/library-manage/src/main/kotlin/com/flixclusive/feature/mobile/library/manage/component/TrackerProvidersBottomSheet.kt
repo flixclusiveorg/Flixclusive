@@ -64,8 +64,8 @@ import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceho
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.feature.mobile.library.common.model.TrackerProvider
 import com.flixclusive.feature.mobile.library.manage.R
-import com.flixclusive.feature.mobile.library.manage.TrackerProvider
 import com.flixclusive.model.provider.ProviderStatus
 import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR

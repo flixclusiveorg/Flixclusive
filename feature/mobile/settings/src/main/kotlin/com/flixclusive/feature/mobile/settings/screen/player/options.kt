@@ -103,7 +103,7 @@ internal fun getAvailableCacheSizes(context: Context) =
         -1L,
     ).associateWith { size ->
         when (size) {
-            0L -> context.getString(LocaleR.string.none_label)
+            0L -> context.getString(LocaleR.string.none)
             -1L -> context.getString(LocaleR.string.no_cache_limit_label)
             else -> {
                 Formatter.formatShortFileSize(

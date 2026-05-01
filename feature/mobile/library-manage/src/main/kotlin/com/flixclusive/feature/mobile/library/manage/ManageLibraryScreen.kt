@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.library.manage
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -63,6 +64,7 @@ import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.CreateLibraryDialog
 import com.flixclusive.feature.mobile.library.common.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
+import com.flixclusive.feature.mobile.library.common.model.TrackerProvider
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.manage.component.DefaultLibraryCardShape
@@ -138,8 +140,8 @@ private fun ManageLibraryScreenContent(
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
     onUnselectAll: () -> Unit,
-    onSaveEdits: (LibraryList) -> Unit,
-    onCreate: (String, String?) -> Unit,
+    onSaveEdits: (LibraryListWithPreview) -> Unit,
+    onCreate: (String, String?, TrackerProvider?) -> Unit,
     onToggleEditDialog: (Boolean) -> Unit,
     onToggleCreateDialog: (Boolean) -> Unit,
     onRemoveLongClickedLibrary: () -> Unit,
@@ -187,19 +189,23 @@ private fun ManageLibraryScreenContent(
             .padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onToggleCreateDialog(true) },
-                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
-                shape = MaterialTheme.shapes.medium,
-                expanded = isFabExpanded,
-                text = { Text(text = stringResource(LocaleR.string.new_list)) },
-                icon = {
-                    Icon(
-                        painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                        contentDescription = stringResource(LocaleR.string.plus_button_content_desc),
-                    )
-                },
-            )
+            AnimatedVisibility(
+                visible = !uiState.isMultiSelecting && libraries is Async.Success,
+            ) {
+                ExtendedFloatingActionButton(
+                    onClick = { onToggleCreateDialog(true) },
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    expanded = isFabExpanded,
+                    text = { Text(text = stringResource(LocaleR.string.new_list)) },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = UiCommonR.drawable.round_add_24),
+                            contentDescription = stringResource(LocaleR.string.plus_button_content_desc),
+                        )
+                    },
+                )
+            }
         },
         topBar = {
             val topBarState = remember(
@@ -313,13 +319,18 @@ private fun ManageLibraryScreenContent(
     if (uiState.isEditingLibrary && uiState.longClickedLibrary != null) {
         EditLibraryDialog(
             library = uiState.longClickedLibrary.list,
-            onSave = onSaveEdits,
+            onSave = {
+                onSaveEdits(
+                    uiState.longClickedLibrary.copy(list = it)
+                )
+            },
             onCancel = { onToggleEditDialog(false) },
         )
     }
 
     if (uiState.isCreatingLibrary) {
         CreateLibraryDialog(
+            trackers = trackers,
             onCreate = onCreate,
             onCancel = { onToggleCreateDialog(false) },
         )
@@ -556,14 +567,14 @@ private fun ManageLibraryScreenBasePreview() {
                     onSaveEdits = {
                         val index = libraries.indexOf(uiState.longClickedLibrary)
                         val libraryWithPreview = libraries[index]
-                        libraries[index] = libraryWithPreview.copy(list = it)
+                        libraries[index] = it
                         uiState =
                             uiState.copy(
                                 isEditingLibrary = false,
                                 longClickedLibrary = null,
                             )
                     },
-                    onCreate = { _, _ -> },
+                    onCreate = { _, _, _ -> },
                     onToggleEditDialog = {
                         uiState =
                             uiState.copy(

@@ -9,13 +9,20 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
@@ -48,17 +55,20 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import coil3.request.ImageRequest
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
-import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
+import com.flixclusive.core.presentation.common.theme.Elevations
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.components.material3.CustomOutlinedTextField
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
@@ -68,84 +78,128 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiv
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.film.LibraryListAndState
 import com.flixclusive.feature.mobile.film.R
-import com.flixclusive.feature.mobile.library.common.component.CreateLibraryDialog
+import kotlinx.coroutines.delay
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun LibraryListSheet(
-    libraryListStates: () -> List<LibraryListAndState>,
+    libraryListStates: () -> Async<List<LibraryListAndState>>,
     query: () -> String,
     onQueryChange: (String) -> Unit,
-    toggleOnLibrary: (String, LibraryListType) -> Unit,
-    createLibrary: (String, String?) -> Unit,
+    toggleOnLibrary: (String, LibraryListAndState) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var isCreateDialogOpen by remember { mutableStateOf(false) }
-
     CommonBottomSheet(
         modifier = modifier,
         onDismissRequest = onDismissRequest,
     ) {
-        LazyColumn(contentPadding = PaddingValues(10.dp)) {
-            item {
-                Text(
-                    text = stringResource(LocaleR.string.add_to_list),
-                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 3.dp),
-                )
-            }
+        Text(
+            text = stringResource(LocaleR.string.add_to_list),
+            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 3.dp),
+        )
 
-            item {
-                SearchBar(
-                    query = query,
-                    onQueryChange = onQueryChange,
-                    modifier = Modifier.padding(vertical = 5.dp),
-                )
-            }
+        SearchBar(
+            query = query,
+            onQueryChange = onQueryChange,
+            modifier = Modifier.padding(vertical = 5.dp),
+        )
 
-            item {
-                CreateLibraryButton(
-                    onClick = { isCreateDialogOpen = true },
-                )
-            }
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3F),
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+        )
 
-            item {
-                HorizontalDivider(
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3F),
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                )
-            }
+        AnimatedContent(
+            targetState = libraryListStates(),
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+        ) { state ->
+            when (state) {
+                is Async.Loading -> {
+                    Column {
+                        repeat(3) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            ) {
+                                Placeholder(
+                                    elevation = Elevations.LEVEL_4,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                )
 
-            items(
-                items = libraryListStates(),
-                key = { it.list.id },
-            ) { listAndState ->
-                ItemContent(
-                    listAndState = listAndState,
-                    toggleOnLibrary = {
-                        toggleOnLibrary(listAndState.list.id, listAndState.list.listType)
-                    },
-                    modifier = Modifier.animateItem(),
-                )
+                                Placeholder(
+                                    elevation = Elevations.LEVEL_4,
+                                    modifier = Modifier
+                                        .height(14.dp)
+                                        .width(180.dp)
+                                        .padding(start = 10.dp)
+                                )
+
+                                Spacer(Modifier.weight(1f))
+
+                                Placeholder(
+                                    elevation = Elevations.LEVEL_4,
+                                    shape = CircleShape,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .aspectRatio(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+                is Async.Failure -> Unit
+                is Async.Success -> {
+                    AnimatedContent(
+                        targetState = state.data.isEmpty(),
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        modifier = Modifier.fillMaxSize()
+                    ) { isEmpty ->
+                        if (isEmpty) {
+                            EmptyDataMessage()
+                        } else {
+                            NonEmptyList(
+                                libraryListStates = state.data,
+                                toggleOnLibrary = toggleOnLibrary,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
+}
 
-    if (isCreateDialogOpen) {
-        CreateLibraryDialog(
-            onCancel = { isCreateDialogOpen = false },
-            onCreate = { name, description ->
-                createLibrary(name, description)
-                isCreateDialogOpen = false
-            },
-        )
+@Composable
+private fun NonEmptyList(
+    libraryListStates: List<LibraryListAndState>,
+    toggleOnLibrary: (String, LibraryListAndState) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 10.dp)
+    ) {
+        items(
+            items = libraryListStates,
+            key = { it.list.id },
+        ) { listAndState ->
+            ItemContent(
+                listAndState = listAndState,
+                toggleOnLibrary = {
+                    toggleOnLibrary(listAndState.list.id, listAndState)
+                },
+                modifier = Modifier.animateItem(),
+            )
+        }
     }
 }
 
@@ -209,32 +263,6 @@ private fun SearchBar(
 }
 
 @Composable
-private fun CreateLibraryButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    TextButton(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.small,
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 24.dp),
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        AdaptiveIcon(
-            painter = painterResource(UiCommonR.drawable.round_add_24),
-            contentDescription = stringResource(LocaleR.string.new_list),
-        )
-
-        Text(
-            text = stringResource(LocaleR.string.new_list),
-            style = LocalTextStyle.current.asAdaptiveTextStyle(),
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .weight(1f),
-        )
-    }
-}
-
-@Composable
 private fun ItemContent(
     listAndState: LibraryListAndState,
     toggleOnLibrary: () -> Unit,
@@ -243,11 +271,7 @@ private fun ItemContent(
     val context = LocalContext.current
     val imageSize = getAdaptiveDp(40.dp)
     val imageModel = remember(listAndState) {
-        val image = listAndState.items
-            .lastOrNull()
-            ?.metadata
-            ?.posterImage
-
+        val image = listAndState.images.firstOrNull()
         context.buildImageRequest(imagePath = image)
     }
 
@@ -356,7 +380,8 @@ private fun LibraryItemIcon(
 @Composable
 private fun LibraryListSheetPreview() {
     var query by remember { mutableStateOf("") }
-    var lists by remember {
+
+    val lists = remember {
         val metadata = if (Random.nextBoolean()) {
             DummyDataForPreview.getMovie().toDBFilm()
         } else {
@@ -375,7 +400,7 @@ private fun LibraryListSheetPreview() {
             emptyList()
         }
 
-        val list = List(20) {
+        List(20) {
             LibraryListAndState(
                 listWithItems = LibraryListWithItems(
                     items = items,
@@ -389,32 +414,30 @@ private fun LibraryListSheetPreview() {
                 containsFilm = Random.nextBoolean(),
             )
         }
+    }
 
-        mutableStateOf(list)
+    var listState by remember {
+        mutableStateOf<Async<List<LibraryListAndState>>>(Async.Success(lists))
+    }
+
+    LaunchedEffect(true) {
+        // Simulate loading state
+        listState = Async.Loading
+
+        delay(2000)
+
+        // Simulate loaded state
+        listState = Async.Success(lists)
     }
 
     FlixclusiveTheme {
         Surface {
             LibraryListSheet(
-                libraryListStates = { lists },
+                libraryListStates = { listState },
                 query = { query },
                 onQueryChange = { query = it },
                 toggleOnLibrary = { _, _ -> },
                 onDismissRequest = {},
-                createLibrary = { name, description ->
-                    lists = lists + LibraryListAndState(
-                        listWithItems = LibraryListWithItems(
-                            items = emptyList(),
-                            list = LibraryList(
-                                id = (lists.size + 1).toString(),
-                                name = name,
-                                ownerId = "preview-user",
-                                description = description,
-                            ),
-                        ),
-                        containsFilm = false,
-                    )
-                },
             )
         }
     }

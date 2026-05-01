@@ -21,12 +21,13 @@ fun EditLibraryDialog(
     BaseLibraryModificationDialog(
         label = stringResource(LocaleR.string.edit_library),
         name = name,
+        isEditing = true,
         description = description,
         onNameChange = { name = it },
         confirmLabel = stringResource(LocaleR.string.save),
         onDescriptionChange = { description = it },
         onConfirm = {
-            val newName = if (name.isEmpty()) library.name else name
+            val newName = name.ifEmpty { library.name }
 
             onSave(library.copy(name = newName, description = description))
         },

@@ -1,9 +1,12 @@
 package com.flixclusive.feature.mobile.film
 
+import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -11,7 +14,6 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
-import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
@@ -20,6 +22,8 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
@@ -28,21 +32,32 @@ import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
+import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
+import com.flixclusive.domain.provider.usecase.tracker.ToggleListItemOnTrackerListUseCase
+import com.flixclusive.domain.provider.usecase.tracker.TrackerListItemToggleAction
+import com.flixclusive.feature.mobile.film.LibraryListAndState.Companion.toState
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.provider.tracker.TrackerList
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -52,14 +67,17 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Date
 
 @HiltViewModel(assistedFactory = FilmScreenViewModel.Factory::class)
 internal class FilmScreenViewModel @AssistedInject constructor(
     dataStoreManager: DataStoreManager,
     getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
+    @param:ApplicationContext private val context: Context,
     private val appDispatchers: AppDispatchers,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
@@ -68,6 +86,10 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
     private val getProviderMetadata: GetProviderMetadataUseCase,
+    private val getTrackerProviders: GetTrackerProvidersUseCase,
+    private val getTrackerLists: GetTrackerListsUseCase,
+    private val getProviderPlugin: GetProviderPluginUseCase,
+    private val toggleListItemOnTrackerList: ToggleListItemOnTrackerListUseCase,
     @Assisted private val navArgFilm: Film,
 ) : ViewModel() {
     @AssistedFactory
@@ -76,12 +98,22 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     }
 
     private var fetchMetadataJob: Job? = null
+    private var fetchLibrariesJob: Job? = null
 
     private val _uiState = MutableStateFlow(FilmUiState())
     val uiState = _uiState.asStateFlow()
 
     private val _metadata = MutableStateFlow<FilmMetadata?>(null)
     val metadata = _metadata.asStateFlow()
+
+    private val _librarySheetQuery = MutableStateFlow("")
+    val librarySheetQuery = _librarySheetQuery.asStateFlow()
+
+    private val _libraryLists = MutableStateFlow<Async<List<LibraryListAndState>>>(Async.Loading)
+    val libraryLists = _libraryLists.asStateFlow()
+
+    private val _trackerError = MutableSharedFlow<UiText>()
+    val trackerError = _trackerError.asSharedFlow()
 
     /**
      * A trigger to retry fetching the season data
@@ -156,55 +188,117 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             initialValue = null,
         )
 
-    /**
-     * This is a distinct flow that represents the current search query
-     *
-     * This is separated from [FilmUiState] to avoid unnecessary recompositions
-     * of the entire screen when the query changes.
-     * */
-    private val _librarySheetQuery = MutableStateFlow("")
-    val librarySheetQuery = _librarySheetQuery.asStateFlow()
-
-    /** lists that contain the current film along with whether they contain it or not */
-    val libraryLists = userSessionDataStore.currentUserId
-        .filterNotNull()
-        .flatMapLatest { userId ->
-            libraryListRepository
-                .getListsAndItems(userId, sort = LibrarySort.Modified())
-                .mapLatest { lists ->
-                    val filmId = navArgFilm.id
-
-                    lists.fastMap { listAndItems ->
-                        val containsFilm = listAndItems.items.fastAny { item ->
-                            item.filmId == filmId
-                        }
-
-                        LibraryListAndState(
-                            listWithItems = listAndItems,
-                            containsFilm = containsFilm,
-                        )
-                    }
-                }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = emptyList(),
-        )
-
     /** search results for the library lists, this is separate to avoid multiple mappings */
     @OptIn(FlowPreview::class)
     val searchResults = librarySheetQuery
         .debounce(800) // wait for the user to stop typing
         .filter { it.isNotEmpty() }
         .flatMapLatest { query ->
-            libraryLists.mapLatest { lists ->
-                lists.fastFilter { it.list.name.contains(query, true) }
+            libraryLists.mapLatest { state ->
+                if (state !is Async.Success) {
+                    return@mapLatest state
+                }
+
+                val filtered = state.data.fastFilter { it.name.contains(query, ignoreCase = true) }
+                Async.Success(filtered)
             }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = libraryLists.value,
+            initialValue = Async.Loading
         )
+
+    private fun fetchLibraryLists() {
+        if (fetchLibrariesJob?.isActive == true) {
+            fetchLibrariesJob?.cancel()
+        }
+
+        fetchLibrariesJob = viewModelScope.launch {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+
+            val appLibraries = libraryListRepository
+                .getListsAndItems(userId = userId, sort = LibrarySort.Modified())
+                .mapLatest { data ->
+                    val list = data.fastMap {
+                        it.toState(filmId = navArgFilm.id)
+                    }
+                    Async.Success(list) as Async<List<LibraryListAndState>>
+                }
+                .onStart { emit(Async.Loading) }
+                .catch {
+                    errorLog("Failed to fetch library lists for user $userId")
+                    errorLog(it)
+                    emit(Async.Failure(it))
+                }
+
+            val trackerLists = getTrackerProviders().mapLatest { state ->
+                if (state is Async.Loading) {
+                    return@mapLatest Async.Loading
+                } else if (state is Async.Failure) {
+                    _trackerError.emit(state.message)
+                    return@mapLatest Async.Success(emptyList())
+                }
+
+                val providers = (state as Async.Success).data
+                val libraries = safeCall {
+                    getTrackerLists(providers).fastMapNotNull {
+
+                        val isInAnyList = runCatching {
+                            val provider = getProviderPlugin(it.providerId) ?: return@fastMapNotNull null
+                            val trackerApi = provider.getTrackerApi(context) ?: return@fastMapNotNull null
+
+                            trackerApi.isInAnyList(navArgFilm)
+                        }.onFailure { e ->
+                            errorLog("Failed to check if film is in any tracker list for provider ${it.providerId}: ${e.message}")
+                            e.printStackTrace()
+                            _trackerError.emit(
+                                UiText.from(
+                                    R.string.failed_to_check_tracker,
+                                    e.message ?: "Unknown error"
+                                )
+                            )
+                        }.getOrNull()
+                            ?: return@fastMapNotNull null
+
+                        LibraryListAndState(
+                            containsFilm = isInAnyList,
+                            providerId = it.providerId,
+                            listWithItems = LibraryListWithItems(
+                                list = LibraryList(
+                                    id = it.id,
+                                    name = it.name,
+                                    description = it.description,
+                                    ownerId = userId,
+                                    updatedAt = it.updatedAt?.let { date -> Date(date) } ?: Date()
+                                ),
+                                items = emptyList()
+                            ),
+                        )
+                    }
+                } ?: emptyList()
+
+                Async.Success(libraries)
+            }
+
+            combine(
+                appLibraries,
+                trackerLists,
+            ) { app, tracker ->
+                when {
+                    app is Async.Loading || tracker is Async.Loading -> Async.Loading
+                    app is Async.Failure -> Async.Failure(app.message, app.cause)
+                    tracker is Async.Failure -> Async.Failure(tracker.message, tracker.cause)
+                    app is Async.Success && tracker is Async.Success -> Async.Success(
+                        (app.data + tracker.data).sortedByDescending { it.list.updatedAt.time }
+                    )
+
+                    else -> Async.Loading
+                }
+            }.collectLatest { result ->
+                _libraryLists.value = result
+            }
+        }
+    }
 
     /** Fetches the metadata for the current film. */
     private suspend fun fetchMetadata() {
@@ -272,41 +366,92 @@ internal class FilmScreenViewModel @AssistedInject constructor(
         retrySeasonTrigger.value += 1
     }
 
-    /**
-     * Toggles the presence of the current film in the library list with the given [id].
-     *
-     * If the film is already in the list, it will be removed. If it is not in the list, it will be added.
-     *
-     * @param id The ID of the library list to toggle the film in.
-     * */
-    fun toggleOnLibrary(id: String, type: LibraryListType) {
+    fun toggleOnLibrary(id: String, list: LibraryListAndState) {
         appDispatchers.ioScope.launch {
             val film = _metadata.value
             requireNotNull(film) {
                 "Film metadata must be loaded before toggling watch progress"
             }
 
-            if (type.isWatched) {
+            if (list.type.isWatched) {
                 toggleWatchProgressStatus(film = film)
                 return@launch
             }
 
-            val oldItem = libraryLists.value
-                .firstOrNull { it.list.id == id }
-                ?.items
-                ?.firstOrNull { it.filmId == navArgFilm.id }
+            if (list.isFromTracker) {
+                val provider = getProviderPlugin(list.providerId!!)
+                if (provider == null) {
+                    errorLog("Failed to get provider plugin for id ${list.providerId}")
+                    return@launch
+                }
 
-            // If the item already exists, remove it. Otherwise, add it.
-            if (oldItem != null) {
-                libraryListRepository.deleteItem(oldItem.itemId)
-            } else {
-                libraryListRepository.insertItem(
-                    item = LibraryListItem(
-                        filmId = navArgFilm.id,
-                        listId = id,
-                    ),
-                    film = _metadata.value,
+                val trackerApi = provider.getTrackerApi(context)
+                if (trackerApi == null) {
+                    errorLog("Failed to get tracker API for provider ${provider.id}")
+                    return@launch
+                }
+
+                val trackerList = TrackerList(
+                    id = list.id,
+                    name = list.name,
+                    providerId = list.providerId
                 )
+
+                toggleListItemOnTrackerList(
+                    list = trackerList,
+                    item = film,
+                    action = if (list.containsFilm) {
+                        TrackerListItemToggleAction.REMOVE
+                    } else {
+                        TrackerListItemToggleAction.ADD
+                    }
+                ).onFailure { e ->
+                    errorLog(e)
+                    _trackerError.emit(
+                        UiText.from(
+                            R.string.failed_to_toggle_item_on_tracker_list,
+                            list.name,
+                            e.message ?: "Unknown error"
+                        )
+                    )
+                    return@launch
+                }
+
+                _libraryLists.update {
+                    when (it) {
+                        is Async.Loading, is Async.Failure -> it
+                        is Async.Success -> {
+                            val updatedLists = it.data.fastMap { libraryList ->
+                                if (libraryList.id == list.id) {
+                                    libraryList.copy(
+                                        containsFilm = !list.containsFilm,
+
+                                    )
+                                } else {
+                                    libraryList
+                                }
+                            }
+
+                            Async.Success(updatedLists)
+                        }
+                    }
+                }
+                return@launch
+            } else {
+                val oldItem = list.items.fastFirstOrNull { it.filmId == navArgFilm.id }
+
+                // If the item already exists, remove it. Otherwise, add it.
+                if (oldItem != null) {
+                    libraryListRepository.deleteItem(oldItem.itemId)
+                } else {
+                    libraryListRepository.insertItem(
+                        item = LibraryListItem(
+                            filmId = navArgFilm.id,
+                            listId = id,
+                        ),
+                        film = _metadata.value,
+                    )
+                }
             }
         }
     }
@@ -334,37 +479,6 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             } else {
                 watchProgressRepository.delete(item = watchProgress.id, type = film.filmType)
             }
-        }
-    }
-
-    /**
-     * Creates a new library list with the given [name] and optional [description],
-     * and immediately adds the current film to it.
-     *
-     * @param name The name of the new library list.
-     * @param description An optional description for the new library list.
-     * */
-    fun createLibrary(
-        name: String,
-        description: String?,
-    ) {
-
-        appDispatchers.ioScope.launch {
-            val film = _metadata.filterNotNull().first()
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val newListId = libraryListRepository.insertList(
-                list = LibraryList(
-                    name = name,
-                    description = description,
-                    ownerId = userId,
-                ),
-            )
-
-            // Immediately add the film to the newly created list
-            libraryListRepository.insertItem(
-                item = LibraryListItem(filmId = film.id, listId = newListId),
-                film = film,
-            )
         }
     }
 
@@ -398,6 +512,8 @@ internal class FilmScreenViewModel @AssistedInject constructor(
     }
 
     init {
+        fetchLibraryLists()
+
         viewModelScope.launch {
             launch init@{
                 // Fetch the detailed metadata using the navArgs
@@ -466,9 +582,34 @@ internal data class FilmUiState(
 internal data class LibraryListAndState(
     private val listWithItems: LibraryListWithItems,
     val containsFilm: Boolean,
+    val images: List<String> = emptyList(),
+    val providerId: String? = null,
 ) {
+    val id get() = list.id
+    val type get() = list.listType
+
+    val name get() = list.name
+
     val list get() = listWithItems.list
     val items get() = listWithItems.items
+
+    val isFromTracker get() = providerId != null
+
+    companion object {
+        fun LibraryListWithItems.toState(
+            filmId: String,
+            providerId: String? = null,
+        ): LibraryListAndState {
+            return LibraryListAndState(
+                listWithItems = this,
+                providerId = providerId,
+                images = items.take(3).fastMap { it.metadata.posterImage }.filterNotNull(),
+                containsFilm = items.fastAny { item ->
+                    item.filmId == filmId
+                },
+            )
+        }
+    }
 }
 
 internal enum class FilmScreenState {

@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
 
+    implementation(libs.coil.compose)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.foundation)
@@ -25,4 +26,5 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.kotlinx.immutables)
+    implementation(libs.stubs.model.provider)
 }

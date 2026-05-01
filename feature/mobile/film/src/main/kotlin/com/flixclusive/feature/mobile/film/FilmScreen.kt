@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -38,14 +40,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
-import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -111,6 +114,8 @@ internal fun InternalFilmScreen(
         creationCallback = { it.create(navArgs = navArgs.film) }
     ),
 ) {
+    val context = LocalContext.current
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val metadata by viewModel.metadata.collectAsStateWithLifecycle()
     val watchProgress by viewModel.watchProgress.collectAsStateWithLifecycle()
@@ -119,6 +124,14 @@ internal fun InternalFilmScreen(
     val librarySheetQuery by viewModel.librarySheetQuery.collectAsStateWithLifecycle()
     val libraryListStates by viewModel.libraryLists.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel) {
+        viewModel.trackerError.collect {
+            snackbarHostState.showSnackbar(it.asString(context))
+        }
+    }
 
     FilmScreenContent(
         isLibraryInitiallyOpened = navArgs.isTogglingLibrary,
@@ -135,7 +148,6 @@ internal fun InternalFilmScreen(
         onSeasonChange = viewModel::onSeasonChange,
         toggleOnLibrary = viewModel::toggleOnLibrary,
         toggleEpisodeOnLibrary = viewModel::toggleEpisodeOnLibrary,
-        createLibrary = viewModel::createLibrary,
         onRetry = viewModel::onRetry,
         onRetryFetchSeason = viewModel::onRetryFetchSeason,
     )
@@ -150,15 +162,15 @@ private fun FilmScreenContent(
     uiState: FilmUiState,
     metadata: Film,
     watchProgress: WatchProgress?,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     seasonToDisplay: Resource<SeasonWithProgress>?,
     query: () -> String,
-    libraryListStates: () -> List<LibraryListAndState>,
-    searchResults: () -> List<LibraryListAndState>,
+    libraryListStates: () -> Async<List<LibraryListAndState>>,
+    searchResults: () -> Async<List<LibraryListAndState>>,
     onQueryChange: (String) -> Unit,
     onSeasonChange: (Season) -> Unit,
-    toggleOnLibrary: (String, LibraryListType) -> Unit,
+    toggleOnLibrary: (String, LibraryListAndState) -> Unit,
     toggleEpisodeOnLibrary: (EpisodeWithProgress) -> Unit,
-    createLibrary: (String, String?) -> Unit,
     onRetry: () -> Unit,
     onRetryFetchSeason: () -> Unit,
 ) {
@@ -231,6 +243,7 @@ private fun FilmScreenContent(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = Modifier
             .padding(LocalGlobalScaffoldPadding.current),
         topBar = {
@@ -244,7 +257,6 @@ private fun FilmScreenContent(
         AnimatedContent(
             modifier = Modifier,
             targetState = uiState.screenState,
-            label = "FilmScreenContent",
         ) { state ->
             when (state) {
                 FilmScreenState.Loading -> {
@@ -298,7 +310,8 @@ private fun FilmScreenContent(
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             val isInLibrary by remember {
                                 derivedStateOf {
-                                    libraryListStates().any { it.containsFilm }
+                                    val state = libraryListStates()
+                                    state is Async.Success && state.data.fastAny { it.containsFilm }
                                 }
                             }
 
@@ -391,7 +404,6 @@ private fun FilmScreenContent(
             },
             onQueryChange = onQueryChange,
             toggleOnLibrary = toggleOnLibrary,
-            createLibrary = createLibrary,
             onDismissRequest = { isLibrarySheetOpen = false },
         )
     }
@@ -538,26 +550,12 @@ private fun FilmScreenBasePreview() {
                 navigator = navigator,
                 showFilmTitles = false,
                 toggleOnLibrary = { _, _ -> },
-                libraryListStates = { lists },
+                libraryListStates = { Async.Success(lists) },
                 searchResults = {
-                    lists.filter { it.list.name.contains(query, ignoreCase = true) }
+                    Async.Success(lists.filter { it.list.name.contains(query, ignoreCase = true) })
                 },
                 query = { query },
                 onQueryChange = { query = it },
-                createLibrary = { name, description ->
-                    lists = lists + LibraryListAndState(
-                        listWithItems = LibraryListWithItems(
-                            items = emptyList(),
-                            list = LibraryList(
-                                id = (lists.size + 1).toString(),
-                                name = name,
-                                ownerId = "preview-user",
-                                description = description,
-                            ),
-                        ),
-                        containsFilm = false,
-                    )
-                },
                 seasonToDisplay = remember(uiState.selectedSeason) {
                     if (metadata is TvShow) {
                         val season = metadata.seasons.first { it.number == (uiState.selectedSeason ?: 1) }
