@@ -34,10 +34,10 @@ interface LibraryListDao {
         SELECT DISTINCT list.*
         FROM library_lists list
         INNER JOIN library_list_items listItem ON list.id = listItem.listId
-        WHERE listItem.filmId = :filmId AND list.ownerId = :ownerId
+        WHERE listItem.mediaId = :mediaId AND list.ownerId = :ownerId
         ORDER BY list.createdAt DESC
     """)
-    fun getListsContainingFilmAsFlow(filmId: String, ownerId: String): Flow<List<LibraryList>>
+    fun getListsContainingMediaAsFlow(mediaId: String, ownerId: String): Flow<List<LibraryList>>
 
 
     @Transaction
@@ -46,10 +46,10 @@ interface LibraryListDao {
             SELECT 1
             FROM library_lists list
             INNER JOIN library_list_items listItem ON list.id = listItem.listId
-            WHERE listItem.filmId = :filmId AND list.ownerId = :ownerId
+            WHERE listItem.mediaId = :mediaId AND list.ownerId = :ownerId
         )
     """)
-    suspend fun isInLibrary(filmId: String, ownerId: String): Boolean
+    suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean
 
     @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")
     suspend fun getWatchedList(ownerId: String): LibraryList

@@ -19,7 +19,7 @@ android {
 
 dependencies {
     implementation(libs.stubs.util)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 
     implementation(libs.gson)
 }

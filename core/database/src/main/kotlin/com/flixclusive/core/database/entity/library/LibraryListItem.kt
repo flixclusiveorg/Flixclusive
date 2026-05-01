@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.media.DBMedia
 import java.util.Date
 
 @Entity(
@@ -17,21 +17,21 @@ import java.util.Date
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = DBFilm::class,
+            entity = DBMedia::class,
             parentColumns = ["id"],
-            childColumns = ["filmId"],
+            childColumns = ["mediaId"],
         ),
     ],
     indices = [
-        Index(value = ["filmId", "listId"], unique = true),
-        Index(value = ["filmId"]),
+        Index(value = ["mediaId", "listId"], unique = true),
+        Index(value = ["mediaId"]),
         Index(value = ["listId"]),
     ],
 )
 data class LibraryListItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val filmId: String,
+    val mediaId: String,
     val listId: String,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),

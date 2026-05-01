@@ -3,8 +3,7 @@ package com.flixclusive.core.database.migration
 import android.annotation.SuppressLint
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.flixclusive.core.database.entity.film.DBFilmV213
-import com.flixclusive.core.database.entity.film.DBFilmV213.Companion.DB_FILM_VALID_RECOMMENDATIONS_COUNT
+import com.flixclusive.core.database.entity.media.DBFilmV213
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.database.migration.Schema8to9.DBFilmMigrator.toDBFilm
 import com.flixclusive.core.util.log.errorLog
@@ -161,7 +160,7 @@ internal object Schema8to9 : Migration(8, 9) {
                 val dbFilm = filmJson.toDBFilm()
                 if (dbFilm.id.isNotEmpty()) {
                     // Check if this is a movie or series based on filmType
-                    if (dbFilm.filmType.name == "MOVIE") {
+                    if (dbFilm.filmType == "MOVIE") {
                         // Migrate as MovieProgress
                         migrateMovieProgress(
                             db = db,
@@ -477,10 +476,10 @@ internal object Schema8to9 : Migration(8, 9) {
                 dbFilm.releaseDate,
                 dbFilm.logoImage,
                 dbFilm.year,
-                dbFilm.filmType.name,
+                dbFilm.filmType,
                 dbFilm.rating,
                 Json.encodeToString(dbFilm.customProperties),
-                dbFilm.recommendations.size >= DB_FILM_VALID_RECOMMENDATIONS_COUNT,
+                dbFilm.hasRecommendations,
                 currentTime,
                 currentTime,
             ),

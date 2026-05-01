@@ -4,31 +4,31 @@ import androidx.room.DatabaseView
 import androidx.room.Embedded
 import androidx.room.Ignore
 import androidx.room.Relation
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.film.DBFilmExternalId
+import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.media.DBMediaExternalId
 
 /**
- * Convenience view for library list items with their associated film metadata.
+ * Convenience view for library list items with their associated media metadata.
  * */
 @DatabaseView(
     viewName = "library_list_item_with_metadata",
-    value = "SELECT library_list_items.id AS item_id, library_list_items.filmId AS item_filmId, library_list_items.listId AS item_listId, library_list_items.createdAt AS item_createdAt, library_list_items.updatedAt AS item_updatedAt, films.id AS film_id, films.title AS film_title, films.providerId AS film_providerId, films.filmType AS film_filmType, films.overview AS film_overview, films.posterImage AS film_posterImage, films.adult AS film_adult, films.language AS film_language, films.rating AS film_rating, films.backdropImage AS film_backdropImage, films.releaseDate AS film_releaseDate, films.createdAt AS film_createdAt, films.updatedAt AS film_updatedAt FROM library_list_items INNER JOIN films ON library_list_items.filmId = films.id"
+    value = "SELECT library_list_items.id AS item_id, library_list_items.mediaId AS item_mediaId, library_list_items.listId AS item_listId, library_list_items.createdAt AS item_createdAt, library_list_items.updatedAt AS item_updatedAt, media.id AS media_id, media.title AS media_title, media.providerId AS media_providerId, media.type AS media_type, media.overview AS media_overview, media.posterImage AS media_posterImage, media.adult AS media_adult, media.language AS media_language, media.rating AS media_rating, media.backdropImage AS media_backdropImage, media.releaseDate AS media_releaseDate, media.createdAt AS media_createdAt, media.updatedAt AS media_updatedAt FROM library_list_items INNER JOIN media ON library_list_items.mediaId = media.id"
 )
 data class LibraryListItemWithMetadata(
     @Embedded(prefix = "item_")
     val item: LibraryListItem,
-    @Embedded(prefix = "film_")
-    val metadata: DBFilm,
+    @Embedded(prefix = "media_")
+    val metadata: DBMedia,
     @Relation(
-        entity = DBFilmExternalId::class,
-        parentColumn = "film_id",
-        entityColumn = "filmId",
+        entity = DBMediaExternalId::class,
+        parentColumn = "media_id",
+        entityColumn = "mediaId",
     )
-    val externalIds: List<DBFilmExternalId>,
+    val externalIds: List<DBMediaExternalId>,
 ) {
     @get:Ignore
     val itemId: Long get() = item.id
 
     @get:Ignore
-    val filmId: String get() = item.filmId
+    val mediaId: String get() = item.mediaId
 }

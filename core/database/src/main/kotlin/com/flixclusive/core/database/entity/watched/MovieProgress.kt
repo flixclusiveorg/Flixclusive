@@ -4,24 +4,24 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.user.User
 import java.util.Date
 
 /**
  * Represents a movie progress item in the watch history.
  *
- * This entity extends [WatchProgress] and includes the film ID, owner ID,
- * progress in seconds, status of the watch, duration of the film in seconds,
+ * This entity extends [WatchProgress] and includes the media ID, owner ID,
+ * progress in seconds, status of the watch, duration of the media in seconds,
  * the date when it was watched, and the watch count.
  * */
 @Entity(
     tableName = "movies_watch_history",
     foreignKeys = [
         ForeignKey(
-            entity = DBFilm::class,
+            entity = DBMedia::class,
             parentColumns = ["id"],
-            childColumns = ["filmId"],
+            childColumns = ["mediaId"],
         ),
         ForeignKey(
             entity = User::class,
@@ -31,14 +31,14 @@ import java.util.Date
         )
     ],
     indices = [
-        Index(value = ["filmId", "ownerId"], unique = true),
-        Index(value = ["filmId"]),
+        Index(value = ["mediaId", "ownerId"], unique = true),
+        Index(value = ["mediaId"]),
         Index(value = ["ownerId"]),
     ],
 )
 data class MovieProgress(
     @PrimaryKey(autoGenerate = true) override val id: Long = 0,
-    override val filmId: String,
+    override val mediaId: String,
     override val ownerId: String,
     override val progress: Long,
     override val status: WatchStatus,

@@ -2,7 +2,7 @@ package com.flixclusive.core.database.entity.watched
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.media.DBMedia
 
 /**
  * Represents a progress item in the watch history for an episode,
@@ -13,8 +13,8 @@ import com.flixclusive.core.database.entity.film.DBFilm
 data class EpisodeProgressWithMetadata(
     @Embedded override val watchData: EpisodeProgress,
     @Relation(
-        parentColumn = "filmId",
+        parentColumn = "mediaId",
         entityColumn = "id",
     )
-    override val film: DBFilm,
+    override val media: DBMedia,
 ) : WatchProgressWithMetadata

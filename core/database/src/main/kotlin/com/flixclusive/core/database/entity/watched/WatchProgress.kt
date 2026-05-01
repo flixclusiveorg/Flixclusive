@@ -9,7 +9,7 @@ import java.util.Date
  * */
 sealed interface WatchProgress {
     val id: Long
-    val filmId: String
+    val mediaId: String
     val ownerId: String
     val progress: Long
     val duration: Long

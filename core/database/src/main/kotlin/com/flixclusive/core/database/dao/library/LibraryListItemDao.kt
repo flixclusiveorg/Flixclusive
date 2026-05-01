@@ -6,15 +6,15 @@ import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
-import com.flixclusive.core.database.entity.film.DBFilmExternalId
-import com.flixclusive.core.database.entity.film.DBFilmExternalId.Companion.toDBFilmExternalIds
-import com.flixclusive.core.database.entity.film.DBFilmFts
-import com.flixclusive.core.database.entity.film.DBFilmFts.Companion.toDBFilmFts
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
-import com.flixclusive.model.film.Film
+import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
+import com.flixclusive.core.database.entity.media.DBMediaExternalId
+import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toDBMediaExternalIds
+import com.flixclusive.core.database.entity.media.DBMediaFts
+import com.flixclusive.core.database.entity.media.DBMediaFts.Companion.toDBMediaFts
+import com.flixclusive.model.media.MediaMetadata
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
@@ -34,10 +34,10 @@ interface LibraryListItemDao {
     @Transaction
     @Query("""
         SELECT * FROM library_list_item_with_metadata
-        WHERE item_listId = :listId AND item_filmId = :filmId
+        WHERE item_listId = :listId AND item_mediaId = :mediaId
         LIMIT 1
     """)
-    suspend fun getByListIdAndFilmId(listId: String, filmId: String): LibraryListItemWithMetadata?
+    suspend fun getByListIdAndMediaId(listId: String, mediaId: String): LibraryListItemWithMetadata?
 
     fun getByListId(
         listId: String,
@@ -78,8 +78,8 @@ interface LibraryListItemDao {
             RoomRawQuery(
                 sql = """
                     SELECT * FROM library_list_item_with_metadata
-                    WHERE item_filmId IN (
-                        SELECT filmId FROM films_fts WHERE films_fts MATCH ?
+                    WHERE item_mediaId IN (
+                        SELECT mediaId FROM medias_fts WHERE medias_fts MATCH ?
                     ) AND item_listId = ?
                     ORDER BY ${if (ascending) "$columnSort ASC" else "$columnSort DESC"}
                 """.trimIndent(),
@@ -94,12 +94,12 @@ interface LibraryListItemDao {
     @Transaction
     suspend fun insert(
         item: LibraryListItem,
-        film: Film? = null,
+        media: MediaMetadata? = null,
     ): Long {
-        if (film != null) {
-            upsertFilm(film.toDBFilm().copy(updatedAt = Date()))
-            upsertFilmFts(film.toDBFilmFts())
-            upsertIds(film.toDBFilmExternalIds())
+        if (media != null) {
+            upsertMedia(media.toDBMedia().copy(updatedAt = Date()))
+            upsertMediaFts(media.toDBMediaFts())
+            upsertIds(media.toDBMediaExternalIds())
         }
 
         return insertItem(item.copy(updatedAt = Date()))
@@ -108,18 +108,18 @@ interface LibraryListItemDao {
     @Query("DELETE FROM library_list_items WHERE id = :id")
     suspend fun delete(id: Long)
 
-    @Query("DELETE FROM library_list_items WHERE listId = :listId AND filmId = :filmId")
-    suspend fun deleteByListIdAndFilmId(listId: String, filmId: String)
+    @Query("DELETE FROM library_list_items WHERE listId = :listId AND mediaId = :mediaId")
+    suspend fun deleteByListIdAndMediaId(listId: String, mediaId: String)
 
 
     @Upsert
-    suspend fun upsertFilm(media: DBFilm)
+    suspend fun upsertMedia(media: DBMedia)
 
     @Upsert
-    suspend fun upsertFilmFts(mediaFts: DBFilmFts)
+    suspend fun upsertMediaFts(mediaFts: DBMediaFts)
 
     @Upsert
-    suspend fun upsertIds(list: List<DBFilmExternalId>)
+    suspend fun upsertIds(list: List<DBMediaExternalId>)
 
     @Upsert
     suspend fun insertItem(list: LibraryListItem): Long
