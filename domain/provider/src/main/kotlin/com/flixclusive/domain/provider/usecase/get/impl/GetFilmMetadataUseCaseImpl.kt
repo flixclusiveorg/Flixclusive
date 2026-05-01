@@ -9,9 +9,9 @@ import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
-import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmMetadata
+import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.PartialMedia
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
@@ -20,25 +20,25 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
-internal class GetFilmMetadataUseCaseImpl @Inject constructor(
+internal class GetMediaMetadataUseCaseImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers
-) : GetFilmMetadataUseCase {
-    override operator fun invoke(film: Film): Flow<Async<FilmMetadata>> = flow {
+) : GetMediaMetadataUseCase {
+    override operator fun invoke(media: PartialMedia): Flow<Async<MediaMetadata>> = flow {
         try {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val provider = providerRepository.getProvider(
-                id = film.providerId, ownerId = userId
+                id = media.providerId, ownerId = userId
             )
 
             if (provider == null) {
                 emit(
                     Async.Failure(
                         UiText.from(
-                            R.string.get_film_metadata_error_no_provider_plugin,
-                            film.providerId
+                            R.string.get_media_metadata_error_no_provider_plugin,
+                            media.providerId
                         )
                     )
                 )
@@ -49,20 +49,23 @@ internal class GetFilmMetadataUseCaseImpl @Inject constructor(
             if (api == null) {
                 emit(
                     Async.Failure(
-                        UiText.from(R.string.get_film_metadata_error_no_provider_api, film.providerId)
+                        UiText.from(R.string.get_media_metadata_error_no_provider_api, media.providerId)
                     )
                 )
                 return@flow
             }
 
-            val metadata = api.getMetadata(film)
+            val metadata = when (media.isMovie) {
+                true -> api.getMovie(media)
+                false -> api.getShow(media)
+            }
 
             emit(Async.Success(metadata))
         } catch (e: Exception) {
             errorLog(e)
             emit(
                 Async.Failure(
-                    UiText.from(R.string.get_film_metadata_error_unk_exception, e.actualMessage),
+                    UiText.from(R.string.get_media_metadata_error_unk_exception, e.actualMessage),
                 )
             )
         }

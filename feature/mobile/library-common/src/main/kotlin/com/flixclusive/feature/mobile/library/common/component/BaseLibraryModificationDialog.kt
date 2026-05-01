@@ -306,8 +306,7 @@ private fun TrackerSheetToggle(
     } else {
         OutlinedButton(
             onClick = onClick,
-            enabled = selectedTracker.status != ProviderStatus.Down
-                && selectedTracker.status != ProviderStatus.Maintenance,
+            enabled = selectedTracker.status.isWorking,
             shape = MaterialTheme.shapes.small,
             modifier = modifier.padding(bottom = 4.dp),
         ) {
@@ -377,8 +376,7 @@ private fun TrackerSheetItem(
 
     TextButton(
         onClick = onClick,
-        enabled = tracker.status != ProviderStatus.Down
-            && tracker.status != ProviderStatus.Maintenance,
+        enabled = tracker.status.isWorking,
         shape = MaterialTheme.shapes.small,
         contentPadding = PaddingValues(vertical = 8.dp),
         modifier = modifier.padding(bottom = 4.dp),

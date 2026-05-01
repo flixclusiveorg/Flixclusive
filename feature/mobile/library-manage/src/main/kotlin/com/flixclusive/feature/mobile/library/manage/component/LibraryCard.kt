@@ -203,7 +203,7 @@ private fun LibraryCardPlaceholderPreview() {
 @Preview
 @Composable
 private fun LibraryCardBasePreview() {
-    val films = remember {
+    val medias = remember {
         List(3) {
             DummyDataForPreview
                 .getMovie(id = "$it")
@@ -220,8 +220,8 @@ private fun LibraryCardBasePreview() {
                     name = "My List #$it",
                     description = "This is my favorite list number $it",
                 ),
-                previews = films,
-                itemsCount = films.size,
+                previews = medias,
+                itemsCount = medias.size,
                 provider = DummyDataForPreview.getProviderMetadata()
             )
         }

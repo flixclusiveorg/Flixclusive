@@ -3,10 +3,10 @@ package com.flixclusive.core.testing.database
 import android.content.Context
 import androidx.room.Room
 import com.flixclusive.core.database.AppDatabase
-import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListType
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.database.entity.provider.InstalledRepository
 import com.flixclusive.core.database.entity.search.SearchHistory
@@ -14,8 +14,8 @@ import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
-import com.flixclusive.core.testing.film.FilmTestDefaults
-import com.flixclusive.model.film.Film
+import com.flixclusive.core.testing.media.MediaTestDefaults
+import com.flixclusive.model.media.MediaMetadata
 import java.util.Date
 
 /**
@@ -24,11 +24,11 @@ import java.util.Date
 object DatabaseTestDefaults {
     const val TEST_USER_ID = "11111111-1111-1111-1111-111111111111"
 
-    fun getDBFilm(film: Film = FilmTestDefaults.getMovie()) = film.toDBFilm()
+    fun getDBMedia(media: MediaMetadata = MediaTestDefaults.getMovie()) = media.toDBMedia()
 
     fun getMovieProgress(
         id: Long = 0,
-        filmId: String = getDBFilm().id,
+        mediaId: String = getDBMedia().id,
         ownerId: String = TEST_USER_ID,
         progress: Long = 0,
         status: WatchStatus = WatchStatus.WATCHING,
@@ -37,7 +37,7 @@ object DatabaseTestDefaults {
         updatedAt: Date = createdAt,
     ) = MovieProgress(
         id = id,
-        filmId = filmId,
+        mediaId = mediaId,
         ownerId = ownerId,
         progress = progress,
         status = status,
@@ -48,7 +48,7 @@ object DatabaseTestDefaults {
 
     fun getEpisodeProgress(
         id: Long = 0,
-        filmId: String = getDBFilm(film = FilmTestDefaults.getTvShow()).id,
+        mediaId: String = getDBMedia(media = MediaTestDefaults.getShow()).id,
         ownerId: String = TEST_USER_ID,
         seasonNumber: Int = 1,
         episodeNumber: Int = 1,
@@ -59,7 +59,7 @@ object DatabaseTestDefaults {
         updatedAt: Date = createdAt,
     ) = EpisodeProgress(
         id = id,
-        filmId = filmId,
+        mediaId = mediaId,
         ownerId = ownerId,
         seasonNumber = seasonNumber,
         episodeNumber = episodeNumber,
@@ -118,11 +118,11 @@ object DatabaseTestDefaults {
 
     fun getLibraryListItem(
         id: Long = 0,
-        filmId: String = getDBFilm().id,
+        mediaId: String = getDBMedia().id,
         listId: String = "test-list-id",
     ) = LibraryListItem(
         id = id,
-        filmId = filmId,
+        mediaId = mediaId,
         listId = listId,
     )
 

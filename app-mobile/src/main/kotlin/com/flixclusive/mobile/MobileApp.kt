@@ -58,7 +58,7 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.navigation.navigator.ExitAction
 import com.flixclusive.core.navigation.navigator.StartPlayerAction
-import com.flixclusive.core.navigation.navigator.ViewFilmPreviewAction
+import com.flixclusive.core.navigation.navigator.ViewMediaPreviewAction
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.components.NetworkMonitorSnackbarVisuals
 import com.flixclusive.core.presentation.mobile.components.NetworkMonitorSnackbarVisuals.Companion.NetworkMonitorSnackbarHost
@@ -69,19 +69,18 @@ import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPip
 import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.DisplayChangelogsObserver
-import com.flixclusive.mobile.component.FilmCoverPreview
-import com.flixclusive.mobile.component.FilmPreviewBottomSheet
+import com.flixclusive.mobile.component.MediaCoverPreview
+import com.flixclusive.mobile.component.MediaPreviewBottomSheet
 import com.flixclusive.mobile.component.PlayerSplashScreen
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.navigation.AppNavHost
 import com.flixclusive.navigation.extensions.bottomBarNavigate
 import com.flixclusive.navigation.extensions.currentScreenAsState
 import com.ramcosta.composedestinations.generated.appmobile.AppmobileNavGraphs
 import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelFilmScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
@@ -166,10 +165,10 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             delay(1200)
             isNavigatingToPlayerScreen = false
 
-            val (film, episode) = playerData
+            val (media, episode) = playerData
             if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                 destinationsNavigator.navigate(
-                    PlayerScreenDestination(film = film as FilmMetadata, episode = episode)
+                    PlayerScreenDestination(media = media, episode = episode)
                 )
             }
 
@@ -272,20 +271,20 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                             }
                         }
                     },
-                    previewFilmAction = remember {
-                        object : ViewFilmPreviewAction {
-                            override fun previewFilm(film: Film) {
-                                viewModel.previewFilm(film)
+                    previewMediaAction = remember {
+                        object : ViewMediaPreviewAction {
+                            override fun previewMedia(media: MediaMetadata) {
+                                viewModel.previewMedia(media)
                             }
                         }
                     },
                     startPlayerAction = remember {
                         object : StartPlayerAction {
                             override fun play(
-                                film: Film,
+                                media: MediaMetadata,
                                 episode: Episode?,
                             ) {
-                                viewModel.onFetchMediaLinks(film, episode)
+                                viewModel.onFetchMediaLinks(media, episode)
                             }
                         }
                     },
@@ -304,15 +303,15 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     }
 
     if (currentSelectedScreen != PlayerScreenDestination) {
-        if (uiState.filmPreviewState != null) {
-            val film = uiState.filmPreviewState!!.film
+        if (uiState.mediaPreviewState != null) {
+            val media = uiState.mediaPreviewState!!.media
 
-            val navigateToFilmScreen = dropUnlessResumed {
+            val navigateToMediaScreen = dropUnlessResumed {
                 when (currentNavGraph) {
                     AppmobileNavGraphs.home -> {
                         destinationsNavigator.navigate(
-                            direction = HomeAppLevelFilmScreenDestination(
-                                film = film,
+                            direction = HomeAppLevelMediaScreenDestination(
+                                media = media,
                                 isTogglingLibrary = true,
                             )
                         )
@@ -320,34 +319,34 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
                     AppmobileNavGraphs.library -> {
                         destinationsNavigator.navigate(
-                            direction = LibraryAppLevelFilmScreenDestination(
-                                film = film,
+                            direction = LibraryAppLevelMediaScreenDestination(
+                                media = media,
                                 isTogglingLibrary = true,
                             )
                         )
                     }
                 }
-                viewModel.onRemovePreviewFilm()
+                viewModel.onRemovePreviewMedia()
             }
 
-            FilmPreviewBottomSheet(
-                preview = uiState.filmPreviewState!!,
+            MediaPreviewBottomSheet(
+                preview = uiState.mediaPreviewState!!,
                 sheetState = bottomSheetState,
                 onSeeMoreClick = {
-                    navigateToFilmScreen()
+                    navigateToMediaScreen()
 
                     scope.launch {
                         bottomSheetState.hide()
                     }.invokeOnCompletion {
                         if (!bottomSheetState.isVisible) {
-                            viewModel.onRemovePreviewFilm()
+                            viewModel.onRemovePreviewMedia()
                         }
                     }
                 },
-                onDismissRequest = viewModel::onRemovePreviewFilm,
+                onDismissRequest = viewModel::onRemovePreviewMedia,
                 onPlayClick = {
-                    viewModel.onFetchMediaLinks(film)
-                    navigateToFilmScreen()
+                    viewModel.onFetchMediaLinks(media)
+                    navigateToMediaScreen()
                 },
                 onImageClick = {
                     fullScreenImageToShow = it
@@ -375,7 +374,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                     },
                     onDismiss = {
                         viewModel.onStopLoadingLinks(isForceClosing = true)
-                        viewModel.onRemovePreviewFilm() // In case, the bottom sheet is opened
+                        viewModel.onRemovePreviewMedia() // In case, the bottom sheet is opened
                     },
                 )
             }
@@ -396,7 +395,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             exit = fadeOut(),
         ) {
             fullScreenImageToShow?.let {
-                FilmCoverPreview(
+                MediaCoverPreview(
                     imagePath = it,
                     onDismiss = {
                         fullScreenImageToShow = null

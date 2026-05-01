@@ -1,8 +1,8 @@
 package com.flixclusive.core.navigation.navigator
 
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.tv.Episode
 
 interface StartPlayerAction {
-    fun play(film: Film, episode: Episode? = null)
+    fun play(media: MediaMetadata, episode: Episode? = null)
 }

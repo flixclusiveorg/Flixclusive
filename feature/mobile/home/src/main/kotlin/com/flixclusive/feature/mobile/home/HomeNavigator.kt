@@ -3,15 +3,15 @@ package com.flixclusive.feature.mobile.home
 import com.flixclusive.core.navigation.navigator.AddProviderAction
 import com.flixclusive.core.navigation.navigator.GoBackAction
 import com.flixclusive.core.navigation.navigator.StartPlayerAction
-import com.flixclusive.core.navigation.navigator.ViewAllFilmsAction
-import com.flixclusive.core.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.navigation.navigator.ViewFilmPreviewAction
+import com.flixclusive.core.navigation.navigator.ViewAllMediasAction
+import com.flixclusive.core.navigation.navigator.ViewMediaAction
+import com.flixclusive.core.navigation.navigator.ViewMediaPreviewAction
 
 interface HomeNavigator :
-    ViewFilmAction,
-    ViewAllFilmsAction,
+    ViewMediaAction,
+    ViewAllMediasAction,
     GoBackAction,
-    ViewFilmPreviewAction,
+    ViewMediaPreviewAction,
     StartPlayerAction,
     AddProviderAction {
     fun openSearchScreen()

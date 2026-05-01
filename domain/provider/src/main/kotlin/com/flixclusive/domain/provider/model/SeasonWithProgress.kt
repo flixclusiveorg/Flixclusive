@@ -1,6 +1,6 @@
 package com.flixclusive.domain.provider.model
 
-import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.media.common.tv.Season
 
 /**
  * A data class representing a season along with its watch progress for each episode.
@@ -10,6 +10,6 @@ data class SeasonWithProgress(
     val episodes: List<EpisodeWithProgress>,
 ) {
     val number get() = season.number
-    val name get() = season.name
+    val title get() = season.title
     val overview get() = season.overview
 }

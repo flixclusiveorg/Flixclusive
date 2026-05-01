@@ -10,9 +10,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
-import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
+import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
@@ -25,7 +25,7 @@ import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
 import com.flixclusive.feature.mobile.library.common.model.TrackerProvider
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.tracker.TrackerList
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -542,14 +542,14 @@ internal data class PreviewPoster(
     val posterPath: String?,
 ) {
     companion object {
-        fun DBFilm.toPreviewPoster(): PreviewPoster {
+        fun DBMedia.toPreviewPoster(): PreviewPoster {
             return PreviewPoster(
                 title = title,
                 posterPath = posterImage,
             )
         }
 
-        fun Film.toPreviewPoster(): PreviewPoster {
+        fun MediaMetadata.toPreviewPoster(): PreviewPoster {
             return PreviewPoster(
                 title = title,
                 posterPath = posterImage,

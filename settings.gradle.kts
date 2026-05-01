@@ -29,7 +29,7 @@ include(":feature:splash-screen")
 include(":feature:app-updates")
 
 // Mobile features
-include(":feature:mobile:film")
+include(":feature:mobile:media")
 include(":feature:mobile:home")
 include(":feature:mobile:library-common")
 include(":feature:mobile:library-details")
@@ -51,7 +51,7 @@ include(":feature:mobile:user-add")
 include(":feature:mobile:user-edit")
 
 // TV features
-//include(":feature:tv:film")
+//include(":feature:tv:media")
 //include(":feature:tv:home")
 //include(":feature:tv:player")
 // include(":feature:tv:preferences")

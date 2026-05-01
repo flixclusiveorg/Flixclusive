@@ -1,6 +1,5 @@
 package com.flixclusive.domain.provider.usecase.get
 
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 
@@ -19,10 +18,10 @@ interface GetProviderFromRemoteUseCase {
     /**
      * Retrieves a list of online [ProviderMetadata]s from the specified repository.
      * */
-    suspend operator fun invoke(repository: Repository): Resource<List<ProviderMetadata>>
+    suspend operator fun invoke(repository: Repository): List<ProviderMetadata>
 
     /**
      * Retrieves a single online [ProviderMetadata] from the specified repository.
      * */
-    suspend operator fun invoke(repository: Repository, id: String): Resource<ProviderMetadata>
+    suspend operator fun invoke(repository: Repository, id: String): ProviderMetadata
 }

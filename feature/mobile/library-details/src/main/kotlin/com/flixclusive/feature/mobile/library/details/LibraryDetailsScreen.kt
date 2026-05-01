@@ -39,21 +39,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
-import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterOnlyNearTopScrollBehavior
+import com.flixclusive.core.presentation.mobile.components.media.MediaCard
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
@@ -61,7 +62,7 @@ import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.details.component.ScreenHeader
 import com.flixclusive.feature.mobile.library.details.component.topbar.LibraryDetailsTopBar
 import com.flixclusive.feature.mobile.library.details.component.topbar.TopTitleAlphaEasing
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.PersistentList
@@ -98,7 +99,7 @@ internal fun LibraryDetailsScreen(
         searchQuery = { searchQuery },
         selectedItems = { selectedItems },
         onGoBack = navigator::goBack,
-        onViewFilm = navigator::openFilmScreen,
+        onViewMedia = navigator::openMediaScreen,
         onAddItems = { /*TODO()*/ },
         onRemoveLongClickedItem = viewModel::onRemoveLongClickedItem,
         onLongClickItem = viewModel::onLongClickItem,
@@ -125,7 +126,7 @@ internal fun LibraryDetailsScreen(
     onUnselectAll: () -> Unit,
     onAddItems: () -> Unit,
     onRemoveLongClickedItem: () -> Unit,
-    onViewFilm: (Film) -> Unit,
+    onViewMedia: (MediaMetadata) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onToggleSelect: (LibraryListItemWithMetadata) -> Unit,
@@ -239,7 +240,7 @@ internal fun LibraryDetailsScreen(
                 false -> {
                     LazyVerticalGrid(
                         state = listState,
-                        columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
+                        columns = GridCells.Adaptive(getAdaptiveMediaCardWidth()),
                         contentPadding = paddingValues,
                         modifier = Modifier.padding(top = 10.dp),
                     ) {
@@ -251,18 +252,18 @@ internal fun LibraryDetailsScreen(
                         }
 
                         items(items = items(), key = { it.itemId }) { item ->
-                            val film = item.metadata
+                            val media = item.metadata.toMediaMetadata()
                             val isSelected by remember {
                                 derivedStateOf { selectedItems().contains(item) }
                             }
 
-                            FilmCard(
-                                film = film,
+                            MediaCard(
+                                media = media,
                                 onClick = {
                                     if (uiState.isMultiSelecting) {
                                         onToggleSelect(item)
                                     } else {
-                                        onViewFilm(it)
+                                        onViewMedia(it)
                                     }
                                 },
                                 onLongClick = { onLongClickItem(item) },
@@ -339,19 +340,19 @@ private fun LibraryDetailsScreenBasePreview() {
 
     var uiState by remember { mutableStateOf(LibraryDetailsUiState(isLoading = true)) }
     var searchQuery by remember { mutableStateOf("") }
-    val films = remember { mutableStateListOf<LibraryListItemWithMetadata>() }
+    val medias = remember { mutableStateListOf<LibraryListItemWithMetadata>() }
     var selectedItems by remember { mutableStateOf(persistentSetOf<LibraryListItemWithMetadata>()) }
 
     val safeItems by remember {
         derivedStateOf {
             val list =
                 if (searchQuery.isNotEmpty()) {
-                    films.filter {
+                    medias.filter {
                         it.metadata.title.contains(searchQuery, true)
                             || it.metadata.overview?.contains(searchQuery, true) == true
                     }
                 } else {
-                    films
+                    medias
                 }
 
             val sortedList =
@@ -374,18 +375,18 @@ private fun LibraryDetailsScreenBasePreview() {
     }
 
     LaunchedEffect(true) {
-        films.addAll(
+        medias.addAll(
             List(100) {
-                val film = DummyDataForPreview.getMovie(
+                val media = DummyDataForPreview.getMovie(
                     id = "${it + 1}",
-                    title = "Film $it",
+                    title = "MediaMetadata $it",
                 )
 
                 LibraryListItemWithMetadata(
-                    metadata = film.toDBFilm(),
+                    metadata = media.toDBMedia(),
                     item = LibraryListItem(
                         id = it.toLong(),
-                        filmId = film.id,
+                        mediaId = media.id,
                         listId = sampleList.id,
                         createdAt = Date(System.currentTimeMillis() - it * 10000000L),
                     ),
@@ -409,8 +410,8 @@ private fun LibraryDetailsScreenBasePreview() {
                     selectedItems = { selectedItems },
                     searchQuery = { searchQuery },
                     onRemoveSelection = {
-                        selectedItems.forEach { film ->
-                            films.removeIf { it.metadata.id == film.metadata.id }
+                        selectedItems.forEach { media ->
+                            medias.removeIf { it.metadata.id == media.metadata.id }
                         }
                     },
                     onStartMultiSelecting = { uiState = uiState.copy(isMultiSelecting = true) },
@@ -420,12 +421,12 @@ private fun LibraryDetailsScreenBasePreview() {
                     },
                     onAddItems = {},
                     onRemoveLongClickedItem = {
-                        val filmToRemove = uiState.longClickedItem
-                        films.removeIf { filmToRemove?.metadata?.id == it.metadata.id }
+                        val mediaToRemove = uiState.longClickedItem
+                        medias.removeIf { mediaToRemove?.metadata?.id == it.metadata.id }
 
                         uiState = uiState.copy(longClickedItem = null)
                     },
-                    onViewFilm = {},
+                    onViewMedia = {},
                     onQueryChange = { searchQuery = it },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
                     onToggleSelect = {

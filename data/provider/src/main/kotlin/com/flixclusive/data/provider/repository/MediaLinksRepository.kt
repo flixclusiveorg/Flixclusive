@@ -2,7 +2,7 @@ package com.flixclusive.data.provider.repository
 
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.data.provider.util.extensions.filterOutExpiredLinks
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.model.provider.link.MediaLink.Companion.getFlagOfType
@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 /**
  *
- * Combination of filmId parameter
- * and season:episode of the film
+ * Combination of mediaId parameter
+ * and season:episode of the media
  * (if it is a TV show).
  *
- * actual format: "$filmId-$season:$episode"
+ * actual format: "$mediaId-$season:$episode"
  *
  * */
 @JvmInline
@@ -26,13 +26,13 @@ value class MediaLinksCacheKey private constructor(
 ) {
     companion object {
         fun create(
-            filmId: String,
+            mediaId: String,
             providerId: String,
             episode: Episode? = null,
-        ) = MediaLinksCacheKey("$providerId::$filmId-${episode?.season}:${episode?.number}")
+        ) = MediaLinksCacheKey("$providerId::$mediaId-${episode?.season}:${episode?.number}")
 
         fun LoadLinksState.toCacheKey(
-            filmId: String,
+            mediaId: String,
             episode: Episode? = null,
         ): MediaLinksCacheKey? {
             val providerId = when (this) {
@@ -42,7 +42,7 @@ value class MediaLinksCacheKey private constructor(
             }
 
             return create(
-                filmId = filmId,
+                mediaId = mediaId,
                 providerId = providerId,
                 episode = episode,
             )
@@ -54,7 +54,7 @@ value class MediaLinksCacheKey private constructor(
  *
  * A data model to hold all cached [MediaLink]s extracted from a provider.
  *
- * @param watchId the watch id of the film from the used provider
+ * @param watchId the watch id of the media from the used provider
  * @param providerId the id of the provider used
  * @param streams watchable links obtained from the provider
  * @param subtitles subtitle links obtained from the provider
@@ -111,7 +111,7 @@ data class MediaLinks(
 
 /**
  * Repository interface for managing observable streams and subtitles
- * for films and TV shows, allowing for caching and retrieval of media links.
+ * for medias and TV shows, allowing for caching and retrieval of media links.
  * */
 interface MediaLinksRepository {
     /**

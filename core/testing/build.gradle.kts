@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.androidx.test.ext.junit)
 
     implementation(libs.stubs.util)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.model.provider)
 
     implementation(libs.room.runtime)

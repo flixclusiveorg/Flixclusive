@@ -1,11 +1,11 @@
 package com.flixclusive.navigation.navgraph
 
 import androidx.compose.runtime.Composable
-import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
+import com.flixclusive.core.navigation.navargs.MediaScreenNavArgs
 import com.flixclusive.core.navigation.navigator.GoBackAction
-import com.flixclusive.feature.mobile.film.FilmScreen
-import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.markdown.MarkdownScreen
+import com.flixclusive.feature.mobile.media.MediaScreen
+import com.flixclusive.feature.mobile.media.MediaScreenNavigator
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreen
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavArgs
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
@@ -37,14 +37,14 @@ internal annotation class AppNavGraph {
     companion object Includes
 }
 
-@InternalDestination<HomeNavGraph>(navArgs = FilmScreenNavArgs::class)
-@InternalDestination<LibraryNavGraph>(navArgs = FilmScreenNavArgs::class)
+@InternalDestination<HomeNavGraph>(navArgs = MediaScreenNavArgs::class)
+@InternalDestination<LibraryNavGraph>(navArgs = MediaScreenNavArgs::class)
 @Composable
-internal fun AppLevelFilmScreen(
-    navigator: FilmScreenNavigator,
-    navArgs: FilmScreenNavArgs
+internal fun AppLevelMediaScreen(
+    navigator: MediaScreenNavigator,
+    navArgs: MediaScreenNavArgs
 ) {
-    FilmScreen(
+    MediaScreen(
         navigator = navigator,
         navArgs = navArgs
     )

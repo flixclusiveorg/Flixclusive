@@ -14,18 +14,18 @@ import com.flixclusive.core.navigation.navigator.OpenPinScreenAction
 import com.flixclusive.core.navigation.navigator.PinAction
 import com.flixclusive.core.navigation.navigator.SelectAvatarAction
 import com.flixclusive.core.navigation.navigator.StartPlayerAction
-import com.flixclusive.core.navigation.navigator.ViewAllFilmsAction
-import com.flixclusive.core.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.navigation.navigator.ViewFilmPreviewAction
+import com.flixclusive.core.navigation.navigator.ViewAllMediasAction
 import com.flixclusive.core.navigation.navigator.ViewMarkdownAction
+import com.flixclusive.core.navigation.navigator.ViewMediaAction
+import com.flixclusive.core.navigation.navigator.ViewMediaPreviewAction
 import com.flixclusive.core.navigation.navigator.ViewNewAppUpdatesAction
 import com.flixclusive.core.navigation.navigator.ViewProviderAction
 import com.flixclusive.feature.mobile.app.updates.dialog.AppUpdatesDialogNavigator
 import com.flixclusive.feature.mobile.app.updates.screen.AppUpdatesScreenNavigator
-import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
 import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
+import com.flixclusive.feature.mobile.media.MediaScreenNavigator
 import com.flixclusive.feature.mobile.onboarding.OnboardingScreenNavigator
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
@@ -37,16 +37,16 @@ import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigat
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.navigation.extensions.navGraph
 import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelSeeAllScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelSeeAllScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
@@ -76,7 +76,7 @@ internal class MobileAppNavigator(
     private val navigator: DestinationsNavigator,
     private val uriHandler: UriHandler,
     private val exitAction: ExitAction,
-    private val previewFilmAction: ViewFilmPreviewAction,
+    private val previewMediaAction: ViewMediaPreviewAction,
     private val startPlayerAction: StartPlayerAction,
 ) : AddProfileAction,
     AddProviderScreenNavigator,
@@ -87,7 +87,7 @@ internal class MobileAppNavigator(
     ChooseProfileAction,
     EditUserAction,
     ExitAction,
-    FilmScreenNavigator,
+    MediaScreenNavigator,
     GoBackAction,
     HomeNavigator,
     LibraryDetailsScreenNavigator,
@@ -102,9 +102,9 @@ internal class MobileAppNavigator(
     SplashScreenNavigator,
     UserEditScreenNavigator,
     UserProfilesScreenNavigator,
-    ViewAllFilmsAction,
-    ViewFilmAction,
-    ViewFilmPreviewAction,
+    ViewAllMediasAction,
+    ViewMediaAction,
+    ViewMediaPreviewAction,
     ViewMarkdownAction,
     ViewNewAppUpdatesAction,
     ViewProviderAction {
@@ -131,11 +131,11 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openFilmScreen(film: Film) {
+    override fun openMediaScreen(media: MediaMetadata) {
         runOnResumed {
             when (currentNavGraph) {
-                is HomeGraph -> navigator.navigate(HomeAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
-                is LibraryGraph -> navigator.navigate(LibraryAppLevelFilmScreenDestination(film = film, isTogglingLibrary = false))
+                is HomeGraph -> navigator.navigate(HomeAppLevelMediaScreenDestination(media = media, isTogglingLibrary = false))
+                is LibraryGraph -> navigator.navigate(LibraryAppLevelMediaScreenDestination(media = media, isTogglingLibrary = false))
             }
         }
     }
@@ -292,12 +292,12 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun previewFilm(film: Film) {
-        previewFilmAction.previewFilm(film)
+    override fun previewMedia(media: MediaMetadata) {
+        previewMediaAction.previewMedia(media)
     }
 
-    override fun play(film: Film, episode: Episode?) {
-        startPlayerAction.play(film, episode)
+    override fun play(media: MediaMetadata, episode: Episode?) {
+        startPlayerAction.play(media, episode)
     }
 
     override fun openAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {

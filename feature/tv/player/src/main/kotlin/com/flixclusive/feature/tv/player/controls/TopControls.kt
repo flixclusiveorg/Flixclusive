@@ -41,7 +41,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.getGlowRadialGradient
 import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -51,7 +51,7 @@ internal val PlaybackButtonsSize = 24.dp
 @Composable
 internal fun TopControls(
     modifier: Modifier = Modifier,
-    isTvShow: Boolean,
+    isShow: Boolean,
     isLastEpisode: Boolean = false,
     currentEpisodeSelected: Episode?,
     title: String,
@@ -127,7 +127,7 @@ internal fun TopControls(
                 }
             }
 
-            if (isTvShow) {
+            if (isShow) {
                 Box(
                     modifier = Modifier.padding(start = 10.dp)
                 ) {

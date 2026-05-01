@@ -26,5 +26,5 @@ dependencies {
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.kotlinx.immutables)
     implementation(libs.stubs.model.provider)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 }

@@ -59,7 +59,7 @@ internal data class CommonSortFilters(
 
                 SortableProperty.Language -> {
                     sortedWith(
-                        getSortComparator(filter.selectedValue.ascending) { it.metadata.language.languageCode },
+                        getSortComparator(filter.selectedValue.ascending) { it.metadata.language.code },
                     )
                 }
 

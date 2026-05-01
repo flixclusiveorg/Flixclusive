@@ -20,7 +20,7 @@ dependencies {
     implementation(projects.dataDownloads)
     implementation(projects.domainDownloads)
     implementation(libs.pauseCoroutineDispatcher)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.provider)
     implementation(libs.stubs.util)
 

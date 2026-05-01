@@ -1,7 +1,7 @@
 package com.flixclusive.core.navigation.navigator
 
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 
-interface ViewFilmAction {
-    fun openFilmScreen(film: Film)
+interface ViewMediaAction {
+    fun openMediaScreen(media: MediaMetadata)
 }

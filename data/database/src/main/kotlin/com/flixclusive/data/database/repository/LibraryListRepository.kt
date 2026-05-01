@@ -4,7 +4,7 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -27,11 +27,11 @@ interface LibraryListRepository {
 
     suspend fun getItem(itemId: Long): LibraryListItemWithMetadata?
 
-    suspend fun insertItem(item: LibraryListItem, film: Film? = null): Long
+    suspend fun insertItem(item: LibraryListItem, media: MediaMetadata? = null): Long
 
-    fun getListsContainingFilm(filmId: String, ownerId: String): Flow<List<LibraryList>>
+    fun getListsContainingMedia(mediaId: String, ownerId: String): Flow<List<LibraryList>>
 
-    suspend fun isInLibrary(filmId: String, ownerId: String): Boolean
+    suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean
 
     suspend fun deleteItem(itemId: Long)
 

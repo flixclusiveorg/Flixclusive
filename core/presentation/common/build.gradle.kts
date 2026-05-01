@@ -24,6 +24,6 @@ dependencies {
     implementation(libs.core.splashscreen)
     implementation(libs.kotlinx.immutables)
     implementation(libs.material)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.model.provider)
 }

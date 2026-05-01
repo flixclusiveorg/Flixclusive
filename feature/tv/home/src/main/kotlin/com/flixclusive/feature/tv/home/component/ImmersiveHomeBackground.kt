@@ -21,16 +21,16 @@ import androidx.tv.material3.MaterialTheme
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
-import com.flixclusive.core.ui.tv.component.FilmOverview
+import com.flixclusive.core.ui.tv.component.MediaOverview
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.drawScrimOnForeground
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 internal fun ImmersiveHomeBackground(
     modifier: Modifier = Modifier,
-    headerItem: Film?
+    headerItem: MediaMetadata?
 ) {
     val context = LocalContext.current
     val enterAnimation = fadeIn(initialAlpha = 0.6F)
@@ -83,15 +83,15 @@ internal fun ImmersiveHomeBackground(
             },
             label = ""
         ) {
-            it?.let { film ->
+            it?.let { media ->
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(LabelStartPadding.getPaddingValues())
                         .padding(top = 20.dp)
                 ) {
-                    FilmOverview(
-                        film = film,
+                    MediaOverview(
+                        media = media,
                         watchHistoryItem = null
                     ) // TODO: Add watch history item here.
                 }

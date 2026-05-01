@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTvMaterial3Api::class, ExperimentalTvFoundationApi::class)
 
-package com.flixclusive.feature.tv.film.component.episodes
+package com.flixclusive.feature.tv.media.component.episodes
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -44,7 +44,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.tv.FilmLogo
+import com.flixclusive.core.ui.tv.MediaLogo
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.FocusRequesterModifiers
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
@@ -55,15 +55,15 @@ import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.film.common.tv.Season
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.media.common.tv.Season
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.Show
 
 private const val EPISODES_PANEL_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 
 @Composable
 internal fun EpisodesPanel(
-    film: TvShow,
+    media: Show,
     currentSelectedSeasonNumber: Int,
     currentSelectedSeason: Resource<Season>,
     onSeasonChange: (Int) -> Unit,
@@ -147,7 +147,7 @@ internal fun EpisodesPanel(
                     NonFocusableSpacer(height = 40.dp)
                 }
 
-                itemsIndexed(film.seasons) { i, season ->
+                itemsIndexed(media.seasons) { i, season ->
                     val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 0, i) }
 
                     SeasonBlock(
@@ -170,8 +170,8 @@ internal fun EpisodesPanel(
                 }
             }
 
-            FilmLogo(
-                film = film,
+            MediaLogo(
+                media = media,
                 showTitleOnError = false,
                 alignment = Alignment.Center,
                 modifier = Modifier

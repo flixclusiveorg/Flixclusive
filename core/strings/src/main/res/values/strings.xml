@@ -25,7 +25,7 @@
     <string name="empty_data_default_sub_label">Nothing came up in here</string>
     <string name="error_crash_title">Oops!</string>
     <string name="error_downloading_update">Error updating the app</string>
-    <string name="error_film_message">Error while fetching data!</string>
+    <string name="error_media_message">Error while fetching data!</string>
     <string name="error_on_search">Error while searching</string>
     <string name="error_search_history_is_already_cleared">Search history is already cleared!</string>
     <string name="fail_sending_error_log">Couldn\'t send error logs to server</string>
@@ -36,7 +36,7 @@
     <string name="failed_to_load_online_providers">Could not parse online providers.</string>
     <string name="failed_to_load_providers">Failed to load providers</string>
     <string name="failed_to_update_provider">Failed to update the provider.</string>
-    <string name="film_data_fetch_failed">Failed to fetch film data</string>
+    <string name="media_data_fetch_failed">Failed to fetch media data</string>
     <string name="invalid_tmdb_id">The TMDB ID shouldn\'t be null or must be an integer.</string>
     <string name="load_link_job_active_error_message">Still processing the last request…</string>
     <string name="null_repository_url_error">No repository url has been given for this provider</string>
@@ -62,7 +62,7 @@
         <item quantity="other">You\'re about to install <b>%1$d</b> providers.</item>
     </plurals>
 
-    <!--  Film/Filter types  -->
+    <!--  MediaMetadata/Filter types  -->
     <string name="all">All</string>
     <string name="movie">Movie</string>
     <string name="tv_show">TV Show</string>
@@ -137,7 +137,7 @@
     <string name="episodes">Episodes</string>
     <string name="exit">Exit</string>
     <string name="export_label">Export</string>
-    <string name="film_card_titles">Detailed film cards</string>
+    <string name="media_card_titles">Detailed media cards</string>
     <string name="finish">Finish</string>
     <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
     <string name="flixclusive_providers">Flixclusive Providers</string>
@@ -181,7 +181,7 @@
     <string name="open_in_web">Open in Web</string>
     <string name="opt_in_prerelease">Ok 🗿</string>
     <string name="opt_out_prerelease">Hell nah 😭</string>
-    <string name="other_films_message">Other films you might like!</string>
+    <string name="other_medias_message">Other medias you might like!</string>
     <string name="pause">Pause</string>
     <string name="pin">PIN</string>
     <string name="pin_confirm">Confirm PIN</string>
@@ -322,7 +322,7 @@
     <string name="full_log_version_used_format">Version (code): </string>
     <string name="made_by_author_label_format">Made by %1$s</string>
     <string name="n_seconds_format">%1$d seconds</string>
-    <string name="provider_test_film_used_for_testing_format">%1$s used for testing: %2$s</string>
+    <string name="provider_test_media_used_for_testing_format">%1$s used for testing: %2$s</string>
     <string name="seek_seconds_format">%1$s seconds</string>
     <string name="untitled_season">Season %1$d</string>
     <string name="untitled_episode">Episode %1$d</string>
@@ -348,7 +348,7 @@
     <string name="empty_recently_watched_list_message">Start watching now!</string>
     <string name="empty_user_profiles_list_message">Create a profile now!</string>
     <string name="failed_to_get_media_id_error_msg">Failed to get media id. This might not be available yet.</string>
-    <string name="film_data_fetching">Fetching film details…</string>
+    <string name="media_data_fetching">Fetching media details…</string>
     <string name="first_time_providers_screen_message">It seems like this is your first time using the providers system, would you like to read more about it?</string>
     <string name="loading_next_episode">Loading next episode…</string>
     <string name="no_installable_providers">No installable providers</string>
@@ -411,7 +411,7 @@
     <string name="episodes_button_desc">An icon for episodes button</string>
     <string name="error_icon_content_desc">Error icon</string>
     <string name="expand_card_icon_content_desc">Expand test result card icon</string>
-    <string name="film_card_titles_settings_description">Display the titles on under the media cards.</string>
+    <string name="media_card_titles_settings_description">Display the titles on under the media cards.</string>
     <string name="filter_button">Filter</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
@@ -419,7 +419,7 @@
     <string name="lock_button_desc">An icon for locking the player</string>
     <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
-    <string name="navigate_to_film">Go see details of film button</string>
+    <string name="navigate_to_media">Go see details of media button</string>
     <string name="navigate_to_repository_content_desc">Open repository screen</string>
     <string name="back">Back</string>
     <string name="next_episode_button_desc">An icon for next episode</string>
@@ -517,7 +517,7 @@
     <string name="backup_restore_failed_format">Restore failed: %1$s</string>
 
     <!--  Share app message  -->
-    <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>
+    <string name="share_message">Watch all latest and exclusive medias at:\n\n%1$s</string>
     <string name="share_message_subject">Flixclusive download link</string>
 
     <!-- Permission request messages -->

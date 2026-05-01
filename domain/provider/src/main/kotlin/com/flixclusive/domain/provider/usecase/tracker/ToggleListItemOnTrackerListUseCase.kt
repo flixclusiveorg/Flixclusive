@@ -1,6 +1,6 @@
 package com.flixclusive.domain.provider.usecase.tracker
 
-import com.flixclusive.model.film.FilmMetadata
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.provider.tracker.TrackerList
 
 enum class TrackerListItemToggleAction {
@@ -11,7 +11,7 @@ enum class TrackerListItemToggleAction {
 interface ToggleListItemOnTrackerListUseCase {
     suspend operator fun invoke(
         list: TrackerList,
-        item: FilmMetadata,
+        item: MediaMetadata,
         action: TrackerListItemToggleAction
     ): Result<Unit>
 }

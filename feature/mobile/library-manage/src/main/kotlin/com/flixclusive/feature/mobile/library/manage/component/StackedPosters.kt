@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -157,7 +157,7 @@ internal fun StackedPostersPlaceholder(
         ) {
             PreviewPlaceholder(
                 showAddButton = false,
-                modifier = backgroundCardWidthModifier.aspectRatio(FilmCover.Poster.ratio),
+                modifier = backgroundCardWidthModifier.aspectRatio(MediaCover.Poster.ratio),
             )
         }
 
@@ -171,7 +171,7 @@ internal fun StackedPostersPlaceholder(
         ) {
             PreviewPlaceholder(
                 showAddButton = false,
-                modifier = backgroundCardWidthModifier.aspectRatio(FilmCover.Poster.ratio),
+                modifier = backgroundCardWidthModifier.aspectRatio(MediaCover.Poster.ratio),
             )
         }
 
@@ -213,7 +213,7 @@ private fun PreviewCard(
                 contentDescription = preview.title,
                 onSuccess = { isHidingPlaceholder = true },
                 modifier = Modifier
-                    .aspectRatio(FilmCover.Poster.ratio)
+                    .aspectRatio(MediaCover.Poster.ratio)
                     .clip(MaterialTheme.shapes.extraSmall),
             )
         }
@@ -226,7 +226,7 @@ private fun PreviewCard(
         ) {
             PreviewPlaceholder(
                 title = preview?.title,
-                modifier = Modifier.aspectRatio(FilmCover.Poster.ratio),
+                modifier = Modifier.aspectRatio(MediaCover.Poster.ratio),
             )
         }
     }
@@ -332,9 +332,9 @@ private fun StackedPostersBasePreview() {
                         StackedPosters(
                             previews =
                                 List(3) {
-                                    DummyDataForPreview.getFilm(
+                                    DummyDataForPreview.getMedia(
                                         id = "$it",
-                                        title = "Film #$it",
+                                        title = "MediaMetadata #$it",
                                     ).toPreviewPoster()
                                 },
                         )

@@ -52,7 +52,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
         val updatedMetadata = getProviderFromRemoteUseCase(
             repository = repository,
             id = provider.id,
-        ).getOrThrow()
+        )
 
         val old = getOldProviderConfig(provider.id)
         createBackup(old)

@@ -56,10 +56,10 @@ internal class AppearanceTweakScreen(
             tweaks =
                 persistentListOf(
                     TweakUI.SwitchTweak(
-                        title = stringResource(LocaleR.string.film_card_titles),
+                        title = stringResource(LocaleR.string.media_card_titles),
                         description = {
                             resources.getString(
-                                LocaleR.string.film_card_titles_settings_description,
+                                LocaleR.string.media_card_titles_settings_description,
                             )
                         },
                         value = shouldShowTitleOnCardsProvider,

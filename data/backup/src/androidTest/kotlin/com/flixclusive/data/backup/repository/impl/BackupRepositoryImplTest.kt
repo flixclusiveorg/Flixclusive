@@ -10,10 +10,10 @@ import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.database.AppDatabase
-import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListType
+import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -41,7 +41,7 @@ import com.flixclusive.data.backup.validate.impl.ProviderBackupValidator
 import com.flixclusive.data.backup.validate.impl.RepositoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.SearchHistoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.WatchProgressBackupValidator
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.util.MediaType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,8 +91,8 @@ class BackupRepositoryImplTest {
                 )
 
                 val listName = "Test List"
-                val filmId = "film-1"
-                seedCustomLibraryList(db, ownerId = userId, listName = listName, filmId = filmId)
+                val mediaId = "media-1"
+                seedCustomLibraryList(db, ownerId = userId, listName = listName, mediaId = mediaId)
 
                 repository.create(uri = Uri.fromFile(backupFile), options = libraryOnlyOptions())
 
@@ -104,7 +104,7 @@ class BackupRepositoryImplTest {
                 expectThat(backedUpList.name).isEqualTo(listName)
                 expectThat(backedUpList.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(backedUpList.items).hasSize(1)
-                expectThat(backedUpList.items.first().film.id).isEqualTo(filmId)
+                expectThat(backedUpList.items.first().media.id).isEqualTo(mediaId)
 
                 expectThat(backup.preferences).isEmpty()
                 expectThat(backup.watchProgressList).isEmpty()
@@ -132,7 +132,7 @@ class BackupRepositoryImplTest {
                     appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
                 )
 
-                seedCustomLibraryList(db, ownerId = userId, listName = "Test List", filmId = "film-1")
+                seedCustomLibraryList(db, ownerId = userId, listName = "Test List", mediaId = "media-1")
 
                 val result = repository.create(uri = Uri.fromFile(backupFile), options = libraryOnlyOptions())
 
@@ -270,7 +270,7 @@ class BackupRepositoryImplTest {
                 expectThat(restoredLists.first().name).isEqualTo("Test List")
                 expectThat(restoredLists.first().list.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(restoredLists.first().items).hasSize(1)
-                expectThat(restoredLists.first().items.first().filmId).isEqualTo("film-1")
+                expectThat(restoredLists.first().items.first().mediaId).isEqualTo("media-1")
             } finally {
                 targetDb.close()
                 backupFile.delete()
@@ -311,7 +311,7 @@ class BackupRepositoryImplTest {
         db: AppDatabase,
         ownerId: String,
         listName: String,
-        filmId: String,
+        mediaId: String,
     ) {
         val listId = db.libraryListDao().insert(
             LibraryList(
@@ -324,13 +324,13 @@ class BackupRepositoryImplTest {
             )
         ).toInt()
 
-        db.libraryListItemDao().upsertFilm(
-            DBFilm(
-                id = filmId,
-                title = "Test Film",
+        db.libraryListItemDao().upsertMedia(
+            DBMedia(
+                id = mediaId,
+                title = "Test Media",
                 providerId = "test-provider",
                 adult = false,
-                filmType = FilmType.MOVIE,
+                mediaType = MediaType.MOVIE,
                 overview = null,
                 posterImage = null,
                 language = null,
@@ -345,7 +345,7 @@ class BackupRepositoryImplTest {
 
         db.libraryListItemDao().insertItem(
             LibraryListItem(
-                filmId = filmId,
+                mediaId = mediaId,
                 listId = listId,
                 createdAt = Date(1_700_000_000_000),
                 updatedAt = Date(1_700_000_000_000),
@@ -373,7 +373,7 @@ class BackupRepositoryImplTest {
                 appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
             )
 
-            seedCustomLibraryList(db, ownerId = userId, listName = "Test List", filmId = "film-1")
+            seedCustomLibraryList(db, ownerId = userId, listName = "Test List", mediaId = "media-1")
 
             repository.create(uri = Uri.fromFile(backupFile), options = libraryOnlyOptions())
 

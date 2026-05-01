@@ -52,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
@@ -91,10 +92,10 @@ import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleAndAudio
 import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleSyncScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.feature.mobile.player.util.UiMode
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -105,7 +106,7 @@ import com.flixclusive.core.drawables.R as UiCommonR
 @Composable
 internal fun PlayerControls(
     player: AppPlayer,
-    film: FilmMetadata,
+    media: MediaMetadata,
     snackbarState: PlayerSnackbarState,
     isInPipMode: Boolean,
     playerPrefs: PlayerPreferences,
@@ -390,7 +391,7 @@ internal fun PlayerControls(
                         modifier = Modifier.align(Alignment.TopCenter)
                     ) {
                         PlayerTopBar(
-                            title = film.title,
+                            title = media.title,
                             episode = currentEpisode,
                             onBack = onBack,
                         )
@@ -486,14 +487,21 @@ internal fun PlayerControls(
 
                     AnimatedPanel(
                         visible = uiMode.isEpisodes
-                            && film is TvShow
+                            && media is Show
                             && currentEpisode != null
                             && onEpisodeChange != null
                             && onSeasonChange != null
                     ) {
+                        val filteredSeasons by remember(media) {
+                            derivedStateOf {
+                                (media as Show).seasons
+                                    .fastFilter { it.isReleased }
+                            }
+                        }
+
                         EpisodesScreen(
                             currentSeason = currentSeason,
-                            seasons = (film as TvShow).seasons,
+                            seasons = filteredSeasons,
                             currentEpisode = currentEpisode!!,
                             onSeasonChange = onSeasonChange!!::invoke,
                             onEpisodeClick = onEpisodeChange!!::invoke,

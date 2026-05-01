@@ -27,5 +27,5 @@ dependencies {
     implementation(libs.material)
     implementation(libs.palette)
     implementation(libs.stubs.model.provider)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 }

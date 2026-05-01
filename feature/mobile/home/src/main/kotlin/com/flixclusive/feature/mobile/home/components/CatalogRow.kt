@@ -35,15 +35,15 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.film.FilmCard
-import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
+import com.flixclusive.core.presentation.mobile.components.media.MediaCard
+import com.flixclusive.core.presentation.mobile.components.media.MediaCardPlaceholder
 import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
 import com.flixclusive.feature.mobile.home.CatalogWithPagingState
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.provider.Catalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -56,9 +56,9 @@ internal fun CatalogRow(
     catalog: Catalog,
     pagingState: PagingState,
     showTitles: Boolean,
-    items: List<Film>,
-    onFilmClick: (Film) -> Unit,
-    onFilmLongClick: (Film) -> Unit,
+    items: List<MediaMetadata>,
+    onMediaClick: (MediaMetadata) -> Unit,
+    onMediaLongClick: (MediaMetadata) -> Unit,
     paginate: () -> Unit,
     onSeeAllItems: () -> Unit,
     modifier: Modifier = Modifier,
@@ -127,12 +127,12 @@ internal fun CatalogRow(
                 count = items.size,
                 key = { items.elementAt(it).id },
             ) {
-                FilmCard(
-                    modifier = Modifier.width(getAdaptiveFilmCardWidth()),
+                MediaCard(
+                    modifier = Modifier.width(getAdaptiveMediaCardWidth()),
                     isShowingTitle = showTitles,
-                    film = items.elementAt(it),
-                    onClick = onFilmClick,
-                    onLongClick = onFilmLongClick,
+                    media = items.elementAt(it),
+                    onClick = onMediaClick,
+                    onLongClick = onMediaLongClick,
                 )
             }
 
@@ -142,11 +142,11 @@ internal fun CatalogRow(
                 items.isEmpty()
             ) {
                 items(20) {
-                    FilmCardPlaceholder(
+                    MediaCardPlaceholder(
                         isShowingTitle = showTitles,
                         modifier = Modifier
                             .padding(3.dp)
-                            .width(getAdaptiveFilmCardWidth())
+                            .width(getAdaptiveMediaCardWidth())
                     )
                 }
             }
@@ -165,10 +165,10 @@ private fun CatalogRowBasePreview() {
             var items by remember {
                 mutableStateOf(
                     MutableList(6) { index ->
-                        DummyDataForPreview.getFilm(
-                            id = "film_$index",
-                            title = "Sample Film ${index + 1}",
-                            filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
+                        DummyDataForPreview.getMedia(
+                            id = "media_$index",
+                            title = "Sample MediaMetadata ${index + 1}",
+                            mediaType = if (index % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
                         )
                     }
                 )
@@ -191,7 +191,7 @@ private fun CatalogRowBasePreview() {
                 CatalogWithPagingState(
                     page = currentPage,
                     catalog = dummyCatalog,
-                    films = items,
+                    medias = items,
                     state = when {
                         isLoading -> PagingState.Loading
                         currentPage >= 3 -> PagingState.Error("End of list")
@@ -208,10 +208,10 @@ private fun CatalogRowBasePreview() {
 
                     val newItems = List(6) { index ->
                         val itemIndex = (items.size - 1) + index
-                        DummyDataForPreview.getFilm(
-                            id = "film_$itemIndex",
-                            title = "Sample Film ${itemIndex + 1}",
-                            filmType = if (itemIndex % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
+                        DummyDataForPreview.getMedia(
+                            id = "media_$itemIndex",
+                            title = "Sample MediaMetadata ${itemIndex + 1}",
+                            mediaType = if (itemIndex % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
                         )
                     }
                     items += newItems
@@ -226,8 +226,8 @@ private fun CatalogRowBasePreview() {
                 pagingState = pagingState.state,
                 showTitles = true,
                 items = items,
-                onFilmClick = { },
-                onFilmLongClick = { },
+                onMediaClick = { },
+                onMediaLongClick = { },
                 onSeeAllItems = { },
                 paginate = {
                     if (!isLoading && requestedPage <= 3) {

@@ -49,15 +49,16 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.PagingState
-import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
-import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.components.isLoadingDelayed
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
@@ -71,11 +72,11 @@ import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.home.components.CatalogProvidersBottomSheet
 import com.flixclusive.feature.mobile.home.components.CatalogRow
 import com.flixclusive.feature.mobile.home.components.ContinueWatchingRow
-import com.flixclusive.feature.mobile.home.components.HomeFilmHeader
+import com.flixclusive.feature.mobile.home.components.HomeMediaHeader
 import com.flixclusive.feature.mobile.home.components.HomeScreenTopBar
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.MediaType
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
@@ -90,14 +91,14 @@ internal fun HomeScreen(
     viewModel: HomeScreenViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
+    val showMediaTitles by viewModel.showMediaTitles.collectAsStateWithLifecycle()
     val catalogProviders by viewModel.catalogProviders.collectAsStateWithLifecycle()
     val continueWatchingItems by viewModel.continueWatchingItems.collectAsStateWithLifecycle()
 
     HomeScreenContent(
         navigator = navigator,
         uiState = uiState,
-        showFilmTitles = { showFilmTitles },
+        showMediaTitles = { showMediaTitles },
         providers = { catalogProviders },
         continueWatchingItems = { continueWatchingItems },
         onToggle = { viewModel.onToggleProvider(it.id) },
@@ -111,7 +112,7 @@ internal fun HomeScreen(
 private fun HomeScreenContent(
     navigator: HomeNavigator,
     uiState: HomeUiState,
-    showFilmTitles: () -> Boolean,
+    showMediaTitles: () -> Boolean,
     providers: () -> Async<List<CatalogProvider>>,
     onToggle: (CatalogProvider) -> Unit,
     paginate: (CatalogWithPagingState) -> Unit,
@@ -186,7 +187,7 @@ private fun HomeScreenContent(
 
                             NonEmptyScreenContent(
                                 navigator = navigator,
-                                showFilmTitles = showFilmTitles,
+                                showMediaTitles = showMediaTitles,
                                 paginate = paginate,
                                 continueWatchingItems = continueWatchingItems,
                                 catalogs = catalogValues,
@@ -254,8 +255,8 @@ private fun EmptyScreenContent(
 private fun NonEmptyScreenContent(
     navigator: HomeNavigator,
     catalogs: List<CatalogWithPagingState>,
-    headerItem: Async<Film>,
-    showFilmTitles: () -> Boolean,
+    headerItem: Async<MediaMetadata>,
+    showMediaTitles: () -> Boolean,
     listState: LazyListState,
     paginate: (CatalogWithPagingState) -> Unit,
     continueWatchingItems: () -> List<WatchProgressWithMetadata>,
@@ -282,10 +283,10 @@ private fun NonEmptyScreenContent(
         modifier = Modifier.fillMaxSize(),
     ) {
         item {
-            HomeFilmHeader(
-                film = headerItem,
-                onFilmClick = navigator::openFilmScreen,
-                onFilmLongClick = navigator::previewFilm,
+            HomeMediaHeader(
+                media = headerItem,
+                onMediaClick = navigator::openMediaScreen,
+                onMediaLongClick = navigator::previewMedia,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -294,9 +295,9 @@ private fun NonEmptyScreenContent(
             item {
                 ContinueWatchingRow(
                     items = continueWatchingItems,
-                    showCardTitle = showFilmTitles(),
-                    onSeeMoreClick = navigator::previewFilm,
-                    onItemClick = { navigator.play(it.film) },
+                    showCardTitle = showMediaTitles(),
+                    onSeeMoreClick = navigator::previewMedia,
+                    onItemClick = { navigator.play(it.media.toMediaMetadata()) },
                 )
             }
         }
@@ -305,10 +306,10 @@ private fun NonEmptyScreenContent(
             CatalogRow(
                 catalog = data.catalog,
                 pagingState = data.state,
-                items = data.films,
-                onFilmClick = navigator::openFilmScreen,
-                showTitles = showFilmTitles(),
-                onFilmLongClick = navigator::previewFilm,
+                items = data.medias,
+                onMediaClick = navigator::openMediaScreen,
+                showTitles = showMediaTitles(),
+                onMediaLongClick = navigator::previewMedia,
                 paginate = { paginate(data) },
                 onSeeAllItems = { navigator.openSeeAllScreen(item = data.catalog) },
             )
@@ -357,7 +358,7 @@ internal fun getBackdropAspectRatio(): Float {
 
     return when {
         windowSizeClass.isWidthMedium -> 2.1f / 3f
-        usePortraitView -> FilmCover.Poster.ratio
+        usePortraitView -> MediaCover.Poster.ratio
         else -> 16f / 6f
     }
 }
@@ -376,11 +377,11 @@ private fun HomeScreenBasePreview() {
             val readyState = 2
 
             val dummyNavigator = object : HomeNavigator {
-                override fun openFilmScreen(film: Film) {}
+                override fun openMediaScreen(media: MediaMetadata) {}
                 override fun openSeeAllScreen(item: Catalog) {}
                 override fun goBack() {}
-                override fun previewFilm(film: Film) {}
-                override fun play(film: Film, episode: Episode?) {}
+                override fun previewMedia(media: MediaMetadata) {}
+                override fun play(media: MediaMetadata, episode: Episode?) {}
                 override fun openAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {}
                 override fun openSearchScreen() {}
             }
@@ -392,7 +393,7 @@ private fun HomeScreenBasePreview() {
                     HomeScreenContent(
                         navigator = dummyNavigator,
                         uiState = HomeUiState(),
-                        showFilmTitles = { true },
+                        showMediaTitles = { true },
                         paginate = { },
                         onRetry = { },
                         continueWatchingItems = { emptyList() },
@@ -407,7 +408,7 @@ private fun HomeScreenBasePreview() {
                         uiState = HomeUiState(
                             catalogs = Async.Failure(stringResource(LocaleR.string.something_went_wrong))
                         ),
-                        showFilmTitles = { true },
+                        showMediaTitles = { true },
                         paginate = { },
                         onRetry = { },
                         continueWatchingItems = { emptyList() },
@@ -442,10 +443,10 @@ private fun HomeScreenBasePreview() {
 
                     val dummyItems = remember {
                         List(8) { index ->
-                            DummyDataForPreview.getFilm(
+                            DummyDataForPreview.getMedia(
                                 id = "movie_$index",
                                 title = "Popular Movie ${index + 1}",
-                                filmType = FilmType.MOVIE,
+                                mediaType = MediaType.MOVIE,
                             )
                         }
                     }
@@ -455,30 +456,30 @@ private fun HomeScreenBasePreview() {
                             "popular_movies" to CatalogWithPagingState(
                                 page = 1,
                                 state = PagingState.Exhausted,
-                                films = dummyItems,
+                                medias = dummyItems,
                                 catalog = dummyCatalogs[0],
                             ),
                             "trending_tv" to CatalogWithPagingState(
                                 page = 1,
                                 state = PagingState.Exhausted,
-                                films = dummyItems,
+                                medias = dummyItems,
                                 catalog = dummyCatalogs[1],
                             ),
                             "action_movies" to CatalogWithPagingState(
                                 page = 1,
                                 state = PagingState.Error(LocaleR.string.end_of_list),
-                                films = dummyItems,
+                                medias = dummyItems,
                                 catalog = dummyCatalogs[2],
                             ),
                         )
                     }
 
-                    val dummyHeaderFilm = remember {
-                        DummyDataForPreview.getFilm(
-                            id = "header_film",
+                    val dummyHeaderMedia = remember {
+                        DummyDataForPreview.getMedia(
+                            id = "header_media",
                             title = "Featured Movie",
-                            overview = "An amazing featured film t...",
-                            filmType = FilmType.MOVIE,
+                            overview = "An amazing featured media t...",
+                            mediaType = MediaType.MOVIE,
                         )
                     }
 
@@ -488,33 +489,33 @@ private fun HomeScreenBasePreview() {
                                 watchData = MovieProgress(
                                     id = 0,
                                     ownerId = "preview-user",
-                                    filmId = "continue_1",
+                                    mediaId = "continue_1",
                                     progress = 3600000L, // 1 hour in milliseconds
                                     status = WatchStatus.WATCHING,
                                 ),
-                                film = DummyDataForPreview
-                                    .getFilm(
+                                media = DummyDataForPreview
+                                    .getMedia(
                                         id = "continue_1",
                                         title = "Continue Movie",
-                                        filmType = FilmType.MOVIE,
-                                    ).toDBFilm(),
+                                        mediaType = MediaType.MOVIE,
+                                    ).toDBMedia(),
                             ),
                             EpisodeProgressWithMetadata(
                                 watchData = EpisodeProgress(
                                     id = 1,
                                     ownerId = "preview-user",
-                                    filmId = "continue_2",
+                                    mediaId = "continue_2",
                                     seasonNumber = 1,
                                     episodeNumber = 3,
                                     progress = 1800000L, // 30 minutes in milliseconds
                                     status = WatchStatus.WATCHING,
                                 ),
-                                film = DummyDataForPreview
-                                    .getFilm(
+                                media = DummyDataForPreview
+                                    .getMedia(
                                         id = "continue_2",
                                         title = "Continue TV Show",
-                                        filmType = FilmType.TV_SHOW,
-                                    ).toDBFilm(),
+                                        mediaType = MediaType.SHOW,
+                                    ).toDBMedia(),
                             ),
                         )
                     }
@@ -522,10 +523,10 @@ private fun HomeScreenBasePreview() {
                     HomeScreenContent(
                         navigator = dummyNavigator,
                         uiState = HomeUiState(
-                            itemHeader = Async.Success(dummyHeaderFilm),
+                            itemHeader = Async.Success(dummyHeaderMedia),
                             catalogs = Async.Success(dummyPagingStates),
                         ),
-                        showFilmTitles = { true },
+                        showMediaTitles = { true },
                         paginate = { },
                         onRetry = { },
                         onToggle = { },

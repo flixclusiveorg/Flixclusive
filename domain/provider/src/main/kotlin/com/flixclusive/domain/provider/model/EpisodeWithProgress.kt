@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.model
 
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 
 /**
  * Data class that combines an [Episode] with its corresponding [EpisodeProgress].

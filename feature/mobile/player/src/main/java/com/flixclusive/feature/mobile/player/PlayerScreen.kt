@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.LoadLinksState
@@ -34,9 +35,9 @@ import com.flixclusive.feature.mobile.player.component.PlayerControls
 import com.flixclusive.feature.mobile.player.component.effect.ToggleOrientationEffect
 import com.flixclusive.feature.mobile.player.component.effect.ToggleSystemBarsEffect
 import com.flixclusive.feature.mobile.player.component.server.ProviderLoadingDialog
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
@@ -65,7 +66,7 @@ internal fun PlayerScreen(
     val canSkipLoading by viewModel.canSkipLoading.collectAsStateWithLifecycle()
     val providers by viewModel.providers.collectAsStateWithLifecycle()
     val currentProvider = remember(uiState.currentProvider, providers) {
-        providers.find { it?.id == uiState.currentProvider }
+        providers.fastFirstOrNull { it.id == uiState.currentProvider }
     }
 
     val snackbarState = rememberPlayerSnackbarState()
@@ -101,7 +102,7 @@ internal fun PlayerScreen(
 
     PlayerScreenContent(
         player = viewModel.player,
-        film = args.film,
+        media = args.media,
         playerPreferences = playerPreferences,
         subtitlesPreferences = subtitlesPreferences,
         snackbarState = snackbarState,
@@ -137,7 +138,7 @@ internal fun PlayerScreen(
 @Composable
 internal fun PlayerScreenContent(
     player: AppPlayer,
-    film: FilmMetadata,
+    media: MediaMetadata,
     playerPreferences: PlayerPreferences,
     subtitlesPreferences: SubtitlesPreferences,
     currentEpisode: Episode?,
@@ -182,7 +183,7 @@ internal fun PlayerScreenContent(
 
         PlayerControls(
             player = player,
-            film = film,
+            media = media,
             snackbarState = snackbarState,
             isInPipMode = isInPipMode,
             playerPrefs = playerPreferences,

@@ -37,25 +37,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
-import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
-import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRuntime
+import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.home.R
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.MediaType
 import kotlin.math.roundToLong
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -66,7 +67,7 @@ internal fun ContinueWatchingRow(
     showCardTitle: Boolean,
     items: () -> List<WatchProgressWithMetadata>,
     onItemClick: (WatchProgressWithMetadata) -> Unit,
-    onSeeMoreClick: (Film) -> Unit,
+    onSeeMoreClick: (MediaMetadata) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -87,13 +88,13 @@ internal fun ContinueWatchingRow(
         LazyRow {
             items(
                 items = items(),
-                key = { "${it.filmId}-${it.id}" }
+                key = { "${it.mediaId}-${it.id}" }
             ) { item ->
                 ContinueWatchingCard(
                     showTitle = showCardTitle,
                     item = item,
                     onClick = { onItemClick(item) },
-                    onSeeMoreClick = { onSeeMoreClick(item.film) },
+                    onSeeMoreClick = { onSeeMoreClick(item.media.toMediaMetadata()) },
                 )
             }
         }
@@ -111,7 +112,7 @@ private fun ContinueWatchingCard(
 ) {
     val feedbackOnLongPress = getFeedbackOnLongPress()
 
-    val film = remember(item) { item.film }
+    val media = remember(item) { item.media }
     val progress = remember(item) {
         val percentage = if (item.watchData.progress == 0L) {
             0F
@@ -154,11 +155,11 @@ private fun ContinueWatchingCard(
                     }
                 )
         ) {
-            FilmCover.Poster(
-                imagePath = film.posterImage,
-                title = film.title,
+            MediaCover.Poster(
+                imagePath = media.posterImage,
+                title = media.title,
                 modifier = Modifier
-                    .width(getAdaptiveFilmCardWidth())
+                    .width(getAdaptiveMediaCardWidth())
                     .clip(MaterialTheme.shapes.small)
             )
 
@@ -236,7 +237,7 @@ private fun ContinueWatchingCard(
 
         if(showTitle) {
             Text(
-                text = film.title,
+                text = media.title,
                 style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
@@ -253,11 +254,11 @@ private fun ContinueWatchingCard(
 private fun ContinueWatchingRowBasePreview() {
     val items = remember {
         List(20) { index ->
-            val film = DummyDataForPreview.getFilm(
-                id = "film_$index",
-                title = "Sample Film ${index + 1}",
-                filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
-            ).toDBFilm()
+            val media = DummyDataForPreview.getMedia(
+                id = "media_$index",
+                title = "Sample MediaMetadata ${index + 1}",
+                mediaType = if (index % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
+            ).toDBMedia()
 
             val ownerId = "preview-user-$index"
             val duration = Random.nextLong(2, 3) * 1000 * 60 * 60
@@ -266,19 +267,19 @@ private fun ContinueWatchingRowBasePreview() {
 
             if (index % 2 == 0) {
                 MovieProgressWithMetadata(
-                    film = film,
+                    media = media,
                     watchData = MovieProgress(
                         id = index.toLong(),
                         ownerId = ownerId,
                         progress = progress,
                         duration = duration,
                         status = watchStatus,
-                        filmId = film.id
+                        mediaId = media.id
                     )
                 )
             } else {
                 EpisodeProgressWithMetadata(
-                    film = film,
+                    media = media,
                     watchData = EpisodeProgress(
                         id = index.toLong(),
                         ownerId = ownerId,
@@ -287,7 +288,7 @@ private fun ContinueWatchingRowBasePreview() {
                         status = watchStatus,
                         episodeNumber = Random.nextInt(24),
                         seasonNumber = Random.nextInt(10),
-                        filmId = film.id
+                        mediaId = media.id
                     )
                 )
             }

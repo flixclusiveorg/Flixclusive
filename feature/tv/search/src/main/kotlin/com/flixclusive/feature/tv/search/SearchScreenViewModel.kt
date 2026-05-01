@@ -12,9 +12,9 @@ import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.tmdb.usecase.GetSearchCardsUseCase
 import com.flixclusive.model.configuration.catalog.SearchCatalog
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.SearchResponseData
-import com.flixclusive.model.film.util.replaceTypeInUrl
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.SearchResponseData
+import com.flixclusive.model.media.util.replaceTypeInUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,7 +28,7 @@ internal class SearchScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     getSearchCardsUseCase: GetSearchCardsUseCase
 ) : ViewModel() {
-    val searchResults = mutableStateListOf<FilmSearchItem>()
+    val searchResults = mutableStateListOf<PartialMedia>()
     val searchSuggestions = mutableStateListOf<String>()
 
     private var searchingJob: Job? = null
@@ -114,8 +114,8 @@ internal class SearchScreenViewModel @Inject constructor(
     }
 
     private fun loadItems(
-        callResponse: Resource<SearchResponseData<FilmSearchItem>>,
-        onSuccess: SearchResponseData<FilmSearchItem>.() -> Unit
+        callResponse: Resource<SearchResponseData<PartialMedia>>,
+        onSuccess: SearchResponseData<PartialMedia>.() -> Unit
     ) {
         if (page != 1 && (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE))
             return
@@ -173,8 +173,8 @@ internal class SearchScreenViewModel @Inject constructor(
 
     private fun getCatalogItems() {
         viewModelScope.launch {
-            val filmTypeCouldBeBoth = selectedCatalog!!.mediaType == "all"
-            val urlQuery = if(filmTypeCouldBeBoth && currentFilterSelected != SearchFilter.ALL) {
+            val mediaTypeCouldBeBoth = selectedCatalog!!.type == "all"
+            val urlQuery = if(mediaTypeCouldBeBoth && currentFilterSelected != SearchFilter.ALL) {
                 selectedCatalog!!.url.replaceTypeInUrl(currentFilterSelected.type)
             } else selectedCatalog!!.url
 
@@ -210,14 +210,14 @@ internal class SearchScreenViewModel @Inject constructor(
 
     private fun loadRecentlyTrending() {
         viewModelScope.launch {
-            val filmType =
+            val mediaType =
                 if (currentFilterSelected.type == "multi")
                     "all"
                 else currentFilterSelected.type
 
             loadItems(
                 callResponse = tmdbRepository.getTrending(
-                    mediaType = filmType,
+                    mediaType = mediaType,
                     page = page,
                 ),
                 onSuccess = {

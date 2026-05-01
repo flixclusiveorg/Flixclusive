@@ -24,19 +24,19 @@ import androidx.tv.material3.MaterialTheme
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-internal fun FilmEmphasisBackground(
-    film: Film?,
+internal fun MediaEmphasisBackground(
+    media: MediaMetadata?,
     backgroundHeight: Dp,
     gradientColor: Color = MaterialTheme.colorScheme.surface,
     enter: EnterTransition = fadeIn(),
     exit: ExitTransition = fadeOut(),
 ) {
     AnimatedContent(
-        targetState = film,
+        targetState = media,
         transitionSpec = {
             ContentTransform(
                 targetContentEnter = enter,

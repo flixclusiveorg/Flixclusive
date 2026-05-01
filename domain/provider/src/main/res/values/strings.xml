@@ -27,9 +27,9 @@
     <string name="failed_to_load_provider">Failed to load provider %1$s (%2$s) after updating. Try reinstalling to see if it could fix the problem.</string>
     <string name="missing_metadata">Metadata not found for provider with id: %1$s</string>
 
-    <string name="get_film_metadata_error_unk_exception">Failed to fetch metadata: %1$s</string>
-    <string name="get_film_metadata_error_no_provider_plugin">Failed to fetch metadata: no provider plugin found for %1$s</string>
-    <string name="get_film_metadata_error_no_provider_api">Failed to fetch metadata: no MetadataProviderApi found for %1$s</string>
+    <string name="get_media_metadata_error_unk_exception">Failed to fetch metadata: %1$s</string>
+    <string name="get_media_metadata_error_no_provider_plugin">Failed to fetch metadata: no provider plugin found for %1$s</string>
+    <string name="get_media_metadata_error_no_provider_api">Failed to fetch metadata: no MetadataProviderApi found for %1$s</string>
 
     <string name="get_media_links_error_empty_provider_list">Failed to fetch media links: no providers installed to fetch from</string>
     <string name="get_media_links_error_no_provider_plugin">Failed to fetch media links: no provider plugin found for %1$s</string>

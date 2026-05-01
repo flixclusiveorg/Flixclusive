@@ -92,7 +92,7 @@ androidComponents {
 }
 
 dependencies {
-    implementation(projects.feature.mobile.film)
+    implementation(projects.feature.mobile.media)
     implementation(projects.feature.mobile.home)
     implementation(projects.feature.mobile.player)
     implementation(projects.feature.mobile.providerAdd)
@@ -117,7 +117,7 @@ dependencies {
 
 //    implementation(projects.feature.tv.home)
 //    implementation(projects.feature.tv.search)
-//    implementation(projects.feature.tv.film)
+//    implementation(projects.feature.tv.media)
 
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
@@ -136,7 +136,7 @@ dependencies {
     implementation(projects.dataProvider)
     implementation(projects.domainProvider)
 
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.model.provider)
     implementation(libs.stubs.util)
 

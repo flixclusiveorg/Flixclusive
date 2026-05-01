@@ -16,13 +16,12 @@ import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.util.extensions.sendCrossMatchingMessage
 import com.flixclusive.domain.provider.util.extensions.sendExtractingLinksMessage
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.capability.CrossMatchProviderApi
-import com.flixclusive.provider.capability.CrossMatchProviderApi.Companion.canHandle
 import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaLinkType
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,15 +40,15 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
     private val providerRepository: ProviderRepository,
 ) : GetMediaLinksUseCase {
     override operator fun invoke(
-        film: FilmMetadata,
+        media: MediaMetadata,
         episode: Episode?,
     ) = channelFlow {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val enabledProviders = providerRepository.getEnabledProviders(ownerId = userId)
         val oldCache = mediaLinksRepository.getLinks(
             MediaLinksCacheKey.create(
-                filmId = film.id,
-                providerId = film.providerId,
+                mediaId = media.id,
+                providerId = media.providerId,
                 episode = episode,
             )
         )
@@ -68,14 +67,14 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             return@channelFlow
         }
 
-        val provider = providerRepository.getProvider(film.providerId, userId)
+        val provider = providerRepository.getProvider(media.providerId, userId)
         if (provider == null) {
-            warnLog("Failed to fetch media links: no provider plugin found for id: ${film.providerId}")
+            warnLog("Failed to fetch media links: no provider plugin found for id: ${media.providerId}")
             send(
                 LoadLinksState.Unavailable(
                     UiText.from(
                         R.string.get_media_links_error_no_provider_plugin,
-                        film.providerId
+                        media.providerId
                     )
                 )
             )
@@ -85,7 +84,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         val mediaLinksApi = provider.plugin?.getMediaLinkApi(context)
         if (mediaLinksApi != null) {
             processProvider(
-                film = film,
+                media = media,
                 id = provider.id,
                 mediaLinksApi = mediaLinksApi,
                 metadata = provider.metadata!!,
@@ -94,8 +93,8 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             return@channelFlow
         }
 
-        if (film.externalIds.isEmpty()) {
-            warnLog("Failed to fetch media links: no external IDs found for film with id: ${film.id}")
+        if (media.externalIds.isEmpty()) {
+            warnLog("Failed to fetch media links: no external IDs found for media with id: ${media.id}")
             send(LoadLinksState.Unavailable())
             return@channelFlow
         }
@@ -104,7 +103,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             val crossMatchApi = enabledProvider.plugin?.getCrossMatchApi(context)
             val mediaLinkApi = enabledProvider.plugin?.getMediaLinkApi(context)
 
-            crossMatchApi?.canHandle(film) == true && mediaLinkApi != null
+            crossMatchApi != null && mediaLinkApi != null
         }.map {
             val crossMatchApi = it.plugin!!.getCrossMatchApi(context)!!
             val mediaLinkApi = it.plugin!!.getMediaLinkApi(context)!!
@@ -126,14 +125,14 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         launch {
             subtitlesOnlyApi.mapAsync { (provider, crossMatcherApi, mediaLinkApi) ->
                 sendCrossMatchingMessage(provider)
-                val crossMatchedFilm = getCrossMatchedFilm(film, crossMatcherApi)
-                if (crossMatchedFilm == null) {
-                    warnLog("Cross-matching failed for subtitle-only provider ${provider.name} with film ${film.title} (${film.id})")
+                val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
+                if (crossMatchedMedia == null) {
+                    warnLog("Cross-matching failed for subtitle-only provider ${provider.name} with media ${media.title} (${media.id})")
                     return@mapAsync null
                 }
 
                 val success = processProvider(
-                    film = crossMatchedFilm,
+                    media = crossMatchedMedia,
                     id = provider.id,
                     mediaLinksApi = mediaLinkApi,
                     metadata = provider,
@@ -142,21 +141,21 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 )
 
                 if (!success) {
-                    warnLog("Failed to fetch subtitles from provider ${provider.name} for film ${film.title} (${film.id})")
+                    warnLog("Failed to fetch subtitles from provider ${provider.name} for media ${media.title} (${media.id})")
                 }
             }
         }
 
         val streamProviders = combinedApis - subtitlesOnlyApi.toSet()
         streamProviders.forEach { (provider, crossMatcherApi, mediaLinkApi) ->
-            val crossMatchedFilm = getCrossMatchedFilm(film, crossMatcherApi)
-            if (crossMatchedFilm == null) {
-                warnLog("Cross-matching failed for stream links provider ${provider.name} with film ${film.title} (${film.id})")
+            val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
+            if (crossMatchedMedia == null) {
+                warnLog("Cross-matching failed for stream links provider ${provider.name} with media ${media.title} (${media.id})")
                 return@forEach
             }
 
             val success = processProvider(
-                film = crossMatchedFilm,
+                media = crossMatchedMedia,
                 id = provider.id,
                 mediaLinksApi = mediaLinkApi,
                 metadata = provider,
@@ -172,7 +171,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
     private suspend fun ProducerScope<LoadLinksState>.processProvider(
         id: String,
-        film: FilmMetadata,
+        media: MediaMetadata,
         episode: Episode? = null,
         metadata: ProviderMetadata,
         mediaLinksApi: MediaLinkProviderApi,
@@ -180,16 +179,16 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
     ): Boolean {
         val key = MediaLinksCacheKey.create(
             providerId = id,
-            filmId = film.id,
+            mediaId = media.id,
             episode = episode,
         )
 
         // Check if the cache already exists for this provider
         val mediaLinks = mediaLinksRepository.getLinks(key)
             ?: MediaLinks(
-                watchId = film.id,
+                watchId = media.id,
                 providerId = id,
-                thumbnail = film.backdropImage ?: film.posterImage,
+                thumbnail = media.backdropImage ?: media.posterImage,
             )
 
         if (mediaLinks.isReady) {
@@ -205,7 +204,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
         try {
             mediaLinksApi.getLinks(
-                film = film,
+                media = media,
                 episode = episode,
             ).onCompletion { error ->
                 if (error != null) {
@@ -232,7 +231,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
             return true
         } catch (e: Throwable) {
-            errorLog("Failed to get media links from provider ${metadata.name} for film ${film.title} (${film.id})")
+            errorLog("Failed to get media links from provider ${metadata.name} for media ${media.title} (${media.id})")
             errorLog(e)
 
             val parsedError = e.toNetworkException()
@@ -241,15 +240,15 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         }
     }
 
-    private suspend fun getCrossMatchedFilm(
-        film: FilmMetadata,
+    private suspend fun getCrossMatchedMedia(
+        media: MediaMetadata,
         crossMatcherApi: CrossMatchProviderApi,
-    ): FilmMetadata? {
-        var crossMatchedFilm = crossMatcherApi.getById(film.externalIds)
-        if (crossMatchedFilm == null) {
-            crossMatchedFilm = crossMatcherApi.getByFuzzy(film)
+    ): MediaMetadata? {
+        var crossMatchedMedia = crossMatcherApi.getById(media.externalIds)
+        if (crossMatchedMedia == null) {
+            crossMatchedMedia = crossMatcherApi.getByFuzzy(media)
         }
 
-        return crossMatchedFilm
+        return crossMatchedMedia
     }
 }

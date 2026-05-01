@@ -1,14 +1,14 @@
 package com.flixclusive.domain.provider.usecase.get.impl
 
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.media.Show
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -20,27 +20,21 @@ internal class GetSeasonWithWatchProgressUseCaseImpl @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore
 ) : GetSeasonWithWatchProgressUseCase {
     override fun invoke(
-        tvShow: TvShow,
+        show: Show,
         number: Int,
-    ): Flow<Resource<SeasonWithProgress>> =
+    ): Flow<Async<SeasonWithProgress>> =
         channelFlow {
-            trySend(Resource.Loading)
-
-            // Try to get the season from the TvShow.seasons property first
-            val seasonIndex = tvShow.seasons.binarySearch {
-                it.number.compareTo(number)
-            }
-
-            val season = tvShow.seasons.getOrNull(seasonIndex)
+            trySend(Async.Loading)
+            val season = show.getSeason(number)
 
             if (season == null) {
-                trySend(Resource.Failure(UiText.from(R.string.failed_to_fetch_season_message, number)))
+                trySend(Async.Failure(UiText.from(R.string.failed_to_fetch_season_message, number)))
                 return@channelFlow
             }
 
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             watchProgressRepository.getSeasonProgressAsFlow(
-                tvShowId = tvShow.id,
+                tvShowId = show.id,
                 seasonNumber = number,
                 ownerId = userId,
             ).collect { list ->
@@ -53,7 +47,7 @@ internal class GetSeasonWithWatchProgressUseCaseImpl @Inject constructor(
                     )
                 }
 
-                send(Resource.Success(SeasonWithProgress(season = season, episodes = episodes)))
+                send(Async.Success(SeasonWithProgress(season = season, episodes = episodes)))
             }
         }
 }

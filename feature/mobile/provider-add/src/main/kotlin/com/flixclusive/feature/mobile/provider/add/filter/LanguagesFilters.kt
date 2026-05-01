@@ -19,12 +19,12 @@ internal data class LanguagesFilters(
             if (filter.selectedValue.isEmpty()) return this
 
             return fastFilter { provider ->
-                filter.selectedValue.contains(provider.metadata.language.languageCode)
+                filter.selectedValue.contains(provider.metadata.language.code)
             }
         }
 
         fun List<SearchableProvider>.toLanguageFilters(): LanguagesFilters {
-            val options = fastMap { it.metadata.language.languageCode }
+            val options = fastMap { it.metadata.language.code }
                 .fastDistinctBy { it }
                 .toImmutableList()
 

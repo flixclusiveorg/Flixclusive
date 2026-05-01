@@ -31,9 +31,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.lifecycle.runtimeCompose)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.model.provider)
     implementation(libs.stubs.provider)
-
-    implementation(projects.coreTesting)
 }

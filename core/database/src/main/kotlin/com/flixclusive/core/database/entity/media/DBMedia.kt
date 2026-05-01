@@ -55,7 +55,7 @@ data class DBMedia(
             )
         }
 
-        fun DBMedia.toMediaMetadata(): MediaMetadata {
+        fun DBMedia.toMediaMetadata(): PartialMedia {
             return PartialMedia(
                 id = id,
                 adult = adult,

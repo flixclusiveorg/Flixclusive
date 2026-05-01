@@ -13,7 +13,6 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
@@ -353,35 +352,29 @@ internal class AddProviderViewModel @Inject constructor(
      * */
     private suspend fun loadAvailableProviders(repositories: List<Repository>) {
         repositories.forEach { repository ->
-            when (val result = getProviderFromRemote(repository)) {
-                Resource.Loading -> Unit
-                is Resource.Failure -> {
-                    val pair = repository to result.error!!
-                    _uiState.update {
-                        it.copy(repositoryExceptions = it.repositoryExceptions + pair)
+            try {
+                val providers = getProviderFromRemote(repository)
+                providers.fastForEach {
+                    val provider = SearchableProvider.from(it)
+                    var status = ProviderInstallationStatus.NotInstalled
+
+                    val metadata = getProviderMetadata(provider.id)
+                    val isInstalled = metadata != null
+
+                    if (isInstalled && isOutdated(old = metadata, new = provider.metadata)) {
+                        status = ProviderInstallationStatus.Outdated
+                    } else if (isInstalled) {
+                        status = ProviderInstallationStatus.Installed
                     }
+
+                    providerInstallationStatusMap[provider.id] = status
+
+                    _availableProviders.value = _availableProviders.value.add(provider)
                 }
-
-                is Resource.Success -> {
-                    val providers = result.data!!
-
-                    providers.fastForEach {
-                        val provider = SearchableProvider.from(it)
-                        var status = ProviderInstallationStatus.NotInstalled
-
-                        val metadata = getProviderMetadata(provider.id)
-                        val isInstalled = metadata != null
-
-                        if (isInstalled && isOutdated(old = metadata, new = provider.metadata)) {
-                            status = ProviderInstallationStatus.Outdated
-                        } else if (isInstalled) {
-                            status = ProviderInstallationStatus.Installed
-                        }
-
-                        providerInstallationStatusMap[provider.id] = status
-
-                        _availableProviders.value = _availableProviders.value.add(provider)
-                    }
+            } catch (e: Throwable) {
+                val pair = repository to UiText.from(e.message ?: "Unknown error")
+                _uiState.update {
+                    it.copy(repositoryExceptions = it.repositoryExceptions + pair)
                 }
             }
         }
@@ -429,7 +422,7 @@ internal data class SearchableProvider(
                     append(provider.name)
                     provider.description?.let { append(it) }
                     append(provider.providerType.type)
-                    append(provider.language.languageCode)
+                    append(provider.language.code)
                     provider.authors.forEach { append(it) }
 
                     extractGithubInfoFromLink(provider.repositoryUrl)?.let { (username, repository) ->

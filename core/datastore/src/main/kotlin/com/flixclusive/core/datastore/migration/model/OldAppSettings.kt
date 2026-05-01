@@ -19,7 +19,7 @@ internal data class OldAppSettings(
     val isUsingAutoUpdateAppFeature: Boolean = true,
     val isUsingPrereleaseUpdates: Boolean = false,
     val isSendingCrashLogsAutomatically: Boolean = true,
-    val isShowingFilmCardTitle: Boolean = false,
+    val isShowingMediaCardTitle: Boolean = false,
     val isSubtitleEnabled: Boolean = true,
     val subtitleLanguage: String = "en",
     val subtitleColor: Int = Color.WHITE,

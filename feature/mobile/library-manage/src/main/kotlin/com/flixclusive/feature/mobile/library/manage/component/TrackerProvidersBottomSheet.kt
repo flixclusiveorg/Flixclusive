@@ -356,7 +356,7 @@ private fun TrackerCard(
 
                             Switch(
                                 checked = enabled(),
-                                enabled = tracker.status != ProviderStatus.Maintenance && tracker.status != ProviderStatus.Down,
+                                enabled = tracker.status != ProviderStatus.Down,
                                 colors = SwitchDefaults.colors(
                                     disabledCheckedThumbColor =
                                         MaterialTheme.colorScheme.surface

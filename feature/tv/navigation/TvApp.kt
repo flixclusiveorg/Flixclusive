@@ -18,7 +18,7 @@ import com.flixclusive.core.ui.tv.util.LocalCurrentRouteProvider
 import com.flixclusive.core.ui.tv.util.LocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.LocalLastFocusedItemPerDestinationProvider
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
-import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.tv.media.destinations.MediaScreenDestination
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.ramcosta.composedestinations.navigation.navigate
@@ -37,7 +37,7 @@ internal fun TvActivity.TvApp() {
     var isDrawerOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(currentSelectedScreen) {
-        isNavDrawerVisible = currentSelectedScreen.route.contains(FilmScreenDestination.route, true).not()
+        isNavDrawerVisible = currentSelectedScreen.route.contains(MediaScreenDestination.route, true).not()
             && currentSelectedScreen != SplashScreenDestination
     }
 

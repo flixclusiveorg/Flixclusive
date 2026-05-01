@@ -11,7 +11,7 @@ import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -65,7 +65,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
 
     override suspend fun insertItem(
         item: LibraryListItem,
-        film: Film?,
+        media: MediaMetadata?,
     ): Long {
         return withContext(appDispatchers.io) {
             val list = listDao.get(item.listId)
@@ -73,20 +73,20 @@ internal class LibraryListRepositoryImpl @Inject constructor(
                 listDao.update(list.copy(updatedAt = Date()))
             }
 
-            itemDao.insert(item, film)
+            itemDao.insert(item, media)
         }
     }
 
-    override fun getListsContainingFilm(
-        filmId: String,
+    override fun getListsContainingMedia(
+        mediaId: String,
         ownerId: String,
     ): Flow<List<LibraryList>> {
-        return listDao.getListsContainingFilmAsFlow(filmId, ownerId)
+        return listDao.getListsContainingMediaAsFlow(mediaId, ownerId)
     }
 
-    override suspend fun isInLibrary(filmId: String, ownerId: String): Boolean {
+    override suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean {
         return withContext(appDispatchers.io) {
-            listDao.isInLibrary(filmId, ownerId)
+            listDao.isInLibrary(mediaId, ownerId)
         }
     }
 
@@ -111,7 +111,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         val column = when (sort) {
             is LibrarySort.Added -> "item_createdAt"
             is LibrarySort.Modified -> "item_updatedAt"
-            is LibrarySort.Name -> "film_title"
+            is LibrarySort.Name -> "media_title"
         }
 
         return itemDao.searchItems(
@@ -126,7 +126,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         val column = when (sort) {
             is LibrarySort.Added -> "item_createdAt"
             is LibrarySort.Modified -> "item_updatedAt"
-            is LibrarySort.Name -> "film_title"
+            is LibrarySort.Name -> "media_title"
         }
 
         return itemDao.getByListId(

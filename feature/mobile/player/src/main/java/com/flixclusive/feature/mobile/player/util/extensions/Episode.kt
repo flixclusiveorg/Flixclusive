@@ -5,9 +5,9 @@ import com.flixclusive.core.database.entity.watched.EpisodeProgress
 internal fun EpisodeProgress.isSameEpisode(
     otherEpisode: Int,
     otherSeason: Int,
-    otherFilmId: String
+    otherMediaId: String
 ): Boolean {
-    return filmId == otherFilmId &&
+    return mediaId == otherMediaId &&
         seasonNumber == otherSeason &&
         episodeNumber == otherEpisode
 }

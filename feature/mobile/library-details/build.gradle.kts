@@ -22,7 +22,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

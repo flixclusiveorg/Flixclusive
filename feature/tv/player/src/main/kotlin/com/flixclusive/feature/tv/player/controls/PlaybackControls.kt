@@ -45,7 +45,7 @@ import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.SubtitlesPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
 import kotlinx.coroutines.delay
@@ -64,7 +64,7 @@ internal fun PlaybackControls(
     isPlaybackSpeedPanelOpened: MutableState<Boolean>,
     isServerPanelOpened: MutableState<Boolean>,
     isVisible: Boolean,
-    isTvShow: Boolean,
+    isShow: Boolean,
     providers: List<ProviderMetadata>,
     servers: List<Stream>,
     stateProvider: () -> PlayerUiState,
@@ -192,7 +192,7 @@ internal fun PlaybackControls(
                 modifier = Modifier.drawBehind {
                     drawRect(topFadeEdge)
                 },
-                isTvShow = isTvShow,
+                isShow = isShow,
                 isLastEpisode = isLastEpisode,
                 title = playbackTitle,
                 currentEpisodeSelected = currentEpisodeSelected,

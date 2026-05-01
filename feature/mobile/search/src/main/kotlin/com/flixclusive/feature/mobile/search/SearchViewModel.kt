@@ -26,9 +26,9 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetSearchProvidersUseCase
 import com.flixclusive.feature.mobile.search.SearchUiState.Companion.resetPagination
 import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.PaginatedResponse
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.common.PaginatedMedia
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.provider.capability.SearchProviderApi
@@ -99,7 +99,7 @@ internal class SearchViewModel @Inject constructor(
             initialValue = emptyList(),
         )
 
-    val showFilmTitles = dataStoreManager
+    val showMediaTitles = dataStoreManager
         .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
         .map { it.shouldShowTitleOnCards }
         .distinctUntilChanged()
@@ -109,7 +109,7 @@ internal class SearchViewModel @Inject constructor(
             initialValue = false,
         )
 
-    val searchResults = mutableStateSetOf<Film>()
+    val searchResults = mutableStateSetOf<MediaMetadata>()
     var filters by mutableStateOf(FilterList())
         private set
 
@@ -264,7 +264,7 @@ internal class SearchViewModel @Inject constructor(
         providerId: String,
         query: String,
         page: Int,
-    ): Async<PaginatedResponse<FilmSearchItem>> {
+    ): Async<PaginatedMedia<PartialMedia>> {
         val filteredFilters = filters.removeUiComponentsFromFilterList()
 
         return try {
@@ -314,7 +314,7 @@ internal data class SearchUiState(
                 page = 1,
                 maxPage = 1,
                 lastQuerySearched = lastQuerySearched,
-                currentViewType = SearchItemViewType.Films,
+                currentViewType = SearchItemViewType.Medias,
                 error = null,
             )
     }
@@ -337,5 +337,5 @@ internal data class SearchProvider(
 internal enum class SearchItemViewType {
     History,
     Providers,
-    Films,
+    Medias,
 }

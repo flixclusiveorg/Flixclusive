@@ -23,18 +23,18 @@ import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.provider.repository.MediaLinksCacheKey.Companion.toCacheKey
 import com.flixclusive.data.provider.repository.MediaLinksRepository
-import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
+import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -65,7 +65,7 @@ internal sealed class ProviderUpdateInfo {
 
 @HiltViewModel
 internal class MobileAppViewModel @Inject constructor(
-    private val _getFilmMetadata: GetFilmMetadataUseCase,
+    private val _getMediaMetadata: GetMediaMetadataUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val watchProgressRepository: WatchProgressRepository,
@@ -80,7 +80,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val updateProvider: UpdateProviderUseCase,
     networkMonitor: NetworkMonitor,
 ) : ViewModel() {
-    private var onFilmLongClickJob: Job? = null
+    private var onMediaLongClickJob: Job? = null
     private var onFetchMediaLinksJob: Job? = null
 
     private val _uiState = MutableStateFlow(MobileAppUiState())
@@ -211,21 +211,21 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    fun previewFilm(film: Film) {
-        if (onFilmLongClickJob?.isActive == true) return
+    fun previewMedia(media: MediaMetadata) {
+        if (onMediaLongClickJob?.isActive == true) return
 
-        onFilmLongClickJob = viewModelScope.launch {
+        onMediaLongClickJob = viewModelScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val libraryItem = libraryListRepository.getListsContainingFilm(
-                filmId = film.id,
+            val libraryItem = libraryListRepository.getListsContainingMedia(
+                mediaId = media.id,
                 ownerId = userId
             ).first()
             val isInLibrary = libraryItem.isNotEmpty()
 
             _uiState.update {
                 it.copy(
-                    filmPreviewState = FilmPreview(
-                        film = film,
+                    mediaPreviewState = MediaPreview(
+                        media = media,
                         isInLibrary = isInLibrary,
                     ),
                 )
@@ -234,28 +234,28 @@ internal class MobileAppViewModel @Inject constructor(
     }
 
     fun onFetchMediaLinks(
-        film: Film,
+        media: MediaMetadata,
         episode: Episode? = null,
     ) {
         if (onFetchMediaLinksJob?.isActive == true && _uiState.value.playerData != null) return
 
         onFetchMediaLinksJob?.cancel()
         onFetchMediaLinksJob = viewModelScope.launch {
-            _uiState.update { it.copy(playerData = PlayerData(film, episode)) }
+            _uiState.update { it.copy(playerData = PlayerData(media, episode)) }
             mediaLinksRepository.setCurrentObservable(null)
-            updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.film_data_fetching))
+            updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.media_data_fetching))
 
-            val metadata = getFilmMetadata(film = film)
+            val metadata = getMediaMetadata(media = media)
             if (metadata == null) {
-                updateLoadLinksState(LoadLinksState.Error(LocaleR.string.film_data_fetch_failed))
+                updateLoadLinksState(LoadLinksState.Error(LocaleR.string.media_data_fetch_failed))
                 return@launch
             }
 
             // Data to be passed to the player screen
-            var playerData = PlayerData(film = metadata)
+            var playerData = PlayerData(media = metadata)
 
             var episodeToLoad = episode
-            if (metadata is TvShow) {
+            if (metadata is Show) {
                 if (episode == null) {
                     episodeToLoad = getEpisodeToWatch(tvShow = metadata)
                 }
@@ -269,7 +269,7 @@ internal class MobileAppViewModel @Inject constructor(
             }
 
             val response = getMediaLinks(
-                film = metadata,
+                media = metadata,
                 episode = episodeToLoad,
             )
 
@@ -283,30 +283,30 @@ internal class MobileAppViewModel @Inject constructor(
     }
 
     /**
-     * Gets a detailed metadata of a non-detailed [Film].
+     * Gets a detailed metadata of a non-detailed [MediaMetadata].
      *
-     * This assumes that [Film] could be a search item.
+     * This assumes that [MediaMetadata] could be a search item.
      * */
-    private suspend fun getFilmMetadata(film: Film): FilmMetadata? {
-        if (film is FilmMetadata) return film
+    private suspend fun getMediaMetadata(media: MediaMetadata): MediaMetadata? {
+        if (media !is PartialMedia) return media
 
-        return when (val response = _getFilmMetadata(film = film).last()) {
+        return when (val response = _getMediaMetadata(media = media).last()) {
             is Async.Success -> response.data
             else -> null
         }
     }
 
-    private suspend fun getEpisodeToWatch(tvShow: TvShow): Episode? {
+    private suspend fun getEpisodeToWatch(tvShow: Show): Episode? {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val progress = watchProgressRepository.get(
             id = tvShow.id,
             ownerId = userId,
-            type = tvShow.filmType,
+            type = tvShow.type,
         ) as? EpisodeProgressWithMetadata
 
         if (progress?.watchData?.isCompleted == true) {
             return getNextEpisode(
-                tvShow = tvShow,
+                show = tvShow,
                 season = progress.watchData.seasonNumber,
                 episode = progress.watchData.episodeNumber,
             )
@@ -349,8 +349,8 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    fun onRemovePreviewFilm() {
-        _uiState.update { it.copy(filmPreviewState = null) }
+    fun onRemovePreviewMedia() {
+        _uiState.update { it.copy(mediaPreviewState = null) }
     }
 
     fun onReleasePlayerCache() {
@@ -363,7 +363,7 @@ internal class MobileAppViewModel @Inject constructor(
         val playerData = _uiState.value.playerData
         if (state.hasProviderId && playerData != null) {
             val cache = state.toCacheKey(
-                filmId = playerData.film.id,
+                mediaId = playerData.media.id,
                 episode = playerData.episode,
             )
 
@@ -393,20 +393,20 @@ internal class MobileAppViewModel @Inject constructor(
 @Stable
 internal data class MobileAppUiState(
     val loadLinksState: LoadLinksState = LoadLinksState.Idle,
-    val filmPreviewState: FilmPreview? = null,
+    val mediaPreviewState: MediaPreview? = null,
     val playerData: PlayerData? = null,
     val isLoadingProviders: Boolean = false,
     val providerErrors: Map<String, ProviderWithThrowable> = emptyMap(),
 )
 
 @Stable
-internal data class FilmPreview(
-    val film: Film,
+internal data class MediaPreview(
+    val media: MediaMetadata,
     val isInLibrary: Boolean,
 )
 
 @Stable
 internal data class PlayerData(
-    val film: Film,
+    val media: MediaMetadata,
     val episode: Episode? = null,
 )

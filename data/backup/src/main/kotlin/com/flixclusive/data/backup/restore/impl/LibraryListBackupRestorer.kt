@@ -2,15 +2,15 @@ package com.flixclusive.data.backup.restore.impl
 
 import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.film.DBFilmExternalId
-import com.flixclusive.core.database.entity.film.DBFilmFts
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListType
+import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.media.DBMediaExternalId
+import com.flixclusive.core.database.entity.media.DBMediaFts
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.data.backup.model.BackupDbFilm
-import com.flixclusive.data.backup.model.BackupDbFilmExternalId
+import com.flixclusive.data.backup.model.BackupDbMedia
+import com.flixclusive.data.backup.model.BackupDbMediaExternalId
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.restore.BackupRestorer
 import kotlinx.coroutines.flow.filterNotNull
@@ -27,14 +27,14 @@ internal class LibraryListBackupRestorer @Inject constructor(
         return runCatching {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-            // Restore all film metadata (including WATCHED list items)
+            // Restore all media metadata (including WATCHED list items)
             items.forEach { list ->
                 list.items.forEach { item ->
-                    val film = item.film.toDbFilm()
-                    val externalIds = item.film.externalIds.map { it.toDbFilmExternalId() }
+                    val media = item.media.toDbMedia()
+                    val externalIds = item.media.externalIds.map { it.toDbMediaExternalId() }
 
-                    libraryListItemDao.upsertFilm(film)
-                    libraryListItemDao.upsertFilmFts(item.film.toDbFilmFts())
+                    libraryListItemDao.upsertMedia(media)
+                    libraryListItemDao.upsertMediaFts(item.media.toDbMediaFts())
                     libraryListItemDao.upsertIds(externalIds)
                 }
             }
@@ -57,7 +57,7 @@ internal class LibraryListBackupRestorer @Inject constructor(
                     list.items.forEach { item ->
                         libraryListItemDao.insertItem(
                             LibraryListItem(
-                                filmId = item.film.id,
+                                mediaId = item.media.id,
                                 listId = newList.id,
                                 createdAt = Date(item.createdAt),
                                 updatedAt = Date(item.updatedAt),
@@ -68,13 +68,13 @@ internal class LibraryListBackupRestorer @Inject constructor(
         }
     }
 
-    private fun BackupDbFilm.toDbFilm(): DBFilm {
-        return DBFilm(
+    private fun BackupDbMedia.toDbMedia(): DBMedia {
+        return DBMedia(
             id = id,
             title = title,
             providerId = providerId,
             adult = adult,
-            filmType = filmType,
+            type = mediaType,
             overview = overview,
             posterImage = posterImage,
             language = language,
@@ -86,17 +86,17 @@ internal class LibraryListBackupRestorer @Inject constructor(
         )
     }
 
-    private fun BackupDbFilm.toDbFilmFts(): DBFilmFts {
-        return DBFilmFts(
-            filmId = id,
+    private fun BackupDbMedia.toDbMediaFts(): DBMediaFts {
+        return DBMediaFts(
+            mediaId = id,
             title = title,
             overview = overview ?: "",
         )
     }
 
-    private fun BackupDbFilmExternalId.toDbFilmExternalId(): DBFilmExternalId {
-        return DBFilmExternalId(
-            filmId = filmId,
+    private fun BackupDbMediaExternalId.toDbMediaExternalId(): DBMediaExternalId {
+        return DBMediaExternalId(
+            mediaId = mediaId,
             providerId = providerId,
             source = source,
             externalId = externalId,

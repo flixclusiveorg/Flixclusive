@@ -6,8 +6,7 @@ import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.tracker.ToggleListItemOnTrackerListUseCase
 import com.flixclusive.domain.provider.usecase.tracker.TrackerListItemToggleAction
-import com.flixclusive.model.film.FilmIdSource
-import com.flixclusive.model.film.FilmMetadata
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.provider.capability.CrossMatchProviderApi
 import com.flixclusive.provider.capability.TrackerFeature
 import com.flixclusive.provider.capability.TrackerProviderApi
@@ -21,7 +20,7 @@ internal class ToggleListItemOnTrackerListUseCaseImpl @Inject constructor(
 ) : ToggleListItemOnTrackerListUseCase {
     override suspend fun invoke(
         list: TrackerList,
-        item: FilmMetadata,
+        item: MediaMetadata,
         action: TrackerListItemToggleAction
     ): Result<Unit> {
         return runCatching {
@@ -31,7 +30,7 @@ internal class ToggleListItemOnTrackerListUseCaseImpl @Inject constructor(
             val trackerApi = getTrackerApi(trackerProviderId)
 
             if (trackerProviderId != metadataProviderId) {
-                val crossMatchApi = getCrossMatchApi(trackerProviderId, item.externalIds)
+                val crossMatchApi = getCrossMatchApi(trackerProviderId)
 
                 val matchedItem = safeCall {
                     crossMatchApi.getById(item.externalIds)
@@ -71,19 +70,12 @@ internal class ToggleListItemOnTrackerListUseCaseImpl @Inject constructor(
         return api
     }
 
-    private suspend fun getCrossMatchApi(
-        trackerId: String,
-        externalIds: Map<FilmIdSource, String>
-    ): CrossMatchProviderApi {
+    private suspend fun getCrossMatchApi(trackerId: String): CrossMatchProviderApi {
         val plugin = getProviderPlugin(trackerId)
             ?: error(context.getString(R.string.tracker_failed_to_add_item_to_list_from_tracker))
 
         val api = plugin.getCrossMatchApi(context)
             ?: error(context.getString(R.string.tracker_failed_to_add_item_to_list_from_tracker))
-
-        if (!api.supportedIdSources.intersect(externalIds.keys).any()) {
-            error("The provider ${plugin.name} doesn't support any of the provided ID sources of this item.")
-        }
 
         return api
     }

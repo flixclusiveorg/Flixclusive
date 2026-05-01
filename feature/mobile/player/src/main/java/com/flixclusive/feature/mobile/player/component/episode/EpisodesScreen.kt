@@ -36,8 +36,8 @@ import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.episode.component.EpisodesRow
 import com.flixclusive.feature.mobile.player.component.episode.component.SeasonsRow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -80,9 +80,7 @@ internal fun EpisodesScreen(
             ) {
                 currentSeason()?.let {
                     Text(
-                        text = it.name.ifEmpty {
-                            stringResource(LocaleR.string.untitled_season, it.season.number)
-                        },
+                        text = it.title ?: stringResource(LocaleR.string.untitled_season, it.season.number),
                         style = MaterialTheme.typography.headlineSmall
                             .asAdaptiveTextStyle(size = 22.sp)
                             .copy(fontWeight = FontWeight.Bold),
@@ -129,7 +127,7 @@ internal fun EpisodesScreen(
 )
 @Composable
 private fun EpisodesScreenPreview() {
-    val sampleShow = remember { DummyDataForPreview.getTvShow() }
+    val sampleShow = remember { DummyDataForPreview.getShow() }
     val sampleEpisode = remember {
         val season = sampleShow.seasons.first()
         val episode = season.episodes.first()
@@ -139,7 +137,7 @@ private fun EpisodesScreenPreview() {
                 episodeNumber = episode.number,
                 progress = 1200L,
                 duration = 2400L,
-                filmId = sampleShow.id,
+                mediaId = sampleShow.id,
                 ownerId = "preview-user",
                 status = WatchStatus.WATCHING,
                 seasonNumber = season.number,

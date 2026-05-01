@@ -31,7 +31,6 @@ import com.flixclusive.core.common.provider.getProviderStatusContainerColor
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.model.provider.Status
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -103,7 +102,7 @@ internal fun ProviderBottomCardContent(
 
             Switch(
                 checked = enabledProvider(),
-                enabled = providerMetadata.status != Status.Maintenance && providerMetadata.status != Status.Down,
+                enabled = providerMetadata.status.isWorking,
                 colors = SwitchDefaults.colors(
                     disabledCheckedThumbColor =
                         MaterialTheme.colorScheme.surface

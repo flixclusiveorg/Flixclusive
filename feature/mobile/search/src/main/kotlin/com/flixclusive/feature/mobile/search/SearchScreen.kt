@@ -35,12 +35,12 @@ import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.search.component.SearchBarInput
-import com.flixclusive.feature.mobile.search.component.SearchFilmsGridView
+import com.flixclusive.feature.mobile.search.component.SearchMediasGridView
 import com.flixclusive.feature.mobile.search.component.SearchProvidersView
 import com.flixclusive.feature.mobile.search.component.SearchSearchHistoryView
 import com.flixclusive.feature.mobile.search.component.filter.FilterBottomSheet
 import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
@@ -55,14 +55,14 @@ internal fun SearchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-    val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
+    val showMediaTitles by viewModel.showMediaTitles.collectAsStateWithLifecycle()
     val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
     val providers by viewModel.providers.collectAsStateWithLifecycle()
 
     SearchScreenContent(
         uiState = uiState,
         searchQuery = { searchQuery },
-        showFilmTitles = showFilmTitles,
+        showMediaTitles = showMediaTitles,
         searchHistory = { searchHistory },
         searchResults = { viewModel.searchResults },
         providers = providers,
@@ -75,18 +75,18 @@ internal fun SearchScreen(
         onUpdateFilters = viewModel::onUpdateFilters,
         deleteSearchHistoryItem = viewModel::deleteSearchHistoryItem,
         paginateItems = viewModel::paginateItems,
-        openFilmScreen = navigator::openFilmScreen,
-        previewFilm = navigator::previewFilm,
+        openMediaScreen = navigator::openMediaScreen,
+        previewMedia = navigator::previewMedia,
     )
 }
 
 @Composable
 private fun SearchScreenContent(
     uiState: SearchUiState,
-    showFilmTitles: Boolean,
+    showMediaTitles: Boolean,
     searchQuery: () -> String,
     searchHistory: () -> List<SearchHistory>,
-    searchResults: () -> Set<Film>,
+    searchResults: () -> Set<MediaMetadata>,
     providers: Async<List<SearchProvider>>,
     filters: () -> FilterList,
     onGoBack: () -> Unit,
@@ -97,8 +97,8 @@ private fun SearchScreenContent(
     onUpdateFilters: (FilterList) -> Unit,
     deleteSearchHistoryItem: (SearchHistory) -> Unit,
     paginateItems: () -> Unit,
-    openFilmScreen: (Film) -> Unit,
-    previewFilm: (Film) -> Unit,
+    openMediaScreen: (MediaMetadata) -> Unit,
+    previewMedia: (MediaMetadata) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
@@ -154,13 +154,13 @@ private fun SearchScreenContent(
             targetState = uiState.currentViewType,
             transitionSpec = {
                 val enter = when (targetState) {
-                    SearchItemViewType.Films -> slideInHorizontally { it } + fadeIn()
+                    SearchItemViewType.Medias -> slideInHorizontally { it } + fadeIn()
                     SearchItemViewType.Providers -> slideInHorizontally { -it } + fadeIn()
                     else -> fadeIn()
                 }
 
                 val exit = when (initialState) {
-                    SearchItemViewType.Films -> slideOutHorizontally { it } + fadeOut()
+                    SearchItemViewType.Medias -> slideOutHorizontally { it } + fadeOut()
                     SearchItemViewType.Providers -> slideOutHorizontally { -it } + fadeOut()
                     else -> fadeOut()
                 }
@@ -192,18 +192,18 @@ private fun SearchScreenContent(
                     )
                 }
 
-                SearchItemViewType.Films -> {
-                    SearchFilmsGridView(
+                SearchItemViewType.Medias -> {
+                    SearchMediasGridView(
                         modifier = modifier,
-                        showFilmTitles = showFilmTitles,
+                        showMediaTitles = showMediaTitles,
                         listState = listState,
-                        previewFilm = previewFilm,
+                        previewMedia = previewMedia,
                         searchResults = searchResults,
                         pagingState = { uiState.pagingState },
                         error = uiState.error,
                         scaffoldPadding = innerPadding,
                         paginateItems = paginateItems,
-                        openFilmScreen = openFilmScreen,
+                        openMediaScreen = openMediaScreen,
                     )
                 }
             }
@@ -247,11 +247,11 @@ private fun SearchScreenBasePreview() {
         }
     }
 
-    val films = remember {
+    val medias = remember {
         List(5) {
-            DummyDataForPreview.getFilm(
+            DummyDataForPreview.getMedia(
                 id = "$it",
-                title = "Film $it",
+                title = "MediaMetadata $it",
             )
         }.toSet()
     }
@@ -262,14 +262,14 @@ private fun SearchScreenBasePreview() {
         Surface {
             SearchScreenContent(
                 uiState = SearchUiState(
-                    lastQuerySearched = "Film 1",
+                    lastQuerySearched = "MediaMetadata 1",
                     currentViewType = SearchItemViewType.Providers,
                     canPaginate = true,
                 ),
-                searchQuery = { "Film 1" },
-                showFilmTitles = true,
+                searchQuery = { "MediaMetadata 1" },
+                showMediaTitles = true,
                 searchHistory = { searchHistory },
-                searchResults = { films },
+                searchResults = { medias },
                 providers = providers,
                 filters = { filters },
                 onGoBack = {},
@@ -280,8 +280,8 @@ private fun SearchScreenBasePreview() {
                 onUpdateFilters = {},
                 deleteSearchHistoryItem = {},
                 paginateItems = {},
-                openFilmScreen = {},
-                previewFilm = {},
+                openMediaScreen = {},
+                previewMedia = {},
             )
         }
     }

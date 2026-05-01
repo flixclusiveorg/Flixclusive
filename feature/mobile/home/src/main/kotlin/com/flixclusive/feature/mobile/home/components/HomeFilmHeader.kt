@@ -61,16 +61,16 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiv
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.home.getBackdropAspectRatio
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.core.drawables.R as UiCommonR
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
-internal fun HomeFilmHeader(
-    film: Async<Film>,
-    onFilmClick: (Film) -> Unit,
-    onFilmLongClick: (Film) -> Unit,
+internal fun HomeMediaHeader(
+    media: Async<MediaMetadata>,
+    onMediaClick: (MediaMetadata) -> Unit,
+    onMediaLongClick: (MediaMetadata) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -80,11 +80,11 @@ internal fun HomeFilmHeader(
         modifier = modifier.aspectRatio(getBackdropAspectRatio()),
     ) {
         AnimatedContent(
-            targetState = film,
+            targetState = media,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             modifier = Modifier.matchParentSize(),
-        ) { film ->
-            when (film) {
+        ) { media ->
+            when (media) {
                 is Async.Loading -> {
                     Box(
                         modifier = Modifier
@@ -95,10 +95,10 @@ internal fun HomeFilmHeader(
                     ScrimOverlay(usePortraitView = usePortraitView)
                 }
 
-                is Async.Success -> FilmContent(
-                    film = film.data,
-                    onFilmClick = onFilmClick,
-                    onFilmLongClick = onFilmLongClick,
+                is Async.Success -> MediaContent(
+                    media = media.data,
+                    onMediaClick = onMediaClick,
+                    onMediaLongClick = onMediaLongClick,
                     modifier = Modifier.matchParentSize(),
                 )
 
@@ -109,10 +109,10 @@ internal fun HomeFilmHeader(
 }
 
 @Composable
-private fun FilmContent(
-    film: Film,
-    onFilmClick: (Film) -> Unit,
-    onFilmLongClick: (Film) -> Unit,
+private fun MediaContent(
+    media: MediaMetadata,
+    onMediaClick: (MediaMetadata) -> Unit,
+    onMediaLongClick: (MediaMetadata) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -121,13 +121,13 @@ private fun FilmContent(
     val usePortraitView = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
     val feedbackOnLongPress = getFeedbackOnLongPress()
-    var showTextInsteadOfLogo by rememberSaveable { mutableStateOf(film.logoImage == null) }
-    val logoImage = remember(film) {
-        context.buildImageRequest(imagePath = film.logoImage)
+    var showTextInsteadOfLogo by rememberSaveable { mutableStateOf(media.logoImage == null) }
+    val logoImage = remember(media) {
+        context.buildImageRequest(imagePath = media.logoImage)
     }
 
-    val headerImage = remember(film) {
-        context.buildImageRequest(imagePath = film.backdropImage ?: film.posterImage)
+    val headerImage = remember(media) {
+        context.buildImageRequest(imagePath = media.backdropImage ?: media.posterImage)
     }
 
     val labelAlignment = if (usePortraitView) {
@@ -146,26 +146,26 @@ private fun FilmContent(
         modifier = modifier
     ) {
         AnimatedContent(
-            targetState = film,
+            targetState = media,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             modifier = Modifier.matchParentSize(),
-        ) { film ->
+        ) { media ->
             AsyncImage(
                 model = headerImage,
                 imageLoader = LocalContext.current.imageLoader,
                 placeholder = SolidColorPainter.from(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)),
                 error = SolidColorPainter.from(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)),
-                contentDescription = film.title,
+                contentDescription = media.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .matchParentSize()
                     .combinedClickable(
                         onClick = {
-                            onFilmClick(film)
+                            onMediaClick(media)
                         },
                         onLongClick = {
                             feedbackOnLongPress()
-                            onFilmLongClick(film)
+                            onMediaLongClick(media)
                         },
                     ),
             )
@@ -182,7 +182,7 @@ private fun FilmContent(
             ) {
                 if (showTextInsteadOfLogo) {
                     Text(
-                        text = film.title,
+                        text = media.title,
                         style = MaterialTheme.typography.headlineMedium.asAdaptiveTextStyle(
                             increaseBy = 5.sp,
                         ),
@@ -192,7 +192,7 @@ private fun FilmContent(
                             top = 22.dp,
                             start = 5.dp,
                             end = 5.dp,
-                            bottom = if (film.genres.isEmpty()) 40.dp else Dp.Unspecified
+                            bottom = if (media.genres.isEmpty()) 40.dp else Dp.Unspecified
                         ),
                     )
                 } else {
@@ -200,7 +200,7 @@ private fun FilmContent(
                         model = logoImage,
                         imageLoader = LocalContext.current.imageLoader,
                         error = painterResource(UiCommonR.drawable.sample_movie_subtitle_preview),
-                        contentDescription = film.title,
+                        contentDescription = media.title,
                         onError = { showTextInsteadOfLogo = true },
                         modifier = Modifier
                             .height(getAdaptiveDp(96.dp, 20.dp))
@@ -216,7 +216,7 @@ private fun FilmContent(
                     verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 ) {
-                    film.genres.forEachIndexed { index, genre ->
+                    media.genres.forEachIndexed { index, genre ->
                         Text(
                             text = genre.name,
                             style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(
@@ -225,7 +225,7 @@ private fun FilmContent(
                             color = LocalContentColor.current.copy(0.6f),
                         )
 
-                        if (index < film.genres.lastIndex) {
+                        if (index < media.genres.lastIndex) {
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterVertically)
@@ -288,11 +288,11 @@ private fun BoxScope.ScrimOverlay(usePortraitView: Boolean) {
 
 @Preview
 @Composable
-private fun HomeFilmHeaderBasePreview() {
-    var film by remember {
-        mutableStateOf<Async<Film>>(
+private fun HomeMediaHeaderBasePreview() {
+    var media by remember {
+        mutableStateOf<Async<MediaMetadata>>(
             Async.Success(
-                DummyDataForPreview.getFilm(
+                DummyDataForPreview.getMedia(
                     genres = listOf(
                         "Action",
                         "Adventure",
@@ -308,10 +308,10 @@ private fun HomeFilmHeaderBasePreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             Column {
-                HomeFilmHeader(
-                    film = film,
-                    onFilmClick = {},
-                    onFilmLongClick = {},
+                HomeMediaHeader(
+                    media = media,
+                    onMediaClick = {},
+                    onMediaLongClick = {},
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -322,29 +322,29 @@ private fun HomeFilmHeaderBasePreview() {
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 private fun DisplayHeaderCompactLandscapePreview() {
-    HomeFilmHeaderBasePreview()
+    HomeMediaHeaderBasePreview()
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=portrait")
 @Composable
 private fun DisplayHeaderMediumPortraitPreview() {
-    HomeFilmHeaderBasePreview()
+    HomeMediaHeaderBasePreview()
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=landscape")
 @Composable
 private fun DisplayHeaderMediumLandscapePreview() {
-    HomeFilmHeaderBasePreview()
+    HomeMediaHeaderBasePreview()
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
 @Composable
 private fun DisplayHeaderExtendedPortraitPreview() {
-    HomeFilmHeaderBasePreview()
+    HomeMediaHeaderBasePreview()
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
 @Composable
 private fun DisplayHeaderExtendedLandscapePreview() {
-    HomeFilmHeaderBasePreview()
+    HomeMediaHeaderBasePreview()
 }

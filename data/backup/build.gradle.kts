@@ -21,7 +21,7 @@ dependencies {
 
     implementation(libs.stubs.util)
     implementation(libs.stubs.model.provider)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 
     implementation(libs.kotlinx.serialization.protobuf)
     implementation(libs.unifile)

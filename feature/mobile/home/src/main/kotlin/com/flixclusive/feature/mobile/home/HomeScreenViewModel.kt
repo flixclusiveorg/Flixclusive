@@ -7,7 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.PagingState
-import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -22,12 +23,12 @@ import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
 import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
-import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.Show
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
@@ -58,7 +59,7 @@ internal class HomeScreenViewModel @Inject constructor(
     userSessionDataStore: UserSessionDataStore,
     appDispatchers: AppDispatchers,
     private val getCatalogItems: GetCatalogItemsUseCase,
-    private val getFilmMetadata: GetFilmMetadataUseCase,
+    private val getMediaMetadata: GetMediaMetadataUseCase,
     private val getHomeCatalogs: GetHomeCatalogsUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val watchProgressRepository: WatchProgressRepository,
@@ -67,8 +68,8 @@ internal class HomeScreenViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 
-    /** Cache to store if a film has metadata or not to avoid redundant API queries */
-    private val cachedFilmMetadata = HashMap<DBFilm, TvShow>()
+    /** Cache to store if a media has metadata or not to avoid redundant API queries */
+    private val cachedMediaMetadata = HashMap<DBMedia, Show>()
 
     private var observeCatalogsJob: Job? = null
     private var loadFetchHeaderJob: Job? = null
@@ -94,7 +95,7 @@ internal class HomeScreenViewModel @Inject constructor(
 
 
     /** Displays the title of the media under the card */
-    val showFilmTitles = dataStoreManager
+    val showMediaTitles = dataStoreManager
         .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
         .mapLatest { it.shouldShowTitleOnCards }
         .distinctUntilChanged()
@@ -143,22 +144,22 @@ internal class HomeScreenViewModel @Inject constructor(
                     return item // Episode not finished, include in continue watching
                 }
 
-                var tvShow: FilmMetadata? = cachedFilmMetadata[item.film]
+                var tvShow: MediaMetadata? = cachedMediaMetadata[item.media]
                 if (tvShow == null) {
-                    val response = getFilmMetadata(item.film).last()
+                    val response = getMediaMetadata(item.media.toMediaMetadata()).last()
                     if (response is Async.Success) {
-                        cachedFilmMetadata[item.film] = response.data as TvShow
+                        cachedMediaMetadata[item.media] = response.data as Show
                         tvShow = response.data
                     }
                 }
 
                 if (tvShow == null) {
-                    throw NullPointerException("Film metadata not found for id: ${item.film.id}")
+                    throw NullPointerException("MediaMetadata metadata not found for id: ${item.media.id}")
                 }
 
                 // Get next episode
                 val nextEpisode = getNextEpisode(
-                    tvShow = tvShow as TvShow,
+                    show = tvShow as Show,
                     season = data.seasonNumber,
                     episode = data.episodeNumber,
                 )
@@ -167,10 +168,10 @@ internal class HomeScreenViewModel @Inject constructor(
                     null // No next episode, exclude from continue watching
                 } else {
                     EpisodeProgressWithMetadata(
-                        film = item.film,
+                        media = item.media,
                         watchData = EpisodeProgress(
                             ownerId = data.ownerId,
-                            filmId = item.film.id,
+                            mediaId = item.media.id,
                             seasonNumber = nextEpisode.season,
                             episodeNumber = nextEpisode.number,
                             progress = 0L,
@@ -212,7 +213,7 @@ internal class HomeScreenViewModel @Inject constructor(
                                     catalog = entry.value,
                                     page = 1,
                                     state = PagingState.Idle,
-                                    films = emptyList(),
+                                    medias = emptyList(),
                                 )
                             }
 
@@ -251,7 +252,7 @@ internal class HomeScreenViewModel @Inject constructor(
                     val isSuccessButEmpty = it is Async.Success && it.data.isEmpty()
                     if (isSuccessButEmpty) return@first true
 
-                    it is Async.Success && it.data.any { entry -> entry.value.films.isNotEmpty() }
+                    it is Async.Success && it.data.any { entry -> entry.value.medias.isNotEmpty() }
                 }
 
             val catalogs = (response as? Async.Success)?.data?.values ?: emptyList()
@@ -260,9 +261,9 @@ internal class HomeScreenViewModel @Inject constructor(
             val maxRetries = 5
             repeat(maxRetries) { i ->
                 val randomCatalog = catalogs.randomOrNull() ?: return@launch
-                val randomFilm = randomCatalog.films.randomOrNull() ?: return@launch
+                val randomMedia = randomCatalog.medias.randomOrNull() ?: return@launch
 
-                when (val response = getFilmMetadata(randomFilm).last()) {
+                when (val response = getMediaMetadata(randomMedia).last()) {
                     is Async.Success -> {
                         _uiState.update { state ->
                             state.copy(itemHeader = Async.Success(response.data))
@@ -276,7 +277,7 @@ internal class HomeScreenViewModel @Inject constructor(
 
                         _uiState.update { state ->
                             state.copy(
-                                itemHeader = Async.Success(randomFilm)
+                                itemHeader = Async.Success(randomMedia)
                             )
                         }
                     }
@@ -324,7 +325,7 @@ internal class HomeScreenViewModel @Inject constructor(
                                 key = catalogWithState.key,
                                 newData = catalogWithState.copy(
                                     state = if (hasNext) PagingState.Idle else PagingState.Exhausted,
-                                    films = catalogWithState.films + response.data.results,
+                                    medias = catalogWithState.medias + response.data.results,
                                 )
                             )
                         }
@@ -350,7 +351,7 @@ internal class HomeScreenViewModel @Inject constructor(
 
 @Stable
 internal data class HomeUiState(
-    val itemHeader: Async<Film> = Async.Loading,
+    val itemHeader: Async<MediaMetadata> = Async.Loading,
     val catalogs: Async<Map<String, CatalogWithPagingState>> = Async.Loading,
 ) {
     fun updateCatalog(
@@ -384,7 +385,7 @@ internal data class CatalogWithPagingState(
     val catalog: Catalog,
     val page: Int,
     val state: PagingState,
-    val films: List<Film>,
+    val medias: List<PartialMedia>,
 ) {
     val canPaginate: Boolean get() = catalog.canPaginate
     val url: String get() = catalog.url

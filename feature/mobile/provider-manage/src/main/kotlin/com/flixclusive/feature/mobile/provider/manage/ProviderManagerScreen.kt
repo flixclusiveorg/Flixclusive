@@ -73,7 +73,6 @@ import com.flixclusive.feature.mobile.provider.manage.component.ProviderManagerT
 import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableItem
 import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyGridState
 import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.model.provider.ProviderStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
@@ -85,9 +84,6 @@ import com.flixclusive.core.strings.R as LocaleR
 private val FabButtonSize = 56.dp
 
 private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array.providers_screen_help)
-
-private val ProviderMetadata.isNotUsable: Boolean
-    get() = status == ProviderStatus.Down || status == ProviderStatus.Maintenance
 
 @Destination<ExternalModuleGraph>
 @Composable
@@ -275,7 +271,7 @@ internal fun ProviderManagerScreenContent(
                                     onClick = { openProviderDetails(metadata) },
                                     uninstallProvider = { providerToUninstall = metadata },
                                     onToggleProvider = { toggleProvider(metadata.id) },
-                                    enabledProvider = { !metadata.isNotUsable && provider.isEnabled },
+                                    enabledProvider = { metadata.status.isWorking && provider.isEnabled },
                                     isDraggingProvider = { isDragging },
                                     dragModifier =
                                         Modifier.draggableHandle(

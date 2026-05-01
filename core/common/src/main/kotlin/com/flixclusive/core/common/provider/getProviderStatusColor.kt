@@ -8,7 +8,6 @@ import com.flixclusive.model.provider.ProviderStatus
 fun getProviderStatusContainerColor(status: ProviderStatus) =
     when (status) {
         ProviderStatus.Down -> Color(0xFFFF3030)
-        ProviderStatus.Maintenance -> Color(0xFFFFBF1B)
         ProviderStatus.Beta -> Color(0xFF00C4FF)
         ProviderStatus.Working -> Color(0xFF00FF04)
     }

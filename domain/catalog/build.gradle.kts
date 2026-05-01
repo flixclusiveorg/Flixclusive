@@ -16,7 +16,7 @@ dependencies {
     implementation(projects.dataDatabase)
     implementation(projects.dataProvider)
 
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.provider)
     implementation(libs.stubs.util)
 

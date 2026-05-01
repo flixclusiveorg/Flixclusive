@@ -10,7 +10,7 @@ import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.navigation.navigator.ExitAction
 import com.flixclusive.core.navigation.navigator.StartPlayerAction
-import com.flixclusive.core.navigation.navigator.ViewFilmPreviewAction
+import com.flixclusive.core.navigation.navigator.ViewMediaPreviewAction
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreen
 import com.flixclusive.feature.mobile.user.add.AddUserScreen
 import com.ramcosta.composedestinations.DestinationsNavHost
@@ -35,7 +35,7 @@ import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 internal fun AppNavHost(
     navController: NavHostController,
     exitAction: ExitAction,
-    previewFilmAction: ViewFilmPreviewAction,
+    previewMediaAction: ViewMediaPreviewAction,
     startPlayerAction: StartPlayerAction,
     isTv: Boolean = false,
 ) {
@@ -51,7 +51,7 @@ internal fun AppNavHost(
                     navBackStackEntry = navBackStackEntry,
                     exitAction = exitAction,
                     navigator = navigator,
-                    previewFilmAction = previewFilmAction,
+                    previewMediaAction = previewMediaAction,
                     startPlayerAction = startPlayerAction,
                 ),
             )
@@ -65,7 +65,7 @@ internal fun AppNavHost(
                         navBackStackEntry = navBackStackEntry,
                         exitAction = exitAction,
                         navigator = navigator,
-                        previewFilmAction = previewFilmAction,
+                        previewMediaAction = previewMediaAction,
                         startPlayerAction = startPlayerAction,
                     ),
                     avatarResultRecipient = resultRecipient<UserAvatarSelectScreenDestination, Int>(
@@ -84,7 +84,7 @@ internal fun AppNavHost(
                         navBackStackEntry = navBackStackEntry,
                         exitAction = exitAction,
                         navigator = navigator,
-                        previewFilmAction = previewFilmAction,
+                        previewMediaAction = previewMediaAction,
                         startPlayerAction = startPlayerAction,
                     ),
                     pinVerifyResultRecipient = resultRecipient<PinVerifyScreenDestination, PinVerificationResult>(
@@ -101,7 +101,7 @@ private fun getMobileNavigator(
     navBackStackEntry: NavBackStackEntry,
     exitAction: ExitAction,
     navigator: DestinationsNavigator,
-    previewFilmAction: ViewFilmPreviewAction,
+    previewMediaAction: ViewMediaPreviewAction,
     startPlayerAction: StartPlayerAction,
 ): MobileAppNavigator {
     return MobileAppNavigator(
@@ -110,7 +110,7 @@ private fun getMobileNavigator(
         uriHandler = LocalUriHandler.current,
         lifecycleOwner = LocalLifecycleOwner.current,
         exitAction = exitAction,
-        previewFilmAction = previewFilmAction,
+        previewMediaAction = previewMediaAction,
         startPlayerAction = startPlayerAction,
     )
 }

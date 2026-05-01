@@ -517,7 +517,7 @@ private fun ManageLibraryScreenBasePreview() {
                 val previews = List(3) {
                     DummyDataForPreview
                         .getMovie(
-                            title = "Film #$it",
+                            title = "MediaMetadata #$it",
                             id = it.toString(),
                         ).toPreviewPoster()
                 }

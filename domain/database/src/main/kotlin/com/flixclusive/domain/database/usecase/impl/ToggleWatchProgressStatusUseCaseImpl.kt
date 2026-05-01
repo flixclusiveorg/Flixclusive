@@ -6,9 +6,9 @@ import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.Movie
-import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Movie
+import com.flixclusive.model.media.Show
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -17,19 +17,19 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
     private val watchProgressRepository: WatchProgressRepository,
     private val userSessionDataStore: UserSessionDataStore,
 ) : ToggleWatchProgressStatusUseCase {
-    override suspend fun invoke(film: Film) {
+    override suspend fun invoke(media: MediaMetadata) {
         val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-        when (film) {
-            is Movie -> invokeForMovie(ownerId, film)
-            is TvShow -> invokeForTvShow(ownerId, film)
+        when (media) {
+            is Movie -> invokeForMovie(ownerId, media)
+            is Show -> invokeForShow(ownerId, media)
         }
     }
 
-    private suspend fun invokeForTvShow(ownerId: String, tvShow: TvShow) {
+    private suspend fun invokeForShow(ownerId: String, tvShow: Show) {
         val progress = watchProgressRepository.get(
             id = tvShow.id,
-            type = tvShow.filmType,
+            type = tvShow.type,
             ownerId = ownerId,
         )
 
@@ -48,9 +48,9 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
                 ?: tvShow.totalEpisodes
 
             watchProgressRepository.insert(
-                film = tvShow,
+                media = tvShow,
                 item = EpisodeProgress(
-                    filmId = tvShow.id,
+                    mediaId = tvShow.id,
                     ownerId = ownerId,
                     seasonNumber = season,
                     episodeNumber = episode,
@@ -69,7 +69,7 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
                 progressList.forEach { episodeProgress ->
                     watchProgressRepository.delete(
                         item = episodeProgress.id,
-                        type = tvShow.filmType,
+                        type = tvShow.type,
                     )
                 }
             }
@@ -77,18 +77,18 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
         }
     }
 
-    private suspend fun invokeForMovie(ownerId: String, film: Movie) {
+    private suspend fun invokeForMovie(ownerId: String, media: Movie) {
         val progress = watchProgressRepository.get(
-            id = film.id,
+            id = media.id,
             ownerId = ownerId,
-            type = film.filmType,
+            type = media.type,
         )
 
         if (progress == null) {
             watchProgressRepository.insert(
-                film = film,
+                media = media,
                 item = MovieProgress(
-                    filmId = film.id,
+                    mediaId = media.id,
                     ownerId = ownerId,
                     progress = 0L,
                     status = WatchStatus.COMPLETED,
@@ -97,7 +97,7 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
         } else {
             watchProgressRepository.delete(
                 item = progress.id,
-                type = film.filmType,
+                type = media.type,
             )
         }
     }

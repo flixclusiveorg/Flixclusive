@@ -2,8 +2,8 @@ package com.flixclusive.domain.catalog.usecase
 
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.PaginatedResponse
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.common.PaginatedMedia
 import com.flixclusive.model.provider.Catalog
 import kotlinx.coroutines.flow.Flow
 
@@ -20,10 +20,10 @@ interface GetCatalogItemsUseCase {
      * @param catalog The catalog from which to fetch items.
      * @param page The page number to fetch.
      *
-     * @return A [Resource] containing a [PaginatedResponse] of [FilmSearchItem]s.
+     * @return A [Resource] containing a [PaginatedMedia] of [PartialMedia]s.
      * */
     operator fun invoke(
         catalog: Catalog,
         page: Int,
-    ): Flow<Async<PaginatedResponse<FilmSearchItem>>>
+    ): Flow<Async<PaginatedMedia<PartialMedia>>>
 }

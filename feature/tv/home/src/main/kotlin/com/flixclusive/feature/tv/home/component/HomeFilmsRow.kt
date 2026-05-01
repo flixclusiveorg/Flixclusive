@@ -21,9 +21,9 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.tv.component.FilmCard
-import com.flixclusive.core.ui.tv.component.FilmCardHeight
-import com.flixclusive.core.ui.tv.component.FilmPadding
+import com.flixclusive.core.ui.tv.component.MediaCard
+import com.flixclusive.core.ui.tv.component.MediaCardHeight
+import com.flixclusive.core.ui.tv.component.MediaPadding
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
@@ -32,21 +32,21 @@ import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.home.PaginationStateInfo
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.provider.Catalog
 
 internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-internal fun HomeFilmsRow(
+internal fun HomeMediasRow(
     modifier: Modifier = Modifier,
     catalogItem: Catalog,
     paginationState: PaginationStateInfo,
-    films: List<Film>,
+    medias: List<MediaMetadata>,
     rowIndex: Int,
-    onFilmClick: (film: Film) -> Unit,
-    onFocusedFilmChange: (film: Film) -> Unit,
+    onMediaClick: (media: MediaMetadata) -> Unit,
+    onFocusedMediaChange: (media: MediaMetadata) -> Unit,
     paginate: (page: Int) -> Unit,
 ) {
     val focusRestorers = createInitialFocusRestorerModifiers()
@@ -62,9 +62,9 @@ internal fun HomeFilmsRow(
     LaunchedEffect(listState.firstVisibleItemIndex) {
         safeCall {
             if (
-                films.isNotEmpty()
-                && listState.firstVisibleItemIndex % films.size == 1
-                && listState.firstVisibleItemIndex > films.size
+                medias.isNotEmpty()
+                && listState.firstVisibleItemIndex % medias.size == 1
+                && listState.firstVisibleItemIndex > medias.size
                 && !paginationState.canPaginate
             ) {
                 listState.scrollToItem(0)
@@ -77,7 +77,7 @@ internal fun HomeFilmsRow(
             shouldStartPaginate && paginationState.canPaginate
             && (paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE
             || paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR
-            || films.isEmpty())
+            || medias.isEmpty())
         ) {
             paginate(paginationState.currentPage)
         }
@@ -85,7 +85,7 @@ internal fun HomeFilmsRow(
 
     Column(
         modifier = Modifier
-            .heightIn(min = FilmPadding.bottom + 18.dp + FilmCardHeight)
+            .heightIn(min = MediaPadding.bottom + 18.dp + MediaCardHeight)
     ) {
         Text(
             text = catalogItem.name,
@@ -96,7 +96,7 @@ internal fun HomeFilmsRow(
             modifier = Modifier
                 .padding(start = LabelStartPadding.start + getLocalDrawerWidth())
                 .padding(
-                    bottom = FilmPadding.bottom,
+                    bottom = MediaPadding.bottom,
                     top = 18.dp
                 )
         )
@@ -112,14 +112,14 @@ internal fun HomeFilmsRow(
             )
         ) {
             items(
-                count = if (paginationState.canPaginate) films.size else Int.MAX_VALUE
+                count = if (paginationState.canPaginate) medias.size else Int.MAX_VALUE
             ) {
-                val columnIndex = it % films.size
-                val film = films[columnIndex]
+                val columnIndex = it % medias.size
+                val media = medias[columnIndex]
 
                 val key = String.format(HOME_FOCUS_KEY_FORMAT, rowIndex, columnIndex)
 
-                FilmCard(
+                MediaCard(
                     modifier = Modifier
                         .ifElse(
                             condition = it == 0,
@@ -128,11 +128,11 @@ internal fun HomeFilmsRow(
                         .focusOnMount(
                             itemKey = key,
                             onFocus = {
-                                onFocusedFilmChange(film)
+                                onFocusedMediaChange(media)
                             }
                         ),
-                    film = film,
-                    onClick = onFilmClick
+                    media = media,
+                    onClick = onMediaClick
                 )
             }
         }

@@ -42,7 +42,7 @@ private fun PlayerScreenBasePreview() {
     var currentServer by remember { mutableIntStateOf(0) }
 
     val tvShow = remember {
-        DummyDataForPreview.getTvShow(
+        DummyDataForPreview.getShow(
             providerId = currentProvider.id,
         )
     }
@@ -149,7 +149,7 @@ private fun PlayerScreenBasePreview() {
                 currentServer = { currentServer },
                 onServerChange = { onServerChange(it) },
                 onBack = { player.release() },
-                film = tvShow,
+                media = tvShow,
                 currentSeason = { currentSeason },
                 currentEpisode = currentEpisode,
                 onEpisodeChange = {},

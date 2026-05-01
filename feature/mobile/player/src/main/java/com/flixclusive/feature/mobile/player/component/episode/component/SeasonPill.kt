@@ -26,9 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.core.strings.R
-import com.flixclusive.model.film.common.tv.Season
-import kotlin.text.ifEmpty
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -54,7 +52,7 @@ internal fun SeasonPill(
         contentAlignment = Alignment.Center
     ) {
         OutlinedButton(
-            enabled = !selected(),
+            enabled = !selected() && season.isReleased,
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = containerColor,
                 disabledContainerColor = containerColor,
@@ -75,9 +73,7 @@ internal fun SeasonPill(
                 )
         ) {
             Text(
-                text = season.name.ifEmpty {
-                    stringResource(LocaleR.string.untitled_season, season.number)
-                },
+                text = season.title ?: stringResource(LocaleR.string.untitled_season, season.number),
                 style = MaterialTheme.typography.labelMedium
             )
         }
@@ -95,7 +91,7 @@ private fun SeasonPillPreview() {
                 items(10) { index ->
                     SeasonPill(
                         season = remember {
-                            DummyDataForPreview.getTvShow()
+                            DummyDataForPreview.getShow()
                                 .seasons.first()
                         },
                         selected = { index == 2 },

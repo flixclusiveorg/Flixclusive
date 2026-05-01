@@ -139,7 +139,7 @@ internal fun SearchBarInput(
                     if (textFieldValue.text.isEmpty()) {
                         isError = true
                     } else {
-                        onChangeView(SearchItemViewType.Films)
+                        onChangeView(SearchItemViewType.Medias)
                     }
 
                     if (isError) return@KeyboardActions

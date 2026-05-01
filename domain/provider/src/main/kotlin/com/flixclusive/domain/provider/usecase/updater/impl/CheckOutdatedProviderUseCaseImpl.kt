@@ -1,11 +1,7 @@
 package com.flixclusive.domain.provider.usecase.updater.impl
 
-import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
@@ -56,20 +52,7 @@ internal class CheckOutdatedProviderUseCaseImpl @Inject constructor(
         }
 
         val repository = metadata.repositoryUrl.toValidRepositoryLink()
-        val response = getProviderFromRemoteUseCase(repository, id)
-
-        if (response is Resource.Failure) {
-            throw ExceptionWithUiText(response.error)
-        }
-
-        if (response.data == null) {
-            throw ExceptionWithUiText(
-                uiText = UiText.from(R.string.provider_not_found_message),
-                cause = NullPointerException(),
-            )
-        }
-
-        val updatedMetadata = response.data!!
+        val updatedMetadata = getProviderFromRemoteUseCase(repository, id)
 
         return manifest.versionCode < updatedMetadata.versionCode
     }

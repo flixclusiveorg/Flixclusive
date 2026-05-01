@@ -23,34 +23,33 @@ import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
-import com.flixclusive.core.presentation.mobile.components.film.FilmCard
-import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
-import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
+import com.flixclusive.core.presentation.mobile.components.media.MediaCard
+import com.flixclusive.core.presentation.mobile.components.media.MediaCardPlaceholder
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
 import com.flixclusive.feature.mobile.search.R
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.core.strings.R as LocaleR
 
-private enum class SearchFilmsGridViewState {
+private enum class SearchMediasGridViewState {
     EMPTY,
     NON_EMPTY,
     ERROR;
 
     val isEmpty: Boolean get() = this == EMPTY
-    val isNonEmpty: Boolean get() = this == NON_EMPTY
     val isError: Boolean get() = this == ERROR
 }
 
 @Composable
-internal fun SearchFilmsGridView(
-    searchResults: () -> Set<Film>,
+internal fun SearchMediasGridView(
+    searchResults: () -> Set<MediaMetadata>,
     pagingState: () -> PagingState,
     error: UiText?,
     scaffoldPadding: PaddingValues,
     listState: LazyGridState,
-    showFilmTitles: Boolean,
+    showMediaTitles: Boolean,
     paginateItems: () -> Unit,
-    openFilmScreen: (Film) -> Unit,
-    previewFilm: (Film) -> Unit,
+    openMediaScreen: (MediaMetadata) -> Unit,
+    previewMedia: (MediaMetadata) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val currentState = remember(
@@ -59,9 +58,9 @@ internal fun SearchFilmsGridView(
         error
     ) {
         when {
-            error != null || (pagingState().isError && searchResults().isEmpty()) -> SearchFilmsGridViewState.ERROR
-            searchResults().isEmpty() -> SearchFilmsGridViewState.EMPTY
-            else -> SearchFilmsGridViewState.NON_EMPTY
+            error != null || (pagingState().isError && searchResults().isEmpty()) -> SearchMediasGridViewState.ERROR
+            searchResults().isEmpty() -> SearchMediasGridViewState.EMPTY
+            else -> SearchMediasGridViewState.NON_EMPTY
         }
     }
 
@@ -88,9 +87,9 @@ internal fun SearchFilmsGridView(
                     listState = listState,
                     pagingState = pagingState,
                     scaffoldPadding = scaffoldPadding,
-                    showFilmTitles = showFilmTitles,
-                    openFilmScreen = openFilmScreen,
-                    previewFilm = previewFilm,
+                    showMediaTitles = showMediaTitles,
+                    openMediaScreen = openMediaScreen,
+                    previewMedia = previewMedia,
                 )
             }
         }
@@ -115,16 +114,16 @@ private fun SearchEmptyState(
 
 @Composable
 private fun SearchNonEmptyState(
-    results: () -> Set<Film>,
+    results: () -> Set<MediaMetadata>,
     listState: LazyGridState,
     pagingState: () -> PagingState,
     scaffoldPadding: PaddingValues,
-    showFilmTitles: Boolean,
-    openFilmScreen: (Film) -> Unit,
-    previewFilm: (Film) -> Unit,
+    showMediaTitles: Boolean,
+    openMediaScreen: (MediaMetadata) -> Unit,
+    previewMedia: (MediaMetadata) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
+        columns = GridCells.Adaptive(getAdaptiveMediaCardWidth()),
         state = listState,
         contentPadding = scaffoldPadding,
     ) {
@@ -132,13 +131,13 @@ private fun SearchNonEmptyState(
             results().size,
             key = { results().elementAt(it).id },
         ) {
-            val film = results().elementAt(it)
+            val media = results().elementAt(it)
 
-            FilmCard(
-                film = film,
-                isShowingTitle = showFilmTitles,
-                onClick = openFilmScreen,
-                onLongClick = previewFilm,
+            MediaCard(
+                media = media,
+                isShowingTitle = showMediaTitles,
+                onClick = openMediaScreen,
+                onLongClick = previewMedia,
                 modifier = Modifier
                     .animateItem()
                     .fillMaxWidth(),
@@ -147,8 +146,8 @@ private fun SearchNonEmptyState(
 
         if (pagingState().isLoading) {
             items(20) {
-                FilmCardPlaceholder(
-                    isShowingTitle = showFilmTitles,
+                MediaCardPlaceholder(
+                    isShowingTitle = showMediaTitles,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(3.dp),

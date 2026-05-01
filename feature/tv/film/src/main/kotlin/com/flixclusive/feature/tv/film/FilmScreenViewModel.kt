@@ -1,4 +1,4 @@
-package com.flixclusive.feature.tv.film
+package com.flixclusive.feature.tv.media
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,11 +7,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.film.BaseFilmScreenViewModel
-import com.flixclusive.core.ui.film.FilmScreenNavArgs
+import com.flixclusive.core.ui.media.BaseMediaScreenViewModel
+import com.flixclusive.core.ui.media.MediaScreenNavArgs
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.domain.library.watchlist.ToggleWatchlistStatusUseCase
-import com.flixclusive.domain.tmdb.usecase.GetFilmMetadataUseCase
+import com.flixclusive.domain.tmdb.usecase.GetMediaMetadataUseCase
 import com.flixclusive.domain.tmdb.usecase.SeasonProviderUseCase
 import com.flixclusive.domain.session.UserSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,19 +22,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class FilmScreenViewModel @Inject constructor(
-    filmProvider: GetFilmMetadataUseCase,
+internal class MediaScreenViewModel @Inject constructor(
+    mediaProvider: GetMediaMetadataUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     seasonProvider: SeasonProviderUseCase,
     toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
     savedStateHandle: SavedStateHandle,
     dataStoreManager: DataStoreManager,
     userSessionManager: UserSessionManager,
-) : BaseFilmScreenViewModel(
-    partiallyDetailedFilm = savedStateHandle.navArgs<FilmScreenNavArgs>().film,
+) : BaseMediaScreenViewModel(
+    partiallyDetailedMedia = savedStateHandle.navArgs<MediaScreenNavArgs>().media,
     watchHistoryRepository = watchHistoryRepository,
     seasonProvider = seasonProvider,
-    filmProvider = filmProvider,
+    mediaProvider = mediaProvider,
     toggleWatchlistStatusUseCase = toggleWatchlistStatusUseCase,
     dataStoreManager = dataStoreManager,
     userSessionManager = userSessionManager

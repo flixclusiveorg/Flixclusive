@@ -11,7 +11,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.provider.Catalog
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,7 +41,7 @@ internal class SeeAllViewModel @AssistedInject constructor(
 
     private var paginatingJob: Job? = null
 
-    val items = mutableStateSetOf<Film>()
+    val items = mutableStateSetOf<MediaMetadata>()
 
     private val _uiState = MutableStateFlow(SeeAllUiState())
     val uiState = _uiState.asStateFlow()
@@ -49,7 +49,7 @@ internal class SeeAllViewModel @AssistedInject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    val showFilmTitles = dataStoreManager
+    val showMediaTitles = dataStoreManager
         .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
         .map { it.shouldShowTitleOnCards }
         .distinctUntilChanged()

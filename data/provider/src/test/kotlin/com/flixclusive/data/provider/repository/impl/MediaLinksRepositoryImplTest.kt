@@ -6,7 +6,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.data.provider.repository.MediaLinks
 import com.flixclusive.data.provider.repository.MediaLinksCacheKey
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
@@ -27,7 +27,7 @@ class MediaLinksRepositoryImplTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val testMediaLinksCacheKey = MediaLinksCacheKey.create(
-        filmId = "film123",
+        mediaId = "media123",
         providerId = "provider1",
         episode = null,
     )
@@ -272,7 +272,7 @@ class MediaLinksRepositoryImplTest {
                 airDate = Date()
             )
             val keyWithEpisode = MediaLinksCacheKey.create(
-                filmId = "film123",
+                mediaId = "media123",
                 providerId = "provider1",
                 episode = episode,
             )

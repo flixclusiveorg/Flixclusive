@@ -54,8 +54,8 @@ core/data_base
 | Navigator interface | `<Feature>ScreenNavigator.kt` | `HomeScreenNavigator.kt` |
 | UI State (if separate file) | `<Feature>UiState.kt` | `HomeUiState.kt` |
 | DI Module | `<Category>Module.kt` | `GetUseCasesModule.kt` |
-| Use case interface | `<Verb><Noun>UseCase.kt` | `GetFilmMetadataUseCase.kt` |
-| Use case implementation | `<Verb><Noun>UseCaseImpl.kt` | `GetFilmMetadataUseCaseImpl.kt` |
+| Use case interface | `<Verb><Noun>UseCase.kt` | `GetMediaMetadataUseCase.kt` |
+| Use case implementation | `<Verb><Noun>UseCaseImpl.kt` | `GetMediaMetadataUseCaseImpl.kt` |
 | Repository interface | `<Noun>Repository.kt` | `ProviderRepository.kt` |
 | Repository implementation | `<Noun>RepositoryImpl.kt` | `ProviderRepositoryImpl.kt` |
 | Room Entity | `<Noun>.kt` or `<Noun>Entity.kt` | `User.kt`, `WatchProgress.kt` |
@@ -75,9 +75,9 @@ internal class HomeVM              // ❌ — don't abbreviate
 
 ### Use Cases
 ```kotlin
-interface GetFilmMetadataUseCase       // ✅ — Verb + Noun + UseCase
-interface FilmMetadataGetter           // ❌ — non-standard naming
-interface FetchFilmMetadata            // ❌ — missing "UseCase" suffix
+interface GetMediaMetadataUseCase       // ✅ — Verb + Noun + UseCase
+interface MediaMetadataGetter           // ❌ — non-standard naming
+interface FetchMediaMetadata            // ❌ — missing "UseCase" suffix
 ```
 
 ### Repositories

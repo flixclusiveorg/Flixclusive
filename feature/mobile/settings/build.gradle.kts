@@ -37,7 +37,7 @@ dependencies {
     implementation(libs.kotlinx.immutables)
     implementation(libs.palette)
     implementation(libs.stubs.model.provider)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.util)
 
     testImplementation(projects.coreTesting)

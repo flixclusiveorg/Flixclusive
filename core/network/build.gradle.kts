@@ -19,5 +19,5 @@ dependencies {
     implementation(projects.coreDatastore)
     implementation(projects.coreStrings)
     implementation(libs.stubs.util)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 }

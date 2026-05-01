@@ -3,10 +3,10 @@ package com.flixclusive.core.testing.provider
 import com.flixclusive.model.provider.Author
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import com.flixclusive.model.provider.Status
 
 /**
  * Provides default values for testing provider-related functionality.
@@ -78,7 +78,7 @@ object ProviderTestDefaults {
         iconUrl: String? = null,
         language: Language = Language.Multiple,
         providerType: ProviderType = ProviderType.All,
-        status: Status = Status.Working,
+        status: ProviderStatus = ProviderStatus.Working,
     ) = ProviderMetadata(
         id = id,
         name = name,
@@ -115,7 +115,7 @@ object ProviderTestDefaults {
         iconUrl: String? = null,
         language: Language = Language.Multiple,
         providerType: ProviderType = ProviderType.All,
-        status: Status = Status.Working,
+        status: ProviderStatus = ProviderStatus.Working,
     ) = ProviderMetadata(
         id = id,
         name = name,

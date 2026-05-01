@@ -55,32 +55,31 @@ import coil3.compose.AsyncImage
 import coil3.imageLoader
 import coil3.request.allowHardware
 import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.FilmCover
+import com.flixclusive.core.ui.common.MediaCover
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.formatMinutes
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.component.CustomLinearProgressIndicator
 import com.flixclusive.core.ui.tv.component.DotSeparatedText
-import com.flixclusive.core.ui.tv.component.FilmCardShape
-import com.flixclusive.core.ui.tv.component.FilmPadding
+import com.flixclusive.core.ui.tv.component.MediaCardShape
+import com.flixclusive.core.ui.tv.component.MediaPadding
 import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroundColor
 import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.database.entity.util.getNextEpisodeToWatch
-import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.core.strings.R as LocaleR
 
-internal val WatchedFilmCardHeight = 250.dp
-private val WatchedFilmCardWidth = 400.dp
+internal val WatchedMediaCardHeight = 250.dp
+private val WatchedMediaCardWidth = 400.dp
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-internal fun WatchedFilmCard(
+internal fun WatchedMediaCard(
     modifier: Modifier = Modifier,
     watchHistoryItem: WatchHistoryItem,
     onClick: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "")
-    val film = watchHistoryItem.film
+    val media = watchHistoryItem.media
     val immersiveBackgroundColor = useLocalImmersiveBackgroundColor()
 
     var isFocused by remember { mutableStateOf(false) }
@@ -111,13 +110,13 @@ internal fun WatchedFilmCard(
 
     StandardCardLayout(
         modifier = modifier
-            .padding(FilmPadding.getPaddingValues())
+            .padding(MediaPadding.getPaddingValues())
             .onFocusChanged { isFocused = it.isFocused },
         imageCard = {
             CardLayoutDefaults.ImageCard(
                 onClick = onClick,
                 interactionSource = it,
-                shape = CardDefaults.shape(FilmCardShape),
+                shape = CardDefaults.shape(MediaCardShape),
                 glow = CardDefaults.glow(
                     focusedGlow = Glow(
                         elevationColor = MaterialTheme.colorScheme.primary.copy(0.6f),
@@ -134,7 +133,7 @@ internal fun WatchedFilmCard(
                             width = borderDp,
                             color = MaterialTheme.colorScheme.onSurface
                         ),
-                        shape = FilmCardShape
+                        shape = MediaCardShape
                     )
                 ),
                 scale = CardDefaults.scale(focusedScale = 1F),
@@ -142,18 +141,18 @@ internal fun WatchedFilmCard(
                 Box(
                     modifier = Modifier
                         .size(
-                            height = WatchedFilmCardHeight,
-                            width = WatchedFilmCardWidth,
+                            height = WatchedMediaCardHeight,
+                            width = WatchedMediaCardWidth,
                         )
                 ) {
                     CardImage(
-                        backdropImage = film.backdropImage,
+                        backdropImage = media.backdropImage,
                         onImageLoad = { image -> drawable = image },
                         onClick = onClick
                     )
 
                     CardProgress(
-                        isTvShow = film.filmType == FilmType.TV_SHOW,
+                        isShow = media.type == MediaType.SHOW,
                         watchHistoryItem = watchHistoryItem,
                         modifier = Modifier
                             .align(Alignment.BottomStart)
@@ -203,10 +202,10 @@ private fun CardImage(
             model = painter,
             imageLoader = LocalContext.current.imageLoader,
             contentScale = ContentScale.FillBounds,
-            contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
+            contentDescription = stringResource(id = LocaleR.string.media_item_content_description),
             onSuccess = { onImageLoad(it.result.image.asDrawable(context.resources)) },
             modifier = Modifier
-                .aspectRatio(FilmCover.Backdrop.ratio)
+                .aspectRatio(MediaCover.Backdrop.ratio)
                 .clip(MaterialTheme.shapes.extraSmall)
                 .clickable { onClick() }
         )
@@ -217,7 +216,7 @@ private fun CardImage(
 @Composable
 private fun CardProgress(
     modifier: Modifier = Modifier,
-    isTvShow: Boolean,
+    isShow: Boolean,
     watchHistoryItem: WatchHistoryItem,
 ) {
     val lastWatchedEpisode = watchHistoryItem.episodesWatched.last()
@@ -232,7 +231,7 @@ private fun CardProgress(
     }
 
     val itemLabel = remember(watchHistoryItem) {
-        if(isTvShow) {
+        if(isShow) {
             val nextEpisodeWatched = getNextEpisodeToWatch(watchHistoryItem)
             val season = nextEpisodeWatched.first
             val episode = nextEpisodeWatched.second
@@ -284,11 +283,11 @@ private fun CardOverview(
 ) {
     val context = LocalContext.current
 
-    val filmInfo = remember {
+    val mediaInfo = remember {
         val infoList = mutableListOf<String>()
         infoList.apply {
             with(item) {
-                if (film.filmType ==  FilmType.MOVIE) {
+                if (media.type ==  MediaType.MOVIE) {
                     add(formatMinutes(episodesWatched.firstOrNull()?.durationTime?.toInt()?.div(1000)?.div(60)).asString(context))
                 } else {
                     val averageRuntime = (episodesWatched.map { it.durationTime }.average().toInt() / 1000) / 60
@@ -317,7 +316,7 @@ private fun CardOverview(
                     }
                 }
 
-                film.parsedReleaseDate?.let(::add)
+                media.parsedReleaseDate?.let(::add)
             }
         }
             .toList()
@@ -326,12 +325,12 @@ private fun CardOverview(
 
     Column(
         modifier = modifier
-            .width(WatchedFilmCardWidth)
+            .width(WatchedMediaCardWidth)
             .padding(top = 8.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Text(
-            text = item.film.title,
+            text = item.media.title,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.labelLarge.copy(
@@ -344,7 +343,7 @@ private fun CardOverview(
         )
 
         DotSeparatedText(
-            texts = filmInfo,
+            texts = mediaInfo,
             style = MaterialTheme.typography.titleSmall.copy(
                 fontWeight = FontWeight.Medium,
             ),
@@ -353,7 +352,7 @@ private fun CardOverview(
                 .fillMaxWidth(0.85F)
         )
 
-        item.film.overview?.let {
+        item.media.overview?.let {
             Text(
                 text = it,
                 maxLines = 2,

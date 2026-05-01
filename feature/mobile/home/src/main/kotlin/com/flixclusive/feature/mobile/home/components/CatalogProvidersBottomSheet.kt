@@ -285,7 +285,7 @@ private fun CatalogProviderCard(
 
             Switch(
                 checked = enabled(),
-                enabled = provider.status != ProviderStatus.Maintenance && provider.status != ProviderStatus.Down,
+                enabled = provider.status.isWorking,
                 colors = SwitchDefaults.colors(
                     disabledCheckedThumbColor =
                         MaterialTheme.colorScheme.surface

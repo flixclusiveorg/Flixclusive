@@ -40,7 +40,7 @@ internal class LibraryListBackupValidator @Inject constructor(
         val missing = linkedSetOf<String>()
         expectedLists.forEach { expected ->
             val expectedList = expected.list
-            val expectedFilmIds = expected.items.asSequence().map { it.filmId }.toSet()
+            val expectedMediaIds = expected.items.asSequence().map { it.mediaId }.toSet()
 
             val backupList = when (expectedList.listType) {
                 LibraryListType.WATCHED -> backupWatched
@@ -52,8 +52,8 @@ internal class LibraryListBackupValidator @Inject constructor(
                 return@forEach
             }
 
-            val backupFilmIds = backupList.items.asSequence().map { it.film.id }.toSet()
-            if (!backupFilmIds.containsAll(expectedFilmIds)) {
+            val backupMediaIds = backupList.items.asSequence().map { it.media.id }.toSet()
+            if (!backupMediaIds.containsAll(expectedMediaIds)) {
                 missing.add(expectedList.name)
             }
         }
@@ -84,19 +84,19 @@ internal class LibraryListBackupValidator @Inject constructor(
                 return@forEach
             }
 
-            val expectedFilmIds = expected.items
+            val expectedMediaIds = expected.items
                 .asSequence()
-                .map { it.film.id }
+                .map { it.media.id }
                 .filter { it.isNotBlank() }
                 .toSet()
 
-            val actualFilmIds = actual.items
+            val actualMediaIds = actual.items
                 .asSequence()
-                .map { it.filmId }
+                .map { it.mediaId }
                 .filter { it.isNotBlank() }
                 .toSet()
 
-            if (!actualFilmIds.containsAll(expectedFilmIds)) {
+            if (!actualMediaIds.containsAll(expectedMediaIds)) {
                 missing.add(expected.name)
             }
         }

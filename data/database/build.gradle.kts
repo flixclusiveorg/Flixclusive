@@ -12,7 +12,7 @@ dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreDatabase)
     implementation(projects.coreDatastore)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.util)
 
     androidTestImplementation(libs.room.runtime)

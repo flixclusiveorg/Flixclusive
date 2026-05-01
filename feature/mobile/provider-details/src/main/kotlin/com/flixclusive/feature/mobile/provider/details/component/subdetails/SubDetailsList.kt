@@ -40,11 +40,11 @@ internal fun SubDetailsList(
 ) {
     val subDetails = remember(provider) {
         val locale = Locale.Builder()
-            .setLanguage(provider.language.languageCode)
+            .setLanguage(provider.language.code)
             .build()
 
         val displayLanguage = locale.displayLanguage.capitalize()
-        val flagEmoji = getFlagFromLanguageCode(provider.language.languageCode)
+        val flagEmoji = getFlagFromLanguageCode(provider.language.code)
 
         listOf(
             provider.versionName to UiText.StringResource(LocaleR.string.version),

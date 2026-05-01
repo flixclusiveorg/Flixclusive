@@ -12,7 +12,6 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
@@ -201,12 +200,12 @@ internal class ProviderDetailsViewModel @Inject constructor(
         }
 
         val repository = old.repositoryUrl.toValidRepositoryLink()
-        val resource = getProviderFromRemote(repository, old.id)
-        if (resource !is Resource.Success || resource.data == null) {
+        val new = try {
+            getProviderFromRemote(repository, old.id)
+        } catch (e: Throwable) {
+            warnLog("Failed to fetch provider metadata for ${old.name}: ${e.message}")
             return false
         }
-
-        val new = resource.data!!
 
         return old.versionCode < new.versionCode
     }

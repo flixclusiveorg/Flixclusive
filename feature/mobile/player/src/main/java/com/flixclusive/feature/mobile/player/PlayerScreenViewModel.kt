@@ -13,6 +13,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -23,7 +24,6 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.PlayerServer.Companion.getIndexOfPreferredQuality
@@ -41,9 +41,9 @@ import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.cleanDuplicates
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerServer
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerSubtitle
 import com.flixclusive.feature.mobile.player.util.extensions.isSameEpisode
-import com.flixclusive.model.film.Movie
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.Movie
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import com.ramcosta.composedestinations.generated.player.navArgs
@@ -131,9 +131,9 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     /**
-     * The film metadata passed to the player screen.
+     * The media metadata passed to the player screen.
      * */
-    val filmMetadata = navArgs.film
+    val mediaMetadata = navArgs.media
 
     // Only using non-suspend function since we don't need to observe changes here
     val providers = userSessionDataStore.currentUserId
@@ -173,7 +173,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val currentMediaLinksCacheKey = distinctProviderFlow
         .combine(distinctEpisodeFlow) { providerId, episode ->
             MediaLinksCacheKey.create(
-                filmId = filmMetadata.id,
+                mediaId = mediaMetadata.id,
                 providerId = providerId,
                 episode = episode,
             )
@@ -214,7 +214,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     val canSkipLoading = _uiState
         .map { state ->
             state.loadLinksState.toCacheKey(
-                filmId = filmMetadata.id,
+                mediaId = mediaMetadata.id,
                 episode = state.currentEpisode,
             )
         }
@@ -242,7 +242,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         )
 
     /**
-     * The season currently being displayed IF [filmMetadata] is a [TvShow] and a season is selected.
+     * The season currently being displayed IF [mediaMetadata] is a [Show] and a season is selected.
      *
      * This is either the season selected by the user (based on [PlayerUiState.currentSeason]),
      * the last watched season if no season is selected. If neither of those are available,
@@ -256,16 +256,22 @@ internal class PlayerScreenViewModel @Inject constructor(
      * */
     val seasonToDisplay = uiState
         .mapNotNull {
-            if (filmMetadata !is TvShow) return@mapNotNull null
+            if (mediaMetadata !is Show) return@mapNotNull null
             it.currentSeason
         }
         .filterNotNull()
         .distinctUntilChanged()
         .flatMapLatest { selectedSeason ->
-            val metadata = filmMetadata as TvShow
+            val metadata = mediaMetadata as Show
             getSeasonWithWatchProgress(metadata, selectedSeason)
-                .dropWhile { it is Resource.Loading }
-                .map { it.data }
+                .dropWhile { it is Async.Loading }
+                .map { state ->
+                    when (state) {
+                        is Async.Success -> state.data
+                        is Async.Failure -> null
+                        Async.Loading -> null
+                    }
+                }
         }
         .stateIn(
             scope = viewModelScope,
@@ -281,8 +287,8 @@ internal class PlayerScreenViewModel @Inject constructor(
     }.flatMapLatest { (episode, userId) ->
         watchProgressRepository
             .getAsFlow(
-                id = filmMetadata.id,
-                type = filmMetadata.filmType,
+                id = mediaMetadata.id,
+                type = mediaMetadata.type,
                 ownerId = userId,
             ).filterNotNull()
             .map {
@@ -291,7 +297,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                     val isSameEpisode = progress.isSameEpisode(
                         otherEpisode = episode?.number ?: -1,
                         otherSeason = episode?.season ?: -1,
-                        otherFilmId = filmMetadata.id,
+                        otherMediaId = mediaMetadata.id,
                     )
 
                     if (!isSameEpisode) {
@@ -327,7 +333,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         if (changeServerJob?.isActive == true) return
 
         val mediaLinksCacheKey = MediaLinksCacheKey.create(
-            filmId = filmMetadata.id,
+            mediaId = mediaMetadata.id,
             providerId = _uiState.value.currentProvider,
             episode = _uiState.value.currentEpisode,
         )
@@ -372,12 +378,12 @@ internal class PlayerScreenViewModel @Inject constructor(
                 return@launch
             }
 
-            // TODO: Uncomment this once we support provider changing even if [filmMetadata] didn't come from TMDb.
-            //  The current workaround now is we lock and filter available providers based on the [filmMetadata.providerId]
+            // TODO: Uncomment this once we support provider changing even if [mediaMetadata] didn't come from TMDb.
+            //  The current workaround now is we lock and filter available providers based on the [mediaMetadata.providerId]
             //  if the metadata didn't come from TMDb, but ideally we should be able to switch between providers
-            //  even for non-TMDb films as long as they have support the identifiers of the film (e.g. IMDb ID).
+            //  even for non-TMDb medias as long as they have support the identifiers of the media (e.g. IMDb ID).
 
-            // if (filmMetadata is TvShow) {
+            // if (mediaMetadata is Show) {
             //     val nextEpisode = getNextEpisode(currentEpisode)
             //     _uiState.update { it.copy(nextEpisode = nextEpisode) }
             // }
@@ -406,7 +412,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     fun onSkipProviderLoading() {
         val state = _uiState.value.loadLinksState
         val cacheKey = state.toCacheKey(
-            filmId = filmMetadata.id,
+            mediaId = mediaMetadata.id,
             episode = selectedEpisode.value,
         ) ?: return
 
@@ -439,7 +445,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     fun onServerFail(serverIndex: Int) {
         val server = servers.value.getOrNull(serverIndex) ?: return
         val mediaLinksCacheKey = MediaLinksCacheKey.create(
-            filmId = filmMetadata.id,
+            mediaId = mediaMetadata.id,
             providerId = _uiState.value.currentProvider,
             episode = _uiState.value.currentEpisode,
         )
@@ -519,7 +525,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         quiet: Boolean = false,
     ): Pair<MediaLinksCacheKey, MediaLinks?> {
         val mediaLinksCacheKey = MediaLinksCacheKey.create(
-            filmId = filmMetadata.id,
+            mediaId = mediaMetadata.id,
             providerId = providerId,
             episode = episode,
         )
@@ -530,7 +536,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
 
         val response = getMediaLinks(
-            film = filmMetadata,
+            media = mediaMetadata,
             episode = episode,
         )
 
@@ -594,7 +600,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         if (episode == null) return null
 
         return getNextEpisode(
-            tvShow = filmMetadata as TvShow,
+            show = mediaMetadata as Show,
             season = episode.season,
             episode = episode.number,
         )
@@ -604,16 +610,16 @@ internal class PlayerScreenViewModel @Inject constructor(
         // Careful here - reconsider this in the future
         val userId = runBlocking { userSessionDataStore.currentUserId.filterNotNull().first() }
 
-        return when (filmMetadata) {
+        return when (mediaMetadata) {
             is Movie -> MovieProgress(
-                filmId = filmMetadata.id,
+                mediaId = mediaMetadata.id,
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
             )
 
-            is TvShow -> EpisodeProgress(
-                filmId = filmMetadata.id,
+            is Show -> EpisodeProgress(
+                mediaId = mediaMetadata.id,
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
@@ -621,7 +627,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 episodeNumber = selectedEpisode.value!!.number,
             )
 
-            else -> throw IllegalStateException("Unsupported film type: $filmMetadata")
+            else -> throw IllegalStateException("Unsupported media type: $mediaMetadata")
         }
     }
 
@@ -639,7 +645,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                     return@listenTo
                 }
 
-                if (filmMetadata is TvShow) {
+                if (this@PlayerScreenViewModel.mediaMetadata is Show) {
                     if (duration <= 0) return@listenTo
 
                     if (currentPosition >= (duration * QUEUE_THRESHOLD)) {
@@ -665,7 +671,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             if (!canSaveProgress) return@launch
 
             setWatchProgress(
-                film = filmMetadata,
+                media = mediaMetadata,
                 watchProgress = when (val progress = watchProgress.value) {
                     is EpisodeProgress -> progress.copy(
                         progress = currentPosition,
@@ -686,10 +692,10 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     /**
-     * Returns the saved start position in milliseconds for the current film and user.
+     * Returns the saved start position in milliseconds for the current media and user.
      * If no saved position exists, returns 0.
      *
-     * @param episode The episode to get the start position for, if [filmMetadata] is a [TvShow].
+     * @param episode The episode to get the start position for, if [mediaMetadata] is a [Show].
      *
      * @return The saved start position in milliseconds.
      * */
@@ -697,13 +703,13 @@ internal class PlayerScreenViewModel @Inject constructor(
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val watchProgress = if (episode == null) {
             watchProgressRepository.get(
-                id = filmMetadata.id,
-                type = filmMetadata.filmType,
+                id = mediaMetadata.id,
+                type = mediaMetadata.type,
                 ownerId = userId,
             )?.watchData
         } else {
             watchProgressRepository.getEpisodeProgress(
-                tvShowId = filmMetadata.id,
+                tvShowId = mediaMetadata.id,
                 seasonNumber = episode.season,
                 episodeNumber = episode.number,
                 ownerId = userId,
@@ -720,7 +726,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     private fun initialize() {
         viewModelScope.launch {
             val mediaLinksCacheKey = MediaLinksCacheKey.create(
-                filmId = filmMetadata.id,
+                mediaId = mediaMetadata.id,
                 providerId = _uiState.value.currentProvider,
                 episode = _uiState.value.currentEpisode,
             )

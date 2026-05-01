@@ -16,7 +16,7 @@ import androidx.compose.ui.util.fastAny
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.provider.model.SeasonWithProgress
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 
 @Composable
 internal fun EpisodesRow(

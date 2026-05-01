@@ -11,8 +11,8 @@ import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.catalog.R
 import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.PaginatedResponse
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.common.PaginatedMedia
 import com.flixclusive.model.provider.Catalog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +31,7 @@ internal class GetCatalogItemsUseCaseImpl @Inject constructor(
     override operator fun invoke(
         catalog: Catalog,
         page: Int,
-    ): Flow<Async<PaginatedResponse<FilmSearchItem>>> = flow {
+    ): Flow<Async<PaginatedMedia<PartialMedia>>> = flow {
         try {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val provider = providerRepository.getProvider(
