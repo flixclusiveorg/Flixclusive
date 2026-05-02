@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -49,6 +50,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
@@ -91,7 +93,7 @@ internal class ManageLibraryViewModel @Inject constructor(
         initialize()
     }
 
-    private fun loadLists() {
+    private fun loadLists(isRefreshing: Boolean = false) {
         if (loadListsJob?.isActive == true) {
             loadListsJob?.cancel()
         }
@@ -129,17 +131,15 @@ internal class ManageLibraryViewModel @Inject constructor(
 
                     val providers = (state as Async.Success).data
                     try {
-                        val lists = getTrackerLists(providers).fastMap { list ->
-                            LibraryListWithPreview(
-                                list = LibraryList(
-                                    id = list.id,
-                                    ownerId = userId,
-                                    name = list.name,
-                                    description = if (list.description.isNullOrEmpty()) null else list.description,
-                                ),
-                                itemsCount = list.itemCount ?: -1,
-                                previews = list.images.map { it.toPreviewPoster() },
-                                provider = providers.fastFirstOrNull { it.id == list.providerId }?.metadata,
+                        val lists = getTrackerLists(providers).fastMapNotNull { list ->
+                            val provider = providers
+                                .fastFirstOrNull { it.id == list.providerId }
+                                ?.metadata
+                                ?: return@fastMapNotNull null
+
+                            list.toPreview(
+                                provider = provider,
+                                ownerId = userId,
                             )
                         }
 
@@ -178,7 +178,16 @@ internal class ManageLibraryViewModel @Inject constructor(
                         }
                     }
                 }
-            }.collectLatest { _libraries.value = it }
+            }.collectLatest {
+                if (!isRefreshing) {
+                    _libraries.value = it
+                } else if (it !is Async.Loading) {
+                    _libraries.value = it
+                    _uiState.update { state ->
+                        state.copy(isRefreshing = false)
+                    }
+                }
+            }
         }
     }
 
@@ -208,13 +217,16 @@ internal class ManageLibraryViewModel @Inject constructor(
                             }
                         )
                     }
-                }.collectLatest { _trackers.value = it }
+                }.collectLatest {
+                    _trackers.value = it
+                }
         }
     }
 
-    fun initialize() {
+    fun initialize(isRefreshing: Boolean = false) {
+        _uiState.update { it.copy(isRefreshing = isRefreshing) }
         loadTrackers()
-        loadLists()
+        loadLists(isRefreshing)
     }
 
     fun onTrackerSignIn(provider: TrackerProvider) {
@@ -338,7 +350,7 @@ internal class ManageLibraryViewModel @Inject constructor(
                 val plugin = getProviderPlugin(providerId) ?: return@launch
                 val api = plugin.getTrackerApi(context) ?: return@launch
 
-                api.updateList(
+                val updatedList = api.updateList(
                     list = TrackerList(
                         id = list.id,
                         name = list.name,
@@ -348,23 +360,19 @@ internal class ManageLibraryViewModel @Inject constructor(
                     )
                 )
 
-                _libraries.update {
-                    if (it !is Async.Success) return@update it
+                _libraries.update { state ->
+                    if (state !is Async.Success) return@update state
 
-                    val updated = it.data.fastMap { library ->
-                        if (library.id != list.id) {
-                            return@fastMap library
-                        }
+                    val updatedLists = state.data.toMutableList()
+                    val index = updatedLists.indexOfFirst { it.id == list.id }
+                    if (index == -1) return@update state
 
-                        library.copy(
-                            list = library.list.copy(
-                                name = list.name,
-                                description = list.description,
-                            )
-                        )
-                    }
+                    updatedLists[index] = updatedList.toPreview(
+                        provider = list.provider,
+                        ownerId = list.list.ownerId,
+                    )
 
-                    Async.Success(updated)
+                    Async.Success(updatedLists.toList())
                 }
             } else {
                 libraryListRepository.updateList(
@@ -499,6 +507,7 @@ internal class ManageLibraryViewModel @Inject constructor(
 
 @Stable
 internal data class ManageLibraryUiState(
+    val isRefreshing: Boolean = false,
     val isShowingFilterSheet: Boolean = false,
     val isShowingSearchBar: Boolean = false,
     val isMultiSelecting: Boolean = false,
@@ -531,6 +540,25 @@ internal data class LibraryListWithPreview(
                     .takeLast(3)
                     .sortedByDescending { it.item.updatedAt }
                     .map { item -> item.metadata.toPreviewPoster() },
+            )
+        }
+
+        fun TrackerList.toPreview(
+            provider: ProviderMetadata,
+            ownerId: String
+        ): LibraryListWithPreview {
+            return LibraryListWithPreview(
+                list = LibraryList(
+                    id = id,
+                    ownerId = ownerId,
+                    name = name,
+                    description = description?.takeIf { it.isNotEmpty() },
+                    createdAt = Date(createdAt ?: System.currentTimeMillis()),
+                    updatedAt = Date(updatedAt ?: System.currentTimeMillis()),
+                ),
+                itemsCount = itemCount ?: -1,
+                provider = provider,
+                previews = images.take(3).map { it.toPreviewPoster() },
             )
         }
     }

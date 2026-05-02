@@ -1,6 +1,7 @@
 package com.flixclusive.domain.provider.di
 
 import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
+import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
@@ -13,6 +14,7 @@ import com.flixclusive.domain.provider.usecase.get.GetSearchProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.impl.GetCatalogProvidersUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.impl.GetCrossMatchedMediaMetadataUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetInstalledProviderUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetMediaLinksUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetMediaMetadataUseCaseImpl
@@ -72,4 +74,9 @@ internal abstract class GetUseCasesModule {
 
     @Binds
     abstract fun bindGetInstalledProviderUseCase(impl: GetInstalledProviderUseCaseImpl): GetInstalledProviderUseCase
+
+    @Binds
+    abstract fun bindGetCrossMatchedMediaMetadataUseCase(
+        impl: GetCrossMatchedMediaMetadataUseCaseImpl,
+    ): GetCrossMatchedMediaMetadataUseCase
 }

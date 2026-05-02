@@ -13,5 +13,5 @@ interface ToggleListItemOnTrackerListUseCase {
         list: TrackerList,
         item: MediaMetadata,
         action: TrackerListItemToggleAction
-    ): Result<Unit>
+    ): Result<TrackerList>
 }

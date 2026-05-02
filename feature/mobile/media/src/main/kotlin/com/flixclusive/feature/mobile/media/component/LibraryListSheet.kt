@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.media.component
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,9 +32,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +57,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
@@ -61,6 +68,7 @@ import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
@@ -79,10 +87,18 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiv
 import com.flixclusive.feature.mobile.media.LibraryListAndState
 import com.flixclusive.feature.mobile.media.R
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
+private enum class ItemToggleState {
+    NotAdded,
+    Toggling,
+    Added,
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 internal fun LibraryListSheet(
     libraryListStates: () -> Async<List<LibraryListAndState>>,
@@ -91,8 +107,12 @@ internal fun LibraryListSheet(
     toggleOnLibrary: (String, LibraryListAndState) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    val sheetState = rememberModalBottomSheetState()
+
     CommonBottomSheet(
+        sheetState = sheetState,
         modifier = modifier,
         onDismissRequest = onDismissRequest,
     ) {
@@ -117,89 +137,112 @@ internal fun LibraryListSheet(
                 .padding(vertical = 8.dp)
         )
 
-        AnimatedContent(
-            targetState = libraryListStates(),
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-        ) { state ->
-            when (state) {
-                is Async.Loading -> {
-                    Column {
-                        repeat(3) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            ) {
-                                Placeholder(
-                                    elevation = Elevations.LEVEL_4,
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                )
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .offset {
+                            val offsetY = runCatching {
+                                sheetState.requireOffset().roundToInt()
+                            }.getOrDefault(0)
 
-                                Placeholder(
-                                    elevation = Elevations.LEVEL_4,
-                                    modifier = Modifier
-                                        .height(14.dp)
-                                        .width(180.dp)
-                                        .padding(start = 10.dp)
-                                )
+                            IntOffset(x = 0, y = -offsetY)
+                        }
+                )
+            },
+            modifier = Modifier
+        ) {
+            AnimatedContent(
+                targetState = libraryListStates(),
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+            ) { state ->
+                when (state) {
+                    is Async.Loading -> {
+                        Column {
+                            repeat(3) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                ) {
+                                    Placeholder(
+                                        elevation = Elevations.LEVEL_4,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                    )
 
-                                Spacer(Modifier.weight(1f))
+                                    Placeholder(
+                                        elevation = Elevations.LEVEL_4,
+                                        modifier = Modifier
+                                            .height(14.dp)
+                                            .width(180.dp)
+                                            .padding(start = 10.dp)
+                                    )
 
-                                Placeholder(
-                                    elevation = Elevations.LEVEL_4,
-                                    shape = CircleShape,
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                        .aspectRatio(1f)
-                                )
+                                    Spacer(Modifier.weight(1f))
+
+                                    Placeholder(
+                                        elevation = Elevations.LEVEL_4,
+                                        shape = CircleShape,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .aspectRatio(1f)
+                                    )
+                                }
                             }
                         }
                     }
-                }
-                is Async.Failure -> Unit
-                is Async.Success -> {
-                    AnimatedContent(
-                        targetState = state.data.isEmpty(),
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        modifier = Modifier.fillMaxSize()
-                    ) { isEmpty ->
-                        if (isEmpty) {
-                            EmptyDataMessage()
-                        } else {
-                            NonEmptyList(
-                                libraryListStates = state.data,
-                                toggleOnLibrary = toggleOnLibrary,
-                            )
+                    is Async.Failure -> Unit
+                    is Async.Success -> {
+                        AnimatedContent(
+                            targetState = state.data.isEmpty(),
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            modifier = Modifier.fillMaxSize()
+                        ) { isEmpty ->
+                            if (isEmpty) {
+                                EmptyDataMessage()
+                            } else {
+                                LazyColumn(
+                                    modifier = modifier,
+                                    contentPadding = PaddingValues(vertical = 10.dp)
+                                ) {
+                                    items(
+                                        items = state.data,
+                                        key = { it.list.id },
+                                    ) { listAndState ->
+                                        var buttonState by remember(listAndState.containsMedia) {
+                                            mutableStateOf(
+                                                if (listAndState.containsMedia) ItemToggleState.Added else ItemToggleState.NotAdded
+                                            )
+                                        }
+
+                                        LaunchedEffect(snackbarHostState.currentSnackbarData) {
+                                            if (snackbarHostState.currentSnackbarData == null) return@LaunchedEffect
+                                            buttonState = if (listAndState.containsMedia) {
+                                                ItemToggleState.Added
+                                            } else {
+                                                ItemToggleState.NotAdded
+                                            }
+                                        }
+
+                                        ItemContent(
+                                            listAndState = listAndState,
+                                            toggleState = { buttonState },
+                                            toggleOnLibrary = {
+                                                buttonState = ItemToggleState.Toggling
+                                                toggleOnLibrary(listAndState.list.id, listAndState)
+                                            },
+                                            modifier = Modifier.animateItem(),
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun NonEmptyList(
-    libraryListStates: List<LibraryListAndState>,
-    toggleOnLibrary: (String, LibraryListAndState) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(vertical = 10.dp)
-    ) {
-        items(
-            items = libraryListStates,
-            key = { it.list.id },
-        ) { listAndState ->
-            ItemContent(
-                listAndState = listAndState,
-                toggleOnLibrary = {
-                    toggleOnLibrary(listAndState.list.id, listAndState)
-                },
-                modifier = Modifier.animateItem(),
-            )
-        }
     }
 }
 
@@ -265,6 +308,7 @@ private fun SearchBar(
 @Composable
 private fun ItemContent(
     listAndState: LibraryListAndState,
+    toggleState: () -> ItemToggleState,
     toggleOnLibrary: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -298,33 +342,49 @@ private fun ItemContent(
         )
 
         AnimatedContent(
-            targetState = listAndState.containsMedia,
+            targetState = toggleState(),
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             modifier = Modifier.align(Alignment.CenterVertically),
-        ) { isInLibrary ->
-            val painter = if (isInLibrary) {
-                painterResource(R.drawable.added)
-            } else {
-                painterResource(R.drawable.add)
-            }
+        ) { state ->
+            when (state) {
+                ItemToggleState.NotAdded, ItemToggleState.Added -> {
+                    val isInLibrary = state == ItemToggleState.Added
+                    val painter = if (isInLibrary) {
+                        painterResource(R.drawable.added)
+                    } else {
+                        painterResource(R.drawable.add)
+                    }
 
-            val description = if (isInLibrary) {
-                stringResource(LocaleR.string.add)
-            } else {
-                stringResource(LocaleR.string.in_library)
-            }
+                    val description = if (isInLibrary) {
+                        stringResource(LocaleR.string.add)
+                    } else {
+                        stringResource(LocaleR.string.in_library)
+                    }
 
-            val tint = if (isInLibrary) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                LocalContentColor.current.copy(alpha = 0.6f)
-            }
+                    val tint = if (isInLibrary) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        LocalContentColor.current.copy(alpha = 0.6f)
+                    }
 
-            AdaptiveIcon(
-                painter = painter,
-                contentDescription = description,
-                tint = tint,
-            )
+                    AdaptiveIcon(
+                        painter = painter,
+                        contentDescription = description,
+                        tint = tint,
+                    )
+                }
+
+                ItemToggleState.Toggling -> {
+                    GradientCircularProgressIndicator(
+                        size = 20.dp,
+                        thickness = 2.dp,
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary,
+                        ),
+                    )
+                }
+            }
         }
     }
 }
@@ -380,6 +440,7 @@ private fun LibraryItemIcon(
 @Composable
 private fun LibraryListSheetPreview() {
     var query by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val lists = remember {
         val metadata = if (Random.nextBoolean()) {
@@ -428,6 +489,8 @@ private fun LibraryListSheetPreview() {
 
         // Simulate loaded state
         listState = Async.Success(lists)
+
+        snackbarHostState.showSnackbar("This is a snackbar message!")
     }
 
     FlixclusiveTheme {

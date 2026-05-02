@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -120,9 +121,11 @@ internal fun InternalMediaScreen(
     val libraryListStates by viewModel.libraryLists.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     LaunchedEffect(viewModel) {
         viewModel.trackerError.collect {
-            context.showToast(it.asString(context))
+            snackbarHostState.showSnackbar(it.asString(context))
         }
     }
 
@@ -134,6 +137,7 @@ internal fun InternalMediaScreen(
         metadata = metadata ?: navArgs.media,
         watchProgress = watchProgress,
         seasonToDisplay = seasonToDisplay,
+        snackbarHostState = snackbarHostState,
         query = { librarySheetQuery },
         searchResults = { searchResults },
         libraryListStates = { libraryListStates },
@@ -155,6 +159,7 @@ private fun MediaScreenContent(
     uiState: MediaUiState,
     metadata: MediaMetadata,
     watchProgress: WatchProgress?,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     seasonToDisplay: Async<SeasonWithProgress>?,
     query: () -> String,
     libraryListStates: () -> Async<List<LibraryListAndState>>,
@@ -275,7 +280,7 @@ private fun MediaScreenContent(
                                 contentAlignment = Alignment.TopCenter,
                             ) {
                                 BackdropImage(
-                                    metadata = metadata as MediaMetadata,
+                                    metadata = metadata,
                                     modifier = Modifier
                                         .aspectRatio(backdropAspectRatio),
                                 )
@@ -301,13 +306,16 @@ private fun MediaScreenContent(
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             val isInLibrary by remember {
                                 derivedStateOf {
-                                    val state = libraryListStates()
-                                    state is Async.Success && state.data.fastAny { it.containsMedia }
+                                    when (val state = libraryListStates()) {
+                                        is Async.Loading -> Async.Loading
+                                        is Async.Failure -> Async.Failure(state.message)
+                                        is Async.Success -> Async.Success(state.data.fastAny { it.containsMedia })
+                                    }
                                 }
                             }
 
                             HeaderButtons(
-                                metadata = metadata as MediaMetadata,
+                                metadata = metadata,
                                 watchProgress = watchProgress,
                                 isInLibrary = isInLibrary,
                                 onPlay = { navigator.play(metadata) },
@@ -325,7 +333,7 @@ private fun MediaScreenContent(
 
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             CollapsibleDescription(
-                                metadata = metadata as MediaMetadata,
+                                metadata = metadata,
                                 modifier = Modifier
                                     .padding(horizontal = DefaultScreenPaddingHorizontal)
                                     .padding(top = 30.dp),
@@ -396,6 +404,7 @@ private fun MediaScreenContent(
             onQueryChange = onQueryChange,
             toggleOnLibrary = toggleOnLibrary,
             onDismissRequest = { isLibrarySheetOpen = false },
+            snackbarHostState = snackbarHostState,
         )
     }
 

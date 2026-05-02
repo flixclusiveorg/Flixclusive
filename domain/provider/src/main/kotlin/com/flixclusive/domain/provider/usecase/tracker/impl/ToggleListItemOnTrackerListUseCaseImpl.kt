@@ -1,13 +1,11 @@
 package com.flixclusive.domain.provider.usecase.tracker.impl
 
 import android.content.Context
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.tracker.ToggleListItemOnTrackerListUseCase
 import com.flixclusive.domain.provider.usecase.tracker.TrackerListItemToggleAction
 import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.provider.capability.CrossMatchProviderApi
 import com.flixclusive.provider.capability.TrackerFeature
 import com.flixclusive.provider.capability.TrackerProviderApi
 import com.flixclusive.provider.tracker.TrackerList
@@ -22,33 +20,21 @@ internal class ToggleListItemOnTrackerListUseCaseImpl @Inject constructor(
         list: TrackerList,
         item: MediaMetadata,
         action: TrackerListItemToggleAction
-    ): Result<Unit> {
+    ): Result<TrackerList> {
         return runCatching {
-            val trackerProviderId = list.providerId
-            val metadataProviderId = item.providerId
-
-            val trackerApi = getTrackerApi(trackerProviderId)
-
-            if (trackerProviderId != metadataProviderId) {
-                val crossMatchApi = getCrossMatchApi(trackerProviderId)
-
-                val matchedItem = safeCall {
-                    crossMatchApi.getById(item.externalIds)
-                        ?: crossMatchApi.getByFuzzy(item)
-                } ?: error(context.getString(R.string.tracker_no_matching_id_for_item))
-
-                return@runCatching if (action == TrackerListItemToggleAction.ADD) {
-                    trackerApi.addListItem(list, matchedItem)
-                } else {
-                    trackerApi.removeListItem(list, matchedItem)
-                }
+            require(item.providerId == list.providerId) {
+                context.getString(R.string.tracker_not_matched_provider)
             }
+
+            val trackerApi = getTrackerApi(list.providerId)
 
             if (action == TrackerListItemToggleAction.ADD) {
                 trackerApi.addListItem(list, item)
             } else {
                 trackerApi.removeListItem(list, item)
             }
+
+            trackerApi.getList(list.id)
         }
     }
 
@@ -66,16 +52,6 @@ internal class ToggleListItemOnTrackerListUseCaseImpl @Inject constructor(
         if (!api.isAuthenticated()) {
             error("${plugin.name} requires authentication to perform this action.")
         }
-
-        return api
-    }
-
-    private suspend fun getCrossMatchApi(trackerId: String): CrossMatchProviderApi {
-        val plugin = getProviderPlugin(trackerId)
-            ?: error(context.getString(R.string.tracker_failed_to_add_item_to_list_from_tracker))
-
-        val api = plugin.getCrossMatchApi(context)
-            ?: error(context.getString(R.string.tracker_failed_to_add_item_to_list_from_tracker))
 
         return api
     }

@@ -12,6 +12,8 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,6 +51,7 @@ fun GradientCircularProgressIndicator(
     colors: List<Color>,
     modifier: Modifier = Modifier,
     size: Dp = 60.dp,
+    thickness: Dp = 6.dp,
 ) {
     val gradientColors = remember { listOf(Color.Transparent) + colors }
     val infiniteTransition = rememberInfiniteTransition(label = "")
@@ -69,7 +72,7 @@ fun GradientCircularProgressIndicator(
             .size(size)
             .rotate(angle)
             .border(
-                6.dp,
+                thickness,
                 brush = Brush.sweepGradient(colors = gradientColors),
                 shape = CircleShape,
             ),
@@ -202,12 +205,16 @@ fun isLoadingDelayed(delayMs: Long = 600L): Boolean {
 private fun GradientProgressIndicatorPreview() {
     MaterialTheme {
         Surface {
-            GradientLinearProgressIndicator(
-                colors = listOf(
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.tertiary,
-                ),
-            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                GradientCircularProgressIndicator(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary,
+                    ),
+                )
+            }
         }
     }
 }

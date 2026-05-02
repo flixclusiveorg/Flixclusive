@@ -28,6 +28,7 @@ import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
+import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
@@ -37,7 +38,7 @@ import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
 import com.flixclusive.domain.provider.usecase.tracker.ToggleListItemOnTrackerListUseCase
 import com.flixclusive.domain.provider.usecase.tracker.TrackerListItemToggleAction
-import com.flixclusive.feature.mobile.media.LibraryListAndState.Companion.toState
+import com.flixclusive.feature.mobile.media.LibraryListAndState.Companion.toLibraryState
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
@@ -89,6 +90,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
     private val getTrackerLists: GetTrackerListsUseCase,
     private val getProviderPlugin: GetProviderPluginUseCase,
     private val toggleListItemOnTrackerList: ToggleListItemOnTrackerListUseCase,
+    private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
     @Assisted private val navArgMedia: MediaMetadata,
 ) : ViewModel() {
     @AssistedFactory
@@ -219,7 +221,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                 .getListsAndItems(userId = userId, sort = LibrarySort.Modified())
                 .mapLatest { data ->
                     val list = data.fastMap {
-                        it.toState(mediaId = navArgMedia.id)
+                        it.toLibraryState(mediaId = navArgMedia.id)
                     }
                     Async.Success(list) as Async<List<LibraryListAndState>>
                 }
@@ -241,37 +243,25 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                 val providers = (state as Async.Success).data
                 val libraries = safeCall {
                     getTrackerLists(providers).fastMapNotNull {
-
                         val isInAnyList = runCatching {
                             val provider = getProviderPlugin(it.providerId) ?: return@fastMapNotNull null
                             val trackerApi = provider.getTrackerApi(context) ?: return@fastMapNotNull null
 
-                            trackerApi.isInAnyList(navArgMedia)
+                            val media = getCrossMatchedMediaMetadata(
+                                media = navArgMedia, providerId = it.providerId,
+                            )
+
+                            trackerApi.isInAnyList(media)
                         }.onFailure { e ->
                             errorLog("Failed to check if media is in any tracker list for provider ${it.providerId}: ${e.message}")
                             e.printStackTrace()
-                            _trackerError.emit(
-                                UiText.from(
-                                    R.string.failed_to_check_tracker,
-                                    e.message ?: "Unknown error"
-                                )
-                            )
+                            _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
                         }.getOrNull()
                             ?: return@fastMapNotNull null
 
-                        LibraryListAndState(
+                        it.toLibraryState(
                             containsMedia = isInAnyList,
-                            providerId = it.providerId,
-                            listWithItems = LibraryListWithItems(
-                                list = LibraryList(
-                                    id = it.id,
-                                    name = it.name,
-                                    description = it.description,
-                                    ownerId = userId,
-                                    updatedAt = it.updatedAt?.let { date -> Date(date) } ?: Date()
-                                ),
-                                items = emptyList()
-                            ),
+                            ownerId = userId,
                         )
                     }
                 } ?: emptyList()
@@ -288,7 +278,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                     app is Async.Failure -> Async.Failure(app.message, app.cause)
                     tracker is Async.Failure -> Async.Failure(tracker.message, tracker.cause)
                     app is Async.Success && tracker is Async.Success -> Async.Success(
-                        (app.data + tracker.data).sortedByDescending { it.list.updatedAt.time }
+                        (app.data + tracker.data).sortedByDescending { it.list.createdAt.time }
                     )
 
                     else -> Async.Loading
@@ -396,9 +386,14 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                     providerId = list.providerId
                 )
 
-                toggleListItemOnTrackerList(
+                val matchedMedia = getCrossMatchedMediaMetadata(
+                    media = media,
+                    providerId = list.providerId,
+                )
+
+                val updatedList = toggleListItemOnTrackerList(
                     list = trackerList,
-                    item = media,
+                    item = matchedMedia,
                     action = if (list.containsMedia) {
                         TrackerListItemToggleAction.REMOVE
                     } else {
@@ -413,29 +408,28 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                             e.message ?: "Unknown error"
                         )
                     )
-                    return@launch
-                }
+                }.getOrNull()
+                    ?: return@launch
 
-                _libraryLists.update {
-                    when (it) {
-                        is Async.Loading, is Async.Failure -> it
+                _libraryLists.update { state ->
+                    when (state) {
+                        is Async.Loading, is Async.Failure -> state
                         is Async.Success -> {
-                            val updatedLists = it.data.fastMap { libraryList ->
-                                if (libraryList.id == list.id) {
-                                    libraryList.copy(
-                                        containsMedia = !list.containsMedia,
+                            val updatedLists = state.data.toMutableList()
+                            val index = updatedLists.indexOfFirst { it.id == list.id }
 
-                                    )
-                                } else {
-                                    libraryList
-                                }
-                            }
+                            if (index == -1) return@update state
 
-                            Async.Success(updatedLists)
+                            val current = updatedLists[index]
+                            updatedLists[index] = updatedList.toLibraryState(
+                                ownerId = current.list.ownerId,
+                                containsMedia = !current.containsMedia,
+                            )
+
+                            Async.Success(updatedLists.toList())
                         }
                     }
                 }
-                return@launch
             } else {
                 val oldItem = list.items.fastFirstOrNull { it.mediaId == navArgMedia.id }
 
@@ -595,7 +589,7 @@ internal data class LibraryListAndState(
     val isFromTracker get() = providerId != null
 
     companion object {
-        fun LibraryListWithItems.toState(
+        fun LibraryListWithItems.toLibraryState(
             mediaId: String,
             providerId: String? = null,
         ): LibraryListAndState {
@@ -608,6 +602,25 @@ internal data class LibraryListAndState(
                 },
             )
         }
+
+        fun TrackerList.toLibraryState(
+            containsMedia: Boolean,
+            ownerId: String
+        ) = LibraryListAndState(
+            listWithItems = LibraryListWithItems(
+                list = LibraryList(
+                    id = id,
+                    name = name,
+                    description = description,
+                    ownerId = ownerId,
+                    updatedAt = updatedAt?.let { Date(it) } ?: Date()
+                ),
+                items = emptyList(),
+            ),
+            providerId = providerId,
+            images = images.takeLast(3).reversed(),
+            containsMedia = containsMedia,
+        )
     }
 }
 

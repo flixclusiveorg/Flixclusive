@@ -21,7 +21,6 @@
     <string name="default_provider_message">
         This metadata was provided by the application itself and not fetched from an external provider. Media links loaded from this metadata will depend on the current enabled external providers.
     </string>
-    <string name="failed_to_fetch_tracker">Failed to fetch trackers: %1$s</string>
-    <string name="failed_to_check_tracker">Failed to check item on trackers: %1$s</string>
     <string name="failed_to_toggle_item_on_tracker_list">Failed to toggle item on tracker list %1$s: %2$s</string>
+    <string name="failed_to_load_library_status">Error loading library status</string>
 </resources>

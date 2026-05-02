@@ -24,7 +24,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -53,6 +55,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
@@ -60,7 +64,9 @@ import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -76,7 +82,7 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun HeaderButtons(
     metadata: MediaMetadata,
     watchProgress: WatchProgress?,
-    isInLibrary: Boolean,
+    isInLibrary: Async<Boolean>,
     onAddToLibrary: () -> Unit,
     onPlay: () -> Unit,
     modifier: Modifier = Modifier,
@@ -85,6 +91,8 @@ internal fun HeaderButtons(
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isCompactOrMedium = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
+
+    var showLibraryWarning by remember { mutableStateOf<UiText?>(null) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -110,14 +118,44 @@ internal fun HeaderButtons(
             }
         }
 
-        ExtraButton(
-            inactiveDrawable = if (isCompactOrMedium) R.drawable.add else UiCommonR.drawable.round_add_24,
-            activeDrawable = if (isCompactOrMedium) R.drawable.added else UiCommonR.drawable.check,
-            inactiveLabel = LocaleR.string.add,
-            activeLabel = LocaleR.string.in_library,
-            state = isInLibrary,
-            onClick = onAddToLibrary,
-        )
+        AnimatedContent(
+            targetState = isInLibrary,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(300)) togetherWith
+                    fadeOut(animationSpec = tween(300))
+            },
+        ) { state ->
+            when (state) {
+                is Async.Loading -> {
+                    Placeholder(
+                        modifier = Modifier
+                            .padding(horizontal = 13.dp)
+                            .size(28.dp)
+                            .clip(CircleShape)
+                    )
+                }
+                is Async.Success -> {
+                    ExtraButton(
+                        inactiveDrawable = if (isCompactOrMedium) R.drawable.add else UiCommonR.drawable.round_add_24,
+                        activeDrawable = if (isCompactOrMedium) R.drawable.added else UiCommonR.drawable.check,
+                        inactiveLabel = LocaleR.string.add,
+                        activeLabel = LocaleR.string.in_library,
+                        state = state.data,
+                        onClick = onAddToLibrary,
+                    )
+                }
+                is Async.Failure -> {
+                    ExtraButton(
+                        inactiveLabel = R.string.failed_to_load_library_status,
+                        activeLabel = R.string.failed_to_load_library_status,
+                        inactiveDrawable = UiCommonR.drawable.warning_outline,
+                        activeDrawable = UiCommonR.drawable.warning_outline,
+                        state = false,
+                        onClick = { showLibraryWarning = state.message },
+                    )
+                }
+            }
+        }
 
         if (metadata.releaseStatus != MediaReleaseStatus.COMING_SOON) {
             ExtraButton(
@@ -127,6 +165,15 @@ internal fun HeaderButtons(
                 activeDrawable = UiCommonR.drawable.download_done,
                 state = isDownloaded,
                 onClick = onToggleDownload,
+            )
+        }
+
+        if (showLibraryWarning != null) {
+            TextAlertDialog(
+                dismissButtonLabel = null,
+                onConfirm = { showLibraryWarning = null },
+                title = stringResource(R.string.failed_to_load_library_status),
+                message = showLibraryWarning!!.asString(LocalContext.current),
             )
         }
     }
@@ -442,7 +489,15 @@ private fun HeaderButtonsPreview() {
                 HeaderButtons(
                     metadata = metadata,
                     watchProgress = progress,
-                    isInLibrary = isInLibrary,
+                    isInLibrary = Async.Loading,
+                    onAddToLibrary = { isInLibrary = !isInLibrary },
+                    onPlay = {},
+                )
+
+                HeaderButtons(
+                    metadata = metadata,
+                    watchProgress = progress,
+                    isInLibrary = Async.Failure(UiText.from("Failed to load library status")),
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onPlay = {},
                 )
@@ -460,7 +515,7 @@ private fun HeaderButtonsPreview() {
                             duration = 6000L,
                         )
                     },
-                    isInLibrary = isInLibrary,
+                    isInLibrary = Async.Success(isInLibrary),
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onPlay = {},
                 )

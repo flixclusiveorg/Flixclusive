@@ -22,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -72,6 +75,7 @@ import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryCardPlaceholder
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
 import com.flixclusive.feature.mobile.library.manage.component.ManageLibraryTopBar
+import com.flixclusive.feature.mobile.library.manage.component.RefreshIndicator
 import com.flixclusive.feature.mobile.library.manage.component.TrackerProvidersBottomSheet
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
@@ -109,6 +113,7 @@ internal fun ManageLibraryScreen(
         trackers = { trackers },
         onTrackerSignIn = viewModel::onTrackerSignIn,
         onToggleTracker = viewModel::onToggleTracker,
+        onRefresh = { viewModel.initialize(isRefreshing = true) },
         onRetry = viewModel::initialize,
         onRemoveLongClickedLibrary = viewModel::onRemoveLongClickedLibrary,
         onViewLibraryContent = navigator::openLibraryDetails,
@@ -136,6 +141,7 @@ private fun ManageLibraryScreenContent(
     trackers: () -> Async<List<TrackerProvider>>,
     selectedLibraries: () -> Set<LibraryListWithPreview>,
     searchQuery: () -> String,
+    onRefresh: () -> Unit,
     onRetry: () -> Unit,
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
@@ -156,6 +162,7 @@ private fun ManageLibraryScreenContent(
     onToggleTracker: (TrackerProvider) -> Unit,
 ) {
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
+    val refreshState = rememberPullToRefreshState()
     var isFabExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -183,127 +190,141 @@ private fun ManageLibraryScreenContent(
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
     var showTrackerOptions by remember { mutableStateOf(false) }
 
-    Scaffold(
-        modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .padding(LocalGlobalScaffoldPadding.current),
-        contentWindowInsets = WindowInsets(0.dp),
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = !uiState.isMultiSelecting && libraries is Async.Success,
-            ) {
-                ExtendedFloatingActionButton(
-                    onClick = { onToggleCreateDialog(true) },
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    expanded = isFabExpanded,
-                    text = { Text(text = stringResource(LocaleR.string.new_list)) },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                            contentDescription = stringResource(LocaleR.string.plus_button_content_desc),
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
+        state = refreshState,
+        indicator = {
+            RefreshIndicator(
+                refreshState = refreshState,
+                isRefreshing = uiState.isRefreshing,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        },
+    ) {
+        Scaffold(
+            modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(LocalGlobalScaffoldPadding.current),
+            contentWindowInsets = WindowInsets(0.dp),
+            floatingActionButton = {
+                AnimatedVisibility(
+                    visible = !uiState.isMultiSelecting && libraries is Async.Success,
+                ) {
+                    ExtendedFloatingActionButton(
+                        onClick = { onToggleCreateDialog(true) },
+                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        expanded = isFabExpanded,
+                        text = { Text(text = stringResource(LocaleR.string.new_list)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = UiCommonR.drawable.round_add_24),
+                                contentDescription = stringResource(LocaleR.string.plus_button_content_desc),
+                            )
+                        },
+                    )
+                }
+            },
+            topBar = {
+                val topBarState = remember(
+                    uiState.isMultiSelecting,
+                    uiState.isShowingSearchBar,
+                ) {
+                    if (uiState.isMultiSelecting) {
+                        LibraryTopBarState.Selecting
+                    } else if (uiState.isShowingSearchBar) {
+                        LibraryTopBarState.Searching
+                    } else {
+                        LibraryTopBarState.DefaultMainScreen
+                    }
+                }
+
+                ManageLibraryTopBar(
+                    topBarState = topBarState,
+                    isListEmpty = isListEmpty,
+                    selectCount = { selectCount },
+                    enableTrackerButton = { trackers().let { it is Async.Success && it.data.isNotEmpty() } },
+                    scrollBehavior = scrollBehavior,
+                    searchQuery = searchQuery,
+                    onShowTrackers = { showTrackerOptions = true },
+                    onToggleSearchBar = onToggleSearchBar,
+                    onQueryChange = onQueryChange,
+                    onUnselectAll = onUnselectAll,
+                    onRemoveSelection = { showDeleteSelectionAlert = true },
+                    title = {
+                        val title =
+                            if (topBarState == LibraryTopBarState.Selecting) {
+                                stringResource(LocaleR.string.count_selection_format, selectCount)
+                            } else {
+                                stringResource(LocaleR.string.my_library)
+                            }
+
+                        Text(
+                            text = title,
+                            style = getTopBarHeadlinerTextStyle(),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
                         )
                     },
-                )
-            }
-        },
-        topBar = {
-            val topBarState = remember(
-                uiState.isMultiSelecting,
-                uiState.isShowingSearchBar,
-            ) {
-                if (uiState.isMultiSelecting) {
-                    LibraryTopBarState.Selecting
-                } else if (uiState.isShowingSearchBar) {
-                    LibraryTopBarState.Searching
-                } else {
-                    LibraryTopBarState.DefaultMainScreen
-                }
-            }
-
-            ManageLibraryTopBar(
-                topBarState = topBarState,
-                isListEmpty = isListEmpty,
-                selectCount = { selectCount },
-                enableTrackerButton = { trackers().let { it is Async.Success && it.data.isNotEmpty() } },
-                scrollBehavior = scrollBehavior,
-                searchQuery = searchQuery,
-                onShowTrackers = { showTrackerOptions = true },
-                onToggleSearchBar = onToggleSearchBar,
-                onQueryChange = onQueryChange,
-                onUnselectAll = onUnselectAll,
-                onRemoveSelection = { showDeleteSelectionAlert = true },
-                title = {
-                    val title =
-                        if (topBarState == LibraryTopBarState.Selecting) {
-                            stringResource(LocaleR.string.count_selection_format, selectCount)
-                        } else {
-                            stringResource(LocaleR.string.my_library)
-                        }
-
-                    Text(
-                        text = title,
-                        style = getTopBarHeadlinerTextStyle(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                    )
-                },
-            ) {
-                LibraryFilterRow(
-                    isListEditable = !isListEmpty && !uiState.isMultiSelecting,
-                    selected = { uiState.selectedFilter },
-                    onUpdate = onUpdateFilter,
-                    onStartSelecting = onStartMultiSelecting,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 15.dp),
-                )
-            }
-        },
-    ) { padding ->
-        AnimatedContent(
-            targetState = libraries,
-            label = "LibraryListContentAnimation",
-        ) { state ->
-            when (state) {
-                is Async.Loading -> LoadingStateScreen(padding)
-
-                is Async.Failure -> {
-                    RetryButton(
-                        error = state.message.asString(),
-                        onRetry = onRetry,
+                ) {
+                    LibraryFilterRow(
+                        isListEditable = !isListEmpty && !uiState.isMultiSelecting,
+                        selected = { uiState.selectedFilter },
+                        onUpdate = onUpdateFilter,
+                        onStartSelecting = onStartMultiSelecting,
                         modifier = Modifier
-                            .padding(padding)
-                            .fillMaxSize(),
+                            .fillMaxWidth()
+                            .padding(vertical = 15.dp),
                     )
                 }
+            },
+        ) { padding ->
+            AnimatedContent(
+                targetState = libraries,
+                label = "LibraryListContentAnimation",
+            ) { state ->
+                when (state) {
+                    is Async.Loading -> LoadingStateScreen(padding)
 
-                is Async.Success -> {
-                    AnimatedContent(
-                        targetState = state.data.isEmpty(),
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        modifier = Modifier.fillMaxSize(),
-                    ) { isEmpty ->
-                        if (isEmpty) {
-                            EmptyDataMessage(modifier = Modifier.padding(padding))
-                        } else {
-                            NonEmptyContent(
-                                libraries = state.data,
-                                uiState = uiState,
-                                listState = listState,
-                                padding = padding,
-                                selectedLibraries = selectedLibraries,
-                                onToggleSelect = onToggleSelect,
-                                onViewLibraryContent = onViewLibraryContent,
-                                onLongClickItem = onLongClickItem,
-                                onToggleOptionsSheet = onToggleOptionsSheet,
-                            )
+                    is Async.Failure -> {
+                        RetryButton(
+                            error = state.message.asString(),
+                            onRetry = onRefresh,
+                            modifier = Modifier
+                                .padding(padding)
+                                .fillMaxSize(),
+                        )
+                    }
+
+                    is Async.Success -> {
+                        AnimatedContent(
+                            targetState = state.data.isEmpty(),
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            modifier = Modifier.fillMaxSize(),
+                        ) { isEmpty ->
+                            if (isEmpty) {
+                                EmptyDataMessage(modifier = Modifier.padding(padding))
+                            } else {
+                                NonEmptyContent(
+                                    libraries = state.data,
+                                    uiState = uiState,
+                                    listState = listState,
+                                    padding = padding,
+                                    selectedLibraries = selectedLibraries,
+                                    onToggleSelect = onToggleSelect,
+                                    onViewLibraryContent = onViewLibraryContent,
+                                    onLongClickItem = onLongClickItem,
+                                    onToggleOptionsSheet = onToggleOptionsSheet,
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
+
 
     if (uiState.isShowingOptionsSheet) {
         LibraryOptionsBottomSheet(
@@ -557,7 +578,7 @@ private fun ManageLibraryScreenBasePreview() {
                     trackers = { Async.Success(emptyList()) },
                     selectedLibraries = { selectedLibraries },
                     searchQuery = { searchQuery },
-                    onRetry = {},
+                    onRefresh = {},
                     onRemoveSelection = { libraries.removeAll(selectedLibraries) },
                     onStartMultiSelecting = { uiState = uiState.copy(isMultiSelecting = true) },
                     onUnselectAll = {
@@ -566,13 +587,11 @@ private fun ManageLibraryScreenBasePreview() {
                     },
                     onSaveEdits = {
                         val index = libraries.indexOf(uiState.longClickedLibrary)
-                        val libraryWithPreview = libraries[index]
                         libraries[index] = it
-                        uiState =
-                            uiState.copy(
-                                isEditingLibrary = false,
-                                longClickedLibrary = null,
-                            )
+                        uiState = uiState.copy(
+                            isEditingLibrary = false,
+                            longClickedLibrary = null,
+                        )
                     },
                     onCreate = { _, _, _ -> },
                     onToggleEditDialog = {
@@ -605,6 +624,7 @@ private fun ManageLibraryScreenBasePreview() {
                     onLongClickItem = { uiState = uiState.copy(longClickedLibrary = it) },
                     onTrackerSignIn = { },
                     onToggleTracker = { },
+                    onRetry = {},
                     onUpdateFilter = {
                         if (uiState.selectedFilter == it) {
                             uiState.selectedFilter.toggleAscending()
