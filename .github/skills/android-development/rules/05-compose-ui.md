@@ -275,3 +275,185 @@ Before finalizing any Compose code, validate:
 
 ### 5.8. Performance Reference
 Follow: https://developer.android.com/develop/ui/compose/performance/bestpractices
+
+---
+
+## 6. Scalable Parameter Management
+
+As screens grow, naive parameter lists balloon — both state params and callback params. This section defines the canonical pattern for keeping composable signatures flat and maintainable at any scale.
+
+### 6.1. The Target Signature
+
+Every Layer 3 content composable MUST aim for this shape:
+
+```kotlin
+@Composable
+private fun FeatureScreenContent(
+    state: FeatureUiState,              // all stable state, bundled
+    navigator: FeatureScreenNavigator,  // navigation concern, kept separate
+    onAction: (FeatureAction) -> Unit,  // all callbacks, collapsed
+    // + deferred lambdas only when required for performance (see 6.4)
+)
+```
+
+Three params is the goal. Deferred lambdas are the only justified addition beyond it.
+
+---
+
+### 6.2. Collapsing Callbacks — Sealed Action Class
+
+Replace all individual callback parameters with a single `onAction: (FeatureAction) -> Unit`.
+Group actions by concern using nested sealed classes:
+
+```kotlin
+sealed class FeatureAction {
+
+    sealed class SectionA : FeatureAction() {
+        object ButtonClicked : SectionA()
+        data class TextChanged(val text: String) : SectionA()
+    }
+
+    sealed class SectionB : FeatureAction() {
+        data class ItemSelected(val id: String) : SectionB()
+        object LoadMore : SectionB()
+    }
+
+    sealed class Error : FeatureAction() {
+        object Retry : Error()
+        object RetrySection : Error()
+    }
+}
+```
+
+The ViewModel handles all actions in one exhaustive `when` block:
+
+```kotlin
+class FeatureViewModel : ViewModel() {
+    fun onAction(action: FeatureAction) {
+        when (action) {
+            is FeatureAction.SectionA.ButtonClicked -> { ... }
+            is FeatureAction.SectionA.TextChanged   -> { ... }
+            is FeatureAction.SectionB.ItemSelected  -> { ... }
+            is FeatureAction.SectionB.LoadMore      -> { ... }
+            is FeatureAction.Error.Retry            -> { ... }
+            is FeatureAction.Error.RetrySection     -> { ... }
+            // Compiler enforces exhaustiveness — missed cases are build errors
+        }
+    }
+}
+```
+
+**Rules:**
+- Each child composable fires only actions from its own namespace — it has no knowledge of other sections.
+- Adding a new event = one new sealed subclass + one new `when` branch. Zero signature changes.
+- `navigator` is never put inside the action class — it is a navigation side-effect, not a ViewModel concern.
+
+---
+
+### 6.3. Collapsing State — Bundled UiState
+
+Replace all individual state parameters with a single `state: FeatureUiState` data class.
+The ViewModel constructs it by combining its individual `StateFlow`s:
+
+```kotlin
+@Stable
+internal data class FeatureUiState(
+    val isLoading: Boolean = false,
+    val metadata: Media = Media.Empty,
+    val watchProgress: WatchProgress = WatchProgress.None,
+    val seasonToDisplay: Season? = null,
+    val showTitles: Boolean = true,
+    val isLibraryInitiallyOpened: Boolean = false,
+)
+```
+
+```kotlin
+// ViewModel combines stable flows into one emission
+val uiState: StateFlow<FeatureUiState> = combine(
+    _isLoading,
+    _metadata,
+    _watchProgress,
+    _seasonToDisplay,
+    _showTitles,
+) { isLoading, metadata, watchProgress, season, showTitles ->
+    FeatureUiState(
+        isLoading = isLoading,
+        metadata = metadata,
+        watchProgress = watchProgress,
+        seasonToDisplay = season,
+        showTitles = showTitles,
+    )
+}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FeatureUiState())
+```
+
+Layer 2 collects it once:
+
+```kotlin
+val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+```
+
+---
+
+### 6.4. High-Churn State — Keep Deferred, Collect in Layer 2
+
+**Do not bundle high-churn state** (e.g., search query, scroll position, list states) into `FeatureUiState`. Doing so causes the entire bundled state to emit on every keystroke, recomposing the whole tree.
+
+Instead:
+- Keep high-churn flows as **separate `StateFlow`s** in the ViewModel — do not combine them.
+- Collect them individually in **Layer 2** via `collectAsStateWithLifecycle()`.
+- Pass them as **deferred lambdas** to Layer 3.
+
+```kotlin
+// Layer 2 — collect high-churn flows individually
+@Composable
+internal fun FeatureScreen(
+    navigator: FeatureScreenNavigator,
+    viewModel: FeatureViewModel,
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // High-churn: collected separately, passed as deferred lambdas
+    val query by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val listStates by viewModel.listStates.collectAsStateWithLifecycle()
+
+    FeatureScreenContent(
+        state = uiState,
+        navigator = navigator,
+        onAction = viewModel::onAction,
+        query = { query },               // ✅ deferred — captured State<T>, not raw value
+        searchResults = { searchResults },
+        listStates = { listStates },
+    )
+}
+```
+
+**Why `by collectAsStateWithLifecycle()` and not `.value`:**
+- `collectAsStateWithLifecycle()` returns a Compose `State<T>` — reads are tracked by the snapshot system.
+- The lambda `{ query }` captures that `State<T>`, so only the composable that **calls** the lambda recomposes when it changes.
+- `.value` is a raw read — Compose cannot track it, deferred reads silently break.
+
+**Classification guide:**
+
+| State type | Bundle into `UiState`? | Pass as deferred lambda? |
+|---|---|---|
+| Loaded data, flags, config | ✅ Yes | ❌ No |
+| Search / filter query | ❌ No | ✅ Yes |
+| Paginated list states | ❌ No | ✅ Yes |
+| Animation-driven values | ❌ No | ✅ Yes |
+| Scroll offsets | ❌ No | ✅ Yes |
+
+---
+
+### 6.5. Before / After Summary
+
+| | Before | After |
+|---|---|---|
+| State params | N individual params | 1 `state: FeatureUiState` |
+| Callback params | N individual lambdas | 1 `onAction: (FeatureAction) -> Unit` |
+| High-churn params | Mixed in or missing | Deferred lambdas, collected individually |
+| Navigation | 1 navigator | 1 navigator (unchanged) |
+| **Total (no high-churn)** | **N + N + 1** | **3** |
+| **Total (with high-churn)** | **N + N + 1** | **3 + number of deferred lambdas** |
+
+Adding a new screen event or state field never changes the composable signature — it only changes the sealed class or the `UiState` data class.
