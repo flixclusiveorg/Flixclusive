@@ -9,6 +9,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -86,7 +87,6 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiv
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.media.LibraryListAndState
 import com.flixclusive.feature.mobile.media.R
-import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -332,14 +332,27 @@ private fun ItemContent(
                 .align(Alignment.CenterVertically),
         )
 
-        Text(
-            text = listAndState.list.name,
-            style = LocalTextStyle.current.asAdaptiveTextStyle(),
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.align(Alignment.CenterVertically)
                 .padding(horizontal = 10.dp)
-                .weight(1f),
-        )
+                .weight(1f)
+        ) {
+            Text(
+                text = listAndState.list.name,
+                style = LocalTextStyle.current.asAdaptiveTextStyle(),
+                modifier = Modifier,
+            )
+
+            listAndState.provider?.name?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalContentColor.current.copy(alpha = 0.6f),
+                    modifier = Modifier,
+                )
+            }
+        }
 
         AnimatedContent(
             targetState = toggleState(),
@@ -472,6 +485,10 @@ private fun LibraryListSheetPreview() {
                         description = "Description $it",
                     ),
                 ),
+                provider = DummyDataForPreview.getProviderMetadata(
+                    id = "provider-$it",
+                    name = "Provider $it",
+                ),
                 containsMedia = Random.nextBoolean(),
             )
         }
@@ -483,9 +500,9 @@ private fun LibraryListSheetPreview() {
 
     LaunchedEffect(true) {
         // Simulate loading state
-        listState = Async.Loading
-
-        delay(2000)
+//        listState = Async.Loading
+//
+//        delay(2000)
 
         // Simulate loaded state
         listState = Async.Success(lists)

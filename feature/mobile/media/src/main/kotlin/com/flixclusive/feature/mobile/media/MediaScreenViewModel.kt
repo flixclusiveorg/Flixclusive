@@ -242,26 +242,29 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 
                 val providers = (state as Async.Success).data
                 val libraries = safeCall {
-                    getTrackerLists(providers).fastMapNotNull {
+                    getTrackerLists(providers).fastMapNotNull { list ->
                         val isInAnyList = runCatching {
-                            val provider = getProviderPlugin(it.providerId) ?: return@fastMapNotNull null
+                            val provider = getProviderPlugin(list.providerId) ?: return@fastMapNotNull null
                             val trackerApi = provider.getTrackerApi(context) ?: return@fastMapNotNull null
 
                             val media = getCrossMatchedMediaMetadata(
-                                media = navArgMedia, providerId = it.providerId,
+                                media = navArgMedia, providerId = list.providerId,
                             )
 
                             trackerApi.isInAnyList(media)
                         }.onFailure { e ->
-                            errorLog("Failed to check if media is in any tracker list for provider ${it.providerId}: ${e.message}")
+                            errorLog("Failed to check if media is in any tracker list for provider ${list.providerId}: ${e.message}")
                             e.printStackTrace()
                             _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
                         }.getOrNull()
                             ?: return@fastMapNotNull null
 
-                        it.toLibraryState(
+                        list.toLibraryState(
                             containsMedia = isInAnyList,
                             ownerId = userId,
+                            provider = providers
+                                .fastFirstOrNull { it.id == list.providerId }?.metadata
+                                ?: return@fastMapNotNull null,
                         )
                     }
                 } ?: emptyList()
@@ -383,12 +386,12 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                 val trackerList = TrackerList(
                     id = list.id,
                     name = list.name,
-                    providerId = list.providerId
+                    providerId = provider.id
                 )
 
                 val matchedMedia = getCrossMatchedMediaMetadata(
                     media = media,
-                    providerId = list.providerId,
+                    providerId = provider.id,
                 )
 
                 val updatedList = toggleListItemOnTrackerList(
@@ -424,6 +427,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                             updatedLists[index] = updatedList.toLibraryState(
                                 ownerId = current.list.ownerId,
                                 containsMedia = !current.containsMedia,
+                                provider = current.provider!!,
                             )
 
                             Async.Success(updatedLists.toList())
@@ -576,9 +580,10 @@ internal data class LibraryListAndState(
     private val listWithItems: LibraryListWithItems,
     val containsMedia: Boolean,
     val images: List<String> = emptyList(),
-    val providerId: String? = null,
+    val provider: ProviderMetadata? = null,
 ) {
     val id get() = list.id
+    val providerId get() = provider?.id
     val type get() = list.listType
 
     val name get() = list.name
@@ -586,16 +591,14 @@ internal data class LibraryListAndState(
     val list get() = listWithItems.list
     val items get() = listWithItems.items
 
-    val isFromTracker get() = providerId != null
+    val isFromTracker get() = provider != null
 
     companion object {
         fun LibraryListWithItems.toLibraryState(
             mediaId: String,
-            providerId: String? = null,
         ): LibraryListAndState {
             return LibraryListAndState(
                 listWithItems = this,
-                providerId = providerId,
                 images = items.take(3).fastMap { it.metadata.posterImage }.filterNotNull(),
                 containsMedia = items.fastAny { item ->
                     item.mediaId == mediaId
@@ -605,7 +608,8 @@ internal data class LibraryListAndState(
 
         fun TrackerList.toLibraryState(
             containsMedia: Boolean,
-            ownerId: String
+            ownerId: String,
+            provider: ProviderMetadata,
         ) = LibraryListAndState(
             listWithItems = LibraryListWithItems(
                 list = LibraryList(
@@ -617,7 +621,7 @@ internal data class LibraryListAndState(
                 ),
                 items = emptyList(),
             ),
-            providerId = providerId,
+            provider = provider,
             images = images.takeLast(3).reversed(),
             containsMedia = containsMedia,
         )
