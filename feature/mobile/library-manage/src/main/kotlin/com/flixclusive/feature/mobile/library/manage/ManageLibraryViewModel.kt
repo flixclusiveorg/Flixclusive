@@ -33,9 +33,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -85,9 +83,6 @@ internal class ManageLibraryViewModel @Inject constructor(
 
     private val _trackers = MutableStateFlow<Async<List<TrackerProvider>>>(Async.Loading)
     val trackers = _trackers.asStateFlow()
-
-    private val _trackerRequiresSignIn = MutableSharedFlow<ProviderMetadata>()
-    val trackerRequiresSignIn = _trackerRequiresSignIn.asSharedFlow()
 
     init {
         initialize()
@@ -229,20 +224,17 @@ internal class ManageLibraryViewModel @Inject constructor(
         loadLists(isRefreshing)
     }
 
-    fun onTrackerSignIn(provider: TrackerProvider) {
+    fun onTrackerSignIn(tracker: TrackerProvider) {
         if (verifyAuthJob?.isActive == true) return
 
         verifyAuthJob = viewModelScope.launch {
-            val plugin = getProviderPlugin(provider.id)
+            val plugin = getProviderPlugin(tracker.id)
 
             val isAuthenticated = safeCall {
                 plugin?.getTrackerApi(context)?.isAuthenticated()
             } ?: false
 
-            if (!isAuthenticated) {
-                _trackerRequiresSignIn.emit(provider.metadata)
-                return@launch
-            }
+            if (!isAuthenticated) return@launch
 
             _trackers.update { providers ->
                 if (providers !is Async.Success) return@update providers
@@ -252,7 +244,7 @@ internal class ManageLibraryViewModel @Inject constructor(
                         return@fastMap provider
                     }
 
-                    provider.copy(isAuthenticated = isAuthenticated)
+                    provider.copy(isAuthenticated = true)
                 }
 
                 Async.Success(updatedProviders)

@@ -5,5 +5,5 @@ import com.flixclusive.core.navigation.navigator.GoBackAction
 import com.flixclusive.core.navigation.navigator.ViewProviderSettingsAction
 
 interface ManageLibraryScreenNavigator : GoBackAction, ViewProviderSettingsAction {
-    fun openLibraryDetails(list: LibraryList)
+    fun openLibraryDetails(list: LibraryList, trackerId: String? = null)
 }

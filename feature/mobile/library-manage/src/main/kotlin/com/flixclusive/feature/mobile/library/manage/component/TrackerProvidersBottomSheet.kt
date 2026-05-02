@@ -82,7 +82,7 @@ internal fun TrackerProvidersBottomSheet(
     trackers: () -> Async<List<TrackerProvider>>,
     onDismiss: () -> Unit,
     onToggle: (TrackerProvider) -> Unit,
-    onSignIn: (TrackerProvider) -> Unit,
+    openProviderSettings: (TrackerProvider) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -119,7 +119,7 @@ internal fun TrackerProvidersBottomSheet(
 
                 is Async.Success -> TrackerProvidersList(
                     trackers = state.data,
-                    onSignIn = onSignIn,
+                    openProviderSettings = openProviderSettings,
                     onSave = { list ->
                         scope.launch { list.forEach(onToggle) }
                         onDismiss()
@@ -149,7 +149,7 @@ internal fun TrackerProvidersBottomSheet(
 @Composable
 private fun TrackerProvidersList(
     trackers: List<TrackerProvider>,
-    onSignIn: (TrackerProvider) -> Unit,
+    openProviderSettings: (TrackerProvider) -> Unit,
     onSave: (List<TrackerProvider>) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -202,7 +202,7 @@ private fun TrackerProvidersList(
                 TrackerCard(
                     tracker = tracker,
                     enabled = { tracker.isEnabled },
-                    openProviderSettings = { onSignIn(tracker) },
+                    openProviderSettings = { openProviderSettings(tracker) },
                     onToggle = {
                         val updatedTracker = tracker.copy(isEnabled = !tracker.isEnabled)
                         currentTrackers[tracker.id] = updatedTracker
@@ -413,7 +413,7 @@ private fun TrackerProvidersBottomSheetPreview() {
                 },
                 onDismiss = {},
                 onToggle = {},
-                onSignIn = {},
+                openProviderSettings = {},
             )
         }
     }

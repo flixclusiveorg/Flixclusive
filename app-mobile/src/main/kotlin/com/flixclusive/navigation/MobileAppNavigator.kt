@@ -140,9 +140,9 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openLibraryDetails(list: LibraryList) {
+    override fun openLibraryDetails(list: LibraryList, trackerId: String?) {
         runOnResumed {
-            navigator.navigate(LibraryDetailsScreenDestination(list))
+            navigator.navigate(LibraryDetailsScreenDestination(list, trackerId))
         }
     }
 

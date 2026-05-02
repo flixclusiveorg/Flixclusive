@@ -5,7 +5,4 @@ import com.flixclusive.core.navigation.navigator.ViewMediaAction
 
 interface LibraryDetailsScreenNavigator :
     ViewMediaAction,
-    GoBackAction {
-    // TODO: Add navigator to AddLibraryItemScreen
-    // fun openLibraryAddItemsScreen()
-}
+    GoBackAction

@@ -99,19 +99,19 @@ internal fun ManageLibraryScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val trackers by viewModel.trackers.collectAsStateWithLifecycle()
 
-    LaunchedEffect(viewModel) {
-        viewModel.trackerRequiresSignIn.collect { state ->
-            navigator.openProviderSettings(state)
-        }
-    }
-
     ManageLibraryScreenContent(
         uiState = uiState,
         searchQuery = { searchQuery },
         selectedLibraries = { viewModel.selectedLibraries },
         libraries = libraries,
         trackers = { trackers },
-        onTrackerSignIn = viewModel::onTrackerSignIn,
+        openProviderSettings = {
+            if (!it.isAuthenticated) {
+                viewModel.onTrackerSignIn(it)
+            }
+
+            navigator.openProviderSettings(it.metadata)
+        },
         onToggleTracker = viewModel::onToggleTracker,
         onRefresh = { viewModel.initialize(isRefreshing = true) },
         onRetry = viewModel::initialize,
@@ -151,14 +151,14 @@ private fun ManageLibraryScreenContent(
     onToggleEditDialog: (Boolean) -> Unit,
     onToggleCreateDialog: (Boolean) -> Unit,
     onRemoveLongClickedLibrary: () -> Unit,
-    onViewLibraryContent: (LibraryList) -> Unit,
+    onViewLibraryContent: (LibraryList, String?) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onToggleSelect: (LibraryListWithPreview) -> Unit,
     onToggleOptionsSheet: (Boolean) -> Unit,
     onLongClickItem: (LibraryListWithPreview) -> Unit,
     onUpdateFilter: (LibrarySort) -> Unit,
-    onTrackerSignIn: (TrackerProvider) -> Unit,
+    openProviderSettings: (TrackerProvider) -> Unit,
     onToggleTracker: (TrackerProvider) -> Unit,
 ) {
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
@@ -290,7 +290,7 @@ private fun ManageLibraryScreenContent(
                     is Async.Failure -> {
                         RetryButton(
                             error = state.message.asString(),
-                            onRetry = onRefresh,
+                            onRetry = onRetry,
                             modifier = Modifier
                                 .padding(padding)
                                 .fillMaxSize(),
@@ -360,8 +360,8 @@ private fun ManageLibraryScreenContent(
     if (showTrackerOptions) {
         TrackerProvidersBottomSheet(
             trackers = trackers,
-            onSignIn = {
-                onTrackerSignIn(it)
+            openProviderSettings = {
+                openProviderSettings(it)
                 showTrackerOptions = false
             },
             onDismiss = { showTrackerOptions = false },
@@ -405,7 +405,7 @@ private fun NonEmptyContent(
     uiState: ManageLibraryUiState,
     selectedLibraries: () -> Set<LibraryListWithPreview>,
     onToggleSelect: (LibraryListWithPreview) -> Unit,
-    onViewLibraryContent: (LibraryList) -> Unit,
+    onViewLibraryContent: (LibraryList, String?) -> Unit,
     onLongClickItem: (LibraryListWithPreview) -> Unit,
     onToggleOptionsSheet: (Boolean) -> Unit
 ) {
@@ -453,7 +453,7 @@ private fun NonEmptyContent(
                         }
                         onToggleSelect(library)
                     } else {
-                        onViewLibraryContent(library.list)
+                        onViewLibraryContent(library.list, library.provider?.id)
                     }
                 },
                 onLongClick = {
@@ -612,7 +612,7 @@ private fun ManageLibraryScreenBasePreview() {
                                 )
                             }
                     },
-                    onViewLibraryContent = {},
+                    onViewLibraryContent = { _, _ ->},
                     onQueryChange = { searchQuery = it },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
                     onToggleSelect = {
@@ -622,7 +622,7 @@ private fun ManageLibraryScreenBasePreview() {
                     },
                     onToggleOptionsSheet = { uiState = uiState.copy(isShowingOptionsSheet = it) },
                     onLongClickItem = { uiState = uiState.copy(longClickedLibrary = it) },
-                    onTrackerSignIn = { },
+                    openProviderSettings = { },
                     onToggleTracker = { },
                     onRetry = {},
                     onUpdateFilter = {
