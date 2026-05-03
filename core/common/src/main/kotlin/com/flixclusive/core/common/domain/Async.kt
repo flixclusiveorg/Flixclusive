@@ -83,7 +83,7 @@ sealed class Async<out T> {
             label: String = "AsyncAnimatedContent",
             loadingContent: @Composable AnimatedContentScope.() -> Unit,
             errorContent: @Composable AnimatedContentScope.(targetState: Failure) -> Unit,
-            content: @Composable AnimatedContentScope.(targetState: S) -> Unit,
+            content: @Composable AnimatedContentScope.(targetState: () -> S) -> Unit,
         ) {
             val targetType = when (targetState) {
                 is Loading -> AsyncType.Loading
@@ -106,7 +106,7 @@ sealed class Async<out T> {
                     }
                     is AsyncType.Success -> {
                         val successState = (targetState as? Success<S>)?.data ?: return@AnimatedContent
-                        content(successState)
+                        content { successState }
                     }
                 }
             }

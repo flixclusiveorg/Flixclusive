@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -178,7 +179,7 @@ private fun HomeScreenContent(
              }
         ) { data ->
             AnimatedContent(
-                targetState = data.isEmpty(),
+                targetState = data().isEmpty(),
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
                 modifier = Modifier.fillMaxSize(),
             ) { isEmpty ->
@@ -187,8 +188,9 @@ private fun HomeScreenContent(
                         openAddProviderScreen = navigator::openAddProviderScreen,
                     )
                 } else {
+                    val updatedData by rememberUpdatedState(data)
                     val catalogValues by remember {
-                        derivedStateOf { data.values.toList() }
+                        derivedStateOf { updatedData().values.toList() }
                     }
 
                     NonEmptyScreenContent(

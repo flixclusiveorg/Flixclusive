@@ -132,7 +132,7 @@ internal fun TrackerProvidersBottomSheet(
             }
         ) { data ->
             TrackerProvidersList(
-                trackers = data,
+                trackers = data(),
                 openProviderSettings = openProviderSettings,
                 onSave = { list ->
                     scope.launch { list.forEach(onToggle) }

@@ -317,8 +317,9 @@ internal class HomeScreenViewModel @Inject constructor(
                     }
 
                     is Async.Success -> {
-                        val maxPage = minOf(MAX_PAGINATION_PAGES, response.data.totalPages)
-                        val hasNext = page < maxPage && catalogWithState.canPaginate
+                        val hasNext = page < MAX_PAGINATION_PAGES
+                            && response.data.hasNextPage
+                            && catalogWithState.canPaginate
 
                         _uiState.update { state ->
                             state.updateCatalog(
@@ -326,6 +327,7 @@ internal class HomeScreenViewModel @Inject constructor(
                                 newData = catalogWithState.copy(
                                     state = if (hasNext) PagingState.Idle else PagingState.Exhausted,
                                     medias = catalogWithState.medias + response.data.results,
+                                    page = catalogWithState.page + 1,
                                 )
                             )
                         }

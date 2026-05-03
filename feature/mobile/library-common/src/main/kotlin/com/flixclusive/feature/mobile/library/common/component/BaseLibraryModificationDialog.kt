@@ -257,7 +257,7 @@ private fun TrackerSelectionSheet(
             }
         ) { data ->
             TrackerProvidersList(
-                trackers = data,
+                trackers = data(),
                 onSelect = onTrackerSelected,
             )
         }

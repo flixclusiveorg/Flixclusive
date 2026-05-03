@@ -118,7 +118,7 @@ internal fun CatalogProvidersBottomSheet(
             }
         ) { data ->
             CatalogProvidersList(
-                providers = data,
+                providers = data(),
                 onSave = { list ->
                     scope.launch { list.forEach(onToggle) }
                     onDismiss()

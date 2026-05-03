@@ -71,7 +71,7 @@ internal fun SearchProvidersView(
         },
     ) { data ->
         SearchProvidersList(
-            providers = data,
+            providers = data(),
             selectedProviderId = selectedProviderId,
             scaffoldPadding = scaffoldPadding,
             onChangeProvider = onChangeProvider,

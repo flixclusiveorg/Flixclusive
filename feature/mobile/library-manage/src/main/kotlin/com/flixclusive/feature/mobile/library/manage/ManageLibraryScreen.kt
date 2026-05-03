@@ -296,7 +296,7 @@ private fun ManageLibraryScreenContent(
                 },
             ) { data ->
                 AnimatedContent(
-                    targetState = data.isEmpty(),
+                    targetState = data().isEmpty(),
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     modifier = Modifier.fillMaxSize(),
                 ) { isEmpty ->
@@ -304,7 +304,7 @@ private fun ManageLibraryScreenContent(
                         EmptyDataMessage(modifier = Modifier.padding(padding))
                     } else {
                         NonEmptyContent(
-                            lists = { data },
+                            lists = data,
                             uiState = uiState,
                             listState = listState,
                             padding = padding,
