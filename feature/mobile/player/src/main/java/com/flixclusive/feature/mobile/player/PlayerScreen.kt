@@ -41,6 +41,7 @@ import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
+import kotlinx.coroutines.flow.merge
 
 @Destination<ExternalModuleGraph>(
     navArgs = PlayerScreenNavArgs::class,
@@ -85,7 +86,10 @@ internal fun PlayerScreen(
             return@LaunchedEffect
         }
 
-        viewModel.player.errors.collect { error ->
+        merge(
+            viewModel.player.errors,
+            viewModel.scrobblingError
+        ).collect { error ->
             snackbarState.showError(error.asString(context))
         }
     }

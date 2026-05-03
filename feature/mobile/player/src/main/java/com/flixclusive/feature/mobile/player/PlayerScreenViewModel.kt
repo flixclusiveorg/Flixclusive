@@ -14,6 +14,7 @@ import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -37,6 +38,7 @@ import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
+import com.flixclusive.domain.provider.usecase.tracker.SyncToScrobblersUseCase
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.cleanDuplicates
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerServer
 import com.flixclusive.feature.mobile.player.util.MediaLinkUtils.toPlayerSubtitle
@@ -46,12 +48,16 @@ import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
+import com.flixclusive.provider.tracker.ScrobbleAction
 import com.ramcosta.composedestinations.generated.player.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -71,6 +77,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 internal class PlayerScreenViewModel @Inject constructor(
@@ -84,11 +91,22 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
     private val dataStoreManager: DataStoreManager,
+    private val syncToScrobblers: SyncToScrobblersUseCase,
     private val playerDataSourceFactory: AppDataSourceFactory,
     @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val navArgs = savedStateHandle.navArgs<PlayerScreenNavArgs>()
+
+    private val _scrobblingError = MutableSharedFlow<UiText>()
+    val scrobblingError = _scrobblingError.asSharedFlow()
+
+    private var changeProviderJob: Job? = null
+    private var changeServerJob: Job? = null
+    private var changeEpisodeJob: Job? = null
+    private var queueNextEpisodeJob: Job? = null
+    private var updateProgressJob: Job? = null
+    private var autoQueueNextEpisodeJob: Job? = null
 
     val playerPreferences = dataStoreManager.getUserPrefs(
         key = UserPreferences.PLAYER_PREFS_KEY,
@@ -312,12 +330,6 @@ internal class PlayerScreenViewModel @Inject constructor(
         started = SharingStarted.Eagerly,
         initialValue = getDefaultWatchProgress(),
     )
-
-    private var changeProviderJob: Job? = null
-    private var changeServerJob: Job? = null
-    private var changeEpisodeJob: Job? = null
-    private var queueNextEpisodeJob: Job? = null
-    private var updateProgressJob: Job? = null
 
     init {
         initialize()
@@ -590,6 +602,8 @@ internal class PlayerScreenViewModel @Inject constructor(
             subtitles = subtitles,
             startPositionMs = startPositionMs,
         )
+
+        updateWatchProgress()
     }
 
     /**
@@ -634,22 +648,39 @@ internal class PlayerScreenViewModel @Inject constructor(
     @OptIn(UnstableApi::class)
     private fun AppPlayer.observePlaybackProgress() {
         viewModelScope.launch(appDispatchers.main) {
-            listenTo(Player.EVENT_PLAYBACK_STATE_CHANGED) { events ->
-                if (!events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED))
-                    return@listenTo
+            launch {
+                listenTo(Player.EVENT_PLAYBACK_STATE_CHANGED) { events ->
+                    if (!events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED))
+                        return@listenTo
 
-                val isFinished = !isPlaying && currentPosition >= duration && duration > 0
-                val nextEpisode = _uiState.value.nextEpisode
-                if (isFinished && nextEpisode != null) {
-                    onEpisodeChange(nextEpisode)
-                    return@listenTo
+                    val isFinished = !isPlaying && currentPosition >= duration && duration > 0
+                    val nextEpisode = _uiState.value.nextEpisode
+                    if (isFinished && nextEpisode != null) {
+                        onEpisodeChange(nextEpisode)
+                        return@listenTo
+                    }
                 }
+            }
 
-                if (this@PlayerScreenViewModel.mediaMetadata is Show) {
-                    if (duration <= 0) return@listenTo
+            launch {
+                listenTo(Player.EVENT_IS_PLAYING_CHANGED) { events ->
+                    if (!events.contains(Player.EVENT_IS_PLAYING_CHANGED))
+                        return@listenTo
 
-                    if (currentPosition >= (duration * QUEUE_THRESHOLD)) {
-                        onQueueNextEpisode()
+                    updateWatchProgress()
+
+                    autoQueueNextEpisodeJob?.cancel()
+                    autoQueueNextEpisodeJob = launch {
+                        while (isPlaying) {
+                            if (duration <= 0) continue
+
+                            val isQueueingNextEpisode = currentPosition >= (duration * QUEUE_THRESHOLD)
+                            if (navArgs.media is Show && isQueueingNextEpisode) {
+                                onQueueNextEpisode()
+                            }
+
+                            delay(3.seconds)
+                        }
                     }
                 }
             }
@@ -657,7 +688,9 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     fun updateWatchProgress() {
-        if (updateProgressJob?.isActive == true) return
+        if (updateProgressJob?.isActive == true) {
+            updateProgressJob?.cancel()
+        }
 
         updateProgressJob = appDispatchers.ioScope.launch {
             val currentPosition = withContext(appDispatchers.main) {
@@ -670,24 +703,45 @@ internal class PlayerScreenViewModel @Inject constructor(
             val canSaveProgress = currentPosition > 60_000L
             if (!canSaveProgress) return@launch
 
+            val progress = when (val progress = watchProgress.value) {
+                is EpisodeProgress -> progress.copy(
+                    progress = currentPosition,
+                    duration = duration,
+                    status = WatchStatus.WATCHING,
+                    updatedAt = Date()
+                )
+
+                is MovieProgress -> progress.copy(
+                    progress = currentPosition,
+                    duration = duration,
+                    status = WatchStatus.WATCHING,
+                    updatedAt = Date()
+                )
+            }
+
             setWatchProgress(
                 media = mediaMetadata,
-                watchProgress = when (val progress = watchProgress.value) {
-                    is EpisodeProgress -> progress.copy(
-                        progress = currentPosition,
-                        duration = duration,
-                        status = WatchStatus.WATCHING,
-                        updatedAt = Date()
-                    )
-
-                    is MovieProgress -> progress.copy(
-                        progress = currentPosition,
-                        duration = duration,
-                        status = WatchStatus.WATCHING,
-                        updatedAt = Date()
-                    )
-                },
+                watchProgress = progress,
             )
+
+            // Adding a small debounce here to ensure that if the user quickly changes providers/episodes,
+            // we don't end up sending multiple scrobble events in quick succession which can cause issues/
+            delay(1500L)
+
+            val isPlaying = withContext(appDispatchers.main) {
+                player.isPlaying
+            }
+
+            try {
+                syncToScrobblers(
+                    action = if (isPlaying) ScrobbleAction.START else ScrobbleAction.STOP,
+                    media = mediaMetadata,
+                    episode = selectedEpisode.value,
+                    watchProgress = progress,
+                )
+            } catch (e: Throwable) {
+                _scrobblingError.emit(UiText.from(e.message ?: "Unknown scrobbling error"))
+            }
         }
     }
 

@@ -316,7 +316,7 @@ class AppPlayer(
         currentCuesWithTiming.clear()
     }
 
-    private inner class InternalPlayerListener() : Player.Listener {
+    private inner class InternalPlayerListener : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 changeSubtitleDelay(0)

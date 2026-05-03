@@ -42,4 +42,5 @@
     <string name="cross_match_not_allowed">Provider %1$s does not support cross-matching.</string>
     <string name="cross_match_no_item_found">No cross-match found for media \'%1$s\' with provider \'%2$s\'</string>
     <string name="tracker_not_matched_provider">Media item does not belong to the same provider as the list.</string>
+    <string name="failed_scrobbling_progress_to_provider">Scrobbling failed for %1$s: %2$s</string>
 </resources>

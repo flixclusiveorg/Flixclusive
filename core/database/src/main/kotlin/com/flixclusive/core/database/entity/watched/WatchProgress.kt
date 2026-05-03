@@ -30,6 +30,6 @@ sealed interface WatchProgress {
     fun isLessThanAMinute(): Boolean = progress <= 60_000L
 
     companion object {
-        private const val WATCH_COMPLETED_THRESHOLD = 95 // 95% of the total duration
+        const val WATCH_COMPLETED_THRESHOLD = 90 // 90% of the total duration
     }
 }

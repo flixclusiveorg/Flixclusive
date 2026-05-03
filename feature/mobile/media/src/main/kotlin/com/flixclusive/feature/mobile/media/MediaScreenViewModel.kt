@@ -36,6 +36,7 @@ import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
+import com.flixclusive.domain.provider.usecase.tracker.SyncFromScrobblersUseCase
 import com.flixclusive.domain.provider.usecase.tracker.ToggleListItemOnTrackerListUseCase
 import com.flixclusive.domain.provider.usecase.tracker.TrackerListItemToggleAction
 import com.flixclusive.feature.mobile.media.LibraryListAndState.Companion.toLibraryState
@@ -52,6 +53,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -91,6 +94,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
     private val getProviderPlugin: GetProviderPluginUseCase,
     private val toggleListItemOnTrackerList: ToggleListItemOnTrackerListUseCase,
     private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
+    private val syncFromScrobblers: SyncFromScrobblersUseCase,
     @Assisted private val navArgMedia: MediaMetadata,
 ) : ViewModel() {
     @AssistedFactory
@@ -208,6 +212,49 @@ internal class MediaScreenViewModel @AssistedInject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = Async.Loading
         )
+
+    @OptIn(FlowPreview::class)
+    private fun syncWatchProgressFromScrobblers() {
+        appDispatchers.ioScope.launch {
+            val media = _metadata.filterNotNull().first()
+            if (media is Show) {
+                seasonToDisplay
+                    .debounce(800)
+                    .filterNotNull()
+                    .collectLatest {
+                        if (it !is Async.Success) return@collectLatest
+
+                        val season = it.data.season
+                        if (season.episodes.isEmpty()) return@collectLatest
+
+                        season.episodes
+                            .chunked(10) // chunk to avoid syncing too many episodes at once, which can cause timeouts
+                            .forEach { batch ->
+                                batch.map { episode ->
+                                    async {
+                                        try {
+                                            syncFromScrobblers(
+                                                item = media,
+                                                episode = episode
+                                            )
+                                        } catch (e: Exception) {
+                                            errorLog("Failed to sync scrobble data for ${media.title}'s S${episode.season}E${episode.number}: ${e.message}")
+                                            e.printStackTrace()
+                                        }
+                                    }
+                                }.awaitAll()
+                            }
+                    }
+            } else {
+                try {
+                    syncFromScrobblers(media)
+                } catch (e: Exception) {
+                    errorLog("Failed to sync scrobble data for movie ${media.title}: ${e.message}")
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
 
     private fun fetchLibraryLists() {
         if (fetchLibrariesJob?.isActive == true) {
@@ -510,6 +557,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 
     init {
         fetchLibraryLists()
+        syncWatchProgressFromScrobblers()
 
         viewModelScope.launch {
             launch init@{
