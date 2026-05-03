@@ -17,6 +17,7 @@ import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.testing.media.MediaTestDefaults
 import com.flixclusive.model.media.MediaMetadata
 import java.util.Date
+import java.util.UUID
 
 /**
  * Test defaults for database-related tests.
@@ -117,7 +118,7 @@ object DatabaseTestDefaults {
     )
 
     fun getLibraryListItem(
-        id: Long = 0,
+        id: String = UUID.randomUUID().toString(),
         mediaId: String = getDBMedia().id,
         listId: String = "test-list-id",
     ) = LibraryListItem(

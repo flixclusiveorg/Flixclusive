@@ -53,11 +53,11 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getItemAsFlow(itemId: Long): Flow<LibraryListItemWithMetadata?> {
+    override fun getItemAsFlow(itemId: String): Flow<LibraryListItemWithMetadata?> {
         return itemDao.getAsFlow(itemId)
     }
 
-    override suspend fun getItem(itemId: Long): LibraryListItemWithMetadata? {
+    override suspend fun getItem(itemId: String): LibraryListItemWithMetadata? {
         return withContext(appDispatchers.io) {
             itemDao.get(itemId)
         }
@@ -66,7 +66,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
     override suspend fun insertItem(
         item: LibraryListItem,
         media: MediaMetadata?,
-    ): Long {
+    ): String {
         return withContext(appDispatchers.io) {
             val list = listDao.get(item.listId)
             if (list != null) {
@@ -90,7 +90,7 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteItem(itemId: Long) {
+    override suspend fun deleteItem(itemId: String) {
         return withContext(appDispatchers.io) {
             val item = itemDao.get(itemId) ?: return@withContext
 

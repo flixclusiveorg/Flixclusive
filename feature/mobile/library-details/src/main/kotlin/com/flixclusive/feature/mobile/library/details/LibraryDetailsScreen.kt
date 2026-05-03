@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -148,7 +147,7 @@ private fun LibraryDetailsScreenContent(
     uiState: () -> LibraryDetailsUiState,
     paginate: () -> Unit,
     searchQuery: () -> String,
-    items: () -> List<LibraryListItemWithMetadata>,
+    items: () -> Set<LibraryListItemWithMetadata>,
     selectedItems: () -> Set<LibraryListItemWithMetadata>,
     onGoBack: () -> Unit,
     onRemoveSelection: () -> Unit,
@@ -345,7 +344,7 @@ private fun LibraryDetailsScreenContent(
 private fun NonEmptyScreen(
     uiState: () -> LibraryDetailsUiState,
     selectedItems: () -> Set<LibraryListItemWithMetadata>,
-    items: () -> List<LibraryListItemWithMetadata>,
+    items: () -> Set<LibraryListItemWithMetadata>,
     scaffoldPadding: PaddingValues,
     onViewMedia: (MediaMetadata) -> Unit,
     onLongClickItem: (LibraryListItemWithMetadata) -> Unit,
@@ -385,9 +384,10 @@ private fun NonEmptyScreen(
         }
 
         items(
-            items = items(),
-            key = { it.mediaId }
-        ) { item ->
+            count = items().size,
+            key = { items().elementAt(it).mediaId }
+        ) { i ->
+            val item = items().elementAt(i)
             val media = item.metadata.toMediaMetadata()
             val isSelected by remember {
                 derivedStateOf { selectedItems().contains(item) }
@@ -520,7 +520,7 @@ private fun LibraryDetailsScreenBasePreview() {
                     },
                 )
 
-            sortedList
+            sortedList.toSet()
         }
     }
 
@@ -548,7 +548,7 @@ private fun LibraryDetailsScreenBasePreview() {
                                 LibraryListItemWithMetadata(
                                     metadata = media.toDBMedia(),
                                     item = LibraryListItem(
-                                        id = it.toLong(),
+                                        id = it.toString(),
                                         mediaId = media.id,
                                         listId = sampleList.id,
                                         createdAt = Date(System.currentTimeMillis() - it * 10000000L),

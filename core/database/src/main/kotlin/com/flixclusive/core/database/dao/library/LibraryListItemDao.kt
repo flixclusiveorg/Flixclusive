@@ -22,11 +22,11 @@ import java.util.Date
 interface LibraryListItemDao {
     @Transaction
     @Query("SELECT * FROM library_list_item_with_metadata WHERE item_id = :id")
-    suspend fun get(id: Long): LibraryListItemWithMetadata?
+    suspend fun get(id: String): LibraryListItemWithMetadata?
 
     @Transaction
     @Query("SELECT * FROM library_list_item_with_metadata WHERE item_id = :id")
-    fun getAsFlow(id: Long): Flow<LibraryListItemWithMetadata?>
+    fun getAsFlow(id: String): Flow<LibraryListItemWithMetadata?>
 
     @Transaction
     @RawQuery(observedEntities = [LibraryListItemWithMetadata::class])
@@ -100,18 +100,20 @@ interface LibraryListItemDao {
     suspend fun insert(
         item: LibraryListItem,
         media: MediaMetadata? = null,
-    ): Long {
+    ): String {
         if (media != null) {
             upsertMedia(media.toDBMedia().copy(updatedAt = Date()))
             upsertMediaFts(media.toDBMediaFts())
             upsertIds(media.toDBMediaExternalIds())
         }
 
-        return insertItem(item.copy(updatedAt = Date()))
+        val updatedItem = item.copy(updatedAt = Date())
+        insertItem(updatedItem)
+        return updatedItem.id
     }
 
     @Query("DELETE FROM library_list_items WHERE id = :id")
-    suspend fun delete(id: Long)
+    suspend fun delete(id: String)
 
     @Query("DELETE FROM library_list_items WHERE listId = :listId AND mediaId = :mediaId")
     suspend fun deleteByListIdAndMediaId(listId: String, mediaId: String)
@@ -127,5 +129,5 @@ interface LibraryListItemDao {
     suspend fun upsertIds(list: List<DBMediaExternalId>)
 
     @Upsert
-    suspend fun insertItem(list: LibraryListItem): Long
+    suspend fun insertItem(item: LibraryListItem)
 }

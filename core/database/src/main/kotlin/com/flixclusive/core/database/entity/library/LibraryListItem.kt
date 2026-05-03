@@ -6,7 +6,10 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flixclusive.core.database.entity.media.DBMedia
 import java.util.Date
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 @Entity(
     tableName = "library_list_items",
     foreignKeys = [
@@ -29,8 +32,8 @@ import java.util.Date
     ],
 )
 data class LibraryListItem(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
+    val id: String = Uuid.generateV4().toString(),
     val mediaId: String,
     val listId: String,
     val createdAt: Date = Date(),

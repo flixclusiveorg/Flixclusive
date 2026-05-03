@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.library.details
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
@@ -39,6 +38,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -73,7 +73,7 @@ internal class LibraryDetailsViewModel @Inject constructor(
 
     val selectedItems = mutableStateSetOf<LibraryListItemWithMetadata>()
 
-    val items = mutableStateListOf<LibraryListItemWithMetadata>()
+    val items = mutableStateSetOf<LibraryListItemWithMetadata>()
 
     private val _library = MutableStateFlow<LibraryList>(navArgs.library)
     val library = _library.asStateFlow()
@@ -89,18 +89,18 @@ internal class LibraryDetailsViewModel @Inject constructor(
                         it.metadata.overview?.contains(query, ignoreCase = true) == true
                 }
 
-                flowOf(list)
+                flowOf(list.toSet())
             } else {
                 libraryListRepository.searchItems(
                     query = query,
                     listId = navArgs.library.id,
                     sort = uiState.value.selectedFilter,
-                )
+                ).mapLatest { it.toSet() }
             }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList(),
+            initialValue = emptySet(),
         )
 
     init {
@@ -293,7 +293,7 @@ private fun MediaMetadata.toLibraryListItemWithMetadata(
     return LibraryListItemWithMetadata(
         item = LibraryListItem(
             mediaId = id,
-            id = hashCode().toLong(),
+            id = id,
             listId = listId,
         ),
         metadata = toDBMedia(),

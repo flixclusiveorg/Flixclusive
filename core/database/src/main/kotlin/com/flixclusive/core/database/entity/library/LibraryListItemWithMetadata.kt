@@ -27,8 +27,27 @@ data class LibraryListItemWithMetadata(
     val externalIds: List<DBMediaExternalId>,
 ) {
     @get:Ignore
-    val itemId: Long get() = item.id
+    val itemId: String get() = item.id
 
     @get:Ignore
     val mediaId: String get() = item.mediaId
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LibraryListItemWithMetadata) return false
+
+        if (itemId != other.itemId) return false
+        if (mediaId != other.mediaId) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = item.hashCode()
+        result = 31 * result + metadata.hashCode()
+        result = 31 * result + externalIds.hashCode()
+        result = 31 * result + itemId.hashCode()
+        result = 31 * result + mediaId.hashCode()
+        return result
+    }
 }

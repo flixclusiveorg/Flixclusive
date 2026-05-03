@@ -23,17 +23,17 @@ interface LibraryListRepository {
 
     suspend fun deleteListById(listId: String)
 
-    fun getItemAsFlow(itemId: Long): Flow<LibraryListItemWithMetadata?>
+    fun getItemAsFlow(itemId: String): Flow<LibraryListItemWithMetadata?>
 
-    suspend fun getItem(itemId: Long): LibraryListItemWithMetadata?
+    suspend fun getItem(itemId: String): LibraryListItemWithMetadata?
 
-    suspend fun insertItem(item: LibraryListItem, media: MediaMetadata? = null): Long
+    suspend fun insertItem(item: LibraryListItem, media: MediaMetadata? = null): String
 
     fun getListsContainingMedia(mediaId: String, ownerId: String): Flow<List<LibraryList>>
 
     suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean
 
-    suspend fun deleteItem(itemId: Long)
+    suspend fun deleteItem(itemId: String)
 
     suspend fun paginateItems(
         listId: String,
