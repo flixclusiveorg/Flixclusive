@@ -1,7 +1,11 @@
 package com.flixclusive.domain.provider.di
 
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListItemsUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
 import com.flixclusive.domain.provider.usecase.tracker.ToggleListItemOnTrackerListUseCase
+import com.flixclusive.domain.provider.usecase.tracker.impl.GetTrackerApiUseCaseImpl
+import com.flixclusive.domain.provider.usecase.tracker.impl.GetTrackerListItemsUseCaseImpl
 import com.flixclusive.domain.provider.usecase.tracker.impl.GetTrackerListsUseCaseImpl
 import com.flixclusive.domain.provider.usecase.tracker.impl.ToggleListItemOnTrackerListUseCaseImpl
 import dagger.Binds
@@ -16,5 +20,11 @@ internal abstract class TrackerUseCaseModule {
     abstract fun bindGetTrackerLibrariesUseCase(impl: GetTrackerListsUseCaseImpl): GetTrackerListsUseCase
 
     @Binds
+    abstract fun bindGetTrackerListItemsUseCase(impl: GetTrackerListItemsUseCaseImpl): GetTrackerListItemsUseCase
+
+    @Binds
     abstract fun bindToggleListItemOnTrackerListUseCase(impl: ToggleListItemOnTrackerListUseCaseImpl): ToggleListItemOnTrackerListUseCase
+
+    @Binds
+    abstract fun bindGetTrackerApiUseCase(impl: GetTrackerApiUseCaseImpl): GetTrackerApiUseCase
 }

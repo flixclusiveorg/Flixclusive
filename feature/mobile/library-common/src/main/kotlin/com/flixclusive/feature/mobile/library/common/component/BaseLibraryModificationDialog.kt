@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.common.provider.getProviderStatusContainerColor
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
@@ -108,30 +109,24 @@ internal fun BaseLibraryModificationDialog(
                     .padding(bottom = 10.dp),
             ) {
                 TextButton(
-                    onClick = onConfirm,
-                    shape = buttonShape,
-                    modifier = Modifier
-                        .weight(1F)
-                        .heightIn(min = buttonMinHeight),
-                ) {
-                    Text(
-                        text = confirmLabel,
-                        color = LocalContentColor.current,
-                        modifier = Modifier.padding(end = 2.dp),
-                    )
-                }
-
-                Button(
                     onClick = onCancel,
                     shape = buttonShape,
                     modifier = Modifier
                         .weight(1F)
                         .heightIn(min = buttonMinHeight),
                 ) {
-                    Text(
-                        text = stringResource(LocaleR.string.cancel),
-                        color = LocalContentColor.current,
-                    )
+                    Text(text = stringResource(LocaleR.string.cancel))
+                }
+
+                Button(
+                    enabled = remember { derivedStateOf { name.isNotBlank() } }.value,
+                    onClick = onConfirm,
+                    shape = buttonShape,
+                    modifier = Modifier
+                        .weight(1F)
+                        .heightIn(min = buttonMinHeight),
+                ) {
+                    Text(text = confirmLabel)
                 }
             }
         },
@@ -231,44 +226,40 @@ private fun TrackerSelectionSheet(
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
-        AnimatedContent(
+        AsyncAnimatedContent(
             targetState = trackers,
-            modifier = Modifier.padding(vertical = 12.dp)
-        ) { state ->
-            when (state) {
-                is Async.Loading -> {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        repeat(4) {
-                            TrackerProviderCardPlaceholder()
-                        }
+            modifier = Modifier.padding(vertical = 12.dp),
+            loadingContent = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(4) {
+                        TrackerProviderCardPlaceholder()
                     }
                 }
-
-                is Async.Success -> TrackerProvidersList(
-                    trackers = state.data,
-                    onSelect = onTrackerSelected,
+            },
+            errorContent = {
+                EmptyDataMessage(
+                    modifier = Modifier.padding(horizontal = 15.dp),
+                    title = stringResource(com.flixclusive.core.presentation.mobile.R.string.an_error_occurred),
+                    description = it.message.asString(),
+                    icon = {
+                        Icon(
+                            painter = painterResource(UiCommonR.drawable.round_error_outline_24),
+                            contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
+                            modifier = Modifier.size(60.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(0.6f),
+                        )
+                    },
                 )
-
-                is Async.Failure -> {
-                    EmptyDataMessage(
-                        modifier = Modifier.padding(horizontal = 15.dp),
-                        title = stringResource(com.flixclusive.core.presentation.mobile.R.string.an_error_occurred),
-                        description = state.message.asString(),
-                        icon = {
-                            Icon(
-                                painter = painterResource(UiCommonR.drawable.round_error_outline_24),
-                                contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
-                                modifier = Modifier.size(60.dp),
-                                tint = MaterialTheme.colorScheme.error.copy(0.6f),
-                            )
-                        },
-                    )
-                }
             }
+        ) { data ->
+            TrackerProvidersList(
+                trackers = data,
+                onSelect = onTrackerSelected,
+            )
         }
     }
 }
@@ -281,88 +272,52 @@ private fun TrackerSheetToggle(
 ) {
     val context = LocalContext.current
 
-    if (selectedTracker == null) {
-        OutlinedButton(
-            onClick = onClick,
-            shape = MaterialTheme.shapes.small,
-            modifier = modifier.padding(bottom = 4.dp),
-        ) {
-            Text(
-                text = stringResource(LocaleR.string.none),
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .weight(1f)
-            )
-
-            Icon(
-                painter = painterResource(UiCommonR.drawable.arrow_right_thin),
-                contentDescription = stringResource(R.string.select_tracker),
-                tint = LocalContentColor.current.copy(0.6f),
-                modifier = Modifier.size(20.dp)
-                    .align(Alignment.CenterVertically)
-            )
-        }
-    } else {
-        OutlinedButton(
-            onClick = onClick,
-            enabled = selectedTracker.status.isWorking,
-            shape = MaterialTheme.shapes.small,
-            modifier = modifier.padding(bottom = 4.dp),
-        ) {
-            ImageWithSmallPlaceholder(
-                model = remember { context.buildImageRequest(selectedTracker.iconUrl) },
-                placeholder = painterResource(UiCommonR.drawable.provider_logo),
-                contentDescription = selectedTracker.name,
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.CenterVertically),
-            )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
-                    .align(Alignment.CenterVertically)
-            ) {
+    OutlinedButton(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier.padding(bottom = 4.dp),
+    ) {
+        AnimatedContent(
+            targetState = selectedTracker,
+            modifier = Modifier.weight(1f)
+        ) { tracker ->
+            if (tracker == null) {
                 Text(
-                    text = selectedTracker.name,
-                    style = MaterialTheme.typography.labelMedium
+                    text = stringResource(LocaleR.string.none),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
                 )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = "v${selectedTracker.versionName} (${selectedTracker.versionCode})",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = LocalContentColor.current.copy(0.6F)
+            } else {
+                Row {
+                    ImageWithSmallPlaceholder(
+                        model = remember { context.buildImageRequest(tracker.iconUrl) },
+                        placeholder = painterResource(UiCommonR.drawable.provider_logo),
+                        contentDescription = tracker.name,
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(end = 8.dp)
+                            .align(Alignment.CenterVertically),
                     )
 
-
-                    if (selectedTracker.status != ProviderStatus.Working) {
-                        Text(
-                            text = selectedTracker.status.name,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 11.sp,
-                            color = getProviderStatusContainerColor(selectedTracker.status),
-                            modifier = Modifier
-                                .graphicsLayer { alpha = 0.6F }
-                        )
-                    }
+                    Text(
+                        text = tracker.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                    )
                 }
             }
-
-            Icon(
-                painter = painterResource(UiCommonR.drawable.arrow_right_thin),
-                contentDescription = stringResource(R.string.select_tracker),
-                tint = LocalContentColor.current.copy(0.6f),
-                modifier = Modifier.size(20.dp)
-                    .align(Alignment.CenterVertically)
-            )
         }
+
+        Icon(
+            painter = painterResource(UiCommonR.drawable.arrow_right_thin),
+            contentDescription = stringResource(R.string.select_tracker),
+            tint = LocalContentColor.current.copy(0.6f),
+            modifier = Modifier.size(20.dp)
+                .align(Alignment.CenterVertically)
+        )
     }
 }
 

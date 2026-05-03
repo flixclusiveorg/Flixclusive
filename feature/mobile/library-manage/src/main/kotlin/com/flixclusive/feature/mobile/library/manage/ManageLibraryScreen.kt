@@ -50,6 +50,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.collections.SortUtils
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.showToast
@@ -94,7 +95,7 @@ internal fun ManageLibraryScreen(
     navigator: ManageLibraryScreenNavigator,
     viewModel: ManageLibraryViewModel = hiltViewModel(),
 ) {
-    val libraries by viewModel.libraries.collectAsStateWithLifecycle()
+    val lists by viewModel.lists.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val trackers by viewModel.trackers.collectAsStateWithLifecycle()
@@ -102,21 +103,13 @@ internal fun ManageLibraryScreen(
     ManageLibraryScreenContent(
         uiState = uiState,
         searchQuery = { searchQuery },
-        selectedLibraries = { viewModel.selectedLibraries },
-        libraries = libraries,
+        selectedLists = { viewModel.selectedLists },
+        lists = lists,
         trackers = { trackers },
-        openProviderSettings = {
-            if (!it.isAuthenticated) {
-                viewModel.onTrackerSignIn(it)
-            }
-
-            navigator.openProviderSettings(it.metadata)
-        },
         onToggleTracker = viewModel::onToggleTracker,
         onRefresh = { viewModel.initialize(isRefreshing = true) },
         onRetry = viewModel::initialize,
         onRemoveLongClickedLibrary = viewModel::onRemoveLongClickedLibrary,
-        onViewLibraryContent = navigator::openLibraryDetails,
         onLongClickItem = viewModel::onLongClickItem,
         onStartMultiSelecting = viewModel::onStartMultiSelecting,
         onToggleSelect = viewModel::onToggleSelect,
@@ -130,6 +123,14 @@ internal fun ManageLibraryScreen(
         onToggleCreateDialog = viewModel::onToggleCreateDialog,
         onSaveEdits = viewModel::onSaveEdits,
         onCreate = viewModel::onAdd,
+        onViewLibraryContent = { navigator.openLibraryDetails(it.list, it.provider) },
+        openProviderSettings = {
+            if (!it.isAuthenticated) {
+                viewModel.onTrackerSignIn(it)
+            }
+
+            navigator.openProviderSettings(it.metadata)
+        },
     )
 }
 
@@ -137,9 +138,9 @@ internal fun ManageLibraryScreen(
 @Composable
 private fun ManageLibraryScreenContent(
     uiState: ManageLibraryUiState,
-    libraries: Async<List<LibraryListWithPreview>>,
+    lists: Async<List<LibraryListWithPreview>>,
     trackers: () -> Async<List<TrackerProvider>>,
-    selectedLibraries: () -> Set<LibraryListWithPreview>,
+    selectedLists: () -> Set<LibraryListWithPreview>,
     searchQuery: () -> String,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
@@ -151,7 +152,7 @@ private fun ManageLibraryScreenContent(
     onToggleEditDialog: (Boolean) -> Unit,
     onToggleCreateDialog: (Boolean) -> Unit,
     onRemoveLongClickedLibrary: () -> Unit,
-    onViewLibraryContent: (LibraryList, String?) -> Unit,
+    onViewLibraryContent: (LibraryListWithPreview) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onToggleSelect: (LibraryListWithPreview) -> Unit,
@@ -177,12 +178,12 @@ private fun ManageLibraryScreenContent(
     val listState = rememberLazyGridState()
 
     val selectCount by remember {
-        derivedStateOf { selectedLibraries().size }
+        derivedStateOf { selectedLists().size }
     }
 
     val isListEmpty by remember {
         derivedStateOf {
-            libraries is Async.Success && libraries.data.isEmpty()
+            lists is Async.Success && lists.data.isEmpty()
         }
     }
 
@@ -209,7 +210,7 @@ private fun ManageLibraryScreenContent(
             contentWindowInsets = WindowInsets(0.dp),
             floatingActionButton = {
                 AnimatedVisibility(
-                    visible = !uiState.isMultiSelecting && libraries is Async.Success,
+                    visible = !uiState.isMultiSelecting && lists is Async.Success,
                 ) {
                     ExtendedFloatingActionButton(
                         onClick = { onToggleCreateDialog(true) },
@@ -280,45 +281,39 @@ private fun ManageLibraryScreenContent(
                 }
             },
         ) { padding ->
-            AnimatedContent(
-                targetState = libraries,
+            AsyncAnimatedContent(
+                targetState = lists,
                 label = "LibraryListContentAnimation",
-            ) { state ->
-                when (state) {
-                    is Async.Loading -> LoadingStateScreen(padding)
-
-                    is Async.Failure -> {
-                        RetryButton(
-                            error = state.message.asString(),
-                            onRetry = onRetry,
-                            modifier = Modifier
-                                .padding(padding)
-                                .fillMaxSize(),
+                loadingContent = { LoadingStateScreen(padding) },
+                errorContent = { error ->
+                    RetryButton(
+                        error = error.message.asString(),
+                        onRetry = onRetry,
+                        modifier = Modifier
+                            .padding(padding)
+                            .fillMaxSize(),
+                    )
+                },
+            ) { data ->
+                AnimatedContent(
+                    targetState = data.isEmpty(),
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    modifier = Modifier.fillMaxSize(),
+                ) { isEmpty ->
+                    if (isEmpty) {
+                        EmptyDataMessage(modifier = Modifier.padding(padding))
+                    } else {
+                        NonEmptyContent(
+                            lists = { data },
+                            uiState = uiState,
+                            listState = listState,
+                            padding = padding,
+                            selectedLists = selectedLists,
+                            onToggleSelect = onToggleSelect,
+                            onViewLibraryContent = onViewLibraryContent,
+                            onLongClickItem = onLongClickItem,
+                            onToggleOptionsSheet = onToggleOptionsSheet,
                         )
-                    }
-
-                    is Async.Success -> {
-                        AnimatedContent(
-                            targetState = state.data.isEmpty(),
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                            modifier = Modifier.fillMaxSize(),
-                        ) { isEmpty ->
-                            if (isEmpty) {
-                                EmptyDataMessage(modifier = Modifier.padding(padding))
-                            } else {
-                                NonEmptyContent(
-                                    libraries = state.data,
-                                    uiState = uiState,
-                                    listState = listState,
-                                    padding = padding,
-                                    selectedLibraries = selectedLibraries,
-                                    onToggleSelect = onToggleSelect,
-                                    onViewLibraryContent = onViewLibraryContent,
-                                    onLongClickItem = onLongClickItem,
-                                    onToggleOptionsSheet = onToggleOptionsSheet,
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -352,7 +347,10 @@ private fun ManageLibraryScreenContent(
     if (uiState.isCreatingLibrary) {
         CreateLibraryDialog(
             trackers = trackers,
-            onCreate = onCreate,
+            onCreate = { name, desc, tracker ->
+                onCreate(name, desc, tracker)
+                onToggleCreateDialog(false)
+            },
             onCancel = { onToggleCreateDialog(false) },
         )
     }
@@ -399,13 +397,13 @@ private fun ManageLibraryScreenContent(
 
 @Composable
 private fun NonEmptyContent(
-    libraries: List<LibraryListWithPreview>,
+    lists: () -> List<LibraryListWithPreview>,
     listState: LazyGridState,
     padding: PaddingValues,
     uiState: ManageLibraryUiState,
-    selectedLibraries: () -> Set<LibraryListWithPreview>,
+    selectedLists: () -> Set<LibraryListWithPreview>,
     onToggleSelect: (LibraryListWithPreview) -> Unit,
-    onViewLibraryContent: (LibraryList, String?) -> Unit,
+    onViewLibraryContent: (LibraryListWithPreview) -> Unit,
     onLongClickItem: (LibraryListWithPreview) -> Unit,
     onToggleOptionsSheet: (Boolean) -> Unit
 ) {
@@ -434,11 +432,11 @@ private fun NonEmptyContent(
         }
 
         items(
-            items = libraries,
+            items = lists(),
             key = { it.id },
         ) { library ->
             val selected by remember {
-                derivedStateOf { selectedLibraries().contains(library) }
+                derivedStateOf { selectedLists().contains(library) }
             }
 
             LibraryCard(
@@ -453,7 +451,7 @@ private fun NonEmptyContent(
                         }
                         onToggleSelect(library)
                     } else {
-                        onViewLibraryContent(library.list, library.provider?.id)
+                        onViewLibraryContent(library)
                     }
                 },
                 onLongClick = {
@@ -574,9 +572,9 @@ private fun ManageLibraryScreenBasePreview() {
             ) {
                 ManageLibraryScreenContent(
                     uiState = uiState,
-                    libraries = safeLibraries,
+                    lists = safeLibraries,
                     trackers = { Async.Success(emptyList()) },
-                    selectedLibraries = { selectedLibraries },
+                    selectedLists = { selectedLibraries },
                     searchQuery = { searchQuery },
                     onRefresh = {},
                     onRemoveSelection = { libraries.removeAll(selectedLibraries) },
@@ -612,7 +610,7 @@ private fun ManageLibraryScreenBasePreview() {
                                 )
                             }
                     },
-                    onViewLibraryContent = { _, _ ->},
+                    onViewLibraryContent = { },
                     onQueryChange = { searchQuery = it },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
                     onToggleSelect = {

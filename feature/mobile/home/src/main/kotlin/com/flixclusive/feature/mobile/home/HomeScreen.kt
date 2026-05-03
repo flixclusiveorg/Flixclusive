@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
@@ -162,47 +163,42 @@ private fun HomeScreenContent(
             )
         },
     ) {
-        AnimatedContent(
+        AsyncAnimatedContent(
             targetState = uiState.catalogs,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
             modifier = Modifier.fillMaxSize(),
-        ) { state ->
-            when (state) {
-                is Async.Loading -> LoadingScreen()
-
-                is Async.Success -> {
-                    AnimatedContent(
-                        targetState = state.data.isEmpty(),
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        modifier = Modifier.fillMaxSize(),
-                    ) { isEmpty ->
-                        if (isEmpty) {
-                            EmptyScreenContent(
-                                openAddProviderScreen = navigator::openAddProviderScreen,
-                            )
-                        } else {
-                            val catalogValues by remember {
-                                derivedStateOf { state.data.values.toList() }
-                            }
-
-                            NonEmptyScreenContent(
-                                navigator = navigator,
-                                showMediaTitles = showMediaTitles,
-                                paginate = paginate,
-                                continueWatchingItems = continueWatchingItems,
-                                catalogs = catalogValues,
-                                headerItem = uiState.itemHeader,
-                                listState = listState,
-                            )
-                        }
+            loadingContent = { LoadingScreen(modifier = Modifier.padding(it)) },
+             errorContent = { error ->
+                 RetryButton(
+                     error = error.message.asString(),
+                     modifier = Modifier
+                         .fillMaxSize()
+                         .padding(it),
+                     onRetry = onRetry,
+                 )
+             }
+        ) { data ->
+            AnimatedContent(
+                targetState = data.isEmpty(),
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                modifier = Modifier.fillMaxSize(),
+            ) { isEmpty ->
+                if (isEmpty) {
+                    EmptyScreenContent(
+                        openAddProviderScreen = navigator::openAddProviderScreen,
+                    )
+                } else {
+                    val catalogValues by remember {
+                        derivedStateOf { data.values.toList() }
                     }
-                }
 
-                is Async.Failure -> {
-                    RetryButton(
-                        error = state.message.asString(),
-                        modifier = Modifier.fillMaxSize(),
-                        onRetry = onRetry,
+                    NonEmptyScreenContent(
+                        navigator = navigator,
+                        showMediaTitles = showMediaTitles,
+                        paginate = paginate,
+                        continueWatchingItems = continueWatchingItems,
+                        catalogs = catalogValues,
+                        headerItem = uiState.itemHeader,
+                        listState = listState,
                     )
                 }
             }

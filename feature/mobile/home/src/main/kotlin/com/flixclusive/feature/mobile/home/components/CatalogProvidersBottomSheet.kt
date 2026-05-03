@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.home.components
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.common.provider.getProviderStatusContainerColor
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
@@ -87,47 +87,43 @@ internal fun CatalogProvidersBottomSheet(
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
-        AnimatedContent(
+        AsyncAnimatedContent(
             targetState = providers,
-            modifier = modifier.padding(vertical = 12.dp)
-        ) { state ->
-            when (state) {
-                is Async.Loading -> {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        repeat(4) {
-                            CatalogProviderCardPlaceholder()
-                        }
+            modifier = modifier.padding(vertical = 12.dp),
+            loadingContent = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(4) {
+                        CatalogProviderCardPlaceholder()
                     }
                 }
-
-                is Async.Success -> CatalogProvidersList(
-                    providers = state.data,
-                    onSave = { list ->
-                        scope.launch { list.forEach(onToggle) }
-                        onDismiss()
-                    }
+            },
+            errorContent = { error ->
+                EmptyDataMessage(
+                    modifier = Modifier.padding(horizontal = 15.dp),
+                    title = stringResource(com.flixclusive.core.presentation.mobile.R.string.an_error_occurred),
+                    description = error.message.asString(),
+                    icon = {
+                        Icon(
+                            painter = painterResource(UiCommonR.drawable.round_error_outline_24),
+                            contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
+                            modifier = Modifier.size(60.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(0.6f),
+                        )
+                    },
                 )
-
-                is Async.Failure -> {
-                    EmptyDataMessage(
-                        modifier = Modifier.padding(horizontal = 15.dp),
-                        title = stringResource(com.flixclusive.core.presentation.mobile.R.string.an_error_occurred),
-                        description = state.message.asString(),
-                        icon = {
-                            Icon(
-                                painter = painterResource(UiCommonR.drawable.round_error_outline_24),
-                                contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
-                                modifier = Modifier.size(60.dp),
-                                tint = MaterialTheme.colorScheme.error.copy(0.6f),
-                            )
-                        },
-                    )
-                }
             }
+        ) { data ->
+            CatalogProvidersList(
+                providers = data,
+                onSave = { list ->
+                    scope.launch { list.forEach(onToggle) }
+                    onDismiss()
+                }
+            )
         }
     }
 }

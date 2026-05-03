@@ -311,7 +311,6 @@
         <item quantity="one">%1$d backup</item>
         <item quantity="other">%1$d backups</item>
     </plurals>
-    <string name="modified_at_format">Modified at %1$s</string>
     <string name="avatar_number">Avatar %1$d</string>
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
     <string name="count_selection_format">%1$d selected</string>

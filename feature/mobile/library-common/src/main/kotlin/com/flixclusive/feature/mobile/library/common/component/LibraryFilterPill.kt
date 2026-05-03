@@ -36,6 +36,7 @@ fun LibraryFilterPill(
     filter: LibrarySort,
     onToggleDirection: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val resources = LocalResources.current
     val displayName = remember {
@@ -48,6 +49,7 @@ fun LibraryFilterPill(
 
     OutlinedButton(
         onClick = onToggleDirection,
+        enabled = enabled,
         modifier =
             modifier
                 .height(getAdaptiveDp(29.dp))
@@ -59,7 +61,7 @@ fun LibraryFilterPill(
                         is LibrarySort.Added -> selected() is LibrarySort.Added
                     }
 
-                    alpha = if (isSelected) 1f else 0.6f
+                    alpha = if (isSelected && enabled) 1f else 0.6f
                 },
         contentPadding = PaddingValues(
             horizontal = 8.dp,
@@ -76,7 +78,7 @@ fun LibraryFilterPill(
                     is LibrarySort.Name -> selected() is LibrarySort.Name
                     is LibrarySort.Modified -> selected() is LibrarySort.Modified
                     is LibrarySort.Added -> selected() is LibrarySort.Added
-                }
+                } && enabled
             ) {
                 AnimatedContent(
                     targetState = selected().ascending,

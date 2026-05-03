@@ -124,17 +124,19 @@ internal fun LibraryCard(
                     )
                 }
 
-                Text(
-                    text = resources.getQuantityString(
-                        LocaleR.plurals.number_of_items_format,
-                        libraryListWithPreview.itemsCount,
-                        libraryListWithPreview.itemsCount,
-                    ),
-                    style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(),
-                    color = LocalContentColor.current.copy(0.6f),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 5,
-                )
+                if (libraryListWithPreview.itemsCount >= 0) {
+                    Text(
+                        text = resources.getQuantityString(
+                            LocaleR.plurals.number_of_items_format,
+                            libraryListWithPreview.itemsCount,
+                            libraryListWithPreview.itemsCount,
+                        ),
+                        style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(),
+                        color = LocalContentColor.current.copy(0.6f),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 5,
+                    )
+                }
             }
         }
     }

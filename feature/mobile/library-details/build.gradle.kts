@@ -19,6 +19,8 @@ dependencies {
     implementation(projects.corePresentationCommon)
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
+    implementation(projects.dataProvider)
+    implementation(projects.domainProvider)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
@@ -29,8 +31,8 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.kotlinx.immutables)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.stubs.provider)
 
     testImplementation(projects.coreTesting)
 }

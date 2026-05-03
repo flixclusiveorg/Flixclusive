@@ -35,7 +35,12 @@ interface LibraryListRepository {
 
     suspend fun deleteItem(itemId: Long)
 
-    fun getItems(listId: String, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
+    suspend fun paginateItems(
+        listId: String,
+        sort: LibrarySort,
+        pageSize: Int,
+        page: Int,
+    ): List<LibraryListItemWithMetadata>
 
     fun getListsAndItems(userId: String, sort: LibrarySort): Flow<List<LibraryListWithItems>>
 

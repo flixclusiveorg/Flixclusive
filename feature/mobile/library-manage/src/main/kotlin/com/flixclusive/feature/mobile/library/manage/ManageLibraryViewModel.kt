@@ -19,9 +19,9 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
-import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
 import com.flixclusive.feature.mobile.library.common.model.TrackerProvider
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
@@ -61,7 +61,7 @@ internal class ManageLibraryViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
     private val toggleProvider: ToggleProviderUseCase,
     private val getTrackerLists: GetTrackerListsUseCase,
-    private val getProviderPlugin: GetProviderPluginUseCase,
+    private val getTrackerApi: GetTrackerApiUseCase
 ) : ViewModel() {
     private var loadListsJob: Job? = null
     private var loadProvidersJob: Job? = null
@@ -76,10 +76,10 @@ internal class ManageLibraryViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    val selectedLibraries = mutableStateSetOf<LibraryListWithPreview>()
+    val selectedLists = mutableStateSetOf<LibraryListWithPreview>()
 
-    private val _libraries = MutableStateFlow<Async<List<LibraryListWithPreview>>>(Async.Loading)
-    val libraries = _libraries.asStateFlow()
+    private val _lists = MutableStateFlow<Async<List<LibraryListWithPreview>>>(Async.Loading)
+    val lists = _lists.asStateFlow()
 
     private val _trackers = MutableStateFlow<Async<List<TrackerProvider>>>(Async.Loading)
     val trackers = _trackers.asStateFlow()
@@ -175,9 +175,9 @@ internal class ManageLibraryViewModel @Inject constructor(
                 }
             }.collectLatest {
                 if (!isRefreshing) {
-                    _libraries.value = it
+                    _lists.value = it
                 } else if (it !is Async.Loading) {
-                    _libraries.value = it
+                    _lists.value = it
                     _uiState.update { state ->
                         state.copy(isRefreshing = false)
                     }
@@ -218,6 +218,33 @@ internal class ManageLibraryViewModel @Inject constructor(
         }
     }
 
+    private suspend fun removeLibrary(list: LibraryListWithPreview) {
+        if (list.isFromTracker) {
+            val providerId = list.provider?.id ?: return
+            val api = safeCall { getTrackerApi(providerId) } ?: return
+
+            api.deleteList(
+                list = TrackerList(
+                    id = list.id,
+                    name = list.name,
+                    description = list.description,
+                    itemCount = list.itemsCount,
+                    providerId = providerId,
+                )
+            )
+
+            _lists.update { state ->
+                if (state !is Async.Success) return@update state
+
+                val updated = state.data.fastFilter { it.id != list.id }
+
+                Async.Success(updated)
+            }
+        } else {
+            libraryListRepository.deleteListById(list.id)
+        }
+    }
+
     fun initialize(isRefreshing: Boolean = false) {
         _uiState.update { it.copy(isRefreshing = isRefreshing) }
         loadTrackers()
@@ -228,10 +255,8 @@ internal class ManageLibraryViewModel @Inject constructor(
         if (verifyAuthJob?.isActive == true) return
 
         verifyAuthJob = viewModelScope.launch {
-            val plugin = getProviderPlugin(tracker.id)
-
             val isAuthenticated = safeCall {
-                plugin?.getTrackerApi(context)?.isAuthenticated()
+                getTrackerApi(tracker.id).isAuthenticated()
             } ?: false
 
             if (!isAuthenticated) return@launch
@@ -275,23 +300,7 @@ internal class ManageLibraryViewModel @Inject constructor(
         requireNotNull(list) { "No library selected for removal!" }
 
         removeLibJob = appDispatchers.ioScope.launch {
-            if (list.isFromTracker) {
-                val providerId = list.provider?.id ?: return@launch
-                val plugin = getProviderPlugin(providerId) ?: return@launch
-                val api = plugin.getTrackerApi(context) ?: return@launch
-
-                api.deleteList(
-                    list = TrackerList(
-                        id = list.id,
-                        name = list.name,
-                        description = list.description,
-                        itemCount = list.itemsCount,
-                        providerId = providerId,
-                    )
-                )
-            } else {
-                libraryListRepository.deleteListById(list.id)
-            }
+            removeLibrary(list)
         }
     }
 
@@ -299,37 +308,11 @@ internal class ManageLibraryViewModel @Inject constructor(
         if (removeSelectionJob?.isActive == true) return
 
         removeSelectionJob = appDispatchers.ioScope.launch {
-            selectedLibraries.forEach { selectedLibrary ->
-                if (selectedLibrary.isFromTracker) {
-                    val providerId = selectedLibrary.provider?.id ?: return@forEach
-                    val plugin = getProviderPlugin(providerId) ?: return@forEach
-                    val api = plugin.getTrackerApi(context) ?: return@forEach
-
-                    api.deleteList(
-                        list = TrackerList(
-                            id = selectedLibrary.id,
-                            name = selectedLibrary.name,
-                            description = selectedLibrary.description,
-                            itemCount = selectedLibrary.itemsCount,
-                            providerId = providerId,
-                        )
-                    )
-
-                    _libraries.update {
-                        if (it !is Async.Success) return@update it
-
-                        val updated = it.data.fastFilter { library ->
-                            library.id != selectedLibrary.id
-                        }
-
-                        Async.Success(updated)
-                    }
-                } else {
-                    libraryListRepository.deleteListById(selectedLibrary.id)
-                }
+            selectedLists.forEach {
+                removeLibrary(it)
             }
 
-            selectedLibraries.clear()
+            selectedLists.clear()
         }
     }
 
@@ -339,8 +322,7 @@ internal class ManageLibraryViewModel @Inject constructor(
         addLibJob = appDispatchers.ioScope.launch {
             if (list.isFromTracker) {
                 val providerId = list.provider?.id ?: return@launch
-                val plugin = getProviderPlugin(providerId) ?: return@launch
-                val api = plugin.getTrackerApi(context) ?: return@launch
+                val api = safeCall { getTrackerApi(providerId) } ?: return@launch
 
                 val updatedList = api.updateList(
                     list = TrackerList(
@@ -352,7 +334,7 @@ internal class ManageLibraryViewModel @Inject constructor(
                     )
                 )
 
-                _libraries.update { state ->
+                _lists.update { state ->
                     if (state !is Async.Success) return@update state
 
                     val updatedLists = state.data.toMutableList()
@@ -397,12 +379,11 @@ internal class ManageLibraryViewModel @Inject constructor(
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
             if (tracker != null) {
-                val plugin = getProviderPlugin(tracker.id) ?: return@launch
-                val api = plugin.getTrackerApi(context) ?: return@launch
+                val api = safeCall { getTrackerApi(tracker.id) } ?: return@launch
 
                 val newList = api.createList(name, description)
 
-                _libraries.update {
+                _lists.update {
                     if (it !is Async.Success) return@update it
 
                     val updated = it.data.toMutableList()
@@ -444,15 +425,15 @@ internal class ManageLibraryViewModel @Inject constructor(
     }
 
     fun onToggleSelect(item: LibraryListWithPreview) {
-        if (selectedLibraries.contains(item)) {
-            selectedLibraries.remove(item)
+        if (selectedLists.contains(item)) {
+            selectedLists.remove(item)
         } else {
-            selectedLibraries.add(item)
+            selectedLists.add(item)
         }
     }
 
     fun onUnselectAll() {
-        selectedLibraries.clear()
+        selectedLists.clear()
         _uiState.update {
             it.copy(isMultiSelecting = false)
         }

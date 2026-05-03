@@ -52,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.common.provider.getProviderStatusContainerColor
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
@@ -100,48 +101,44 @@ internal fun TrackerProvidersBottomSheet(
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
-        AnimatedContent(
+        AsyncAnimatedContent(
             targetState = trackers(),
-            modifier = modifier.padding(vertical = 12.dp)
-        ) { state ->
-            when (state) {
-                is Async.Loading -> {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        repeat(4) {
-                            TrackerProviderCardPlaceholder()
-                        }
+            modifier = modifier.padding(vertical = 12.dp),
+            loadingContent = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(4) {
+                        TrackerProviderCardPlaceholder()
                     }
                 }
-
-                is Async.Success -> TrackerProvidersList(
-                    trackers = state.data,
-                    openProviderSettings = openProviderSettings,
-                    onSave = { list ->
-                        scope.launch { list.forEach(onToggle) }
-                        onDismiss()
-                    }
+            },
+            errorContent = {
+                EmptyDataMessage(
+                    modifier = Modifier.padding(horizontal = 15.dp),
+                    title = stringResource(com.flixclusive.core.presentation.mobile.R.string.an_error_occurred),
+                    description = it.message.asString(),
+                    icon = {
+                        Icon(
+                            painter = painterResource(UiCommonR.drawable.round_error_outline_24),
+                            contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
+                            modifier = Modifier.size(60.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(0.6f),
+                        )
+                    },
                 )
-
-                is Async.Failure -> {
-                    EmptyDataMessage(
-                        modifier = Modifier.padding(horizontal = 15.dp),
-                        title = stringResource(com.flixclusive.core.presentation.mobile.R.string.an_error_occurred),
-                        description = state.message.asString(),
-                        icon = {
-                            Icon(
-                                painter = painterResource(UiCommonR.drawable.round_error_outline_24),
-                                contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
-                                modifier = Modifier.size(60.dp),
-                                tint = MaterialTheme.colorScheme.error.copy(0.6f),
-                            )
-                        },
-                    )
-                }
             }
+        ) { data ->
+            TrackerProvidersList(
+                trackers = data,
+                openProviderSettings = openProviderSettings,
+                onSave = { list ->
+                    scope.launch { list.forEach(onToggle) }
+                    onDismiss()
+                }
+            )
         }
     }
 }

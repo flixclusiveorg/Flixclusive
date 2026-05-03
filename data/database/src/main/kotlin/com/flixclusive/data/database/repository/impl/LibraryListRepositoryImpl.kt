@@ -122,17 +122,24 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun getItems(listId: String, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>> {
+    override suspend fun paginateItems(
+        listId: String,
+        sort: LibrarySort,
+        pageSize: Int,
+        page: Int,
+    ): List<LibraryListItemWithMetadata> {
         val column = when (sort) {
             is LibrarySort.Added -> "item_createdAt"
             is LibrarySort.Modified -> "item_updatedAt"
             is LibrarySort.Name -> "media_title"
         }
 
-        return itemDao.getByListId(
+        return itemDao.paginateByListId(
             listId = listId,
             columnSort = column,
             ascending = sort.ascending,
+            pageSize = pageSize,
+            page = page,
         )
     }
 

@@ -1,9 +1,5 @@
 package com.flixclusive.feature.mobile.search.component
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.presentation.common.theme.Elevations
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.Placeholder
@@ -62,27 +59,25 @@ internal fun SearchProvidersView(
 
     val listState = rememberLazyGridState(initialFirstVisibleItemIndex = max(selectedIndex, 0))
 
-    AnimatedContent(
+    AsyncAnimatedContent(
         targetState = providers,
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-        modifier = Modifier.fillMaxSize()
-    ) { state ->
-        when (state) {
-            is Async.Loading -> SearchProvidersLoading(modifier = Modifier.padding(scaffoldPadding))
-            is Async.Failure -> SearchProvidersError(
+        modifier = Modifier.fillMaxSize(),
+        loadingContent = { SearchProvidersLoading(modifier = Modifier.padding(scaffoldPadding)) },
+        errorContent = { state ->
+            SearchProvidersError(
                 message = state.cause?.stackTraceToString() ?: state.message.asString(),
                 modifier = Modifier.padding(scaffoldPadding)
             )
-
-            is Async.Success -> SearchProvidersList(
-                providers = state.data,
-                selectedProviderId = selectedProviderId,
-                scaffoldPadding = scaffoldPadding,
-                onChangeProvider = onChangeProvider,
-                modifier = modifier,
-                listState = listState,
-            )
-        }
+        },
+    ) { data ->
+        SearchProvidersList(
+            providers = data,
+            selectedProviderId = selectedProviderId,
+            scaffoldPadding = scaffoldPadding,
+            onChangeProvider = onChangeProvider,
+            modifier = modifier,
+            listState = listState,
+        )
     }
 }
 

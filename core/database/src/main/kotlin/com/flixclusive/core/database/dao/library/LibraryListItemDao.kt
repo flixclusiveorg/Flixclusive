@@ -28,8 +28,9 @@ interface LibraryListItemDao {
     @Query("SELECT * FROM library_list_item_with_metadata WHERE item_id = :id")
     fun getAsFlow(id: Long): Flow<LibraryListItemWithMetadata?>
 
+    @Transaction
     @RawQuery(observedEntities = [LibraryListItemWithMetadata::class])
-    fun getByListIdRaw(query: RoomRawQuery): Flow<List<LibraryListItemWithMetadata>>
+    suspend fun getByListIdRaw(query: RoomRawQuery): List<LibraryListItemWithMetadata>
 
     @Transaction
     @Query("""
@@ -39,15 +40,19 @@ interface LibraryListItemDao {
     """)
     suspend fun getByListIdAndMediaId(listId: String, mediaId: String): LibraryListItemWithMetadata?
 
-    fun getByListId(
+    @Transaction
+    suspend fun paginateByListId(
         listId: String,
         columnSort: String,
         ascending: Boolean,
-    ): Flow<List<LibraryListItemWithMetadata>> {
+        pageSize: Int,
+        page: Int,
+    ): List<LibraryListItemWithMetadata> {
         val query = """
             SELECT * FROM library_list_item_with_metadata
             WHERE item_listId = ?
             ORDER BY ${if (ascending) "$columnSort ASC" else "$columnSort DESC"}
+            LIMIT $pageSize OFFSET ${pageSize * (page - 1)}
         """.trimIndent()
 
         return getByListIdRaw(

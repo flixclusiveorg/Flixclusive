@@ -1,17 +1,16 @@
 package com.flixclusive.domain.provider.usecase.tracker.impl
 
-import android.content.Context
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.repository.ProviderResponseWrapper
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
 import com.flixclusive.provider.capability.TrackerFeature
 import com.flixclusive.provider.tracker.TrackerList
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 internal class GetTrackerListsUseCaseImpl @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    private val getTrackerApi: GetTrackerApiUseCase
 ) : GetTrackerListsUseCase {
     override suspend fun invoke(
         providers: List<ProviderResponseWrapper>
@@ -20,7 +19,7 @@ internal class GetTrackerListsUseCaseImpl @Inject constructor(
             if (!provider.isEnabled) return@mapNotNull null
 
             val api = safeCall {
-                provider.plugin?.getTrackerApi(context)
+                getTrackerApi(provider.id)
             } ?: return@mapNotNull null
 
             runCatching {

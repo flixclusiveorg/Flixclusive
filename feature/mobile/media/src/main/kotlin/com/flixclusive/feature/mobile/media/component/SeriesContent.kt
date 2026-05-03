@@ -56,14 +56,14 @@ internal fun LazyGridScope.seriesContent(
         }
     }
 
-    when {
-        seasonToDisplay is Async.Loading -> {
+    when (seasonToDisplay) {
+        is Async.Loading -> {
             items(20) {
                 EpisodeCardPlaceholder()
             }
         }
 
-        seasonToDisplay is Async.Failure -> {
+        is Async.Failure -> {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 val error = seasonToDisplay.message.asString()
 
@@ -77,7 +77,7 @@ internal fun LazyGridScope.seriesContent(
             }
         }
 
-        seasonToDisplay is Async.Success -> {
+        is Async.Success -> {
             val season = seasonToDisplay.data
             season.overview?.let {
                 item(span = { GridItemSpan(maxLineSpan) }) {
