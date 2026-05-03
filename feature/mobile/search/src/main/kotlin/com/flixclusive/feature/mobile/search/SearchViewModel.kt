@@ -274,7 +274,7 @@ internal class SearchViewModel @Inject constructor(
             val result = withContext(appDispatchers.io) {
                 api.search(
                     page = page,
-                    title = query,
+                    query = query,
                     filters = filteredFilters,
                 )
             }
