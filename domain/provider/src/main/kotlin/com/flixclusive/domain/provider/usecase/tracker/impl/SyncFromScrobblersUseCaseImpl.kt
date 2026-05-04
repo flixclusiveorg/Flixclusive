@@ -114,7 +114,7 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
             it.absoluteProgress ?: 0L
         }
 
-        if (maxProgress == null) {
+        if (maxProgress == null || maxProgress.absoluteProgress == 0L) {
             syncCacheTtl.updateSyncTime(cacheKey)
             return
         }
