@@ -433,7 +433,7 @@ private fun NonEmptyContent(
 
         items(
             items = lists(),
-            key = { it.id },
+            key = { it.id + it.provider?.id },
         ) { library ->
             val selected by remember {
                 derivedStateOf { selectedLists().contains(library) }

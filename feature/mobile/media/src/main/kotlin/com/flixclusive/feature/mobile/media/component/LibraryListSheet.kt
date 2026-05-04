@@ -208,7 +208,7 @@ internal fun LibraryListSheet(
                                 ) {
                                     items(
                                         items = state.data,
-                                        key = { it.list.id },
+                                        key = { it.list.id + it.providerId },
                                     ) { listAndState ->
                                         var buttonState by remember(listAndState.containsMedia) {
                                             mutableStateOf(
