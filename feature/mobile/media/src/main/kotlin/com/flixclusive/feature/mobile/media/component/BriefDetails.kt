@@ -209,9 +209,10 @@ private data class ImportantInfo(
     val releaseDate: String?,
     val seasons: String?,
     val episodes: String?,
+    val certification: String?
 ) {
     val asList by lazy {
-        listOfNotNull(rating, adult, runtime, language, releaseDate, seasons, episodes)
+        listOfNotNull(rating, adult, runtime, language, releaseDate, certification, seasons, episodes)
     }
 }
 
@@ -250,6 +251,7 @@ private fun getBriefDetails(
         rating = media.rating?.formatAsRating()?.asString(context),
         runtime = media.runtime?.formatAsRuntime()?.asString(context),
         releaseDate = media.releaseDate?.extractYear()?.toString(),
+        certification = media.certification,
         adult = adult,
         language = language,
         seasons = seasons,
