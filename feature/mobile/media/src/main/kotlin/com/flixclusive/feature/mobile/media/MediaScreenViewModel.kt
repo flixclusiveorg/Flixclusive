@@ -303,6 +303,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                             errorLog("Failed to check if media is in any tracker list for provider ${list.providerId}: ${e.message}")
                             e.printStackTrace()
                             _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
+                            return@mapLatest Async.Failure(UiText.from(e.message ?: "Unknown error"), e)
                         }.getOrNull()
                             ?: return@fastMapNotNull null
 
