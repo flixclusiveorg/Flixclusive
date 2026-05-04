@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.PagingState
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
@@ -258,35 +259,33 @@ internal class HomeScreenViewModel @Inject constructor(
             val catalogs = (response as? Async.Success)?.data?.values ?: emptyList()
             if (catalogs.isEmpty()) return@launch
 
-            val maxRetries = 5
-            repeat(maxRetries) { i ->
-                val randomCatalog = catalogs.randomOrNull() ?: return@launch
-                val randomMedia = randomCatalog.medias.randomOrNull() ?: return@launch
+            var randomMedia: PartialMedia? = null
+            for (state in catalogs) {
+                if (state.medias.isNotEmpty()) {
+                    randomMedia = state.medias.random()
+                    break
+                }
+            }
 
-                when (val response = getMediaMetadata(randomMedia).last()) {
-                    is Async.Success -> {
-                        _uiState.update { state ->
-                            state.copy(itemHeader = Async.Success(response.data))
-                        }
-                        return@launch
+            if (randomMedia == null) {
+                _uiState.update { state ->
+                    state.copy(itemHeader = Async.Failure(UiText.from(R.string.failed_to_get_header_item)))
+                }
+                return@launch
+            }
+
+            getMediaMetadata(randomMedia).collect { response ->
+                if (response is Async.Failure) {
+                    if (response.cause is CancellationException) return@collect
+
+                    _uiState.update { state ->
+                        state.copy(itemHeader = Async.Success(randomMedia))
                     }
+                    return@collect
+                }
 
-                    is Async.Failure -> {
-                        if (i != maxRetries - 1) return@repeat
-                        if (response.cause is CancellationException) return@launch
-
-                        _uiState.update { state ->
-                            state.copy(
-                                itemHeader = Async.Success(randomMedia)
-                            )
-                        }
-                    }
-
-                    is Async.Loading -> {
-                        _uiState.update { state ->
-                            state.copy(itemHeader = Async.Loading)
-                        }
-                    }
+                _uiState.update { state ->
+                    state.copy(itemHeader = response)
                 }
             }
         }
