@@ -147,6 +147,7 @@ internal fun InternalMediaScreen(
         toggleEpisodeOnLibrary = viewModel::toggleEpisodeOnLibrary,
         onRetry = viewModel::onRetry,
         onRetryFetchSeason = viewModel::onRetryFetchSeason,
+        onRetryFetchLists = viewModel::onRetryFetchLibraries,
     )
 }
 
@@ -170,6 +171,7 @@ private fun MediaScreenContent(
     toggleEpisodeOnLibrary: (EpisodeWithProgress) -> Unit,
     onRetry: () -> Unit,
     onRetryFetchSeason: () -> Unit,
+    onRetryFetchLists: () -> Unit,
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -324,6 +326,7 @@ private fun MediaScreenContent(
                                     // TODO: Implement download
                                     context.showToast(resources.getString(LocaleR.string.coming_soon))
                                 },
+                                onRetryFetchLists = onRetryFetchLists,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(DefaultScreenPaddingHorizontal)
@@ -543,19 +546,12 @@ private fun MediaScreenBasePreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             MediaScreenContent(
+                navigator = navigator,
                 isLibraryInitiallyOpened = false,
+                showMediaTitles = false,
                 uiState = uiState,
                 metadata = metadata,
-                onRetry = {},
-                navigator = navigator,
-                showMediaTitles = false,
-                toggleOnLibrary = { _, _ -> },
-                libraryListStates = { Async.Success(lists) },
-                searchResults = {
-                    Async.Success(lists.filter { it.list.name.contains(query, ignoreCase = true) })
-                },
-                query = { query },
-                onQueryChange = { query = it },
+                watchProgress = watchProgress,
                 seasonToDisplay = remember(uiState.selectedSeason) {
                     if (metadata is Show) {
                         val season = metadata.seasons.first { it.number == (uiState.selectedSeason ?: 1) }
@@ -585,10 +581,18 @@ private fun MediaScreenBasePreview() {
                         null
                     }
                 },
+                query = { query },
+                libraryListStates = { Async.Success(lists) },
+                searchResults = {
+                    Async.Success(lists.filter { it.list.name.contains(query, ignoreCase = true) })
+                },
+                onQueryChange = { query = it },
                 onSeasonChange = { uiState = uiState.copy(selectedSeason = it.number) },
-                watchProgress = watchProgress,
+                toggleOnLibrary = { _, _ -> },
                 toggleEpisodeOnLibrary = {},
-                onRetryFetchSeason = {},
+                onRetry = {},
+                onRetryFetchLists = {},
+                onRetryFetchSeason = {}
             )
         }
     }

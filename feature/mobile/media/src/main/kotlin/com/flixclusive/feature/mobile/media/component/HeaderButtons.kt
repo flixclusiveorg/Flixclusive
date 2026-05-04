@@ -85,6 +85,7 @@ internal fun HeaderButtons(
     isInLibrary: Async<Boolean>,
     onAddToLibrary: () -> Unit,
     onPlay: () -> Unit,
+    onRetryFetchLists: () -> Unit,
     modifier: Modifier = Modifier,
     isDownloaded: Boolean = false, // TODO: Implement download functionality
     onToggleDownload: () -> Unit = {}, // TODO: Implement download functionality
@@ -170,8 +171,9 @@ internal fun HeaderButtons(
 
         if (showLibraryWarning != null) {
             TextAlertDialog(
-                dismissButtonLabel = null,
-                onConfirm = { showLibraryWarning = null },
+                confirmButtonLabel = stringResource(LocaleR.string.retry),
+                onConfirm = onRetryFetchLists,
+                onDismiss = { showLibraryWarning = null },
                 title = stringResource(R.string.failed_to_load_library_status),
                 message = showLibraryWarning!!.asString(LocalContext.current),
             )
@@ -491,6 +493,7 @@ private fun HeaderButtonsPreview() {
                     watchProgress = progress,
                     isInLibrary = Async.Loading,
                     onAddToLibrary = { isInLibrary = !isInLibrary },
+                    onRetryFetchLists = {},
                     onPlay = {},
                 )
 
@@ -499,6 +502,7 @@ private fun HeaderButtonsPreview() {
                     watchProgress = progress,
                     isInLibrary = Async.Failure(UiText.from("Failed to load library status")),
                     onAddToLibrary = { isInLibrary = !isInLibrary },
+                    onRetryFetchLists = {},
                     onPlay = {},
                 )
 
@@ -517,6 +521,7 @@ private fun HeaderButtonsPreview() {
                     },
                     isInLibrary = Async.Success(isInLibrary),
                     onAddToLibrary = { isInLibrary = !isInLibrary },
+                    onRetryFetchLists = {},
                     onPlay = {},
                 )
             }

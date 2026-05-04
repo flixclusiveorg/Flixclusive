@@ -283,14 +283,13 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                 if (state is Async.Loading) {
                     return@mapLatest Async.Loading
                 } else if (state is Async.Failure) {
-                    _trackerError.emit(state.message)
                     return@mapLatest Async.Success(emptyList())
                 }
 
                 val providers = (state as Async.Success).data
                 val libraries = safeCall {
                     getTrackerLists(providers).fastMapNotNull { list ->
-                        val isInAnyList = runCatching {
+                        val isInList = runCatching {
                             val provider = getProviderPlugin(list.providerId) ?: return@fastMapNotNull null
                             val trackerApi = provider.getTrackerApi(context) ?: return@fastMapNotNull null
 
@@ -298,9 +297,9 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                                 media = navArgMedia, providerId = list.providerId,
                             )
 
-                            trackerApi.isInAnyList(media)
+                            trackerApi.isInList(list, media)
                         }.onFailure { e ->
-                            errorLog("Failed to check if media is in any tracker list for provider ${list.providerId}: ${e.message}")
+                            errorLog("Failed to check if media is in list [${list.id}] for provider ${list.providerId}: ${e.message}")
                             e.printStackTrace()
                             _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
                             return@mapLatest Async.Failure(UiText.from(e.message ?: "Unknown error"), e)
@@ -308,7 +307,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                             ?: return@fastMapNotNull null
 
                         list.toLibraryState(
-                            containsMedia = isInAnyList,
+                            containsMedia = isInList,
                             ownerId = userId,
                             provider = providers
                                 .fastFirstOrNull { it.id == list.providerId }?.metadata
@@ -400,6 +399,10 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 
             setInitialSelectedSeason()
         }
+    }
+
+    fun onRetryFetchLibraries() {
+        fetchLibraryLists()
     }
 
     fun onRetryFetchSeason() {
@@ -671,7 +674,7 @@ internal data class LibraryListAndState(
                 items = emptyList(),
             ),
             provider = provider,
-            images = images.takeLast(3).reversed(),
+            images = images,
             containsMedia = containsMedia,
         )
     }

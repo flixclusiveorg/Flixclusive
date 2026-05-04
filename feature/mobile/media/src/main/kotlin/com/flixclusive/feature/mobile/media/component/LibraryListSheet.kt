@@ -64,6 +64,7 @@ import coil3.compose.AsyncImage
 import coil3.imageLoader
 import coil3.request.ImageRequest
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
@@ -153,89 +154,84 @@ internal fun LibraryListSheet(
             },
             modifier = Modifier
         ) {
-            AnimatedContent(
+            AsyncAnimatedContent(
                 targetState = libraryListStates(),
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-            ) { state ->
-                when (state) {
-                    is Async.Loading -> {
-                        Column {
-                            repeat(3) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                ) {
-                                    Placeholder(
-                                        elevation = Elevations.LEVEL_4,
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                    )
+                loadingContent = {
+                    Column {
+                        repeat(3) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            ) {
+                                Placeholder(
+                                    elevation = Elevations.LEVEL_4,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                )
 
-                                    Placeholder(
-                                        elevation = Elevations.LEVEL_4,
-                                        modifier = Modifier
-                                            .height(14.dp)
-                                            .width(180.dp)
-                                            .padding(start = 10.dp)
-                                    )
+                                Placeholder(
+                                    elevation = Elevations.LEVEL_4,
+                                    modifier = Modifier
+                                        .height(14.dp)
+                                        .width(180.dp)
+                                        .padding(start = 10.dp)
+                                )
 
-                                    Spacer(Modifier.weight(1f))
+                                Spacer(Modifier.weight(1f))
 
-                                    Placeholder(
-                                        elevation = Elevations.LEVEL_4,
-                                        shape = CircleShape,
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .aspectRatio(1f)
-                                    )
-                                }
+                                Placeholder(
+                                    elevation = Elevations.LEVEL_4,
+                                    shape = CircleShape,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .aspectRatio(1f)
+                                )
                             }
                         }
                     }
-                    is Async.Failure -> Unit
-                    is Async.Success -> {
-                        AnimatedContent(
-                            targetState = state.data.isEmpty(),
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                            modifier = Modifier.fillMaxSize()
-                        ) { isEmpty ->
-                            if (isEmpty) {
-                                EmptyDataMessage()
-                            } else {
-                                LazyColumn(
-                                    modifier = modifier,
-                                    contentPadding = PaddingValues(vertical = 10.dp)
-                                ) {
-                                    items(
-                                        items = state.data,
-                                        key = { it.list.id + it.providerId },
-                                    ) { listAndState ->
-                                        var buttonState by remember(listAndState.containsMedia) {
-                                            mutableStateOf(
-                                                if (listAndState.containsMedia) ItemToggleState.Added else ItemToggleState.NotAdded
-                                            )
-                                        }
+                },
+                errorContent = {}
+            ) { data ->
+                AnimatedContent(
+                    targetState = data().isEmpty(),
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    modifier = Modifier.fillMaxSize()
+                ) { isEmpty ->
+                    if (isEmpty) {
+                        EmptyDataMessage()
+                    } else {
+                        LazyColumn(
+                            modifier = modifier,
+                            contentPadding = PaddingValues(vertical = 10.dp)
+                        ) {
+                            items(
+                                items = data(),
+                                key = { it.list.id + it.providerId },
+                            ) { listAndState ->
+                                var buttonState by remember(listAndState.containsMedia) {
+                                    mutableStateOf(
+                                        if (listAndState.containsMedia) ItemToggleState.Added else ItemToggleState.NotAdded
+                                    )
+                                }
 
-                                        LaunchedEffect(snackbarHostState.currentSnackbarData) {
-                                            if (snackbarHostState.currentSnackbarData == null) return@LaunchedEffect
-                                            buttonState = if (listAndState.containsMedia) {
-                                                ItemToggleState.Added
-                                            } else {
-                                                ItemToggleState.NotAdded
-                                            }
-                                        }
-
-                                        ItemContent(
-                                            listAndState = listAndState,
-                                            toggleState = { buttonState },
-                                            toggleOnLibrary = {
-                                                buttonState = ItemToggleState.Toggling
-                                                toggleOnLibrary(listAndState.list.id, listAndState)
-                                            },
-                                            modifier = Modifier.animateItem(),
-                                        )
+                                LaunchedEffect(snackbarHostState.currentSnackbarData) {
+                                    if (snackbarHostState.currentSnackbarData == null) return@LaunchedEffect
+                                    buttonState = if (listAndState.containsMedia) {
+                                        ItemToggleState.Added
+                                    } else {
+                                        ItemToggleState.NotAdded
                                     }
                                 }
+
+                                ItemContent(
+                                    listAndState = listAndState,
+                                    toggleState = { buttonState },
+                                    toggleOnLibrary = {
+                                        buttonState = ItemToggleState.Toggling
+                                        toggleOnLibrary(listAndState.list.id, listAndState)
+                                    },
+                                    modifier = Modifier.animateItem(),
+                                )
                             }
                         }
                     }
@@ -334,7 +330,8 @@ private fun ItemContent(
 
         Column(
             verticalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.align(Alignment.CenterVertically)
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
                 .padding(horizontal = 10.dp)
                 .weight(1f)
         ) {
