@@ -24,9 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -61,10 +59,10 @@ import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
@@ -128,11 +126,15 @@ internal fun HeaderButtons(
         ) { state ->
             when (state) {
                 is Async.Loading -> {
-                    Placeholder(
+                    GradientCircularProgressIndicator(
+                        size = 28.dp,
+                        thickness = 3.dp,
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary,
+                        ),
                         modifier = Modifier
                             .padding(horizontal = 13.dp)
-                            .size(28.dp)
-                            .clip(CircleShape)
                     )
                 }
                 is Async.Success -> {
