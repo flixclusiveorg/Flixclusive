@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.feature.mobile.search.R
-import com.flixclusive.feature.mobile.search.SearchItemViewType
+import com.flixclusive.feature.mobile.search.SearchViewType
 import com.flixclusive.feature.mobile.search.util.FilterHelper
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -40,9 +40,9 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ProviderFilterButton(
-    currentViewType: SearchItemViewType,
+    currentViewType: SearchViewType,
     provider: ProviderMetadata?,
-    onChangeView: (SearchItemViewType) -> Unit,
+    onChangeView: (SearchViewType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var lastViewTypeSelected by rememberSaveable { mutableIntStateOf(currentViewType.ordinal) }
@@ -50,10 +50,10 @@ internal fun ProviderFilterButton(
     OutlinedButton(
         onClick = {
             val viewType = when (currentViewType) {
-                SearchItemViewType.Providers -> SearchItemViewType.entries[lastViewTypeSelected]
+                SearchViewType.Providers -> SearchViewType.entries[lastViewTypeSelected]
                 else -> {
                     lastViewTypeSelected = currentViewType.ordinal
-                    SearchItemViewType.Providers
+                    SearchViewType.Providers
                 }
             }
 

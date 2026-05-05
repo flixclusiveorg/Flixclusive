@@ -82,7 +82,7 @@ internal class SearchViewModel @Inject constructor(
             }
             .sortedBy { it.name }
 
-        Async.Success(data) as Async<List<SearchProvider>>
+        Async.Success(data)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -158,7 +158,7 @@ internal class SearchViewModel @Inject constructor(
         filters = newFilters
     }
 
-    fun onChangeView(viewType: SearchItemViewType) {
+    fun onChangeView(viewType: SearchViewType) {
         _uiState.update { it.copy(currentViewType = viewType) }
     }
 
@@ -297,7 +297,7 @@ internal class SearchViewModel @Inject constructor(
 
 @Immutable
 internal data class SearchUiState(
-    val currentViewType: SearchItemViewType = SearchItemViewType.Providers,
+    val currentViewType: SearchViewType = SearchViewType.Providers,
     val pagingState: PagingState = PagingState.Loading,
     val page: Int = 1,
     val maxPage: Int = 1,
@@ -314,7 +314,7 @@ internal data class SearchUiState(
                 page = 1,
                 maxPage = 1,
                 lastQuerySearched = lastQuerySearched,
-                currentViewType = SearchItemViewType.Medias,
+                currentViewType = SearchViewType.Medias,
                 error = null,
             )
     }
@@ -334,7 +334,7 @@ internal data class SearchProvider(
     val status: ProviderStatus get() = metadata.status
 }
 
-internal enum class SearchItemViewType {
+internal enum class SearchViewType {
     History,
     Providers,
     Medias,

@@ -92,7 +92,7 @@ private fun SearchScreenContent(
     onGoBack: () -> Unit,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
-    onChangeView: (SearchItemViewType) -> Unit,
+    onChangeView: (SearchViewType) -> Unit,
     onChangeProvider: (String) -> Unit,
     onUpdateFilters: (FilterList) -> Unit,
     deleteSearchHistoryItem: (SearchHistory) -> Unit,
@@ -154,14 +154,14 @@ private fun SearchScreenContent(
             targetState = uiState.currentViewType,
             transitionSpec = {
                 val enter = when (targetState) {
-                    SearchItemViewType.Medias -> slideInHorizontally { it } + fadeIn()
-                    SearchItemViewType.Providers -> slideInHorizontally { -it } + fadeIn()
+                    SearchViewType.Medias -> slideInHorizontally { it } + fadeIn()
+                    SearchViewType.Providers -> slideInHorizontally { -it } + fadeIn()
                     else -> fadeIn()
                 }
 
                 val exit = when (initialState) {
-                    SearchItemViewType.Medias -> slideOutHorizontally { it } + fadeOut()
-                    SearchItemViewType.Providers -> slideOutHorizontally { -it } + fadeOut()
+                    SearchViewType.Medias -> slideOutHorizontally { it } + fadeOut()
+                    SearchViewType.Providers -> slideOutHorizontally { -it } + fadeOut()
                     else -> fadeOut()
                 }
 
@@ -171,7 +171,7 @@ private fun SearchScreenContent(
             val modifier = Modifier.clip(RoundedCornerShape(topEnd = 4.dp, topStart = 4.dp))
 
             when (viewType) {
-                SearchItemViewType.History -> {
+                SearchViewType.History -> {
                     SearchSearchHistoryView(
                         modifier = modifier,
                         searchHistory = searchHistory,
@@ -179,10 +179,11 @@ private fun SearchScreenContent(
                         onSearch = onSearch,
                         onQueryChange = onQueryChange,
                         deleteSearchHistoryItem = deleteSearchHistoryItem,
+                        onChangeView = onChangeView
                     )
                 }
 
-                SearchItemViewType.Providers -> {
+                SearchViewType.Providers -> {
                     SearchProvidersView(
                         modifier = modifier,
                         providers = providers,
@@ -192,7 +193,7 @@ private fun SearchScreenContent(
                     )
                 }
 
-                SearchItemViewType.Medias -> {
+                SearchViewType.Medias -> {
                     SearchMediasGridView(
                         modifier = modifier,
                         showMediaTitles = showMediaTitles,
@@ -263,7 +264,7 @@ private fun SearchScreenBasePreview() {
             SearchScreenContent(
                 uiState = SearchUiState(
                     lastQuerySearched = "MediaMetadata 1",
-                    currentViewType = SearchItemViewType.Providers,
+                    currentViewType = SearchViewType.Providers,
                     canPaginate = true,
                 ),
                 searchQuery = { "MediaMetadata 1" },

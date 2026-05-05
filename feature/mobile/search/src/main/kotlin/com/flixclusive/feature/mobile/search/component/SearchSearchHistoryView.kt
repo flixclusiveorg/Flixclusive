@@ -11,10 +11,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveGridCellsCount
+import com.flixclusive.feature.mobile.search.SearchViewType
 import com.flixclusive.feature.mobile.search.ViewLabelHeader
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -24,10 +26,12 @@ internal fun SearchSearchHistoryView(
     searchHistory: () -> List<SearchHistory>,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
-    deleteSearchHistoryItem: (SearchHistory) -> Unit,
     scaffoldPadding: PaddingValues,
+    deleteSearchHistoryItem: (SearchHistory) -> Unit,
+    onChangeView: (SearchViewType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     var searchHistoryToDelete by rememberSaveable { mutableStateOf<SearchHistory?>(null) }
 
     LazyVerticalGrid(
@@ -47,8 +51,10 @@ internal fun SearchSearchHistoryView(
                 modifier = Modifier.animateItem(),
                 item = item,
                 onClick = {
+                    keyboardController?.hide()
                     onQueryChange(item.query)
                     onSearch()
+                    onChangeView(SearchViewType.Medias)
                 },
                 onLongClick = {
                     searchHistoryToDelete = item

@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -57,8 +58,8 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.feature.mobile.search.SearchItemViewType
 import com.flixclusive.feature.mobile.search.SearchProvider
+import com.flixclusive.feature.mobile.search.SearchViewType
 import com.flixclusive.feature.mobile.search.component.filter.ProviderFilterButton
 import com.flixclusive.feature.mobile.search.util.FilterHelper
 import com.flixclusive.feature.mobile.search.util.FilterHelper.getFormattedName
@@ -69,13 +70,13 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun SearchBarInput(
-    currentViewType: SearchItemViewType,
+    currentViewType: SearchViewType,
     provider: SearchProvider?,
     searchQuery: () -> String,
     lastQuerySearched: String,
     filters: FilterList,
     onSearch: () -> Unit,
-    onChangeView: (SearchItemViewType) -> Unit,
+    onChangeView: (SearchViewType) -> Unit,
     onNavigationIconClick: () -> Unit,
     onToggleFilterSheet: (Int) -> Unit,
     onQueryChange: (String) -> Unit,
@@ -84,9 +85,7 @@ internal fun SearchBarInput(
     val context = LocalContext.current
 
     var isError by remember { mutableStateOf(false) }
-    var textFieldValue by remember(searchQuery) {
-        mutableStateOf(searchQuery().toTextFieldValue())
-    }
+    var textFieldValue by remember { mutableStateOf(searchQuery().toTextFieldValue()) }
     val focusRequester = remember { FocusRequester() }
     val isTypingNewQuery by remember {
         derivedStateOf {
@@ -101,10 +100,17 @@ internal fun SearchBarInput(
         }
     }
 
+    LaunchedEffect(searchQuery) {
+        snapshotFlow { searchQuery() }
+            .collect {
+                textFieldValue = it.toTextFieldValue()
+            }
+    }
+
     val updatedOnChangeView by rememberUpdatedState(onChangeView)
     LaunchedEffect(isTypingNewQuery) {
         if (isTypingNewQuery) {
-            updatedOnChangeView(SearchItemViewType.History)
+            updatedOnChangeView(SearchViewType.History)
         }
     }
 
@@ -139,7 +145,7 @@ internal fun SearchBarInput(
                     if (textFieldValue.text.isEmpty()) {
                         isError = true
                     } else {
-                        onChangeView(SearchItemViewType.Medias)
+                        onChangeView(SearchViewType.Medias)
                     }
 
                     if (isError) return@KeyboardActions
@@ -274,7 +280,7 @@ private fun SearchBarExpandedPreview() {
                 onToggleFilterSheet = {},
                 filters = FilterList(),
                 provider = SearchProvider(getProviderMetadata(), true),
-                currentViewType = SearchItemViewType.History,
+                currentViewType = SearchViewType.History,
                 onChangeView = {},
             )
         }
