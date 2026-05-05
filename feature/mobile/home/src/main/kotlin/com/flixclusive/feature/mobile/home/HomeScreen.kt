@@ -276,7 +276,6 @@ private fun NonEmptyScreenContent(
 
     LazyColumn(
         state = listState,
-        contentPadding = LocalGlobalScaffoldPadding.current,
         modifier = Modifier.fillMaxSize(),
     ) {
         item {
