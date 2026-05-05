@@ -35,6 +35,7 @@ import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRating
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
+import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatReleaseDate
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.media.GenreButton
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -45,7 +46,6 @@ import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.Genre
 import com.flixclusive.model.provider.ProviderMetadata
-import java.util.Calendar
 import java.util.Locale
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -250,21 +250,13 @@ private fun getBriefDetails(
     return ImportantInfo(
         rating = media.rating?.formatAsRating()?.asString(context),
         runtime = media.runtime?.formatAsRuntime()?.asString(context),
-        releaseDate = media.releaseDate?.extractYear()?.toString(),
+        releaseDate = media.formatReleaseDate(),
         certification = media.certification,
         adult = adult,
         language = language,
         seasons = seasons,
         episodes = episodes,
     )
-}
-
-private fun Long.extractYear(): Int {
-    val calendar = Calendar.getInstance().apply {
-        timeInMillis = this@extractYear
-    }
-
-    return calendar.get(Calendar.YEAR)
 }
 
 @Preview

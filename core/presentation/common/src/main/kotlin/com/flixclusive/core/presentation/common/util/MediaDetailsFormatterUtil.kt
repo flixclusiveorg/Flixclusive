@@ -2,6 +2,10 @@ package com.flixclusive.core.presentation.common.util
 
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.R
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Show
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 /**
@@ -54,6 +58,32 @@ object MediaDetailsFormatterUtil {
                     else -> ratings
                 }
             )
+        }
+    }
+
+    fun MediaMetadata.formatReleaseDate(): String? {
+        val year = releaseDate?.let {
+            val calendar = Calendar.getInstance().apply {
+                time = Date(it)
+            }
+
+            calendar.get(Calendar.YEAR).toString()
+        }
+
+        val lastAirDate = if (this is Show) {
+            lastAirDate?.let {
+                val calendar = Calendar.getInstance().apply {
+                    time = Date(it)
+                }
+
+                calendar.get(Calendar.YEAR).toString()
+            }
+        } else null
+
+        return when {
+            year != null && lastAirDate != null -> "$year - $lastAirDate"
+            year != null -> year
+            else -> null
         }
     }
 }

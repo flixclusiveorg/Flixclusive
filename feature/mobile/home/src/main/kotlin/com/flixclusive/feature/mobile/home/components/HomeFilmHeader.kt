@@ -53,6 +53,8 @@ import coil3.imageLoader
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
+import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatReleaseDate
 import com.flixclusive.core.presentation.common.util.SolidColorPainter
 import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
@@ -142,6 +144,17 @@ private fun MediaContent(
         0.4f
     }
 
+    val details = remember(media) {
+        val genre = media.genres.firstOrNull()
+
+        listOfNotNull(
+            genre?.name,
+            media.formatReleaseDate(),
+            media.certification,
+            media.runtime?.formatAsRuntime()?.asString(context),
+        )
+    }
+
     Box(
         modifier = modifier
     ) {
@@ -216,16 +229,15 @@ private fun MediaContent(
                     verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 ) {
-                    media.genres.forEachIndexed { index, genre ->
+                    details.forEachIndexed { index, detail ->
                         Text(
-                            text = genre.name,
-                            style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(
-                                increaseBy = 5.sp,
-                            ),
+                            text = detail,
                             color = LocalContentColor.current.copy(0.6f),
+                            style = MaterialTheme.typography.labelMedium
+                                .asAdaptiveTextStyle(increaseBy = 5.sp),
                         )
 
-                        if (index < media.genres.lastIndex) {
+                        if (index < details.lastIndex) {
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterVertically)
