@@ -45,6 +45,7 @@ import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 @Destination<ExternalModuleGraph>
@@ -74,7 +75,7 @@ internal fun SearchScreen(
         onChangeProvider = viewModel::onChangeProvider,
         onUpdateFilters = viewModel::onUpdateFilters,
         deleteSearchHistoryItem = viewModel::deleteSearchHistoryItem,
-        paginateItems = viewModel::paginateItems,
+        paginateItems = viewModel::paginate,
         openMediaScreen = navigator::openMediaScreen,
         previewMedia = navigator::previewMedia,
     )
@@ -106,13 +107,12 @@ private fun SearchScreenContent(
     var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
 
     val updatedPaginateItems by rememberUpdatedState(paginateItems)
-    LaunchedEffect(listState, uiState.canPaginate) {
-        snapshotFlow { uiState.canPaginate && listState.shouldPaginate() }
+    LaunchedEffect(listState, uiState.pagingState) {
+        snapshotFlow { listState.shouldPaginate() && uiState.pagingState.isIdle }
             .distinctUntilChanged()
-            .collect { shouldPaginate ->
-                if (shouldPaginate) {
-                    updatedPaginateItems()
-                }
+            .filter { it }
+            .collect {
+                updatedPaginateItems()
             }
     }
 
@@ -201,7 +201,6 @@ private fun SearchScreenContent(
                         previewMedia = previewMedia,
                         searchResults = searchResults,
                         pagingState = { uiState.pagingState },
-                        error = uiState.error,
                         scaffoldPadding = innerPadding,
                         paginateItems = paginateItems,
                         openMediaScreen = openMediaScreen,
@@ -265,7 +264,6 @@ private fun SearchScreenBasePreview() {
                 uiState = SearchUiState(
                     lastQuerySearched = "MediaMetadata 1",
                     currentViewType = SearchViewType.Providers,
-                    canPaginate = true,
                 ),
                 searchQuery = { "MediaMetadata 1" },
                 showMediaTitles = true,

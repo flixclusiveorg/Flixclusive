@@ -134,7 +134,7 @@ internal class SearchViewModel @Inject constructor(
                 searchHistoryRepository.insert(SearchHistory(query = query, ownerId = userId))
             }
 
-            paginateItems()
+            paginate()
         }
     }
 
@@ -162,18 +162,11 @@ internal class SearchViewModel @Inject constructor(
         _uiState.update { it.copy(currentViewType = viewType) }
     }
 
-    fun paginateItems() {
+    fun paginate() {
         if (paginatingJob?.isActive == true) return
 
         paginatingJob = viewModelScope.launch {
             if (isDonePaginating()) return@launch
-
-            _uiState.update {
-                it.copy(
-                    pagingState = PagingState.Loading,
-                    error = null,
-                )
-            }
 
             val providerId = _uiState.map { it.selectedProviderId }.filterNotNull().first()
             val query = _searchQuery.value
@@ -186,38 +179,29 @@ internal class SearchViewModel @Inject constructor(
                     page = page,
                 )
             ) {
-                Async.Loading -> Unit
+                is Async.Loading -> {
+                    _uiState.update {
+                        it.copy(pagingState = PagingState.Loading)
+                    }
+                }
+                is Async.Failure -> {
+                    _uiState.update {
+                        it.copy(pagingState = PagingState.Error(result.message))
+                    }
+                }
                 is Async.Success -> {
                     val data = result.data
-                    val canPaginate = data.results.size == 20 || data.page < data.totalPages
-                    if (data.page == 1) {
-                        searchResults.clear()
-                    }
 
                     searchResults.addAll(data.results)
                     val pagingState = when {
-                        canPaginate -> PagingState.Idle
+                        data.hasNextPage -> PagingState.Idle
                         else -> PagingState.Exhausted
                     }
 
                     _uiState.update {
                         it.copy(
                             page = it.page + 1,
-                            maxPage = data.totalPages,
-                            canPaginate = canPaginate,
                             pagingState = pagingState,
-                        )
-                    }
-                }
-
-                is Async.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            error = result.message,
-                            pagingState = when (it.page) {
-                                1 -> PagingState.Error(result.message)
-                                else -> PagingState.Exhausted
-                            },
                         )
                     }
                 }
@@ -242,8 +226,8 @@ internal class SearchViewModel @Inject constructor(
      * */
     private fun isDonePaginating(): Boolean =
         _uiState.value.let {
-            (it.page != 1 && (!it.canPaginate || it.pagingState.isExhausted)) ||
-                _searchQuery.value.isEmpty()
+            (it.page != 1 && it.pagingState.isExhausted)
+                || _searchQuery.value.isEmpty()
         }
 
     private fun FilterList.removeUiComponentsFromFilterList(): FilterList =
@@ -297,25 +281,19 @@ internal class SearchViewModel @Inject constructor(
 
 @Immutable
 internal data class SearchUiState(
+    val page: Int = 1,
+    val lastQuerySearched: String = "",
     val currentViewType: SearchViewType = SearchViewType.Providers,
     val pagingState: PagingState = PagingState.Loading,
-    val page: Int = 1,
-    val maxPage: Int = 1,
-    val canPaginate: Boolean = false,
-    val error: UiText? = null,
-    val lastQuerySearched: String = "",
     val selectedProviderId: String? = null,
 ) {
     companion object {
         fun SearchUiState.resetPagination(lastQuerySearched: String) =
             copy(
                 pagingState = PagingState.Loading,
-                canPaginate = false,
                 page = 1,
-                maxPage = 1,
                 lastQuerySearched = lastQuerySearched,
                 currentViewType = SearchViewType.Medias,
-                error = null,
             )
     }
 }

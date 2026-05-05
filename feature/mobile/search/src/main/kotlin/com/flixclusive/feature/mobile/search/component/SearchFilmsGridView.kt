@@ -14,13 +14,14 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.domain.PagingState
-import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.media.MediaCard
@@ -43,7 +44,6 @@ private enum class SearchMediasGridViewState {
 internal fun SearchMediasGridView(
     searchResults: () -> Set<MediaMetadata>,
     pagingState: () -> PagingState,
-    error: UiText?,
     scaffoldPadding: PaddingValues,
     listState: LazyGridState,
     showMediaTitles: Boolean,
@@ -52,15 +52,13 @@ internal fun SearchMediasGridView(
     previewMedia: (MediaMetadata) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val currentState = remember(
-        searchResults().isEmpty(),
-        pagingState().isError,
-        error
-    ) {
-        when {
-            error != null || (pagingState().isError && searchResults().isEmpty()) -> SearchMediasGridViewState.ERROR
-            searchResults().isEmpty() -> SearchMediasGridViewState.EMPTY
-            else -> SearchMediasGridViewState.NON_EMPTY
+    val currentState by remember {
+        derivedStateOf {
+            when {
+                pagingState().isError && searchResults().isEmpty() -> SearchMediasGridViewState.ERROR
+                searchResults().isEmpty() && pagingState().isIdle -> SearchMediasGridViewState.EMPTY
+                else -> SearchMediasGridViewState.NON_EMPTY
+            }
         }
     }
 
@@ -68,19 +66,22 @@ internal fun SearchMediasGridView(
         AnimatedContent(
             targetState = currentState,
             transitionSpec = { fadeIn() togetherWith  fadeOut() },
+            modifier = Modifier.fillMaxSize()
         ) { state ->
             if (state.isError) {
-                val errorMsg = error ?: (pagingState() as PagingState.Error).error
-
                 RetryButton(
-                    error = errorMsg.asString(),
+                    error = (pagingState() as? PagingState.Error)?.error?.asString(),
                     onRetry = paginateItems,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .fillMaxSize(),
                 )
             } else if (state.isEmpty) {
-                SearchEmptyState(modifier = Modifier.padding(scaffoldPadding))
+                SearchEmptyState(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(scaffoldPadding)
+                )
             } else {
                 SearchNonEmptyState(
                     results = searchResults,
@@ -90,6 +91,7 @@ internal fun SearchMediasGridView(
                     showMediaTitles = showMediaTitles,
                     openMediaScreen = openMediaScreen,
                     previewMedia = previewMedia,
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }
@@ -121,11 +123,13 @@ private fun SearchNonEmptyState(
     showMediaTitles: Boolean,
     openMediaScreen: (MediaMetadata) -> Unit,
     previewMedia: (MediaMetadata) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(getAdaptiveMediaCardWidth()),
         state = listState,
         contentPadding = scaffoldPadding,
+        modifier = modifier,
     ) {
         items(
             results().size,
