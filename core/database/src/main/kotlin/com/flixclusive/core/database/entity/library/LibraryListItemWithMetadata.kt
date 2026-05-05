@@ -5,7 +5,10 @@ import androidx.room.Embedded
 import androidx.room.Ignore
 import androidx.room.Relation
 import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.media.DBMediaExternalId
+import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toExternalIdMap
+import com.flixclusive.model.media.MediaMetadata
 
 /**
  * Convenience view for library list items with their associated media metadata.
@@ -26,6 +29,8 @@ data class LibraryListItemWithMetadata(
     )
     val externalIds: List<DBMediaExternalId>,
 ) {
+    fun toMediaMetadata(): MediaMetadata = metadata.toMediaMetadata(externalIds.toExternalIdMap())
+
     @get:Ignore
     val itemId: String get() = item.id
 

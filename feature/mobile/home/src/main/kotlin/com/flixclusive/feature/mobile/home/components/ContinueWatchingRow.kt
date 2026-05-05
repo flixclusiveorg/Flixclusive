@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
-import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -94,7 +93,7 @@ internal fun ContinueWatchingRow(
                     showTitle = showCardTitle,
                     item = item,
                     onClick = { onItemClick(item) },
-                    onSeeMoreClick = { onSeeMoreClick(item.media.toMediaMetadata()) },
+                    onSeeMoreClick = { onSeeMoreClick(item.toMediaMetadata()) },
                 )
             }
         }
@@ -268,6 +267,7 @@ private fun ContinueWatchingRowBasePreview() {
             if (index % 2 == 0) {
                 MovieProgressWithMetadata(
                     media = media,
+                    externalIds = emptyList(),
                     watchData = MovieProgress(
                         id = index.toLong(),
                         ownerId = ownerId,
@@ -280,6 +280,7 @@ private fun ContinueWatchingRowBasePreview() {
             } else {
                 EpisodeProgressWithMetadata(
                     media = media,
+                    externalIds = emptyList(),
                     watchData = EpisodeProgress(
                         id = index.toLong(),
                         ownerId = ownerId,

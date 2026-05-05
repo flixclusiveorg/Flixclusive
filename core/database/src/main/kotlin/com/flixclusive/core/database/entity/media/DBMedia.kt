@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.common.MediaIdSource
 import com.flixclusive.model.media.common.MediaType
 import java.io.Serializable
 import java.time.Instant
@@ -55,7 +56,7 @@ data class DBMedia(
             )
         }
 
-        fun DBMedia.toMediaMetadata(): PartialMedia {
+        fun DBMedia.toMediaMetadata(externalIds: Map<MediaIdSource, String>): PartialMedia {
             return PartialMedia(
                 id = id,
                 adult = adult,
@@ -68,6 +69,7 @@ data class DBMedia(
                 rating = rating,
                 backdropImage = backdropImage,
                 releaseDate = releaseDate?.time ?: 0L,
+                externalIds = externalIds,
             )
         }
     }

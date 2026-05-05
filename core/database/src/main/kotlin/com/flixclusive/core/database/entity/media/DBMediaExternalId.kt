@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.MediaIdSource
 import java.util.Date
 
 @Entity(
@@ -40,6 +41,10 @@ data class DBMediaExternalId(
                     externalId = externalId,
                 )
             }
+        }
+
+        fun List<DBMediaExternalId>.toExternalIdMap(): Map<MediaIdSource, String> {
+            return associate { MediaIdSource.valueOf(it.source) to it.externalId }
         }
     }
 }

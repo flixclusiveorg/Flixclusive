@@ -14,7 +14,6 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
-import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toDBMediaExternalIds
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
@@ -185,7 +184,7 @@ internal class LibraryDetailsViewModel @Inject constructor(
                 val api = getTrackerApi(navArgs.tracker.id)
                 api.removeListItem(
                     list = navArgs.library.toTrackerList(navArgs.tracker.id),
-                    item = item.metadata.toMediaMetadata(),
+                    item = item.toMediaMetadata(),
                 )
 
                 items.remove(item)

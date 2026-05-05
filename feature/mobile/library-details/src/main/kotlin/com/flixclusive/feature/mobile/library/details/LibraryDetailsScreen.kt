@@ -53,7 +53,6 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
-import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
@@ -388,7 +387,7 @@ private fun NonEmptyScreen(
             key = { items().elementAt(it).mediaId }
         ) { i ->
             val item = items().elementAt(i)
-            val media = item.metadata.toMediaMetadata()
+            val media = item.toMediaMetadata()
             val isSelected by remember {
                 derivedStateOf { selectedItems().contains(item) }
             }

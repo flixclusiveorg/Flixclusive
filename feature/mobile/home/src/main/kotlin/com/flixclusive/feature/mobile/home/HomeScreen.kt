@@ -52,7 +52,6 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
-import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -295,7 +294,7 @@ private fun NonEmptyScreenContent(
                     items = continueWatchingItems,
                     showCardTitle = showMediaTitles(),
                     onSeeMoreClick = navigator::previewMedia,
-                    onItemClick = { navigator.play(it.media.toMediaMetadata()) },
+                    onItemClick = { navigator.play(it.toMediaMetadata()) },
                 )
             }
         }
@@ -497,6 +496,7 @@ private fun HomeScreenBasePreview() {
                                         title = "Continue Movie",
                                         mediaType = MediaType.MOVIE,
                                     ).toDBMedia(),
+                                externalIds = emptyList(),
                             ),
                             EpisodeProgressWithMetadata(
                                 watchData = EpisodeProgress(
@@ -514,6 +514,7 @@ private fun HomeScreenBasePreview() {
                                         title = "Continue TV Show",
                                         mediaType = MediaType.SHOW,
                                     ).toDBMedia(),
+                                externalIds = emptyList(),
                             ),
                         )
                     }

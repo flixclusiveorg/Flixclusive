@@ -9,7 +9,6 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.media.DBMedia
-import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -147,7 +146,7 @@ internal class HomeScreenViewModel @Inject constructor(
 
                 var tvShow: MediaMetadata? = cachedMediaMetadata[item.media]
                 if (tvShow == null) {
-                    val response = getMediaMetadata(item.media.toMediaMetadata()).last()
+                    val response = getMediaMetadata(item.toMediaMetadata()).last()
                     if (response is Async.Success) {
                         cachedMediaMetadata[item.media] = response.data as Show
                         tvShow = response.data
@@ -170,6 +169,7 @@ internal class HomeScreenViewModel @Inject constructor(
                 } else {
                     EpisodeProgressWithMetadata(
                         media = item.media,
+                        externalIds = item.externalIds,
                         watchData = EpisodeProgress(
                             ownerId = data.ownerId,
                             mediaId = item.media.id,
