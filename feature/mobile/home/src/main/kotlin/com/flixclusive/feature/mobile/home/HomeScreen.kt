@@ -61,7 +61,7 @@ import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.components.MediaCover
-import com.flixclusive.core.presentation.common.components.isLoadingDelayed
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -324,7 +324,7 @@ private fun LoadingScreen(
     message: String? = null
 ) {
     AnimatedVisibility(
-        visible = !isLoadingDelayed(),
+        visible = isLoadingWithDelay(),
         enter = fadeIn(),
         exit = fadeOut(),
         modifier = modifier.fillMaxSize(),

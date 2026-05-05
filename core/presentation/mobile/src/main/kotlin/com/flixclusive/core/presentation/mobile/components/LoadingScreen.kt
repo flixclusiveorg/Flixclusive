@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
-import com.flixclusive.core.presentation.common.components.isLoadingDelayed
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.strings.R as LocaleR
@@ -30,7 +30,7 @@ fun LoadingScreen(
     progressSize: Dp = getAdaptiveDp(40.dp)
 ) {
     AnimatedVisibility(
-        visible = !isLoadingDelayed(delay),
+        visible = isLoadingWithDelay(delay),
         modifier = Modifier.fillMaxSize(),
         enter = fadeIn(),
         exit = fadeOut(),

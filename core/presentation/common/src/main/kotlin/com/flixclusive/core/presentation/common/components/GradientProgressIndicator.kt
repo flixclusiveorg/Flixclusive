@@ -191,7 +191,7 @@ fun GradientLinearProgressIndicator(
 }
 
 @Composable
-fun isLoadingDelayed(delayMs: Long = 600L): Boolean {
+fun isLoadingWithDelay(delayMs: Long = 600L): Boolean {
     var delayLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(true) {

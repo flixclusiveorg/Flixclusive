@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.common.components.isLoadingDelayed
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
@@ -45,7 +45,7 @@ internal fun MediaScreenPlaceholder() {
     }
 
     AnimatedVisibility(
-        visible = !isLoadingDelayed(),
+        visible = isLoadingWithDelay(),
         enter = fadeIn(),
         exit = fadeOut(),
         modifier = Modifier.fillMaxSize()

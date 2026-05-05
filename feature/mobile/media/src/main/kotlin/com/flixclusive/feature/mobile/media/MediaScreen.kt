@@ -54,6 +54,7 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.navigation.navargs.MediaScreenNavArgs
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -441,7 +442,7 @@ private fun MediaScreenContent(
  * */
 internal fun getBackdropAspectRatio(usePortraitView: Boolean) =
     when {
-        usePortraitView -> 0.8f / 1f
+        usePortraitView -> MediaCover.Poster.ratio
         else -> 16f / 6f
     }
 
