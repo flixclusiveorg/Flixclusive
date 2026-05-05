@@ -29,7 +29,7 @@ fun CreateLibraryDialog(
 
     BaseLibraryModificationDialog(
         label = stringResource(LocaleR.string.new_list),
-        name = name,
+        name = { name },
         description = description,
         selectedTracker = selectedTracker,
         onNameChange = { name = it },

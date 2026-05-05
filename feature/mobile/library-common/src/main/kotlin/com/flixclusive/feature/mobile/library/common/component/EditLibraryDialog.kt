@@ -20,7 +20,7 @@ fun EditLibraryDialog(
 
     BaseLibraryModificationDialog(
         label = stringResource(LocaleR.string.edit_library),
-        name = name,
+        name = { name },
         isEditing = true,
         description = description,
         onNameChange = { name = it },

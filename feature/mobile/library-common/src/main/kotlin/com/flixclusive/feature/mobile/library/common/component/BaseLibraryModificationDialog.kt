@@ -66,7 +66,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun BaseLibraryModificationDialog(
     label: String,
-    name: String,
+    name: () -> String,
     description: String?,
     confirmLabel: String,
     onNameChange: (String) -> Unit,
@@ -99,6 +99,10 @@ internal fun BaseLibraryModificationDialog(
         }
     }
 
+    val isCreateButtonEnabled by remember {
+        derivedStateOf { name().isNotBlank() }
+    }
+
     CommonAlertDialog(
         onDismiss = onCancel,
         action = {
@@ -119,7 +123,7 @@ internal fun BaseLibraryModificationDialog(
                 }
 
                 Button(
-                    enabled = remember { derivedStateOf { name.isNotBlank() } }.value,
+                    enabled = isCreateButtonEnabled,
                     onClick = onConfirm,
                     shape = buttonShape,
                     modifier = Modifier
@@ -165,7 +169,7 @@ internal fun BaseLibraryModificationDialog(
                 )
 
                 TextField(
-                    value = name,
+                    value = name(),
                     onValueChange = onNameChange,
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = textFieldStyle,
