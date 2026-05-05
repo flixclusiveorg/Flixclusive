@@ -56,7 +56,7 @@ internal fun CatalogRow(
     catalog: Catalog,
     pagingState: PagingState,
     showTitles: Boolean,
-    items: List<MediaMetadata>,
+    items: () -> Set<MediaMetadata>,
     onMediaClick: (MediaMetadata) -> Unit,
     onMediaLongClick: (MediaMetadata) -> Unit,
     paginate: () -> Unit,
@@ -67,7 +67,7 @@ internal fun CatalogRow(
 
     LaunchedEffect(listState, paginate, pagingState) {
         snapshotFlow {
-            pagingState.isIdle && (listState.shouldPaginate() || items.isEmpty())
+            pagingState.isIdle && (listState.shouldPaginate() || items().isEmpty())
         }.distinctUntilChanged()
             .filter { it }
             .collect {
@@ -124,13 +124,15 @@ internal fun CatalogRow(
 
         LazyRow(state = listState) {
             items(
-                count = items.size,
-                key = { items.elementAt(it).id },
+                count = items().size,
+                key = { items().elementAt(it).id },
             ) {
+                val item = items().elementAt(it)
+
                 MediaCard(
                     modifier = Modifier.width(getAdaptiveMediaCardWidth()),
                     isShowingTitle = showTitles,
-                    media = items.elementAt(it),
+                    media = item,
                     onClick = onMediaClick,
                     onLongClick = onMediaLongClick,
                 )
@@ -139,7 +141,7 @@ internal fun CatalogRow(
             if (
                 pagingState.isLoading ||
                 pagingState.isError ||
-                items.isEmpty()
+                items().isEmpty()
             ) {
                 items(20) {
                     MediaCardPlaceholder(
@@ -170,7 +172,7 @@ private fun CatalogRowBasePreview() {
                             title = "Sample MediaMetadata ${index + 1}",
                             mediaType = if (index % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
                         )
-                    }
+                    }.toSet()
                 )
             }
             var currentPage by remember { mutableIntStateOf(1) }
@@ -225,7 +227,7 @@ private fun CatalogRowBasePreview() {
                 catalog = dummyCatalog,
                 pagingState = pagingState.state,
                 showTitles = true,
-                items = items,
+                items = { items },
                 onMediaClick = { },
                 onMediaLongClick = { },
                 onSeeAllItems = { },

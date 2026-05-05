@@ -304,7 +304,7 @@ private fun NonEmptyScreenContent(
             CatalogRow(
                 catalog = data.catalog,
                 pagingState = data.state,
-                items = data.medias,
+                items = { data.medias },
                 onMediaClick = navigator::openMediaScreen,
                 showTitles = showMediaTitles(),
                 onMediaLongClick = navigator::previewMedia,
@@ -446,7 +446,7 @@ private fun HomeScreenBasePreview() {
                                 title = "Popular Movie ${index + 1}",
                                 mediaType = MediaType.MOVIE,
                             )
-                        }
+                        }.toSet()
                     }
 
                     val dummyPagingStates = remember {

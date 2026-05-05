@@ -214,7 +214,7 @@ internal class HomeScreenViewModel @Inject constructor(
                                     catalog = entry.value,
                                     page = 1,
                                     state = PagingState.Idle,
-                                    medias = emptyList(),
+                                    medias = emptySet(),
                                 )
                             }
 
@@ -386,7 +386,7 @@ internal data class CatalogWithPagingState(
     val catalog: Catalog,
     val page: Int,
     val state: PagingState,
-    val medias: List<PartialMedia>,
+    val medias: Set<PartialMedia>,
 ) {
     val canPaginate: Boolean get() = catalog.canPaginate
     val url: String get() = catalog.url
