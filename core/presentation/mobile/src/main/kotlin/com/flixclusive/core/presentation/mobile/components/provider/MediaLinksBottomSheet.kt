@@ -510,9 +510,7 @@ private fun MediaLinksBottomSheetPreview() {
                             if (randomBool) {
                                 setOf(
                                     Flag.ThirdPartyGateway(
-                                        url = "https://www.google.com",
                                         name = "Netflix",
-                                        description = "Description",
                                         logo = """
                                             https://media.themoviedb.org/t/p/original/9BgaNQRMDvVlji1JBZi6tcfxpKx.jpg
                                         """.trimIndent(),
