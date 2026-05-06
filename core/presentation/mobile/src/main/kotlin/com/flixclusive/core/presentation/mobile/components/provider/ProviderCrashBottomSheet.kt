@@ -222,9 +222,7 @@ internal fun CrashItemTopContent(
 
     val repository = remember(provider) {
         val pair = provider.repositoryUrl.toOwnerAndRepository()
-        requireNotNull(pair) {
-            "Could not extract github info from link: ${provider.repositoryUrl}"
-        }
+            ?: return@remember null
 
         val (username, repository) = pair
 
@@ -255,17 +253,19 @@ internal fun CrashItemTopContent(
                 style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
             )
 
-            Text(
-                text = repository,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
-                color = LocalContentColor.current.copy(0.6f),
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.small)
-                    .clickable { uriHandler.openUri(provider.repositoryUrl) }
-                    .padding(vertical = 1.dp),
-            )
+            repository?.let {
+                Text(
+                    text = it,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
+                    color = LocalContentColor.current.copy(0.6f),
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable { uriHandler.openUri(provider.repositoryUrl) }
+                        .padding(vertical = 1.dp),
+                )
+            }
 
             Text(
                 text = version,
