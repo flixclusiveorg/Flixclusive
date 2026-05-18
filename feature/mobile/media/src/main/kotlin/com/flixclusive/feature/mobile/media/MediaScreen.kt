@@ -78,6 +78,7 @@ import com.flixclusive.feature.mobile.media.component.LibraryListSheet
 import com.flixclusive.feature.mobile.media.component.MediaScreenPlaceholder
 import com.flixclusive.feature.mobile.media.component.MediaScreenTopBar
 import com.flixclusive.feature.mobile.media.component.seriesContent
+import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaScreen
 import com.flixclusive.feature.mobile.media.util.MediaScreenUtils
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Movie
@@ -93,7 +94,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun MediaScreen(
-    navigator: MediaScreenNavigator,
+    navigator: NavigatorMediaScreen,
     navArgs: MediaScreenNavArgs,
 ) {
     InternalMediaScreen(
@@ -105,7 +106,7 @@ fun MediaScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun InternalMediaScreen(
-    navigator: MediaScreenNavigator,
+    navigator: NavigatorMediaScreen,
     navArgs: MediaScreenNavArgs,
     viewModel: MediaScreenViewModel = hiltViewModel<MediaScreenViewModel, MediaScreenViewModel.Factory>(
         creationCallback = { it.create(navArgs = navArgs.media) }
@@ -155,7 +156,7 @@ internal fun InternalMediaScreen(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun MediaScreenContent(
-    navigator: MediaScreenNavigator,
+    navigator: NavigatorMediaScreen,
     isLibraryInitiallyOpened: Boolean,
     showMediaTitles: Boolean,
     uiState: MediaUiState,
@@ -248,7 +249,7 @@ private fun MediaScreenContent(
         topBar = {
             MediaScreenTopBar(
                 title = metadata.title,
-                onNavigate = navigator::goBack,
+                onNavigate = navigator::navigateBack,
                 containerAlpha = { appBarContainerAlpha },
             )
         },
@@ -293,10 +294,10 @@ private fun MediaScreenContent(
                                     onProviderClick = {
                                         if (uiState.provider == null) return@BriefDetails
 
-                                        navigator.openProviderDetails(uiState.provider)
+                                        navigator.navigateToProviderDetails(uiState.provider)
                                     },
                                     onGenreClick = { genre ->
-                                        genre.catalog?.let(navigator::openSeeAllScreen)
+                                        genre.catalog?.let(navigator::navigateToSeeAllScreen)
                                     },
                                     provider = uiState.provider,
                                     modifier = Modifier
@@ -321,7 +322,7 @@ private fun MediaScreenContent(
                                 metadata = metadata,
                                 watchProgress = watchProgress,
                                 isInLibrary = isInLibrary,
-                                onPlay = { navigator.play(metadata) },
+                                onPlay = { navigator.showLinkLoaderSheet(metadata) },
                                 onAddToLibrary = { isLibrarySheetOpen = true },
                                 onToggleDownload = {
                                     // TODO: Implement download
@@ -368,7 +369,7 @@ private fun MediaScreenContent(
                                 seasonToDisplay = seasonToDisplay,
                                 onSeasonChange = onSeasonChange,
                                 onRetry = onRetryFetchSeason,
-                                onClick = { episode -> navigator.play(metadata, episode = episode) },
+                                onClick = { episode -> navigator.showLinkLoaderSheet(metadata, episode = episode) },
                                 onLongClick = { longClickedEpisode = it },
                             )
                         }
@@ -381,8 +382,8 @@ private fun MediaScreenContent(
                                 MediaCard(
                                     isShowingTitle = showMediaTitles,
                                     media = media,
-                                    onClick = navigator::openMediaScreen,
-                                    onLongClick = navigator::previewMedia,
+                                    onClick = navigator::navigateToMediaScreen,
+                                    onLongClick = navigator::showMediaPreviewBottomSheet,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .animateItem(),
@@ -449,13 +450,13 @@ internal fun getBackdropAspectRatio(usePortraitView: Boolean) =
 @Preview
 @Composable
 private fun MediaScreenBasePreview() {
-    val navigator = object : MediaScreenNavigator {
-        override fun openMediaScreen(media: MediaMetadata) {}
-        override fun previewMedia(media: MediaMetadata) {}
-        override fun play(media: MediaMetadata, episode: Episode?) {}
-        override fun openProviderDetails(providerMetadata: ProviderMetadata) {}
-        override fun goBack() {}
-        override fun openSeeAllScreen(item: Catalog) {}
+    val navigator = object : NavigatorMediaScreen {
+        override fun navigateToMediaScreen(media: MediaMetadata, isTogglingLibrary: Boolean) {}
+        override fun showMediaPreviewBottomSheet(media: MediaMetadata) {}
+        override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {}
+        override fun navigateToProviderDetails(providerMetadata: ProviderMetadata) {}
+        override fun navigateBack() {}
+        override fun navigateToSeeAllScreen(item: Catalog) {}
     }
     var uiState by remember {
         mutableStateOf(

@@ -81,7 +81,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun AppUpdatesScreen(
-    navigator: AppUpdatesScreenNavigator,
+    navigator: NavigatorAppUpdatesScreen,
     newVersion: String,
     updateUrl: String,
     updateInfo: String?,
@@ -102,8 +102,8 @@ internal fun AppUpdatesScreen(
                 url = updateUrl,
             )
         },
-        openHomeScreen = navigator::openHomeScreen,
-        goBack = navigator::goBack,
+        openHomeScreen = navigator::navigateToHomeScreen,
+        goBack = navigator::navigateBack,
     )
 }
 

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.flixclusive.feature.mobile)
     alias(libs.plugins.flixclusive.compose)
+    alias(libs.plugins.flixclusive.destinations)
     alias(libs.plugins.flixclusive.testing)
 }
 
@@ -34,6 +35,8 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.constraintlayout.compose)
+    implementation(libs.destinations.bottomSheet)
     implementation(libs.kotlinx.immutables)
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.stubs.util)

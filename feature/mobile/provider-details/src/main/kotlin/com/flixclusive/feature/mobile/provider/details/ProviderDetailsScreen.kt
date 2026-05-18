@@ -65,7 +65,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>(navArgs = ProviderMetadataNavArgs::class)
 @Composable
 internal fun ProviderDetailsScreen(
-    navigator: ProviderDetailsNavigator,
+    navigator: NavigatorProviderDetails,
     args: ProviderMetadataNavArgs,
     viewModel: ProviderDetailsViewModel = hiltViewModel(),
 ) {
@@ -75,16 +75,16 @@ internal fun ProviderDetailsScreen(
     ProviderDetailsScreenContent(
         uiState = uiState,
         warnOnInstall = warnOnInstall,
-        onGoBack = navigator::goBack,
+        onGoBack = navigator::navigateBack,
         onToggleInstallation = viewModel::onToggleInstallation,
         onDisableInstallationWarning = viewModel::disableWarnOnInstall,
-        onViewMarkdown = navigator::openMarkdownScreen,
+        onViewMarkdown = navigator::navigateToMarkdownScreen,
         onConsumeInstallationError = viewModel::onConsumeInstallationError,
         onGoToProviderSettings = {
             if (uiState.installationStatus.isOutdated) {
-                navigator.openProviderSettings(args.metadata)
+                navigator.navigateToProviderSettings(args.metadata)
             } else {
-                navigator.openProviderSettings(uiState.metadata)
+                navigator.navigateToProviderSettings(uiState.metadata)
             }
         },
         onGoToRepository = {
@@ -94,7 +94,7 @@ internal fun ProviderDetailsScreen(
                 uiState.metadata.repositoryUrl
             }
 
-            navigator.openAddProviderScreen(repositoryUrl.toValidRepositoryLink())
+            navigator.navigateToAddProviderScreen(repositoryUrl.toValidRepositoryLink())
         },
     )
 }

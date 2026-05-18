@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.datastore.model.FlixclusivePrefs
 import com.flixclusive.feature.mobile.settings.Tweak
-import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
+import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
 import kotlinx.coroutines.flow.StateFlow
 
 internal interface BaseTweakNavigation : BaseTweakScreen<FlixclusivePrefs> {
@@ -15,7 +15,7 @@ internal interface BaseTweakNavigation : BaseTweakScreen<FlixclusivePrefs> {
 
     override fun onUpdatePreferences(transform: suspend (t: FlixclusivePrefs) -> FlixclusivePrefs) { /*No-op*/ }
 
-    fun onClick(navigator: SettingsScreenNavigator)
+    fun onClick(navigator: NavigatorSettingsScreen)
 
     @Composable
     override fun getTweaks(): List<Tweak> = listOf()

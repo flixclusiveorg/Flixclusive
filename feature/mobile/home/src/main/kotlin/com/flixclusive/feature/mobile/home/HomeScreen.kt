@@ -89,7 +89,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>(start = true)
 @Composable
 internal fun HomeScreen(
-    navigator: HomeNavigator,
+    navigator: NavigatorHome,
     viewModel: HomeScreenViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -112,7 +112,7 @@ internal fun HomeScreen(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun HomeScreenContent(
-    navigator: HomeNavigator,
+    navigator: NavigatorHome,
     uiState: HomeUiState,
     showMediaTitles: () -> Boolean,
     providers: () -> Async<List<CatalogProvider>>,
@@ -158,7 +158,7 @@ private fun HomeScreenContent(
             HomeScreenTopBar(
                 title = stringResource(LocaleR.string.home),
                 containerAlpha = { appBarContainerAlpha },
-                onSearch = navigator::openSearchScreen,
+                onSearch = navigator::navigateToSearchScreen,
                 onFilterClick = { isSheetOpen = true },
                 enableFilterButton = { providers().let { it is Async.Success && it.data.isNotEmpty() } },
             )
@@ -185,7 +185,7 @@ private fun HomeScreenContent(
             ) { isEmpty ->
                 if (isEmpty) {
                     EmptyScreenContent(
-                        openAddProviderScreen = navigator::openAddProviderScreen,
+                        openAddProviderScreen = navigator::navigateToAddProviderScreen,
                     )
                 } else {
                     val updatedData by rememberUpdatedState(data)
@@ -251,7 +251,7 @@ private fun EmptyScreenContent(
 
 @Composable
 private fun NonEmptyScreenContent(
-    navigator: HomeNavigator,
+    navigator: NavigatorHome,
     catalogs: List<CatalogWithPagingState>,
     headerItem: Async<MediaMetadata>,
     showMediaTitles: () -> Boolean,
@@ -282,8 +282,8 @@ private fun NonEmptyScreenContent(
         item {
             HomeMediaHeader(
                 media = headerItem,
-                onMediaClick = navigator::openMediaScreen,
-                onMediaLongClick = navigator::previewMedia,
+                onMediaClick = navigator::navigateToMediaScreen,
+                onMediaLongClick = navigator::showMediaPreviewBottomSheet,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -297,8 +297,8 @@ private fun NonEmptyScreenContent(
                 ContinueWatchingRow(
                     items = continueWatchingItems,
                     showCardTitle = showMediaTitles(),
-                    onSeeMoreClick = navigator::previewMedia,
-                    onItemClick = { navigator.play(it.toMediaMetadata()) },
+                    onSeeMoreClick = navigator::showMediaPreviewBottomSheet,
+                    onItemClick = { navigator.showLinkLoaderSheet(it.toMediaMetadata()) },
                 )
             }
         }
@@ -308,11 +308,11 @@ private fun NonEmptyScreenContent(
                 catalog = data.catalog,
                 pagingState = data.state,
                 items = { data.medias },
-                onMediaClick = navigator::openMediaScreen,
+                onMediaClick = navigator::navigateToMediaScreen,
                 showTitles = showMediaTitles(),
-                onMediaLongClick = navigator::previewMedia,
+                onMediaLongClick = navigator::showMediaPreviewBottomSheet,
                 paginate = { paginate(data) },
-                onSeeAllItems = { navigator.openSeeAllScreen(item = data.catalog) },
+                onSeeAllItems = { navigator.navigateToSeeAllScreen(item = data.catalog) },
             )
         }
     }
@@ -377,14 +377,14 @@ private fun HomeScreenBasePreview() {
             val errorState = 1
             val readyState = 2
 
-            val dummyNavigator = object : HomeNavigator {
-                override fun openMediaScreen(media: MediaMetadata) {}
-                override fun openSeeAllScreen(item: Catalog) {}
-                override fun goBack() {}
-                override fun previewMedia(media: MediaMetadata) {}
-                override fun play(media: MediaMetadata, episode: Episode?) {}
-                override fun openAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {}
-                override fun openSearchScreen() {}
+            val dummyNavigator = object : NavigatorHome {
+                override fun navigateToMediaScreen(media: MediaMetadata, isTogglingLibrary: Boolean) {}
+                override fun navigateToSeeAllScreen(item: Catalog) {}
+                override fun navigateBack() {}
+                override fun showMediaPreviewBottomSheet(media: MediaMetadata) {}
+                override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {}
+                override fun navigateToAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {}
+                override fun navigateToSearchScreen() {}
             }
 
             var previewState by remember { mutableIntStateOf(readyState) }

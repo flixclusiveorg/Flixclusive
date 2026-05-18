@@ -26,7 +26,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.navigation.deeplink.provider.ProviderDeepLinkConfig
-import com.flixclusive.core.navigation.navigator.GoBackAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
@@ -48,7 +48,7 @@ import com.ramcosta.composedestinations.annotation.parameters.DeepLink
 )
 @Composable
 internal fun ProviderSettingsScreen(
-    navigator: GoBackAction,
+    navigator: NavigateBack,
     viewModel: ProviderSettingsScreenViewModel = hiltViewModel(),
 ) {
     val providerPlugin by viewModel.providerPlugin.collectAsStateWithLifecycle()
@@ -61,7 +61,7 @@ internal fun ProviderSettingsScreen(
 
 @Composable
 internal fun ProviderSettingsScreenContent(
-    navigator: GoBackAction,
+    navigator: NavigateBack,
     provider: Async<ProviderPlugin>,
 ) {
     val context = LocalContext.current
@@ -69,7 +69,7 @@ internal fun ProviderSettingsScreenContent(
     Scaffold(
         topBar = {
             CommonTopBar(
-                onNavigate = navigator::goBack,
+                onNavigate = navigator::navigateBack,
                 title = provider.let {
                     when (it) {
                         is Async.Success -> it.data.name
@@ -89,13 +89,13 @@ internal fun ProviderSettingsScreenContent(
                 is Async.Failure -> {
                     LaunchedEffect(true) {
                         context.showToast(state.message.asString(context))
-                        navigator.goBack()
+                        navigator.navigateBack()
                     }
                 }
 
                 is Async.Success -> ProviderSettingsContent(
                     provider = state.data,
-                    onGoBack = navigator::goBack,
+                    onGoBack = navigator::navigateBack,
                 )
             }
         }
@@ -162,8 +162,8 @@ private fun ProviderSettingsScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
             ProviderSettingsScreenContent(
-                navigator = object : GoBackAction {
-                    override fun goBack() {}
+                navigator = object : NavigateBack {
+                    override fun navigateBack() {}
                 },
                 provider = provider,
             )

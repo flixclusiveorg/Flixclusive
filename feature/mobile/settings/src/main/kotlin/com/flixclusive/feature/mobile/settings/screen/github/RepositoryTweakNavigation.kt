@@ -7,7 +7,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY_URL
 import com.flixclusive.feature.mobile.preferences.R
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
+import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
 import com.flixclusive.core.drawables.R as UiCommonR
 
 internal object RepositoryTweakNavigation : BaseTweakNavigation {
@@ -18,7 +18,7 @@ internal object RepositoryTweakNavigation : BaseTweakNavigation {
     override fun getIconPainter(): Painter
         = painterResource(UiCommonR.drawable.github_outline)
 
-    override fun onClick(navigator: SettingsScreenNavigator) {
-        navigator.openLink(GITHUB_REPOSITORY_URL)
+    override fun onClick(navigator: NavigatorSettingsScreen) {
+        navigator.navigateToUrl(GITHUB_REPOSITORY_URL)
     }
 }

@@ -20,7 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
-import com.flixclusive.core.navigation.navigator.GoBackAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
@@ -48,7 +48,7 @@ import kotlinx.coroutines.flow.merge
 )
 @Composable
 internal fun PlayerScreen(
-    navigator: GoBackAction,
+    navigator: NavigateBack,
     args: PlayerScreenNavArgs,
     viewModel: PlayerScreenViewModel = hiltViewModel(),
 ) {
@@ -74,7 +74,7 @@ internal fun PlayerScreen(
 
     fun showErrorAndGoBack() {
         context.showToast(resources.getString(R.string.no_servers_error))
-        navigator.goBack()
+        navigator.navigateBack()
 
         val activity = context.getActivity<ComponentActivity>()
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -134,7 +134,7 @@ internal fun PlayerScreen(
         },
         onBack = {
             viewModel.updateWatchProgress()
-            navigator.goBack()
+            navigator.navigateBack()
         },
     )
 }

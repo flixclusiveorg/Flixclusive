@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SeeAllScreen(
-    navigator: SeeAllScreenNavigator,
+    navigator: NavigatorSeeAllScreen,
     navArgs: SeeAllScreenNavArgs,
 ) {
     InternalSeeAllScreen(
@@ -59,7 +59,7 @@ fun SeeAllScreen(
 
 @Composable
 internal fun InternalSeeAllScreen(
-    navigator: SeeAllScreenNavigator,
+    navigator: NavigatorSeeAllScreen,
     navArgs: SeeAllScreenNavArgs,
     viewModel: SeeAllViewModel = hiltViewModel<SeeAllViewModel, SeeAllViewModel.Factory>(
         creationCallback = { it.create(navArgs.catalog) }
@@ -84,9 +84,9 @@ internal fun InternalSeeAllScreen(
         catalog = navArgs.catalog,
         searchQuery = { searchQuery },
         onQueryChange = viewModel::onQueryChange,
-        previewMedia = navigator::previewMedia,
-        onGoBack = navigator::goBack,
-        openMediaScreen = navigator::openMediaScreen,
+        previewMedia = navigator::showMediaPreviewBottomSheet,
+        onGoBack = navigator::navigateBack,
+        openMediaScreen = navigator::navigateToMediaScreen,
         onToggleSearchBar = viewModel::onToggleSearch,
         paginate = viewModel::paginate,
     )

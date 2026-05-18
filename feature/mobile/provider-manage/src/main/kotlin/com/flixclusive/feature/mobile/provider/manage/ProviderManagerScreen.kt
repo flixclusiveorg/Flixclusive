@@ -88,7 +88,7 @@ private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun ProviderManagerScreen(
-    navigator: ProviderManagerScreenNavigator,
+    navigator: NavigatorProviderManagerScreen,
     viewModel: ProviderManagerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -103,15 +103,15 @@ internal fun ProviderManagerScreen(
         searchQuery = { searchQuery },
         onQueryChange = viewModel::onQueryChange,
         onMove = viewModel::onMove,
-        goBack = navigator::goBack,
+        goBack = navigator::navigateBack,
         toggleProvider = { id -> viewModel.onToggleProvider(id) },
-        openProviderSettings = navigator::openProviderSettings,
+        openProviderSettings = navigator::navigateToProviderSettings,
         onConsumeError = viewModel::onConsumeError,
-        openProviderDetails = navigator::openProviderDetails,
-        openAddProviderScreen = navigator::openAddProviderScreen,
+        openProviderDetails = navigator::navigateToProviderDetails,
+        openAddProviderScreen = navigator::navigateToAddProviderScreen,
         uninstallProvider = viewModel::uninstallProvider,
         setFirstTimeOnProvidersScreen = viewModel::setFirstTimeOnProvidersScreen,
-        openMarkdownScreen = navigator::openMarkdownScreen,
+        openMarkdownScreen = navigator::navigateToMarkdownScreen,
         onToggleSearchBar = viewModel::onToggleSearchBar,
     )
 }

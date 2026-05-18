@@ -67,7 +67,7 @@ internal fun ListContent(
     items: ImmutableMap<Int?, List<BaseTweakScreen<out FlixclusivePrefs>>>,
     onScroll: (Float) -> Unit,
     currentUser: () -> User,
-    navigator: SettingsScreenNavigator,
+    navigator: NavigatorSettingsScreen,
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -106,7 +106,7 @@ internal fun ListContent(
         item {
             ListContentHeader(
                 currentUser = currentUser,
-                onChangeUser = { navigator.openEditUserScreen(currentUser().id) },
+                onChangeUser = { navigator.navigateToEditUserScreen(currentUser().id) },
                 modifier =
                     Modifier
                         .padding(bottom = 20.dp)

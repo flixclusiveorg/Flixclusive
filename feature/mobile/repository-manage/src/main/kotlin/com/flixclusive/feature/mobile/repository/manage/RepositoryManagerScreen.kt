@@ -40,7 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.navigation.navigator.GoBackAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -64,7 +64,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun RepositoryManagerScreen(
-    navigator: GoBackAction,
+    navigator: NavigateBack,
     viewModel: RepositoryManagerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,7 +82,7 @@ internal fun RepositoryManagerScreen(
         onAddLink = viewModel::onAddLink,
         clearSelection = viewModel::clearSelection,
         toggleRepositorySelection = viewModel::toggleRepositorySelection,
-        onGoBack = navigator::goBack,
+        onGoBack = navigator::navigateBack,
         onRemoveRepository = viewModel::onRemoveRepository,
         onRemoveSelection = viewModel::onRemoveSelection,
         onConsumeError = viewModel::onConsumeError,

@@ -22,16 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.navigation.navigator.PinAction
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.feature.mobile.user.add.NavigatorAddUserScreenNavigateTo
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 internal class PinScreen(
-    private val navigator: AddUserScreenNavigator,
+    private val navigator: NavigatorAddUserScreenNavigateTo,
 ) : OnBoardingScreen {
     override val index: Int = 0
     override val title: UiText = UiText.StringResource(LocaleR.string.onboarding_profile_pin_title)
@@ -54,7 +54,7 @@ internal class PinScreen(
                         increaseBy = 18.dp,
                     ),
                 ).clickable {
-                    navigator.openUserPinScreen(PinAction.Setup)
+                    navigator.navigateToUserPinScreen(PinAction.Setup)
                 }.background(
                     color = surface,
                     shape = shape,

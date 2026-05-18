@@ -17,7 +17,7 @@ internal object SwitchProfileNavigation : BaseTweakNavigation {
     override fun getIconPainter(): Painter
         = painterResource(UiCommonR.drawable.profile_placeholder)
 
-    override fun onClick(navigator: SettingsScreenNavigator) {
-        navigator.openProfilesScreen()
+    override fun onClick(navigator: NavigatorSettingsScreen) {
+        navigator.navigateToUserProfilesScreen()
     }
 }

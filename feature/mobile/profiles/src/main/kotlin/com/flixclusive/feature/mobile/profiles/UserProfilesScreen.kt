@@ -87,7 +87,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 fun UserProfilesScreen(
-    navigator: UserProfilesScreenNavigator,
+    navigator: NavigatorUserProfilesScreen,
     isFromSplashScreen: Boolean,
     pinVerifyResultRecipient: OpenResultRecipient<PinVerificationResult>,
 ) {
@@ -102,7 +102,7 @@ fun UserProfilesScreen(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun UserProfilesScreen(
-    navigator: UserProfilesScreenNavigator,
+    navigator: NavigatorUserProfilesScreen,
     isFromSplashScreen: Boolean,
     pinVerifyResultRecipient: OpenResultRecipient<PinVerificationResult>,
     viewModel: UserProfilesViewModel,
@@ -112,7 +112,7 @@ internal fun UserProfilesScreen(
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
-            navigator.openHomeScreen()
+            navigator.navigateToHomeScreen()
         }
     }
 
@@ -149,7 +149,7 @@ private fun UserProfilesScreenContent(
     profiles: List<User>,
     uiState: ProfilesScreenUiState,
     isFromSplashScreen: Boolean,
-    navigator: UserProfilesScreenNavigator,
+    navigator: NavigatorUserProfilesScreen,
     initialState: ScreenType,
     onHoverProfile: (User) -> Unit,
     onUseProfile: (User) -> Unit,
@@ -223,7 +223,7 @@ private fun UserProfilesScreenContent(
                                         profiles = profiles,
                                         onHover = onHover,
                                         listState = listState,
-                                        onEdit = { navigator.openEditUserScreen(it.id) },
+                                        onEdit = { navigator.navigateToEditUserScreen(it.id) },
                                     )
                                 }
 
@@ -232,7 +232,7 @@ private fun UserProfilesScreenContent(
                                         profiles = profiles,
                                         onHover = onHover,
                                         pagerState = pagerState,
-                                        onEdit = { navigator.openEditUserScreen(it.id) },
+                                        onEdit = { navigator.navigateToEditUserScreen(it.id) },
                                     )
                                 }
 
@@ -246,7 +246,7 @@ private fun UserProfilesScreenContent(
                                                 if (profile.pin.isNullOrEmpty()) {
                                                     onUseProfile(profile)
                                                 } else {
-                                                    navigator.openUserPinScreen(PinAction.Verify(profile.pin!!))
+                                                    navigator.navigateToUserPinScreen(PinAction.Verify(profile.pin!!))
                                                 }
                                             },
                                         )
@@ -258,7 +258,7 @@ private fun UserProfilesScreenContent(
                 }
             } else {
                 EmptyScreen(
-                    onAdd = { navigator.openAddProfileScreen() },
+                    onAdd = { navigator.navigateToAddProfileScreen() },
                 )
             }
         }
@@ -272,7 +272,7 @@ private fun UserProfilesScreenContent(
                 showTagOnly = profiles.isEmpty() || screenType == ScreenType.ContinueScreen,
                 screenType = screenType,
                 isFromSplashScreen = isFromSplashScreen,
-                addNewUser = navigator::openAddProfileScreen,
+                addNewUser = navigator::navigateToAddProfileScreen,
                 onChangeView = {
                     lastScreenTypeUsed = screenType
                     screenType = it
@@ -281,7 +281,7 @@ private fun UserProfilesScreenContent(
                     if (screenType == ScreenType.ContinueScreen) {
                         screenType = lastScreenTypeUsed
                     } else {
-                        navigator.goBack()
+                        navigator.navigateBack()
                     }
                 },
             )
@@ -531,20 +531,20 @@ private fun UserProfilesScreenBasePreview() {
                 ),
                 uiState = uiState,
                 isFromSplashScreen = false,
-                navigator = object : UserProfilesScreenNavigator {
-                    override fun openHomeScreen() {}
+                navigator = object : NavigatorUserProfilesScreen {
+                    override fun navigateToHomeScreen() {}
 
-                    override fun openAddProfileScreen(isInitializing: Boolean) {}
+                    override fun navigateToAddProfileScreen(isInitializing: Boolean) {}
 
-                    override fun onExitApplication() {}
+                    override fun exitApplication() {}
 
-                    override fun openUserAvatarSelectScreen(selected: Int) {}
+                    override fun navigateToUserAvatarSelectScreen(selected: Int) {}
 
-                    override fun openEditUserScreen(userId: String) {}
+                    override fun navigateToEditUserScreen(userId: String) {}
 
-                    override fun openUserPinScreen(action: PinAction) {}
+                    override fun navigateToUserPinScreen(action: PinAction) {}
 
-                    override fun goBack() {}
+                    override fun navigateBack() {}
                 },
                 initialState = ScreenType.Pager,
                 onHoverProfile = { uiState = uiState.copy(focusedProfile = it) },

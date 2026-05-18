@@ -33,7 +33,7 @@ internal val TagSize = 300.dp
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun SplashScreen(
-    navigator: SplashScreenNavigator,
+    navigator: NavigatorSplashScreen,
     viewModel: SplashScreenViewModel = hiltViewModel(),
 ) {
     val systemPreferences by viewModel.systemPreferences.collectAsStateWithLifecycle()
@@ -45,16 +45,16 @@ internal fun SplashScreen(
     LaunchedEffect(viewModel) {
         viewModel.navigationEvents.collect { event ->
             when (event) {
-                SplashNavigationEvent.Onboarding -> navigator.openOnboardingScreen()
-                is SplashNavigationEvent.AppUpdate -> navigator.openUpdateScreen(
+                SplashNavigationEvent.Onboarding -> navigator.navigateToOnboardingScreen()
+                is SplashNavigationEvent.AppUpdate -> navigator.navigateToAppUpdateScreen(
                     newVersion = event.info.versionName,
                     updateInfo = event.info.changelogs,
                     updateUrl = event.info.updateUrl,
                     isComingFromSplashScreen = true,
                 )
-                SplashNavigationEvent.AddProfile -> navigator.openAddProfileScreen(true)
-                SplashNavigationEvent.ChooseProfile -> navigator.openProfilesScreen(true)
-                SplashNavigationEvent.Home -> navigator.openHomeScreen()
+                SplashNavigationEvent.AddProfile -> navigator.navigateToAddProfileScreen(true)
+                SplashNavigationEvent.ChooseProfile -> navigator.navigateToUserProfilesScreen(true)
+                SplashNavigationEvent.Home -> navigator.navigateToHomeScreen()
             }
         }
     }

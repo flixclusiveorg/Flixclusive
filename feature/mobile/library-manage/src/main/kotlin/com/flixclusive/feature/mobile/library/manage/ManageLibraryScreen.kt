@@ -92,7 +92,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun ManageLibraryScreen(
-    navigator: ManageLibraryScreenNavigator,
+    navigator: NavigatorManageLibraryScreen,
     viewModel: ManageLibraryViewModel = hiltViewModel(),
 ) {
     val lists by viewModel.lists.collectAsStateWithLifecycle()
@@ -123,13 +123,13 @@ internal fun ManageLibraryScreen(
         onToggleCreateDialog = viewModel::onToggleCreateDialog,
         onSaveEdits = viewModel::onSaveEdits,
         onCreate = viewModel::onAdd,
-        onViewLibraryContent = { navigator.openLibraryDetails(it.list, it.provider) },
+        onViewLibraryContent = { navigator.navigateToLibraryDetailsScreen(it.list, it.provider) },
         openProviderSettings = {
             if (!it.isAuthenticated) {
                 viewModel.onTrackerSignIn(it)
             }
 
-            navigator.openProviderSettings(it.metadata)
+            navigator.navigateToProviderSettings(it.metadata)
         },
     )
 }

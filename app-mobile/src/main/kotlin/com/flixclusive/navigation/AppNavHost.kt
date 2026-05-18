@@ -8,9 +8,8 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
-import com.flixclusive.core.navigation.navigator.ExitAction
-import com.flixclusive.core.navigation.navigator.StartPlayerAction
-import com.flixclusive.core.navigation.navigator.ViewMediaPreviewAction
+import com.flixclusive.core.navigation.navigator.NavigateToLinkLoaderSheet
+import com.flixclusive.core.navigation.navigator.NavigatorExitApp
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreen
 import com.flixclusive.feature.mobile.user.add.AddUserScreen
 import com.ramcosta.composedestinations.DestinationsNavHost
@@ -34,9 +33,8 @@ import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 @Composable
 internal fun AppNavHost(
     navController: NavHostController,
-    exitAction: ExitAction,
-    previewMediaAction: ViewMediaPreviewAction,
-    startPlayerAction: StartPlayerAction,
+    navigatorExitApp: NavigatorExitApp,
+    navigateToLinkLoaderSheet: NavigateToLinkLoaderSheet,
     isTv: Boolean = false,
 ) {
     val navigator = navController.rememberDestinationsNavigator()
@@ -49,10 +47,9 @@ internal fun AppNavHost(
             dependency(
                 getMobileNavigator(
                     navBackStackEntry = navBackStackEntry,
-                    exitAction = exitAction,
+                    navigatorExitApp = navigatorExitApp,
                     navigator = navigator,
-                    previewMediaAction = previewMediaAction,
-                    startPlayerAction = startPlayerAction,
+                    navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
                 ),
             )
         },
@@ -63,10 +60,9 @@ internal fun AppNavHost(
                     isInitializing = navArgs.isInitializing,
                     navigator = getMobileNavigator(
                         navBackStackEntry = navBackStackEntry,
-                        exitAction = exitAction,
+                        navigatorExitApp = navigatorExitApp,
                         navigator = navigator,
-                        previewMediaAction = previewMediaAction,
-                        startPlayerAction = startPlayerAction,
+                        navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
                     ),
                     avatarResultRecipient = resultRecipient<UserAvatarSelectScreenDestination, Int>(
                         resultNavType = intNavType,
@@ -82,10 +78,9 @@ internal fun AppNavHost(
                     isFromSplashScreen = navArgs.isFromSplashScreen,
                     navigator = getMobileNavigator(
                         navBackStackEntry = navBackStackEntry,
-                        exitAction = exitAction,
+                        navigatorExitApp = navigatorExitApp,
                         navigator = navigator,
-                        previewMediaAction = previewMediaAction,
-                        startPlayerAction = startPlayerAction,
+                        navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
                     ),
                     pinVerifyResultRecipient = resultRecipient<PinVerifyScreenDestination, PinVerificationResult>(
                         resultNavType = pinVerificationResultNavType
@@ -99,18 +94,16 @@ internal fun AppNavHost(
 @Composable
 private fun getMobileNavigator(
     navBackStackEntry: NavBackStackEntry,
-    exitAction: ExitAction,
+    navigatorExitApp: NavigatorExitApp,
     navigator: DestinationsNavigator,
-    previewMediaAction: ViewMediaPreviewAction,
-    startPlayerAction: StartPlayerAction,
+    navigateToLinkLoaderSheet: NavigateToLinkLoaderSheet,
 ): MobileAppNavigator {
     return MobileAppNavigator(
         destination = navBackStackEntry.destination,
         navigator = navigator,
         uriHandler = LocalUriHandler.current,
         lifecycleOwner = LocalLifecycleOwner.current,
-        exitAction = exitAction,
-        previewMediaAction = previewMediaAction,
-        startPlayerAction = startPlayerAction,
+        navigatorExitApp = navigatorExitApp,
+        navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
     )
 }

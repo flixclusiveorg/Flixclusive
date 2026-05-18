@@ -30,7 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.imageLoader
-import com.flixclusive.core.navigation.navigator.GoBackAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
@@ -45,7 +45,7 @@ private fun isValidUrl(url: String): Boolean {
 
 @Composable
 fun MarkdownScreen(
-    navigator: GoBackAction,
+    navigator: NavigateBack,
     title: String,
     description: String,
 ) {
@@ -61,7 +61,7 @@ fun MarkdownScreen(
         topBar = {
             CommonTopBar(
                 title = title,
-                onNavigate = navigator::goBack,
+                onNavigate = navigator::navigateBack,
             )
         },
     ) {
@@ -118,8 +118,8 @@ private fun MarkdownScreenPreview() {
     FlixclusiveTheme {
         Surface {
             MarkdownScreen(
-                navigator = object : GoBackAction {
-                    override fun goBack() = Unit
+                navigator = object : NavigateBack {
+                    override fun navigateBack() = Unit
                 },
                 title = "2.0.0",
                 description =

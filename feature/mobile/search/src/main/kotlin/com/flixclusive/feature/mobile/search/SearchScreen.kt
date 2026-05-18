@@ -51,7 +51,7 @@ import kotlinx.coroutines.launch
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun SearchScreen(
-    navigator: SearchScreenNavigator,
+    navigator: NavigatorSearchScreen,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,7 +68,7 @@ internal fun SearchScreen(
         searchResults = { viewModel.searchResults },
         providers = providers,
         filters = { viewModel.filters },
-        onGoBack = navigator::goBack,
+        onGoBack = navigator::navigateBack,
         onQueryChange = viewModel::onQueryChange,
         onSearch = viewModel::onSearch,
         onChangeView = viewModel::onChangeView,
@@ -76,8 +76,8 @@ internal fun SearchScreen(
         onUpdateFilters = viewModel::onUpdateFilters,
         deleteSearchHistoryItem = viewModel::deleteSearchHistoryItem,
         paginateItems = viewModel::paginate,
-        openMediaScreen = navigator::openMediaScreen,
-        previewMedia = navigator::previewMedia,
+        openMediaScreen = navigator::navigateToMediaScreen,
+        previewMedia = navigator::showMediaPreviewBottomSheet,
     )
 }
 

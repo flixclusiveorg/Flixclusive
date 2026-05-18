@@ -73,7 +73,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun SettingsScreen(
-    navigator: SettingsScreenNavigator,
+    navigator: NavigatorSettingsScreen,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
@@ -263,18 +263,18 @@ private fun TabletPreview() {
     FlixclusiveTheme {
         Surface {
             SettingsScreen(
-                navigator = object : SettingsScreenNavigator {
-                    override fun openProviderManagerScreen() = Unit
+                navigator = object : NavigatorSettingsScreen {
+                    override fun navigateToProviderManagerScreen() = Unit
 
-                    override fun openRepositoryManagerScreen() = Unit
+                    override fun navigateToRepositoryManagerScreen() = Unit
 
-                    override fun openLink(url: String) = Unit
+                    override fun navigateToUrl(url: String) = Unit
 
-                    override fun goBack() = Unit
+                    override fun navigateBack() = Unit
 
-                    override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
+                    override fun navigateToUserProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
-                    override fun openEditUserScreen(userId: String) = Unit
+                    override fun navigateToEditUserScreen(userId: String) = Unit
                 },
             )
         }
@@ -287,18 +287,18 @@ private fun PhonePreview() {
     FlixclusiveTheme {
         Surface {
             SettingsScreen(
-                navigator = object : SettingsScreenNavigator {
-                    override fun openProviderManagerScreen() = Unit
+                navigator = object : NavigatorSettingsScreen {
+                    override fun navigateToProviderManagerScreen() = Unit
 
-                    override fun openRepositoryManagerScreen() = Unit
+                    override fun navigateToRepositoryManagerScreen() = Unit
 
-                    override fun openLink(url: String) = Unit
+                    override fun navigateToUrl(url: String) = Unit
 
-                    override fun goBack() = Unit
+                    override fun navigateBack() = Unit
 
-                    override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
+                    override fun navigateToUserProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
-                    override fun openEditUserScreen(userId: String) = Unit
+                    override fun navigateToEditUserScreen(userId: String) = Unit
                 },
             )
         }

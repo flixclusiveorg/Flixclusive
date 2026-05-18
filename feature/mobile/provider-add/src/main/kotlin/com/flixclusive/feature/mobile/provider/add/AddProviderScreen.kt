@@ -69,7 +69,7 @@ import com.flixclusive.core.strings.R as LocaleR
 )
 @Composable
 internal fun AddProviderScreen(
-    navigator: AddProviderScreenNavigator,
+    navigator: NavigatorAddProviderScreen,
     viewModel: AddProviderViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,10 +86,10 @@ internal fun AddProviderScreen(
         searchQuery = { searchQuery },
         onToggleSearchBar = viewModel::onToggleSearchBar,
         onRetry = viewModel::initialize,
-        onGoBack = navigator::goBack,
+        onGoBack = navigator::navigateBack,
         consumeProviderExceptions = viewModel::consumeProviderExceptions,
         onToggleInstallation = viewModel::onToggleInstallation,
-        onViewProviderDetails = navigator::openProviderDetails,
+        onViewProviderDetails = navigator::navigateToProviderDetails,
         onQueryChange = viewModel::onSearchQueryChange,
         onUpdateFilter = viewModel::onUpdateFilter,
         filters = { filters },

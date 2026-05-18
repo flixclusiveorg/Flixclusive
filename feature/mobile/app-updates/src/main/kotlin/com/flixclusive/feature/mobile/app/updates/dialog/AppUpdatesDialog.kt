@@ -57,7 +57,7 @@ internal object DismissibleDialog : DestinationStyle.Dialog() {
 @Destination<ExternalModuleGraph>(style = DismissibleDialog::class)
 @Composable
 internal fun AppUpdatesDialog(
-    navigator: AppUpdatesDialogNavigator,
+    navigator: NavigatorAppUpdatesDialog,
     viewModel: AppUpdatesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,7 +66,7 @@ internal fun AppUpdatesDialog(
         uiState = uiState,
         checkForUpdates = viewModel::checkForUpdates,
         openUpdateScreen = { updateInfo ->
-            navigator.openUpdateScreen(
+            navigator.navigateToAppUpdateScreen(
                 newVersion = updateInfo.versionName,
                 updateUrl = updateInfo.updateUrl,
                 updateInfo = updateInfo.changelogs,

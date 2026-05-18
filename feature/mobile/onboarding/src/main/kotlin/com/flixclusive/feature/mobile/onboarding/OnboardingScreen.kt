@@ -74,7 +74,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun OnboardingScreen(
-    navigator: OnboardingScreenNavigator,
+    navigator: NavigatorOnboardingScreen,
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -141,8 +141,8 @@ internal fun OnboardingScreen(
     LaunchedEffect(viewModel) {
         viewModel.nextStepNavigation.collect { navigation ->
             when (navigation) {
-                NextStepNavigation.CONTINUE_ONBOARDING -> navigator.openAddProfileScreen(true)
-                NextStepNavigation.HOME -> navigator.openHomeScreen()
+                NextStepNavigation.CONTINUE_ONBOARDING -> navigator.navigateToAddProfileScreen(true)
+                NextStepNavigation.HOME -> navigator.navigateToHomeScreen()
             }
         }
     }

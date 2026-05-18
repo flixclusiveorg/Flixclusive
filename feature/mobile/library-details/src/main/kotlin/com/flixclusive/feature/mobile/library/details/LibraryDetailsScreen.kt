@@ -91,7 +91,7 @@ private enum class LibraryDetailsScreenState {
 @Composable
 internal fun LibraryDetailsScreen(
     args: LibraryDetailsNavArgs,
-    navigator: LibraryDetailsScreenNavigator,
+    navigator: NavigatorLibraryDetailsScreen,
     viewModel: LibraryDetailsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -123,8 +123,8 @@ internal fun LibraryDetailsScreen(
         },
         searchQuery = { searchQuery },
         selectedItems = { viewModel.selectedItems },
-        onGoBack = navigator::goBack,
-        onViewMedia = navigator::openMediaScreen,
+        onGoBack = navigator::navigateBack,
+        onViewMedia = navigator::navigateToMediaScreen,
         onRemoveLongClickedItem = viewModel::onRemoveLongClickedItem,
         onLongClickItem = viewModel::onLongClickItem,
         onStartMultiSelecting = viewModel::onStartMultiSelecting,

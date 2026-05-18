@@ -5,38 +5,40 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavDestination
 import com.flixclusive.core.database.entity.library.LibraryList
-import com.flixclusive.core.navigation.navigator.AddProfileAction
-import com.flixclusive.core.navigation.navigator.ChooseProfileAction
-import com.flixclusive.core.navigation.navigator.EditUserAction
-import com.flixclusive.core.navigation.navigator.ExitAction
-import com.flixclusive.core.navigation.navigator.GoBackAction
-import com.flixclusive.core.navigation.navigator.OpenPinScreenAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
+import com.flixclusive.core.navigation.navigator.NavigateToAddProfileScreen
+import com.flixclusive.core.navigation.navigator.NavigateToAppUpdatesScreen
+import com.flixclusive.core.navigation.navigator.NavigateToChooseProfileScreen
+import com.flixclusive.core.navigation.navigator.NavigateToEditUserScreen
+import com.flixclusive.core.navigation.navigator.NavigateToLinkLoaderSheet
+import com.flixclusive.core.navigation.navigator.NavigateToMarkdownScreen
+import com.flixclusive.core.navigation.navigator.NavigateToMediaImageDialog
+import com.flixclusive.core.navigation.navigator.NavigateToMediaPreviewBottomSheet
+import com.flixclusive.core.navigation.navigator.NavigateToMediaScreen
+import com.flixclusive.core.navigation.navigator.NavigateToOpenPinScreen
+import com.flixclusive.core.navigation.navigator.NavigateToProviderScreen
+import com.flixclusive.core.navigation.navigator.NavigateToSeeAllScreen
+import com.flixclusive.core.navigation.navigator.NavigateToSelectAvatarScreen
+import com.flixclusive.core.navigation.navigator.NavigatorExitApp
 import com.flixclusive.core.navigation.navigator.PinAction
-import com.flixclusive.core.navigation.navigator.SelectAvatarAction
-import com.flixclusive.core.navigation.navigator.StartPlayerAction
-import com.flixclusive.core.navigation.navigator.ViewAllMediasAction
-import com.flixclusive.core.navigation.navigator.ViewMarkdownAction
-import com.flixclusive.core.navigation.navigator.ViewMediaAction
-import com.flixclusive.core.navigation.navigator.ViewMediaPreviewAction
-import com.flixclusive.core.navigation.navigator.ViewNewAppUpdatesAction
-import com.flixclusive.core.navigation.navigator.ViewProviderAction
-import com.flixclusive.feature.mobile.app.updates.dialog.AppUpdatesDialogNavigator
-import com.flixclusive.feature.mobile.app.updates.screen.AppUpdatesScreenNavigator
-import com.flixclusive.feature.mobile.home.HomeNavigator
-import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
-import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
-import com.flixclusive.feature.mobile.media.MediaScreenNavigator
-import com.flixclusive.feature.mobile.onboarding.OnboardingScreenNavigator
-import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
-import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
-import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
-import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
-import com.flixclusive.feature.mobile.search.SearchScreenNavigator
-import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
-import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
-import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
-import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
-import com.flixclusive.feature.splashScreen.SplashScreenNavigator
+import com.flixclusive.feature.mobile.app.updates.dialog.NavigatorAppUpdatesDialog
+import com.flixclusive.feature.mobile.app.updates.screen.NavigatorAppUpdatesScreen
+import com.flixclusive.feature.mobile.home.NavigatorHome
+import com.flixclusive.feature.mobile.library.details.NavigatorLibraryDetailsScreen
+import com.flixclusive.feature.mobile.library.manage.NavigatorManageLibraryScreen
+import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaPreviewBottomSheet
+import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaScreen
+import com.flixclusive.feature.mobile.onboarding.NavigatorOnboardingScreen
+import com.flixclusive.feature.mobile.profiles.NavigatorUserProfilesScreen
+import com.flixclusive.feature.mobile.provider.add.NavigatorAddProviderScreen
+import com.flixclusive.feature.mobile.provider.details.NavigatorProviderDetails
+import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerScreen
+import com.flixclusive.feature.mobile.search.NavigatorSearchScreen
+import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
+import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
+import com.flixclusive.feature.mobile.user.add.NavigatorAddUserScreenNavigateTo
+import com.flixclusive.feature.mobile.user.edit.NavigatorUserEditScreen
+import com.flixclusive.feature.splashScreen.NavigatorSplashScreen
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.Catalog
@@ -55,6 +57,8 @@ import com.ramcosta.composedestinations.generated.appmobile.navgraphs.LibraryGra
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
+import com.ramcosta.composedestinations.generated.media.destinations.MediaImagePreviewDialogDestination
+import com.ramcosta.composedestinations.generated.media.destinations.MediaPreviewBottomSheetDestination
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
@@ -75,39 +79,40 @@ internal class MobileAppNavigator(
     private val destination: NavDestination,
     private val navigator: DestinationsNavigator,
     private val uriHandler: UriHandler,
-    private val exitAction: ExitAction,
-    private val previewMediaAction: ViewMediaPreviewAction,
-    private val startPlayerAction: StartPlayerAction,
-) : AddProfileAction,
-    AddProviderScreenNavigator,
-    AddUserScreenNavigator,
-    OnboardingScreenNavigator,
-    AppUpdatesDialogNavigator,
-    AppUpdatesScreenNavigator,
-    ChooseProfileAction,
-    EditUserAction,
-    ExitAction,
-    MediaScreenNavigator,
-    GoBackAction,
-    HomeNavigator,
-    LibraryDetailsScreenNavigator,
-    ManageLibraryScreenNavigator,
-    OpenPinScreenAction,
-    ProviderDetailsNavigator,
-    ProviderManagerScreenNavigator,
-    SearchScreenNavigator,
-    SeeAllScreenNavigator,
-    SelectAvatarAction,
-    SettingsScreenNavigator,
-    SplashScreenNavigator,
-    UserEditScreenNavigator,
-    UserProfilesScreenNavigator,
-    ViewAllMediasAction,
-    ViewMediaAction,
-    ViewMediaPreviewAction,
-    ViewMarkdownAction,
-    ViewNewAppUpdatesAction,
-    ViewProviderAction {
+    private val navigatorExitApp: NavigatorExitApp,
+    private val navigateToLinkLoaderSheet: NavigateToLinkLoaderSheet,
+) : NavigateBack,
+    NavigateToAddProfileScreen,
+    NavigateToAppUpdatesScreen,
+    NavigateToChooseProfileScreen,
+    NavigateToEditUserScreen,
+    NavigateToMarkdownScreen,
+    NavigateToMediaImageDialog,
+    NavigateToMediaPreviewBottomSheet,
+    NavigateToMediaScreen,
+    NavigateToOpenPinScreen,
+    NavigateToProviderScreen,
+    NavigateToSeeAllScreen,
+    NavigateToSelectAvatarScreen,
+    NavigatorAddProviderScreen,
+    NavigatorAddUserScreenNavigateTo,
+    NavigatorAppUpdatesDialog,
+    NavigatorAppUpdatesScreen,
+    NavigatorExitApp,
+    NavigatorHome,
+    NavigatorLibraryDetailsScreen,
+    NavigatorManageLibraryScreen,
+    NavigatorMediaPreviewBottomSheet,
+    NavigatorMediaScreen,
+    NavigatorOnboardingScreen,
+    NavigatorProviderDetails,
+    NavigatorProviderManagerScreen,
+    NavigatorSearchScreen,
+    NavigatorSeeAllScreen,
+    NavigatorSettingsScreen,
+    NavigatorSplashScreen,
+    NavigatorUserEditScreen,
+    NavigatorUserProfilesScreen {
     private val currentNavGraph get() = destination.navGraph()
 
     private fun runOnResumed(
@@ -118,11 +123,11 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun goBack() {
+    override fun navigateBack() {
         navigator.navigateUp()
     }
 
-    override fun openSeeAllScreen(item: Catalog) {
+    override fun navigateToSeeAllScreen(item: Catalog) {
         runOnResumed {
             when (currentNavGraph) {
                 is HomeGraph -> navigator.navigate(HomeAppLevelSeeAllScreenDestination(catalog = item))
@@ -131,22 +136,22 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openMediaScreen(media: MediaMetadata) {
+    override fun navigateToMediaScreen(media: MediaMetadata, isTogglingLibrary: Boolean) {
         runOnResumed {
             when (currentNavGraph) {
-                is HomeGraph -> navigator.navigate(HomeAppLevelMediaScreenDestination(media = media, isTogglingLibrary = false))
-                is LibraryGraph -> navigator.navigate(LibraryAppLevelMediaScreenDestination(media = media, isTogglingLibrary = false))
+                is HomeGraph -> navigator.navigate(HomeAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary))
+                is LibraryGraph -> navigator.navigate(LibraryAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary))
             }
         }
     }
 
-    override fun openLibraryDetails(list: LibraryList, tracker: ProviderMetadata?) {
+    override fun navigateToLibraryDetailsScreen(list: LibraryList, tracker: ProviderMetadata?) {
         runOnResumed {
             navigator.navigate(LibraryDetailsScreenDestination(list, tracker))
         }
     }
 
-    override fun openUpdateScreen(
+    override fun navigateToAppUpdateScreen(
         newVersion: String,
         updateUrl: String,
         updateInfo: String?,
@@ -164,7 +169,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openHomeScreen() {
+    override fun navigateToHomeScreen() {
         runOnResumed {
             navigator.navigate(HomeGraph) {
                 popUpTo(AppGraph) {
@@ -177,7 +182,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openProfilesScreen(shouldPopBackStack: Boolean) {
+    override fun navigateToUserProfilesScreen(shouldPopBackStack: Boolean) {
         runOnResumed {
             navigator.navigate(
                 UserProfilesScreenDestination(isFromSplashScreen = shouldPopBackStack),
@@ -191,7 +196,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openOnboardingScreen() {
+    override fun navigateToOnboardingScreen() {
         runOnResumed {
             navigator.navigate(OnboardingScreenDestination) {
                 popUpTo(AppGraph) {
@@ -201,7 +206,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openUserAvatarSelectScreen(selected: Int) {
+    override fun navigateToUserAvatarSelectScreen(selected: Int) {
         runOnResumed {
             navigator.navigate(
                 UserAvatarSelectScreenDestination(selected = selected),
@@ -209,7 +214,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openUserPinScreen(action: PinAction) {
+    override fun navigateToUserPinScreen(action: PinAction) {
         val destination =
             when (action) {
                 is PinAction.Setup -> PinSetupScreenDestination()
@@ -221,7 +226,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openAddProfileScreen(isInitializing: Boolean) {
+    override fun navigateToAddProfileScreen(isInitializing: Boolean) {
         runOnResumed {
             navigator.navigate(AddUserScreenDestination(isInitializing = isInitializing)) {
                 if (isInitializing) {
@@ -233,11 +238,11 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun onExitApplication() {
-        exitAction.onExitApplication()
+    override fun exitApplication() {
+        navigatorExitApp.exitApplication()
     }
 
-    override fun openProviderSettings(providerMetadata: ProviderMetadata) {
+    override fun navigateToProviderSettings(providerMetadata: ProviderMetadata) {
         runOnResumed {
             navigator.navigate(
                 ProviderSettingsScreenDestination(id = providerMetadata.id),
@@ -245,7 +250,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openRepositoryManagerScreen() {
+    override fun navigateToRepositoryManagerScreen() {
         runOnResumed {
             navigator.navigate(
                 RepositoryManagerScreenDestination,
@@ -253,7 +258,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openProviderDetails(providerMetadata: ProviderMetadata) {
+    override fun navigateToProviderDetails(providerMetadata: ProviderMetadata) {
         runOnResumed {
             navigator.navigate(
                 ProviderDetailsScreenDestination(metadata = providerMetadata),
@@ -261,7 +266,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openMarkdownScreen(
+    override fun navigateToMarkdownScreen(
         title: String,
         description: String,
     ) {
@@ -276,31 +281,43 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openProviderManagerScreen() {
+    override fun navigateToProviderManagerScreen() {
         runOnResumed {
             navigator.navigate(ProviderManagerScreenDestination)
         }
     }
 
-    override fun openLink(url: String) {
+    override fun navigateToUrl(url: String) {
         uriHandler.openUri(url)
     }
 
-    override fun openEditUserScreen(userId: String) {
+    override fun navigateToEditUserScreen(userId: String) {
         runOnResumed {
             navigator.navigate(UserEditScreenDestination(userId = userId))
         }
     }
 
-    override fun previewMedia(media: MediaMetadata) {
-        previewMediaAction.previewMedia(media)
+    override fun showMediaPreviewBottomSheet(media: MediaMetadata) {
+        runOnResumed {
+            navigator.navigate(
+                MediaPreviewBottomSheetDestination(media = media),
+            )
+        }
     }
 
-    override fun play(media: MediaMetadata, episode: Episode?) {
-        startPlayerAction.play(media, episode)
+    override fun showMediaImageDialog(imagePath: String) {
+        runOnResumed {
+            navigator.navigate(
+                MediaImagePreviewDialogDestination(imagePath = imagePath),
+            )
+        }
     }
 
-    override fun openAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {
+    override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {
+        navigateToLinkLoaderSheet.showLinkLoaderSheet(media, episode)
+    }
+
+    override fun navigateToAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {
         runOnResumed {
             navigator.navigate(
                 AddProviderScreenDestination(initialSelectedRepositoryFilter = initialSelectedRepositoryFilter),
@@ -308,7 +325,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openSearchScreen() {
+    override fun navigateToSearchScreen() {
         runOnResumed {
             navigator.navigate(SearchScreenDestination)
         }

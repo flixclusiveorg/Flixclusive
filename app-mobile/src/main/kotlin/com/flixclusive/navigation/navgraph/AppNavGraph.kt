@@ -2,19 +2,21 @@ package com.flixclusive.navigation.navgraph
 
 import androidx.compose.runtime.Composable
 import com.flixclusive.core.navigation.navargs.MediaScreenNavArgs
-import com.flixclusive.core.navigation.navigator.GoBackAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.feature.mobile.markdown.MarkdownScreen
 import com.flixclusive.feature.mobile.media.MediaScreen
-import com.flixclusive.feature.mobile.media.MediaScreenNavigator
+import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaScreen
+import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreen
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavArgs
-import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
 import com.flixclusive.navigation.AppDefaultTransition
 import com.flixclusive.navigation.InternalDestination
 import com.ramcosta.composedestinations.annotation.ExternalDestination
 import com.ramcosta.composedestinations.annotation.ExternalModuleDestinations
 import com.ramcosta.composedestinations.annotation.NavHostGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
+import com.ramcosta.composedestinations.generated.media.destinations.MediaImagePreviewDialogDestination
+import com.ramcosta.composedestinations.generated.media.destinations.MediaPreviewBottomSheetDestination
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
@@ -33,6 +35,8 @@ internal annotation class AppNavGraph {
     @ExternalDestination<SplashScreenDestination>(start = true)
     @ExternalDestination<OnboardingScreenDestination>
     @ExternalDestination<UserProfilesScreenDestination>
+    @ExternalDestination<MediaImagePreviewDialogDestination>
+    @ExternalDestination<MediaPreviewBottomSheetDestination>
     @ExternalModuleDestinations<UsereditModuleDestinations>
     companion object Includes
 }
@@ -41,7 +45,7 @@ internal annotation class AppNavGraph {
 @InternalDestination<LibraryNavGraph>(navArgs = MediaScreenNavArgs::class)
 @Composable
 internal fun AppLevelMediaScreen(
-    navigator: MediaScreenNavigator,
+    navigator: NavigatorMediaScreen,
     navArgs: MediaScreenNavArgs
 ) {
     MediaScreen(
@@ -54,7 +58,7 @@ internal fun AppLevelMediaScreen(
 @InternalDestination<LibraryNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @Composable
 internal fun AppLevelSeeAllScreen(
-    navigator: SeeAllScreenNavigator,
+    navigator: NavigatorSeeAllScreen,
     navArgs: SeeAllScreenNavArgs
 ) {
     SeeAllScreen(
@@ -67,7 +71,7 @@ internal fun AppLevelSeeAllScreen(
 @InternalDestination<SettingsNavGraph>
 @Composable
 internal fun AppLevelMarkdownScreen(
-    navigator: GoBackAction,
+    navigator: NavigateBack,
     title: String,
     description: String,
 ) {

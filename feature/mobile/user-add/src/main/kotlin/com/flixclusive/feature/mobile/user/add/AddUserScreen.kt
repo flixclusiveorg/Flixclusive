@@ -82,7 +82,7 @@ private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 @Composable
 fun AddUserScreen(
     isInitializing: Boolean,
-    navigator: AddUserScreenNavigator,
+    navigator: NavigatorAddUserScreenNavigateTo,
     avatarResultRecipient: OpenResultRecipient<Int>,
     pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
     viewModel: AddUserViewModel = hiltViewModel(),
@@ -104,7 +104,7 @@ fun AddUserScreen(
 @Composable
 internal fun AddUserScreenContent(
     isInitializing: Boolean,
-    navigator: AddUserScreenNavigator,
+    navigator: NavigatorAddUserScreenNavigateTo,
     avatarResultRecipient: OpenResultRecipient<Int>,
     pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
     images: List<String>,
@@ -129,9 +129,9 @@ internal fun AddUserScreenContent(
 
     LaunchedEffect(state) {
         if (state is AddUserState.Added && isInitializing) {
-            navigator.openHomeScreen()
+            navigator.navigateToHomeScreen()
         } else if (state is AddUserState.Added) {
-            navigator.goBack()
+            navigator.navigateBack()
         }
     }
 
@@ -162,7 +162,7 @@ internal fun AddUserScreenContent(
             hideBackButton = { isInitializing && currentScreen == 0 },
             onBack = {
                 if (currentScreen == 0) {
-                    navigator.goBack()
+                    navigator.navigateBack()
                 } else {
                     currentScreen--
                 }
@@ -455,14 +455,14 @@ private fun AddUserScreenBasePreview() {
             AddUserScreenContent(
                 isInitializing = false,
                 navigator =
-                    object : AddUserScreenNavigator {
-                        override fun openUserAvatarSelectScreen(selected: Int) = Unit
+                    object : NavigatorAddUserScreenNavigateTo {
+                        override fun navigateToUserAvatarSelectScreen(selected: Int) = Unit
 
-                        override fun openUserPinScreen(action: PinAction) = Unit
+                        override fun navigateToUserPinScreen(action: PinAction) = Unit
 
-                        override fun goBack() = Unit
+                        override fun navigateBack() = Unit
 
-                        override fun openHomeScreen() = Unit
+                        override fun navigateToHomeScreen() = Unit
                     },
                 avatarResultRecipient =
                     object : OpenResultRecipient<Int> {

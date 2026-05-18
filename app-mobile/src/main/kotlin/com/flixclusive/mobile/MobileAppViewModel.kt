@@ -19,7 +19,6 @@ import com.flixclusive.core.network.monitor.NetworkMonitor
 import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.webview.WebViewDriverManager
-import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.provider.repository.MediaLinksCacheKey.Companion.toCacheKey
 import com.flixclusive.data.provider.repository.MediaLinksRepository
@@ -71,7 +70,6 @@ internal class MobileAppViewModel @Inject constructor(
     private val watchProgressRepository: WatchProgressRepository,
     private val dataStoreManager: DataStoreManager,
     private val userSessionDataStore: UserSessionDataStore,
-    private val libraryListRepository: LibraryListRepository,
     private val appDispatchers: AppDispatchers,
     private val playerCache: PlayerCache,
     private val mediaLinksRepository: MediaLinksRepository,
@@ -80,7 +78,6 @@ internal class MobileAppViewModel @Inject constructor(
     private val updateProvider: UpdateProviderUseCase,
     networkMonitor: NetworkMonitor,
 ) : ViewModel() {
-    private var onMediaLongClickJob: Job? = null
     private var onFetchMediaLinksJob: Job? = null
 
     private val _uiState = MutableStateFlow(MobileAppUiState())
@@ -211,28 +208,6 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    fun previewMedia(media: MediaMetadata) {
-        if (onMediaLongClickJob?.isActive == true) return
-
-        onMediaLongClickJob = viewModelScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val libraryItem = libraryListRepository.getListsContainingMedia(
-                mediaId = media.id,
-                ownerId = userId
-            ).first()
-            val isInLibrary = libraryItem.isNotEmpty()
-
-            _uiState.update {
-                it.copy(
-                    mediaPreviewState = MediaPreview(
-                        media = media,
-                        isInLibrary = isInLibrary,
-                    ),
-                )
-            }
-        }
-    }
-
     fun onFetchMediaLinks(
         media: MediaMetadata,
         episode: Episode? = null,
@@ -349,10 +324,6 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    fun onRemovePreviewMedia() {
-        _uiState.update { it.copy(mediaPreviewState = null) }
-    }
-
     fun onReleasePlayerCache() {
         appDispatchers.ioScope.launch {
             playerCache.release()
@@ -393,7 +364,6 @@ internal class MobileAppViewModel @Inject constructor(
 @Stable
 internal data class MobileAppUiState(
     val loadLinksState: LoadLinksState = LoadLinksState.Idle,
-    val mediaPreviewState: MediaPreview? = null,
     val playerData: PlayerData? = null,
     val isLoadingProviders: Boolean = false,
     val providerErrors: Map<String, ProviderWithThrowable> = emptyMap(),
