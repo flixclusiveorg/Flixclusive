@@ -560,9 +560,6 @@ internal class MediaScreenViewModel @AssistedInject constructor(
     }
 
     init {
-        fetchLibraryLists()
-        syncWatchProgressFromScrobblers()
-
         viewModelScope.launch {
             launch init@{
                 // Fetch the detailed metadata using the navArgs
@@ -576,6 +573,8 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                 if (_uiState.value.error != null) return@init
 
                 setInitialSelectedSeason()
+                fetchLibraryLists()
+                syncWatchProgressFromScrobblers()
             }
 
             launch {
