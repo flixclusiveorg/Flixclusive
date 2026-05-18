@@ -5,6 +5,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
+@Serializable
 sealed interface BackupWatchProgress {
     val mediaId: String
     val progress: Long
