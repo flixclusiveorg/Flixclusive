@@ -29,7 +29,6 @@ import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -206,27 +205,27 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             mediaLinksApi.getLinks(
                 media = media,
                 episode = episode,
-            ).onCompletion { error ->
-                if (error != null) {
-                    throw error
-                }
+                onLinkFound = { link ->
+                    when (link) {
+                        is Stream -> mediaLinksRepository.addStream(key, link)
+                        is Subtitle -> mediaLinksRepository.addSubtitle(key, link)
+                    }
+                },
+            )
 
-                val mediaLinks = mediaLinksRepository.getLinks(key)
-                if (mediaLinks != null && mediaLinks.hasStreamableLinks) {
-                    mediaLinksRepository.insertLinks(key, mediaLinks.copy(hasExtractedSuccessfully = true))
-                    send(LoadLinksState.Success(providerId = mediaLinks.providerId))
-                } else {
-                    send(
-                        LoadLinksState.Error(
-                            UiText.from(R.string.no_links_loaded_format_message, metadata.name),
-                        ),
-                    )
-                }
-            }.collect { link ->
-                when (link) {
-                    is Stream -> mediaLinksRepository.addStream(key, link)
-                    is Subtitle -> mediaLinksRepository.addSubtitle(key, link)
-                }
+            val updatedLinks = mediaLinksRepository.getLinks(key)
+            if (updatedLinks != null && updatedLinks.hasStreamableLinks) {
+                mediaLinksRepository.insertLinks(
+                    key,
+                    updatedLinks.copy(hasExtractedSuccessfully = true)
+                )
+                send(LoadLinksState.Success(providerId = updatedLinks.providerId))
+            } else {
+                send(
+                    LoadLinksState.Error(
+                        UiText.from(R.string.no_links_loaded_format_message, metadata.name),
+                    ),
+                )
             }
 
             return true

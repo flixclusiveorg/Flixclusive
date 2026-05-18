@@ -138,7 +138,6 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                     }
                 }
 
-                provider.__filename = file.name
                 provider.manifest = manifest
                 provider.settings = providerPrefs
 
