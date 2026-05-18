@@ -93,7 +93,10 @@ internal fun ProviderSettingsScreenContent(
                     }
                 }
 
-                is Async.Success -> ProviderSettingsContent(provider = state.data)
+                is Async.Success -> ProviderSettingsContent(
+                    provider = state.data,
+                    onGoBack = navigator::goBack,
+                )
             }
         }
     }
@@ -102,11 +105,20 @@ internal fun ProviderSettingsScreenContent(
 @Composable
 private fun ProviderSettingsContent(
     provider: ProviderPlugin,
+    onGoBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     val method = remember(provider) {
-        provider::class.java
-            .getDeclaredComposableMethod("SettingsScreen")
+        try {
+            provider::class.java
+                .getDeclaredComposableMethod("SettingsScreen")
+        } catch (e: NoSuchMethodException) {
+            null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     Box(
@@ -117,7 +129,14 @@ private fun ProviderSettingsContent(
             val appResources = LocalResources.current
             val resources = remember { provider.resources ?: appResources }
             CompositionLocalProvider(LocalResources provides resources) {
-                method.invoke(currentComposer, provider)
+                if (method != null) {
+                    method.invoke(currentComposer, provider)
+                } else {
+                    LaunchedEffect(true) {
+                        context.showToast(appResources.getString(R.string.provider_setting_not_found))
+                        onGoBack()
+                    }
+                }
             }
         }
     }
