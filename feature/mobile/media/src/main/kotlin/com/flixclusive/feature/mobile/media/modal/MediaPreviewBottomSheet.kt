@@ -45,6 +45,7 @@ import androidx.constraintlayout.compose.Dimension
 import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRating
+import com.flixclusive.core.presentation.mobile.components.media.MediaCardDefaultPosterSize
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaPreviewBottomSheet
@@ -108,6 +109,7 @@ private fun MediaPreviewBottomSheetContent(
 
         MediaCover.Poster(
             imagePath = media.posterImage,
+            imageSize = MediaCardDefaultPosterSize,
             title = media.title,
             onClick = {
                 val poster = media.posterImage ?: return@Poster

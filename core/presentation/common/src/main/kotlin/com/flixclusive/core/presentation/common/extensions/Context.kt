@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import android.widget.Toast
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import coil3.size.Size
 
 /**
  * Extension function to show a toast message.
@@ -26,13 +27,17 @@ fun Context.showToast(
  *
  * @return Returns an [ImageRequest] if [imagePath] is valid, otherwise null.
  * */
-fun Context.buildImageRequest(imagePath: String?): ImageRequest? {
+fun Context.buildImageRequest(
+    imagePath: String?,
+    imageSize: Size = Size.ORIGINAL,
+): ImageRequest? {
     if (imagePath == null) {
         return null
     }
 
     val imageRequest = ImageRequest.Builder(this).apply {
         data(imagePath.ifEmpty { null })
+        size(imageSize)
         crossfade(true)
     }
 

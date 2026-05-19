@@ -48,6 +48,7 @@ import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.media.MediaCardDefaultPosterSize
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -156,6 +157,7 @@ private fun ContinueWatchingCard(
         ) {
             MediaCover.Poster(
                 imagePath = media.posterImage,
+                imageSize = MediaCardDefaultPosterSize,
                 title = media.title,
                 modifier = Modifier
                     .width(getAdaptiveMediaCardWidth())

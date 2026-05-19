@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
+import coil3.size.Size
 import com.flixclusive.core.presentation.common.components.MediaCover.Poster
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.ifElse
@@ -58,6 +59,7 @@ enum class MediaCover(
         imagePath: String?,
         title: String,
         modifier: Modifier = Modifier,
+        imageSize: Size = Size.ORIGINAL,
         contentScale: ContentScale = ContentScale.FillBounds,
         onSuccess: () -> Unit = {},
         onClick: (() -> Unit)? = null,
@@ -67,7 +69,7 @@ enum class MediaCover(
         val context = LocalContext.current
 
         val painter = remember(imagePath) {
-            context.buildImageRequest(imagePath = imagePath)
+            context.buildImageRequest(imagePath = imagePath, imageSize = imageSize)
         }
 
         AsyncImage(

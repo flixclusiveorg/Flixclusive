@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.size.Size
 import com.flixclusive.core.drawables.R
 import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getMedia
@@ -32,6 +33,11 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.model.media.MediaMetadata
+
+val MediaCardDefaultPosterSize = Size(
+    width = 100,
+    height = 300,
+)
 
 /**
  * A card component that displays a media's poster and optionally its title
@@ -62,6 +68,7 @@ fun MediaCard(
         ) {
             MediaCover.Poster(
                 imagePath = media.posterImage,
+                imageSize = MediaCardDefaultPosterSize,
                 title = media.title,
                 onSuccess = { showPlaceholder = false },
                 onClick = { onClick(media) },
