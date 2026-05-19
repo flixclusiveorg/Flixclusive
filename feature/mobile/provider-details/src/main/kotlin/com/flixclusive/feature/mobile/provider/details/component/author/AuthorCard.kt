@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -24,7 +25,6 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiv
 import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.SUB_LABEL_SIZE
 import com.flixclusive.model.provider.Author
 import com.flixclusive.core.drawables.R as UiCommonR
-import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun AuthorCard(
@@ -71,8 +71,8 @@ internal fun AuthorCard(
                         )
                     ),
                 urlImage = author.image,
-                placeholderId = UiCommonR.drawable.profile_placeholder,
-                contentDescId = LocaleR.string.author_icon_content_desc,
+                placeholder = painterResource(UiCommonR.drawable.profile_placeholder),
+                contentDescription = author.name,
             )
 
             Text(

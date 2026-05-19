@@ -36,7 +36,6 @@ import com.flixclusive.feature.mobile.search.SearchViewType
 import com.flixclusive.feature.mobile.search.util.FilterHelper
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.drawables.R as UiCommonR
-import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ProviderFilterButton(
@@ -103,7 +102,7 @@ private fun NonEmptyFilterButton(
         if (isIconLoadingError) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.provider_logo),
-                contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
+                contentDescription = name,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(12.dp),
@@ -113,7 +112,7 @@ private fun NonEmptyFilterButton(
 
             AsyncImage(
                 model = imageModel,
-                contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
+                contentDescription = name,
                 onError = { isIconLoadingError = true },
                 modifier = Modifier
                     .size(12.dp),

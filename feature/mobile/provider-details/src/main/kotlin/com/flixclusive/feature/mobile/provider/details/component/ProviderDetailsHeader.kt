@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,7 +32,6 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiv
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.drawables.R as UiCommonR
-import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ProviderDetailsHeader(
@@ -55,8 +55,8 @@ internal fun ProviderDetailsHeader(
             modifier = Modifier.size(65.dp),
             placeholderSize = 38.dp,
             urlImage = provider.iconUrl,
-            placeholderId = UiCommonR.drawable.provider_logo,
-            contentDescId = LocaleR.string.provider_icon_content_desc,
+            placeholder = painterResource(UiCommonR.drawable.provider_logo),
+            contentDescription = provider.name,
             shape = MaterialTheme.shapes.small,
         )
 
