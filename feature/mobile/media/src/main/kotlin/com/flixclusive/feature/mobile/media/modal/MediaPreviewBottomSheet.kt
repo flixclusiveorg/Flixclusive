@@ -49,9 +49,6 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaPreviewBottomSheet
 import com.flixclusive.model.media.MediaMetadata
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import com.ramcosta.composedestinations.bottomsheet.spec.DestinationStyleBottomSheet
 import java.util.Calendar
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.mobile.R as UiMobileR
@@ -61,12 +58,8 @@ data class MediaPreviewNavArgs(
     val media: MediaMetadata,
 )
 
-@Destination<ExternalModuleGraph>(
-    navArgs = MediaPreviewNavArgs::class,
-    style = DestinationStyleBottomSheet::class
-)
 @Composable
-internal fun MediaPreviewBottomSheet(
+fun MediaPreviewBottomSheet(
     args: MediaPreviewNavArgs,
     navigator: NavigatorMediaPreviewBottomSheet,
 ) {

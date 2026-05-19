@@ -245,7 +245,7 @@
     <string name="stop">Stop</string>
     <string name="stream">Stream</string>
     <string name="style">Style</string>
-    <string name="subtitle">Subtitles</string>
+    <string name="subtitle">Subtitle</string>
     <string name="subtitles_background_color">Background color</string>
     <string name="subtitles_color">Font color</string>
     <string name="subtitles_edge_type">Edge type</string>

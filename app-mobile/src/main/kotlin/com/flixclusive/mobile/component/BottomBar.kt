@@ -88,9 +88,7 @@ internal fun BottomBar(
                 CustomNavItem(
                     item = it,
                     isSelected = currentSelectedGraph == it.screen,
-                    onClick = {
-                        onNavigate(it.screen)
-                    },
+                    onClick = { onNavigate(it.screen) },
                 )
             }
         }

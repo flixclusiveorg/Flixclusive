@@ -1,27 +1,22 @@
 package com.flixclusive.mobile
 
+//noinspection UsingMaterialAndMaterial3Libraries
+//noinspection UsingMaterialAndMaterial3Libraries
 import android.annotation.SuppressLint
 import android.view.ViewGroup
-import android.view.WindowManager
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
-//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.navigation.ModalBottomSheetLayout
-//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.navigation.rememberBottomSheetNavigator
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,9 +32,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -57,22 +50,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.plusAssign
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.provider.LoadLinksState
-import com.flixclusive.core.navigation.navigator.NavigateToLinkLoaderSheet
 import com.flixclusive.core.navigation.navigator.NavigatorExitApp
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.components.NetworkMonitorSnackbarVisuals
 import com.flixclusive.core.presentation.mobile.components.NetworkMonitorSnackbarVisuals.Companion.NetworkMonitorSnackbarHost
-import com.flixclusive.core.presentation.mobile.components.provider.MediaLinksBottomSheet
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.DisplayChangelogsObserver
-import com.flixclusive.mobile.component.PlayerSplashScreen
-import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.navigation.AppNavHost
 import com.flixclusive.navigation.extensions.bottomBarNavigate
 import com.flixclusive.navigation.extensions.currentScreenAsState
@@ -83,6 +70,7 @@ import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
+import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
@@ -97,15 +85,6 @@ import com.ramcosta.composedestinations.spec.Route
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.system.exitProcess
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -115,7 +94,6 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val transitionMutex = remember { Mutex() }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val hasNotSeenNewChangelogs by viewModel.hasNotSeenNewChangelogs.collectAsStateWithLifecycle()
@@ -125,8 +103,6 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     val webViewDriver by viewModel.webViewDriver.collectAsStateWithLifecycle()
 
     var hasBeenDisconnected by remember { mutableStateOf(false) }
-
-    val scope = rememberCoroutineScope()
 
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -142,35 +118,6 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         mutableStateOf(shouldHideBottomBar(route = currentSelectedScreen))
     }
 
-    var isNavigatingToPlayerScreen by remember { mutableStateOf(false) }
-
-    BackHandler(
-        enabled = uiState.loadLinksState.isSuccess
-    ) {
-        // No-op to disable back navigation while the app is transitioning to the player screen
-    }
-
-    suspend fun transitionToPlayer(playerData: PlayerData) {
-        if (transitionMutex.isLocked) return
-
-        transitionMutex.withLock {
-            useBottomBar = false
-            delay(500)
-            isNavigatingToPlayerScreen = true
-            delay(1200)
-            isNavigatingToPlayerScreen = false
-
-            val (media, episode) = playerData
-            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                destinationsNavigator.navigate(
-                    PlayerScreenDestination(media = media, episode = episode)
-                )
-            }
-
-            viewModel.updateLoadLinksState(LoadLinksState.Idle)
-        }
-    }
-
     DisplayChangelogsObserver(
         navController = navController,
         hasNotSeenNewChangelogs = hasNotSeenNewChangelogs,
@@ -180,25 +127,6 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     LaunchedEffect(currentSelectedScreen) {
         useBottomBar = shouldHideBottomBar(route = currentSelectedScreen)
-    }
-
-    LaunchedEffect(true) {
-        combine(
-            snapshotFlow { currentSelectedScreen },
-            viewModel.uiState.map {
-                it.loadLinksState to it.playerData
-            }.distinctUntilChanged(),
-            viewModel.currentObservableLinks,
-        ) { screen, (loadLinksState, playerData), linksCache ->
-            playerData?.takeIf {
-                screen != PlayerScreenDestination &&
-                    loadLinksState.isSuccess &&
-                    linksCache != null
-            }
-        }
-            .filterNotNull()
-            .distinctUntilChanged()
-            .collectLatest(::transitionToPlayer)
     }
 
     LaunchedEffect(isConnectedAtNetwork) {
@@ -261,75 +189,17 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             CompositionLocalProvider(
                 LocalGlobalScaffoldPadding provides padding,
             ) {
-                Box {
-                    AppNavHost(
-                        navController = navController,
-                        navigatorExitApp = remember {
-                            object : NavigatorExitApp {
-                                override fun exitApplication() {
-                                    finish()
-                                    exitProcess(0)
-                                }
+                AppNavHost(
+                    navController = navController,
+                    navigatorExitApp = remember {
+                        object : NavigatorExitApp {
+                            override fun exitApplication() {
+                                finish()
+                                exitProcess(0)
                             }
-                        },
-                        navigateToLinkLoaderSheet = remember {
-                            object : NavigateToLinkLoaderSheet {
-                                override fun showLinkLoaderSheet(
-                                    media: MediaMetadata,
-                                    episode: Episode?,
-                                ) {
-                                    viewModel.onFetchMediaLinks(media, episode)
-                                }
-                            }
-                        },
-                    )
-
-                    AnimatedVisibility(
-                        visible = isNavigatingToPlayerScreen,
-                        enter = slideInHorizontally(tween(450)) { it },
-                        exit = slideOutHorizontally(tween(400)) { it },
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        PlayerSplashScreen()
-                    }
-                }
-            }
-        }
-    }
-
-
-    if (currentSelectedScreen != PlayerScreenDestination) {
-        if (!uiState.loadLinksState.isIdle && uiState.playerData != null) {
-            val cachedLinks by viewModel.currentObservableLinks.collectAsStateWithLifecycle()
-
-            LaunchedEffect(true) {
-                window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            }
-
-            if (!isNavigatingToPlayerScreen && useBottomBar) {
-                MediaLinksBottomSheet(
-                    state = uiState.loadLinksState,
-                    streams = cachedLinks?.streams ?: emptyList(),
-                    subtitles = cachedLinks?.subtitles ?: emptyList(),
-                    onLinkClick = { /*TODO: Add link chooser navigation for player screen*/ },
-                    onSkipLoading = {
-                        scope.launch {
-                            transitionToPlayer(uiState.playerData!!)
                         }
                     },
-                    onDismiss = {
-                        viewModel.onStopLoadingLinks(isForceClosing = true)
-                    },
                 )
-            }
-        } else {
-            LaunchedEffect(true) {
-                window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-                // Reset the state to idle if the player data is null to
-                // prevent getting stuck in a non-idle state. This can happen
-                // if the user comes back from the player screen before the links finish loading.
-                viewModel.updateLoadLinksState(LoadLinksState.Idle)
             }
         }
     }
@@ -371,17 +241,18 @@ private fun shouldHideBottomBar(route: Route): Boolean {
             AddProviderScreenDestination,
             AddUserScreenDestination,
             AppAppLevelMarkdownScreenDestination,
-            SettingsAppLevelMarkdownScreenDestination,
+            AppUpdatesScreenDestination,
+            OnboardingScreenDestination,
             PinSetupScreenDestination,
             PinVerifyScreenDestination,
             PlayerScreenDestination,
+            PlayerSplashScreenDestination,
+            ProviderSettingsScreenDestination,
+            SettingsAppLevelMarkdownScreenDestination,
             SplashScreenDestination,
-            AppUpdatesScreenDestination,
             UserAvatarSelectScreenDestination,
             UserEditScreenDestination,
             UserProfilesScreenDestination,
-            OnboardingScreenDestination,
-            ProviderSettingsScreenDestination,
         )
 
     val noBottomBarNestedScreens =

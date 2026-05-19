@@ -10,7 +10,6 @@ import com.flixclusive.core.navigation.navigator.NavigateToAddProfileScreen
 import com.flixclusive.core.navigation.navigator.NavigateToAppUpdatesScreen
 import com.flixclusive.core.navigation.navigator.NavigateToChooseProfileScreen
 import com.flixclusive.core.navigation.navigator.NavigateToEditUserScreen
-import com.flixclusive.core.navigation.navigator.NavigateToLinkLoaderSheet
 import com.flixclusive.core.navigation.navigator.NavigateToMarkdownScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMediaImageDialog
 import com.flixclusive.core.navigation.navigator.NavigateToMediaPreviewBottomSheet
@@ -26,9 +25,11 @@ import com.flixclusive.feature.mobile.app.updates.screen.NavigatorAppUpdatesScre
 import com.flixclusive.feature.mobile.home.NavigatorHome
 import com.flixclusive.feature.mobile.library.details.NavigatorLibraryDetailsScreen
 import com.flixclusive.feature.mobile.library.manage.NavigatorManageLibraryScreen
+import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaLinksBottomSheet
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaPreviewBottomSheet
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaScreen
 import com.flixclusive.feature.mobile.onboarding.NavigatorOnboardingScreen
+import com.flixclusive.feature.mobile.player.NavigatorPlayerSplashScreen
 import com.flixclusive.feature.mobile.profiles.NavigatorUserProfilesScreen
 import com.flixclusive.feature.mobile.provider.add.NavigatorAddProviderScreen
 import com.flixclusive.feature.mobile.provider.details.NavigatorProviderDetails
@@ -46,8 +47,10 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.navigation.extensions.navGraph
 import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaPreviewBottomSheetDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelSeeAllScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaPreviewBottomSheetDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelSeeAllScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
@@ -58,8 +61,10 @@ import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGr
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
 import com.ramcosta.composedestinations.generated.media.destinations.MediaImagePreviewDialogDestination
-import com.ramcosta.composedestinations.generated.media.destinations.MediaPreviewBottomSheetDestination
+import com.ramcosta.composedestinations.generated.media.destinations.MediaLinksBottomSheetDestination
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
+import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
+import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
@@ -80,7 +85,6 @@ internal class MobileAppNavigator(
     private val navigator: DestinationsNavigator,
     private val uriHandler: UriHandler,
     private val navigatorExitApp: NavigatorExitApp,
-    private val navigateToLinkLoaderSheet: NavigateToLinkLoaderSheet,
 ) : NavigateBack,
     NavigateToAddProfileScreen,
     NavigateToAppUpdatesScreen,
@@ -102,9 +106,11 @@ internal class MobileAppNavigator(
     NavigatorHome,
     NavigatorLibraryDetailsScreen,
     NavigatorManageLibraryScreen,
+    NavigatorMediaLinksBottomSheet,
     NavigatorMediaPreviewBottomSheet,
     NavigatorMediaScreen,
     NavigatorOnboardingScreen,
+    NavigatorPlayerSplashScreen,
     NavigatorProviderDetails,
     NavigatorProviderManagerScreen,
     NavigatorSearchScreen,
@@ -139,8 +145,13 @@ internal class MobileAppNavigator(
     override fun navigateToMediaScreen(media: MediaMetadata, isTogglingLibrary: Boolean) {
         runOnResumed {
             when (currentNavGraph) {
-                is HomeGraph -> navigator.navigate(HomeAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary))
-                is LibraryGraph -> navigator.navigate(LibraryAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary))
+                is HomeGraph -> navigator.navigate(
+                    HomeAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
+                )
+
+                is LibraryGraph -> navigator.navigate(
+                    LibraryAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
+                )
             }
         }
     }
@@ -299,9 +310,11 @@ internal class MobileAppNavigator(
 
     override fun showMediaPreviewBottomSheet(media: MediaMetadata) {
         runOnResumed {
-            navigator.navigate(
-                MediaPreviewBottomSheetDestination(media = media),
-            )
+            when (currentNavGraph) {
+                is HomeGraph -> navigator.navigate(HomeAppLevelMediaPreviewBottomSheetDestination(media = media))
+                is LibraryGraph -> navigator.navigate(LibraryAppLevelMediaPreviewBottomSheetDestination(media = media))
+                else -> throw IllegalStateException("Media preview bottom sheet can only be opened from Home or Library graph")
+            }
         }
     }
 
@@ -314,7 +327,47 @@ internal class MobileAppNavigator(
     }
 
     override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {
-        navigateToLinkLoaderSheet.showLinkLoaderSheet(media, episode)
+        runOnResumed {
+            navigator.navigate(
+                MediaLinksBottomSheetDestination(
+                    media = media,
+                    episode = episode,
+                )
+            )
+        }
+    }
+
+    override fun showPlayerSplashScreen(
+        media: MediaMetadata,
+        episode: Episode?
+    ) {
+        runOnResumed {
+            navigator.navigate(
+                PlayerSplashScreenDestination(
+                    media = media,
+                    episode = episode,
+                ),
+            )
+        }
+    }
+
+    override fun navigateToPlayerScreen(
+        media: MediaMetadata,
+        episode: Episode?
+    ) {
+        runOnResumed {
+            navigator.navigate(
+                PlayerScreenDestination(
+                    media = media,
+                    episode = episode,
+                ),
+            ) {
+                // Clear player splash screen from back stack to prevent going back to it
+                popUpTo(PlayerSplashScreenDestination(media = media, episode = episode)) {
+                    inclusive = true
+                }
+            }
+        }
     }
 
     override fun navigateToAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {

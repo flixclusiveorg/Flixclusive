@@ -23,6 +23,7 @@ import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.extensions.showToast
+import com.flixclusive.core.presentation.mobile.extensions.toggleSystemBars
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
@@ -77,6 +78,7 @@ internal fun PlayerScreen(
         navigator.navigateBack()
 
         val activity = context.getActivity<ComponentActivity>()
+        activity.toggleSystemBars(true)
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 

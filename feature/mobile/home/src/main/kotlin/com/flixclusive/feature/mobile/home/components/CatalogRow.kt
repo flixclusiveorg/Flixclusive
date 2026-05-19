@@ -217,7 +217,7 @@ private fun ErrorCatalogRow(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val defaultLabel = stringResource(LocaleR.string.something_went_wrong)
+    val defaultLabel = stringResource(LocaleR.string.unknown_season)
     val message = remember { error?.asString(context) ?: defaultLabel }
 
     Box(

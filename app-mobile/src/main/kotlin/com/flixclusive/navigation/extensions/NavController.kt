@@ -28,9 +28,7 @@ internal fun DestinationsNavigator.bottomBarNavigate(
 
     navigate(screen) {
         if (isPoppingToRoot) {
-            popUpTo(screen.startRoute) {
-                inclusive = true
-            }
+            popUpTo(screen.startRoute)
         } else {
             popUpTo(AppmobileNavGraphs.home.startDestination) {
                 saveState = true

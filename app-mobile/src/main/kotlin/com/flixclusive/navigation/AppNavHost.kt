@@ -8,7 +8,6 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
-import com.flixclusive.core.navigation.navigator.NavigateToLinkLoaderSheet
 import com.flixclusive.core.navigation.navigator.NavigatorExitApp
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreen
 import com.flixclusive.feature.mobile.user.add.AddUserScreen
@@ -34,7 +33,6 @@ import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 internal fun AppNavHost(
     navController: NavHostController,
     navigatorExitApp: NavigatorExitApp,
-    navigateToLinkLoaderSheet: NavigateToLinkLoaderSheet,
     isTv: Boolean = false,
 ) {
     val navigator = navController.rememberDestinationsNavigator()
@@ -49,7 +47,6 @@ internal fun AppNavHost(
                     navBackStackEntry = navBackStackEntry,
                     navigatorExitApp = navigatorExitApp,
                     navigator = navigator,
-                    navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
                 ),
             )
         },
@@ -62,7 +59,6 @@ internal fun AppNavHost(
                         navBackStackEntry = navBackStackEntry,
                         navigatorExitApp = navigatorExitApp,
                         navigator = navigator,
-                        navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
                     ),
                     avatarResultRecipient = resultRecipient<UserAvatarSelectScreenDestination, Int>(
                         resultNavType = intNavType,
@@ -80,7 +76,6 @@ internal fun AppNavHost(
                         navBackStackEntry = navBackStackEntry,
                         navigatorExitApp = navigatorExitApp,
                         navigator = navigator,
-                        navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
                     ),
                     pinVerifyResultRecipient = resultRecipient<PinVerifyScreenDestination, PinVerificationResult>(
                         resultNavType = pinVerificationResultNavType
@@ -96,7 +91,6 @@ private fun getMobileNavigator(
     navBackStackEntry: NavBackStackEntry,
     navigatorExitApp: NavigatorExitApp,
     navigator: DestinationsNavigator,
-    navigateToLinkLoaderSheet: NavigateToLinkLoaderSheet,
 ): MobileAppNavigator {
     return MobileAppNavigator(
         destination = navBackStackEntry.destination,
@@ -104,6 +98,5 @@ private fun getMobileNavigator(
         uriHandler = LocalUriHandler.current,
         lifecycleOwner = LocalLifecycleOwner.current,
         navigatorExitApp = navigatorExitApp,
-        navigateToLinkLoaderSheet = navigateToLinkLoaderSheet,
     )
 }

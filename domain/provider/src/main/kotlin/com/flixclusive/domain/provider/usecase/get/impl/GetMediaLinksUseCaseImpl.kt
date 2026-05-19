@@ -1,6 +1,7 @@
 package com.flixclusive.domain.provider.usecase.get.impl
 
 import android.content.Context
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.UserSessionDataStore
@@ -29,6 +30,7 @@ import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,6 +39,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
     private val mediaLinksRepository: MediaLinksRepository,
     private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
+    private val appDispatchers: AppDispatchers,
 ) : GetMediaLinksUseCase {
     override operator fun invoke(
         media: MediaMetadata,
@@ -166,7 +169,10 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 return@channelFlow
             }
         }
+
+        send(LoadLinksState.Unavailable())
     }
+        .flowOn(appDispatchers.io)
 
     private suspend fun ProducerScope<LoadLinksState>.processProvider(
         id: String,
@@ -243,11 +249,17 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         media: MediaMetadata,
         crossMatcherApi: CrossMatchProviderApi,
     ): MediaMetadata? {
-        var crossMatchedMedia = crossMatcherApi.getById(media.externalIds)
-        if (crossMatchedMedia == null) {
-            crossMatchedMedia = crossMatcherApi.getByFuzzy(media)
-        }
+        try {
+            var crossMatchedMedia = crossMatcherApi.getById(media.externalIds)
+            if (crossMatchedMedia == null) {
+                crossMatchedMedia = crossMatcherApi.getByFuzzy(media)
+            }
 
-        return crossMatchedMedia
+            return crossMatchedMedia
+        } catch (e: Throwable) {
+            errorLog("Cross-matching failed for media ${media.title} (${media.id})}")
+            errorLog(e)
+            return null
+        }
     }
 }
