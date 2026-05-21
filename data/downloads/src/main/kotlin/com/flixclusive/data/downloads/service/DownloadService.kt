@@ -248,7 +248,7 @@ class DownloadService : Service() {
     private fun updateNotification(
         notificationId: Int,
         fileName: String,
-        progress: Int,
+        progress: Float,
         status: DownloadStatus,
     ) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -260,7 +260,7 @@ class DownloadService : Service() {
                     .setContentTitle("Downloading ${fileName.substringBeforeLast(".")}")
                     .setContentText("$progress%")
                     .setSmallIcon(android.R.drawable.stat_sys_download)
-                    .setProgress(100, progress, false)
+                    .setProgress(100, progress.toInt(), false)
                     .setOngoing(true)
                     .build()
             }

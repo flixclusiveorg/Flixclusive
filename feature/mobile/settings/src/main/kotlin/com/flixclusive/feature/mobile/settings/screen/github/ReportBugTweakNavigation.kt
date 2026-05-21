@@ -18,7 +18,7 @@ internal object ReportBugTweakNavigation : BaseTweakNavigation {
 
     @Composable
     override fun getIconPainter(): Painter
-        = painterResource(UiCommonR.drawable.test_thin)
+        = painterResource(UiCommonR.drawable.bug_thin)
 
     override fun onClick(navigator: NavigatorSettingsScreen) {
         navigator.navigateToUrl(

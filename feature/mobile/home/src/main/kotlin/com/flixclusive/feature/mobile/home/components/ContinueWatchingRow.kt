@@ -231,7 +231,7 @@ private fun ContinueWatchingCard(
             ) {
                 AdaptiveIcon(
                     painter = painterResource(id = R.drawable.round_more_vert_24),
-                    contentDescription = stringResource(LocaleR.string.see_more_btn_content_desc)
+                    contentDescription = stringResource(LocaleR.string.see_more)
                 )
             }
         }

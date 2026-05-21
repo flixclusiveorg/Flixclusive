@@ -15,7 +15,7 @@ import com.flixclusive.core.navigation.navigator.NavigateToMediaImageDialog
 import com.flixclusive.core.navigation.navigator.NavigateToMediaPreviewBottomSheet
 import com.flixclusive.core.navigation.navigator.NavigateToMediaScreen
 import com.flixclusive.core.navigation.navigator.NavigateToOpenPinScreen
-import com.flixclusive.core.navigation.navigator.NavigateToProviderScreen
+import com.flixclusive.core.navigation.navigator.NavigateToProviderDetailsBottomSheet
 import com.flixclusive.core.navigation.navigator.NavigateToSeeAllScreen
 import com.flixclusive.core.navigation.navigator.NavigateToSelectAvatarScreen
 import com.flixclusive.core.navigation.navigator.NavigatorExitApp
@@ -32,7 +32,7 @@ import com.flixclusive.feature.mobile.onboarding.NavigatorOnboardingScreen
 import com.flixclusive.feature.mobile.player.NavigatorPlayerSplashScreen
 import com.flixclusive.feature.mobile.profiles.NavigatorUserProfilesScreen
 import com.flixclusive.feature.mobile.provider.add.NavigatorAddProviderScreen
-import com.flixclusive.feature.mobile.provider.details.NavigatorProviderDetails
+import com.flixclusive.feature.mobile.provider.details.NavigatorProviderDetailsBottomSheet
 import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerScreen
 import com.flixclusive.feature.mobile.search.NavigatorSearchScreen
 import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
@@ -67,7 +67,7 @@ import com.ramcosta.composedestinations.generated.player.destinations.PlayerScre
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
-import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
+import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsBottomSheetDestination
 import com.ramcosta.composedestinations.generated.providermanage.destinations.ProviderManagerScreenDestination
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
@@ -95,7 +95,7 @@ internal class MobileAppNavigator(
     NavigateToMediaPreviewBottomSheet,
     NavigateToMediaScreen,
     NavigateToOpenPinScreen,
-    NavigateToProviderScreen,
+    NavigateToProviderDetailsBottomSheet,
     NavigateToSeeAllScreen,
     NavigateToSelectAvatarScreen,
     NavigatorAddProviderScreen,
@@ -111,7 +111,7 @@ internal class MobileAppNavigator(
     NavigatorMediaScreen,
     NavigatorOnboardingScreen,
     NavigatorPlayerSplashScreen,
-    NavigatorProviderDetails,
+    NavigatorProviderDetailsBottomSheet,
     NavigatorProviderManagerScreen,
     NavigatorSearchScreen,
     NavigatorSeeAllScreen,
@@ -253,10 +253,10 @@ internal class MobileAppNavigator(
         navigatorExitApp.exitApplication()
     }
 
-    override fun navigateToProviderSettings(providerMetadata: ProviderMetadata) {
+    override fun navigateToProviderSettings(provider: ProviderMetadata) {
         runOnResumed {
             navigator.navigate(
-                ProviderSettingsScreenDestination(id = providerMetadata.id),
+                ProviderSettingsScreenDestination(id = provider.id),
             )
         }
     }
@@ -269,10 +269,10 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun navigateToProviderDetails(providerMetadata: ProviderMetadata) {
+    override fun showProviderDetailsSheet(provider: ProviderMetadata) {
         runOnResumed {
             navigator.navigate(
-                ProviderDetailsScreenDestination(metadata = providerMetadata),
+                ProviderDetailsBottomSheetDestination(metadata = provider),
             )
         }
     }
@@ -282,9 +282,8 @@ internal class MobileAppNavigator(
         description: String,
     ) {
         val direction = when (currentNavGraph) {
-            is HomeGraph -> AppAppLevelMarkdownScreenDestination(title = title, description = description)
             is SettingsGraph -> SettingsAppLevelMarkdownScreenDestination(title = title, description = description)
-            else -> throw IllegalStateException("Markdown screen can only be opened from Home or Settings graph")
+            else -> AppAppLevelMarkdownScreenDestination(title = title, description = description)
         }
 
         runOnResumed {

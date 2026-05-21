@@ -354,7 +354,7 @@ private fun AppUpdatesScreenBasePreview() {
             state.status.isIdle -> DownloadState(
                 downloadId = "",
                 status = DownloadStatus.DOWNLOADING,
-                progress = 0,
+                progress = 0f,
             )
 
             state.status.isDownloading && state.progress < 100 -> state.copy(
@@ -364,7 +364,7 @@ private fun AppUpdatesScreenBasePreview() {
             state.status.isDownloading && state.progress >= 100 -> DownloadState(
                 downloadId = "",
                 status = DownloadStatus.COMPLETED,
-                progress = 100,
+                progress = 100f,
             )
 
             else -> DownloadState.IDLE
@@ -394,7 +394,7 @@ private fun AppUpdatesScreenBasePreview() {
                     state = state.copy(
                         downloadId = "",
                         status = DownloadStatus.DOWNLOADING,
-                        progress = 0,
+                        progress = 0f,
                     )
                 },
                 openHomeScreen = {},

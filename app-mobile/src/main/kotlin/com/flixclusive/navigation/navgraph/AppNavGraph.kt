@@ -26,6 +26,7 @@ import com.ramcosta.composedestinations.generated.player.destinations.PlayerScre
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
+import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsBottomSheetDestination
 import com.ramcosta.composedestinations.generated.splashscreen.destinations.SplashScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.UsereditModuleDestinations
@@ -43,6 +44,7 @@ internal annotation class AppNavGraph {
     @ExternalDestination<MediaImagePreviewDialogDestination>
     @ExternalDestination<MediaLinksBottomSheetDestination>
     @ExternalDestination<PlayerSplashScreenDestination>
+    @ExternalDestination<ProviderDetailsBottomSheetDestination>
     @ExternalModuleDestinations<UsereditModuleDestinations>
     companion object Includes
 }

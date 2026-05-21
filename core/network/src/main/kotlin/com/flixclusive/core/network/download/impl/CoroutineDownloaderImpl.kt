@@ -6,6 +6,7 @@ import com.flixclusive.core.network.download.DownloadProgress
 import com.flixclusive.core.network.util.ProgressInterceptor.Companion.addProgressListener
 import com.flixclusive.core.network.util.ProgressListener
 import com.flixclusive.core.util.android.saveTo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
@@ -46,9 +47,9 @@ internal class CoroutineDownloaderImpl
                                 done: Boolean,
                             ) {
                                 val progress = if (contentLength != -1L) {
-                                    ((bytesRead * 100) / contentLength).toInt()
+                                    (bytesRead * 100) / contentLength.toFloat()
                                 } else {
-                                    -1
+                                    -1f
                                 }
 
                                 try {
@@ -60,8 +61,11 @@ internal class CoroutineDownloaderImpl
                                             isComplete = done,
                                         ),
                                     )
-                                } catch (e: Exception) {
+                                } catch (_: CancellationException) {
                                     // Flow collector might be closed, ignore
+                                } catch (e: Exception) {
+                                    // Log the error but don't crash the downloader
+                                    e.printStackTrace()
                                 }
                             }
                         },

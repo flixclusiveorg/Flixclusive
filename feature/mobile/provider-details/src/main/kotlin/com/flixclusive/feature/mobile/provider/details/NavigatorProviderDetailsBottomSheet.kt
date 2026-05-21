@@ -5,7 +5,7 @@ import com.flixclusive.core.navigation.navigator.NavigateToAddProviderScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMarkdownScreen
 import com.flixclusive.core.navigation.navigator.NavigateToProviderSettings
 
-interface NavigatorProviderDetails :
+interface NavigatorProviderDetailsBottomSheet :
     NavigateBack,
     NavigateToAddProviderScreen,
     NavigateToProviderSettings,

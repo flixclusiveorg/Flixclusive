@@ -162,7 +162,7 @@ internal fun HeaderButtons(
 
         if (metadata.releaseStatus != MediaReleaseStatus.COMING_SOON) {
             ExtraButton(
-                inactiveLabel = LocaleR.string.download,
+                inactiveLabel = LocaleR.string.label_download,
                 activeLabel = R.string.downloaded,
                 inactiveDrawable = UiCommonR.drawable.download,
                 activeDrawable = UiCommonR.drawable.download_done,

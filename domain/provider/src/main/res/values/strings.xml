@@ -23,7 +23,6 @@
     <string name="provider_not_found">Provider [%1$s (%2$s)] not found. Cannot be unloaded</string>
     <string name="provider_not_even_installed">No such installed provider: %1$s</string>
     <string name="unload_exception_message">An error occurred while unloading %1$s (%2$s): %3$s</string>
-    <string name="failed_to_download_provider">Failed to download provider: %1$s (%2$s)</string>
     <string name="failed_to_load_provider">Failed to load provider %1$s (%2$s) after updating. Try reinstalling to see if it could fix the problem.</string>
     <string name="missing_metadata">Metadata not found for provider with id: %1$s</string>
 
@@ -43,4 +42,5 @@
     <string name="cross_match_no_item_found">No cross-match found for media \'%1$s\' with provider \'%2$s\'</string>
     <string name="tracker_not_matched_provider">Media item does not belong to the same provider as the list.</string>
     <string name="failed_scrobbling_progress_to_provider">Scrobbling failed for %1$s: %2$s</string>
+    <string name="error_msg_failed_to_download_provider_file">Failed to download provider file</string>
 </resources>

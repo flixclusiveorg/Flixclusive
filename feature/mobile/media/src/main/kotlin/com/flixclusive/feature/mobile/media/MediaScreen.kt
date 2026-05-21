@@ -294,7 +294,7 @@ private fun MediaScreenContent(
                                     onProviderClick = {
                                         if (uiState.provider == null) return@BriefDetails
 
-                                        navigator.navigateToProviderDetails(uiState.provider)
+                                        navigator.showProviderDetailsSheet(uiState.provider)
                                     },
                                     onGenreClick = { genre ->
                                         genre.catalog?.let(navigator::navigateToSeeAllScreen)
@@ -454,7 +454,7 @@ private fun MediaScreenBasePreview() {
         override fun navigateToMediaScreen(media: MediaMetadata, isTogglingLibrary: Boolean) {}
         override fun showMediaPreviewBottomSheet(media: MediaMetadata) {}
         override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {}
-        override fun navigateToProviderDetails(providerMetadata: ProviderMetadata) {}
+        override fun showProviderDetailsSheet(provider: ProviderMetadata) {}
         override fun navigateBack() {}
         override fun navigateToSeeAllScreen(item: Catalog) {}
     }

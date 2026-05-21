@@ -1,8 +1,8 @@
 package com.flixclusive.feature.mobile.provider.add
 
 import com.flixclusive.core.navigation.navigator.NavigateBack
-import com.flixclusive.core.navigation.navigator.NavigateToProviderScreen
+import com.flixclusive.core.navigation.navigator.NavigateToProviderDetailsBottomSheet
 
 interface NavigatorAddProviderScreen :
-    NavigateToProviderScreen,
+    NavigateToProviderDetailsBottomSheet,
     NavigateBack

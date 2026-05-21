@@ -21,7 +21,7 @@ import com.flixclusive.model.provider.ProviderType
 object DummyDataForPreview {
     fun getProviderMetadata(
         id: String = "TEST-FLX-PROVIDER",
-        name: String = "id-tmdb-123",
+        name: String = "Test provider",
         description: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         repositoryUrl: String = "https://github.com/flixclusiveorg/123Movies",
         buildUrl: String = "https://raw.githubusercontent.com/flixclusiveorg/plugins-template/builds/updater.json",
@@ -38,9 +38,16 @@ object DummyDataForPreview {
         providerType: ProviderType = ProviderType.All,
         status: ProviderStatus = ProviderStatus.Working,
         language: Language = Language.Multiple,
-        authors: List<Author> = List(5) { Author("FLX $it") },
+        authors: List<Author> = List(5) {
+            Author(
+                "FLX $it",
+                socialLink = if (it % 2 == 0) "https://github.com/john-doe" else null
+            )
+        },
+        adult: Boolean = false,
     ) =
         ProviderMetadata(
+            adult = adult,
             id = id,
             name = name,
             description = description,

@@ -319,7 +319,7 @@ private fun ExpandableText(
         if (hasOverflow || expanded) {
             Text(
                 text = stringResource(
-                    if (expanded) R.string.see_less else R.string.see_more,
+                    if (expanded) R.string.see_less else LocaleR.string.see_more,
                 ),
                 style = MaterialTheme.typography.labelSmall.asAdaptiveTextStyle(),
                 color = MaterialTheme.colorScheme.primary,
@@ -344,12 +344,12 @@ private fun DownloadButton(
     // TODO: Implement download functionality
     PlainTooltipBox(
         modifier = modifier,
-        description = stringResource(LocaleR.string.download),
+        description = stringResource(LocaleR.string.label_download),
     ) {
         IconButton(onClick = onClick) {
             AdaptiveIcon(
                 painter = painterResource(UiCommonR.drawable.download),
-                contentDescription = stringResource(LocaleR.string.download),
+                contentDescription = stringResource(LocaleR.string.label_download),
                 dp = 22.dp,
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )

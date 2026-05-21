@@ -68,6 +68,7 @@
     <string name="tv_show">TV Show</string>
 
     <!--  Extra labels  -->
+    <string name="label_provider_adult">18+</string>
     <string name="in_library">In library</string>
     <string name="create">Create</string>
     <string name="add_debug_prefix">Add debug prefix</string>
@@ -286,6 +287,7 @@
     <string name="added_at">Added at</string>
     <string name="created_at">Created at</string>
     <string name="mark_as_watched">Mark as watched</string>
+    <string name="see_more">See more</string>
     <string name="mark_as_unwatched">Mark as unwatched</string>
     <string name="watched">Watched</string>
 
@@ -336,9 +338,8 @@
     <string name="copied_link">Link has been copied</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="copy_stack_trace_message">You can open an issue on GitHub with this stack trace.</string>
-    <string name="default_description_msg">No description given.</string>
     <string name="default_update_info_message">No additional update information provided.</string>
-    <string name="download">Download</string>
+    <string name="label_download">Download</string>
     <string name="download_completed">Download completed</string>
     <string name="download_in_progress">Downloading</string>
     <string name="empty_list_default_message">No items found.</string>
@@ -419,6 +420,7 @@
     <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
     <string name="navigate_to_media">Go see details of media button</string>
+    <string name="navigate">Navigate</string>
     <string name="navigate_to_repository_content_desc">Open repository screen</string>
     <string name="back">Back</string>
     <string name="next_episode_button_desc">An icon for next episode</string>
@@ -444,7 +446,6 @@
     <string name="search_history_content_desc">Clears all searches this user has made</string>
     <string name="search_history_icon">An icon for search history</string>
     <string name="search_history_item_count_format">You have %1$d search history items</string>
-    <string name="see_more_btn_content_desc">See more</string>
     <string name="selected_avatar_content_desc">Selected avatar</string>
     <string name="signup_prerelease_updates_desc">Opt-in on using pre-release updates instead of official ones.</string>
     <string name="sort_icon_content_desc">Sort icon</string>

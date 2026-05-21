@@ -89,7 +89,7 @@ internal fun AddProviderScreen(
         onGoBack = navigator::navigateBack,
         consumeProviderExceptions = viewModel::consumeProviderExceptions,
         onToggleInstallation = viewModel::onToggleInstallation,
-        onViewProviderDetails = navigator::navigateToProviderDetails,
+        onViewProviderDetails = navigator::showProviderDetailsSheet,
         onQueryChange = viewModel::onSearchQueryChange,
         onUpdateFilter = viewModel::onUpdateFilter,
         filters = { filters },

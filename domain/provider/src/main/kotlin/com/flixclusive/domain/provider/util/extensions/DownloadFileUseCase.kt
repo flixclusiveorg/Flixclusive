@@ -8,12 +8,14 @@ import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.takeWhile
 import java.io.File
 
 suspend fun DownloadFileUseCase.downloadProvider(
     file: File,
     metadata: ProviderMetadata,
+    onProgressChange: (Float) -> Unit,
 ) {
     val providerDownloadRequest = DownloadRequest.from(
         url = metadata.buildUrl,
@@ -39,6 +41,13 @@ suspend fun DownloadFileUseCase.downloadProvider(
         invoke(updaterJsonDownloadRequest)
     ) { provider, updaterJson ->
         provider to updaterJson
+    }.onEach {
+        val providerProgress = it.first.progress
+        val updaterJsonProgress = it.second.progress
+
+        // Calculate overall progress as an average of both downloads
+        val overallProgress = (providerProgress + updaterJsonProgress) / 2
+        onProgressChange(overallProgress)
     }.takeWhile { (provider, updaterJson) ->
         val exception = provider.error ?: updaterJson.error
         val isFinished = provider.status.isFinished && updaterJson.status.isFinished

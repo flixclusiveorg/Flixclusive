@@ -3,5 +3,5 @@ package com.flixclusive.core.navigation.navigator
 import com.flixclusive.model.provider.ProviderMetadata
 
 interface NavigateToProviderSettings {
-    fun navigateToProviderSettings(providerMetadata: ProviderMetadata)
+    fun navigateToProviderSettings(provider: ProviderMetadata)
 }

@@ -11,6 +11,6 @@ package com.flixclusive.core.network.download
 data class DownloadProgress(
     val bytesDownloaded: Long,
     val totalBytes: Long,
-    val progress: Int,
+    val progress: Float,
     val isComplete: Boolean,
 )

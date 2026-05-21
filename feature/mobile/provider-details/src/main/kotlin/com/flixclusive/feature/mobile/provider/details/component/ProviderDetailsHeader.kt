@@ -8,26 +8,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
-import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.model.provider.ProviderMetadata
@@ -36,12 +30,9 @@ import com.flixclusive.core.drawables.R as UiCommonR
 @Composable
 internal fun ProviderDetailsHeader(
     provider: ProviderMetadata,
-    installationStatus: ProviderInstallationStatus,
-    onToggleInstallationState: () -> Unit,
-    openRepositoryScreen: () -> Unit,
+    onRepositoryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val (owner, repository) = remember {
         extractGithubInfoFromLink(provider.repositoryUrl) ?: (null to null)
     }
@@ -52,8 +43,8 @@ internal fun ProviderDetailsHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ImageWithSmallPlaceholder(
-            modifier = Modifier.size(65.dp),
-            placeholderSize = 38.dp,
+            modifier = Modifier.size(50.dp),
+            placeholderSize = 25.dp,
             urlImage = provider.iconUrl,
             placeholder = painterResource(UiCommonR.drawable.provider_logo),
             contentDescription = provider.name,
@@ -61,15 +52,13 @@ internal fun ProviderDetailsHeader(
         )
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
             modifier = Modifier.weight(1f)
         ) {
             Text(
                 text = provider.name,
-                style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Black,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -78,23 +67,11 @@ internal fun ProviderDetailsHeader(
 
                 Text(
                     text = repoName,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleSmall.asAdaptiveTextStyle(),
-                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable(onClick = openRepositoryScreen),
+                    modifier = Modifier.clickable(onClick = onRepositoryClick),
                 )
             }
-        }
-
-        // Installation button is not shown in compact mode because it's shown in the bottom bar
-        if (!windowSizeClass.isWidthCompact) {
-            ToggleInstallationButton(
-                installationStatus = installationStatus,
-                onToggleInstallationState = onToggleInstallationState,
-                modifier = Modifier.width(getAdaptiveDp(100.dp, 35.dp)),
-            )
         }
     }
 }
@@ -116,30 +93,22 @@ private fun ProviderDetailsHeaderBasePreview() {
             ) {
                 ProviderDetailsHeader(
                     provider = providerMetadata,
-                    installationStatus = ProviderInstallationStatus.NotInstalled,
-                    onToggleInstallationState = {},
-                    openRepositoryScreen = {},
+                    onRepositoryClick = {},
                 )
 
                 ProviderDetailsHeader(
                     provider = providerMetadata,
-                    installationStatus = ProviderInstallationStatus.Installed,
-                    onToggleInstallationState = {},
-                    openRepositoryScreen = {},
+                    onRepositoryClick = {},
                 )
 
                 ProviderDetailsHeader(
                     provider = providerMetadata,
-                    installationStatus = ProviderInstallationStatus.Installing,
-                    onToggleInstallationState = {},
-                    openRepositoryScreen = {},
+                    onRepositoryClick = {},
                 )
 
                 ProviderDetailsHeader(
                     provider = providerMetadata,
-                    installationStatus = ProviderInstallationStatus.Outdated,
-                    onToggleInstallationState = {},
-                    openRepositoryScreen = {},
+                    onRepositoryClick = {},
                 )
             }
         }

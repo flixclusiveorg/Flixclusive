@@ -98,7 +98,7 @@ internal fun ProviderManagerScreen(
         goBack = navigator::navigateBack,
         openProviderSettings = navigator::navigateToProviderSettings,
         onConsumeError = viewModel::onConsumeError,
-        openProviderDetails = navigator::navigateToProviderDetails,
+        openProviderDetails = navigator::showProviderDetailsSheet,
         openAddProviderScreen = navigator::navigateToAddProviderScreen,
         uninstallProvider = viewModel::uninstallProvider,
         setFirstTimeOnProvidersScreen = viewModel::setFirstTimeOnProvidersScreen,

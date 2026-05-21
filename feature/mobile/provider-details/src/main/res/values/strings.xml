@@ -2,4 +2,19 @@
 <resources>
     <string name="browse_repository">Browse repository</string>
     <string name="issue_a_bug">Issue a bug</string>
+    <string name="label_view_full_changelogs">View full changelogs →</string>
+    <string name="error_msg_failed_to_check_for_updates">Failed to check for updates: %1$s</string>
+    <string name="error_msg_failed_to_load_provider">Failed to load provider details: %1$s</string>
+    <string name="error_msg_failed_to_install_provider">Failed to install provider: %1$s</string>
+    <string name="error_msg_failed_to_uninstall_provider">Failed to uninstall provider: %1$s</string>
+    <string name="error_msg_skip_uninstall">Provider %1$s was not found. Skipping uninstallation…</string>
+    <string name="error_msg_failed_to_update_provider">Failed to update provider: %1$s</string>
+    <string name="label_downloading_provider">Downloading provider…</string>
+
+    <string name="label_loading">Loading…</string>
+    <string name="label_install">Install</string>
+    <string name="label_uninstall">Uninstall</string>
+    <string name="label_uninstalling">Uninstalling…</string>
+    <string name="label_downloading">Downloading…</string>
+    <string name="label_update">Update to v%1$s</string>
 </resources>

@@ -29,6 +29,8 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.markdown)
+    implementation(libs.destinations.bottomSheet)
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.stubs.model.provider)
     implementation(libs.stubs.provider)

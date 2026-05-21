@@ -6,7 +6,7 @@ import java.io.File
 data class DownloadState(
     val downloadId: String,
     val status: DownloadStatus = DownloadStatus.IDLE,
-    val progress: Int = 0,
+    val progress: Float = 0f,
     val bytesDownloaded: Long = 0L,
     val totalBytes: Long = 0L,
     val error: UiText? = null,
