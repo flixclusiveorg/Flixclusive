@@ -42,7 +42,7 @@ class DownloadRepositoryImplTest {
 
             stateFlow.test {
                 val initialState = awaitItem()
-                expectThat(initialState.downloadId).isEqualTo(downloadId)
+                expectThat(initialState.id).isEqualTo(downloadId)
                 expectThat(initialState.status).isEqualTo(DownloadStatus.IDLE)
                 expectThat(initialState.progress).isEqualTo(0)
                 expectThat(initialState.bytesDownloaded).isEqualTo(0L)
@@ -206,7 +206,7 @@ class DownloadRepositoryImplTest {
 
             stateFlow1.test {
                 val initialState1 = awaitItem()
-                expectThat(initialState1.downloadId).isEqualTo(downloadId1)
+                expectThat(initialState1.id).isEqualTo(downloadId1)
                 expectThat(initialState1.status).isEqualTo(DownloadStatus.IDLE)
 
                 downloadRepository.executeDownload(downloadId1, url1, mockFile)
@@ -221,7 +221,7 @@ class DownloadRepositoryImplTest {
 
             stateFlow2.test {
                 val initialState2 = awaitItem()
-                expectThat(initialState2.downloadId).isEqualTo(downloadId2)
+                expectThat(initialState2.id).isEqualTo(downloadId2)
                 expectThat(initialState2.status).isEqualTo(DownloadStatus.IDLE)
 
                 downloadRepository.executeDownload(downloadId2, url2, mockFile)

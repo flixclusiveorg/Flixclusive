@@ -8,14 +8,12 @@ import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-internal class DownloadFileUseCaseImpl
-    @Inject
-    constructor(
-        private val downloadRepository: DownloadRepository,
-        private val downloadServiceController: DownloadServiceController,
-    ) : DownloadFileUseCase {
-        override fun invoke(request: DownloadRequest): Flow<DownloadState> {
-            downloadServiceController.start(request)
-            return downloadRepository.getDownloadState(request.downloadId)
-        }
+internal class DownloadFileUseCaseImpl @Inject constructor(
+    private val downloadRepository: DownloadRepository,
+    private val downloadServiceController: DownloadServiceController,
+) : DownloadFileUseCase {
+    override fun invoke(request: DownloadRequest): Flow<DownloadState> {
+        downloadServiceController.start(request)
+        return downloadRepository.getDownloadState(request.id)
     }
+}

@@ -3,13 +3,13 @@ package com.flixclusive.domain.downloads.model
 /**
  * Data class representing a request to download a file.
  *
- * @property downloadId A unique identifier for the download request.
+ * @property id A unique identifier for the download request.
  * @property url The URL from which to download the file.
  * @property fileName The name to save the downloaded file as.
  * @property destinationPath The path where the file should be saved.
  * */
 data class DownloadRequest(
-    val downloadId: String,
+    val id: String,
     val url: String,
     val fileName: String,
     val destinationPath: String,
@@ -22,14 +22,14 @@ data class DownloadRequest(
          * @param fileName The name to save the downloaded file as.
          * @param destinationPath The path where the file should be saved.
          *
-         * @return A new instance of [DownloadRequest] with a unique [downloadId].
+         * @return A new instance of [DownloadRequest] with a unique [id].
          * */
         fun from(
             url: String,
             fileName: String,
             destinationPath: String,
         ) = DownloadRequest(
-            downloadId = getDownloadId(url, fileName, destinationPath),
+            id = getDownloadId(url, fileName, destinationPath),
             url = url,
             fileName = fileName,
             destinationPath = destinationPath,

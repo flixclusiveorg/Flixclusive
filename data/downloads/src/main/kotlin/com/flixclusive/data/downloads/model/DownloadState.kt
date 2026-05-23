@@ -4,7 +4,7 @@ import com.flixclusive.core.common.locale.UiText
 import java.io.File
 
 data class DownloadState(
-    val downloadId: String,
+    val id: String,
     val status: DownloadStatus = DownloadStatus.IDLE,
     val progress: Float = 0f,
     val bytesDownloaded: Long = 0L,
@@ -13,7 +13,7 @@ data class DownloadState(
     val file: File? = null,
 ) {
     companion object {
-        val IDLE = DownloadState(downloadId = "")
+        val IDLE = DownloadState(id = "")
 
         fun DownloadState.error(error: UiText) =
             copy(

@@ -1,43 +1,63 @@
 package com.flixclusive.data.downloads.repository.impl
 
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.network.download.CoroutineDownloader
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.downloads.model.DownloadState
 import com.flixclusive.data.downloads.model.DownloadStatus
 import com.flixclusive.data.downloads.repository.DownloadRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class DownloadRepositoryImpl
-    @Inject
-    constructor(
-        private val coroutineDownloader: CoroutineDownloader,
-    ) : DownloadRepository {
-        private val downloadStates = mutableMapOf<String, MutableStateFlow<DownloadState>>()
+internal class DownloadRepositoryImpl @Inject constructor(
+    private val coroutineDownloader: CoroutineDownloader,
+    private val appDispatchers: AppDispatchers,
+) : DownloadRepository {
+    private val states = ConcurrentHashMap<String, MutableStateFlow<DownloadState>>()
 
-        override fun getDownloadState(downloadId: String): StateFlow<DownloadState> {
-            return downloadStates
-                .getOrPut(downloadId) {
-                    MutableStateFlow(DownloadState(downloadId = downloadId))
-                }.asStateFlow()
+    private val jobs = mutableMapOf<String, Job>()
+
+    private val scope by lazy { CoroutineScope(appDispatchers.io + SupervisorJob()) }
+
+    override fun getDownloadState(id: String): Flow<DownloadState> {
+        return states
+            .computeIfAbsent(id) {
+                MutableStateFlow(DownloadState(id = id))
+            }.asStateFlow()
+            .transformWhile {
+                emit(it)
+                !it.status.isFinished
+            }.onCompletion {
+                states.remove(id)
+            }
+    }
+
+    override fun executeDownload(
+        id: String,
+        url: String,
+        destinationFile: File,
+    ) {
+        val stateFlow = states.computeIfAbsent(id) {
+            MutableStateFlow(DownloadState(id = id))
         }
 
-        override suspend fun executeDownload(
-            downloadId: String,
-            url: String,
-            destinationFile: File,
-        ) {
-            val stateFlow = downloadStates.getOrPut(downloadId) {
-                MutableStateFlow(DownloadState(downloadId = downloadId))
-            }
-
+        jobs[id]?.cancel()
+        jobs[id] = scope.launch {
             try {
                 stateFlow.update { it.copy(status = DownloadStatus.DOWNLOADING) }
 
@@ -57,19 +77,26 @@ internal class DownloadRepositoryImpl
                             )
                         }
                     }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                errorLog("Download failed for $id: ${e.message}")
+                errorLog(e)
                 stateFlow.update {
                     it.copy(
                         status = DownloadStatus.FAILED,
                         error = UiText.from(e.message ?: "Unknown error occurred"),
                     )
                 }
-            }
-        }
-
-        override fun cancelDownload(downloadId: String) {
-            downloadStates[downloadId]?.update {
-                it.copy(status = DownloadStatus.CANCELLED)
+            } finally {
+                states.remove(id)
             }
         }
     }
+
+    override fun cancelDownload(id: String) {
+        jobs[id]?.cancel()
+        states[id]?.update {
+            it.copy(status = DownloadStatus.CANCELLED)
+        }
+        states.remove(id)
+    }
+}
