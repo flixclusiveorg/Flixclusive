@@ -80,8 +80,13 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
             downloadFile.downloadProvider(
                 metadata = updatedMetadata,
                 file = newFile,
-                onProgressChange = { progress ->
-                    trySend(DownloadProviderResult.Downloading(progress = progress.coerceIn(0f, 99f)))
+                onStateChange = { state ->
+                    trySend(
+                        DownloadProviderResult.Downloading(
+                            progress = state.progress.coerceIn(0f, 99f),
+                            downloadId = state.id,
+                        )
+                    )
                 },
             )
         }

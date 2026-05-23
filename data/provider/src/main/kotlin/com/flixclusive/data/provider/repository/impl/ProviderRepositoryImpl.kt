@@ -4,9 +4,9 @@ import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.entity.provider.InstalledProvider
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.provider.repository.ProviderResponseWrapper
-import com.flixclusive.data.provider.util.ProviderSortOrderManager
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.ProviderPlugin
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -22,8 +22,6 @@ internal class ProviderRepositoryImpl @Inject constructor(
     private val installedProviderDao: InstalledProviderDao,
     private val appDispatchers: AppDispatchers
 ) : ProviderRepository {
-    private val providerSortOrderManager = ProviderSortOrderManager(installedProviderDao)
-
     private val metadataMap = HashMap<String, ProviderMetadata>()
 
     /** Map containing all loaded provider classes  */
@@ -88,41 +86,6 @@ internal class ProviderRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun isEnabled(id: String, ownerId: String) = withContext(appDispatchers.io) {
-        installedProviderDao.isEnabled(id = id, ownerId = ownerId)
-    }
-
-    override fun getEnabledProvidersAsFlow(ownerId: String): Flow<List<ProviderResponseWrapper>> {
-        return installedProviderDao.getEnabledAsFlow(ownerId).mapLatest {
-            it.map { provider ->
-                val plugin = pluginsMap[provider.id]
-                val metadata = metadataMap[provider.id]
-
-                ProviderResponseWrapper(
-                    provider = provider,
-                    plugin = plugin,
-                    metadata = metadata
-                )
-            }
-        }
-    }
-
-    override suspend fun getEnabledProviders(ownerId: String): List<ProviderResponseWrapper> {
-        return withContext(appDispatchers.io) {
-            val enabledProviders = installedProviderDao.getEnabled(ownerId)
-            enabledProviders.map { provider ->
-                val plugin = pluginsMap[provider.id]
-                val metadata = metadataMap[provider.id]
-
-                ProviderResponseWrapper(
-                    provider = provider,
-                    plugin = plugin,
-                    metadata = metadata
-                )
-            }
-        }
-    }
-
     override suspend fun getProviders(ownerId: String) = withContext(appDispatchers.io) {
         installedProviderDao.getAll(ownerId).map {
             val plugin = pluginsMap[it.id]
@@ -149,28 +112,31 @@ internal class ProviderRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMaxSortOrder(ownerId: String): Double {
-        return withContext(appDispatchers.io) {
-            providerSortOrderManager.getNextSortOrder(ownerId)
+    override fun getProvidersWithCapabilityAsFlow(ownerId: String, capability: ProviderCapability): Flow<List<ProviderResponseWrapper>> {
+        return getProvidersAsFlow(ownerId).mapLatest { providers ->
+            providers.filter { wrapper ->
+                when (capability) {
+                    ProviderCapability.CATALOG -> wrapper.plugin?.getCatalogApi(context) != null
+                    ProviderCapability.CROSS_MATCH -> wrapper.plugin?.getCrossMatchApi(context) != null
+                    ProviderCapability.MEDIA_LINK -> wrapper.plugin?.getMediaLinkApi(context) != null
+                    ProviderCapability.METADATA -> wrapper.plugin?.getMetadataApi(context) != null
+                    ProviderCapability.SEARCH -> wrapper.plugin?.getSearchApi(context) != null
+                    ProviderCapability.TRACKER -> wrapper.plugin?.getTrackerApi(context) != null
+                }
+            }
         }
     }
 
-    override suspend fun reorderPosition(
-        moved: InstalledProvider,
-        before: InstalledProvider?,
-        after: InstalledProvider?,
-    ) {
-        providerSortOrderManager.reorder(
-            moved = moved,
-            before = before,
-            after = after
-        )
-    }
-
-    override suspend fun renormalizePositions(ownerId: String) {
-        val all = installedProviderDao.getAll(ownerId)
-        if (providerSortOrderManager.needsRenormalization(all)) {
-            providerSortOrderManager.renormalize(all, ownerId)
+    override suspend fun getProvidersWithCapability(ownerId: String, capability: ProviderCapability): List<ProviderResponseWrapper> {
+        return getProviders(ownerId).filter { wrapper ->
+            when (capability) {
+                ProviderCapability.CATALOG -> wrapper.plugin?.getCatalogApi(context) != null
+                ProviderCapability.CROSS_MATCH -> wrapper.plugin?.getCrossMatchApi(context) != null
+                ProviderCapability.MEDIA_LINK -> wrapper.plugin?.getMediaLinkApi(context) != null
+                ProviderCapability.METADATA -> wrapper.plugin?.getMetadataApi(context) != null
+                ProviderCapability.SEARCH -> wrapper.plugin?.getSearchApi(context) != null
+                ProviderCapability.TRACKER -> wrapper.plugin?.getTrackerApi(context) != null
+            }
         }
     }
 
@@ -180,12 +146,26 @@ internal class ProviderRepositoryImpl @Inject constructor(
         metadataMap.clear()
     }
 
-    override suspend fun toggleProvider(id: String, ownerId: String) {
-        val isEnabled = installedProviderDao.isEnabled(id, ownerId)
-        installedProviderDao.setEnabled(
-            id = id,
-            ownerId = ownerId,
-            isEnabled = !isEnabled
-        )
+    override suspend fun toggleCapability(id: String, ownerId: String, capability: ProviderCapability) {
+        val provider = installedProviderDao.get(id, ownerId) ?: return
+        when (capability) {
+            ProviderCapability.CATALOG -> installedProviderDao.setCatalogEnabled(id, ownerId, !provider.isCatalogEnabled)
+            ProviderCapability.CROSS_MATCH -> installedProviderDao.setCrossMatchEnabled(id, ownerId, !provider.isCrossMatchEnabled)
+            ProviderCapability.MEDIA_LINK -> installedProviderDao.setMediaLinkEnabled(id, ownerId, !provider.isMediaLinkEnabled)
+            ProviderCapability.METADATA -> installedProviderDao.setMetadataEnabled(id, ownerId, !provider.isMetadataEnabled)
+            ProviderCapability.SEARCH -> installedProviderDao.setSearchEnabled(id, ownerId, !provider.isSearchEnabled)
+            ProviderCapability.TRACKER -> installedProviderDao.setTrackerEnabled(id, ownerId, !provider.isTrackerEnabled)
+        }
+    }
+
+    override fun getProviderAsFlow(id: String, ownerId: String): Flow<ProviderResponseWrapper?> {
+        return installedProviderDao.getAsFlow(id, ownerId).mapLatest { provider ->
+            if (provider == null) return@mapLatest null
+            ProviderResponseWrapper(
+                provider = provider,
+                plugin = pluginsMap[id],
+                metadata = metadataMap[id],
+            )
+        }
     }
 }

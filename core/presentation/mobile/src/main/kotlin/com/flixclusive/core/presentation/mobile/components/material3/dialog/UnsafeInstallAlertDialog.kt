@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -50,12 +50,12 @@ fun UnsafeInstallAlertDialog(
 
     val buttonMinHeight = 50.dp
 
-    val context = LocalContext.current
-    val message = context.resources.getQuantityString(
+    val resources = LocalResources.current
+    val message = resources.getQuantityString(
         LocaleR.plurals.warning_install_message_first_half,
         quantity,
         formattedName,
-    ) + " " + context.getString(LocaleR.string.warning_install_message_second_half)
+    ) + " " + resources.getString(LocaleR.string.warning_install_message_second_half)
 
     CommonAlertDialog(
         modifier = modifier,
@@ -107,7 +107,7 @@ fun UnsafeInstallAlertDialog(
                         .heightIn(min = buttonMinHeight),
                 ) {
                     Text(
-                        text = stringResource(id = LocaleR.string.cancel),
+                        text = stringResource(id = LocaleR.string.label_cancel),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Light,
                     )

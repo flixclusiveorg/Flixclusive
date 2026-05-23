@@ -15,6 +15,7 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.database.repository.WatchProgressRepository
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.tracker.SyncFromScrobblersUseCase
@@ -247,9 +248,11 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
 
     private suspend fun getScrobblers(): List<Pair<String, TrackerProviderApi>> {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val providers = providerRepository.getEnabledProviders(userId)
+        val providers = providerRepository.getProvidersWithCapability(userId, ProviderCapability.TRACKER)
 
         return providers.mapNotNull {
+            if (!it.isTrackerEnabled) return@mapNotNull null
+
             val api = try {
                 it.plugin?.getTrackerApi(context)
             } catch (e: Throwable) {

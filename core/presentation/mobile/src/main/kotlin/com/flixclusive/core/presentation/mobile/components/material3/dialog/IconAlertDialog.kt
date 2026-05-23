@@ -41,7 +41,7 @@ fun IconAlertDialog(
     tint: Color = MaterialTheme.colorScheme.primary,
     dialogProperties: DialogProperties = DialogProperties(),
     confirmButtonLabel: String = stringResource(id = LocaleR.string.ok),
-    dismissButtonLabel: String? = stringResource(id = LocaleR.string.cancel),
+    dismissButtonLabel: String? = stringResource(id = LocaleR.string.label_cancel),
     dismissOnConfirm: Boolean = true,
     onDismiss: () -> Unit = {},
 ) {

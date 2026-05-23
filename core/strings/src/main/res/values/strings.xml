@@ -96,7 +96,7 @@
     <string name="browse_movie_companies">Top movie companies</string>
     <string name="browse_providers_catalogs">Your providers\' catalogs</string>
     <string name="browse_tv_networks">Top TV networks</string>
-    <string name="cancel">Cancel</string>
+    <string name="label_cancel">Cancel</string>
     <string name="change_logs">CHANGE LOGS</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="choose_an_avatar">Choose an avatar</string>
@@ -158,8 +158,12 @@
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
     <string name="import_label">Import</string>
     <string name="incognito">Incognito</string>
-    <string name="install">Install</string>
-    <string name="install_all">Install all</string>
+    <string name="label_downloading_provider">Downloading provider…</string>
+    <string name="label_loading">Loading…</string>
+    <string name="label_uninstalling">Uninstalling…</string>
+    <string name="label_update">Update to v%1$s</string>
+    <string name="label_install">Install</string>
+    <string name="label_install_all">Install all</string>
     <string name="language">Language</string>
     <string name="languages">Languages</string>
     <string name="load_url">Load URL</string>
@@ -262,7 +266,7 @@
     <string name="bg_transparency">Background transparency</string>
     <string name="understanding_providers">Understanding Providers</string>
     <string name="understood">Understood</string>
-    <string name="uninstall">Uninstall</string>
+    <string name="label_uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>
     <string name="unsafe_and_untrusted">Unsafe and Untrusted</string>
     <string name="update_info">Update information</string>

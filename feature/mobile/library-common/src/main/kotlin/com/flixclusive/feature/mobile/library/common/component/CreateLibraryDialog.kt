@@ -54,7 +54,7 @@ private fun CreateLibraryDialogPreview() {
                     Async.Success(
                         List(10) {
                             TrackerProvider(
-                                isEnabled = it % 3 != 0,
+                                isTrackerEnabled = it % 3 != 0,
                                 isAuthenticated = it % 2 != 0,
                                 metadata = DummyDataForPreview.getProviderMetadata(
                                     id = it.toString(),

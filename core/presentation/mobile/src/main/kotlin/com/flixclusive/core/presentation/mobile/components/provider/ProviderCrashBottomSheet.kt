@@ -106,7 +106,7 @@ fun ProviderCrashBottomSheet(
 
             itemsIndexed(
                 errors,
-                key = { _, (provider) -> provider.id },
+                key = { _, item -> item.provider.id + item.throwable.hashCode() },
             ) { i, error ->
                 Column(
                     modifier = Modifier.animateItem(),

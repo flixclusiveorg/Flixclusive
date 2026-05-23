@@ -148,7 +148,7 @@ internal class DataTweak(
                                 .heightIn(min = buttonMinHeight),
                         ) {
                             Text(
-                                text = stringResource(R.string.cancel),
+                                text = stringResource(R.string.label_cancel),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Light,
                             )

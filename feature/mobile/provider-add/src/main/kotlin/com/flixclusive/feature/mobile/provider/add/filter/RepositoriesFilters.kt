@@ -6,7 +6,7 @@ import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.strings.R
-import com.flixclusive.feature.mobile.provider.add.SearchableProvider
+import com.flixclusive.feature.mobile.provider.add.ProviderItem
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.collections.immutable.ImmutableList
@@ -22,7 +22,7 @@ internal data class RepositoriesFilters(
     companion object {
         const val REPOSITORY_NAME_OWNER_FORMAT = "%s/%s"
 
-        fun List<SearchableProvider>.filterRepositories(filter: RepositoriesFilters): List<SearchableProvider> {
+        fun List<ProviderItem>.filterRepositories(filter: RepositoriesFilters): List<ProviderItem> {
             if (filter.selectedValue.isEmpty()) return this
 
             return fastFilter { provider ->
@@ -33,7 +33,7 @@ internal data class RepositoriesFilters(
             }
         }
 
-        fun List<SearchableProvider>.toRepositoryFilters(
+        fun List<ProviderItem>.toRepositoryFilters(
             repositories: List<Repository>,
             initialSelectedRepository: Repository? = null,
         ): RepositoriesFilters {

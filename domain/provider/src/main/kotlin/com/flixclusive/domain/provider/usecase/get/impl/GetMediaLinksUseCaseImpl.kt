@@ -46,7 +46,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         episode: Episode?,
     ) = channelFlow {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val enabledProviders = providerRepository.getEnabledProviders(ownerId = userId)
+        val providers = providerRepository.getProviders(ownerId = userId)
         val oldCache = mediaLinksRepository.getLinks(
             MediaLinksCacheKey.create(
                 mediaId = media.id,
@@ -60,7 +60,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             return@channelFlow
         }
 
-        if (enabledProviders.isEmpty()) {
+        if (providers.isEmpty()) {
             send(
                 LoadLinksState.Unavailable(
                     UiText.from(R.string.get_media_links_error_empty_provider_list)
@@ -84,7 +84,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         }
 
         val mediaLinksApi = provider.plugin?.getMediaLinkApi(context)
-        if (mediaLinksApi != null) {
+        if (mediaLinksApi != null && provider.isMediaLinkEnabled) {
             processProvider(
                 media = media,
                 id = provider.id,
@@ -101,11 +101,12 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             return@channelFlow
         }
 
-        val combinedApis = enabledProviders.filter { enabledProvider ->
+        val combinedApis = providers.filter { enabledProvider ->
             val crossMatchApi = enabledProvider.plugin?.getCrossMatchApi(context)
             val mediaLinkApi = enabledProvider.plugin?.getMediaLinkApi(context)
 
             crossMatchApi != null && mediaLinkApi != null
+                && enabledProvider.isMediaLinkEnabled && enabledProvider.isCrossMatchEnabled
         }.map {
             val crossMatchApi = it.plugin!!.getCrossMatchApi(context)!!
             val mediaLinkApi = it.plugin!!.getMediaLinkApi(context)!!

@@ -3,7 +3,7 @@ package com.flixclusive.feature.mobile.provider.add.filter
 import android.content.Context
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.strings.R
-import com.flixclusive.feature.mobile.provider.add.SearchableProvider
+import com.flixclusive.feature.mobile.provider.add.ProviderItem
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.collections.immutable.toImmutableList
 import com.flixclusive.core.strings.R as LocaleR
@@ -30,8 +30,8 @@ internal data class CommonSortFilters(
     companion object {
         private inline fun <T : Comparable<T>> getSortComparator(
             ascending: Boolean,
-            crossinline selector: (SearchableProvider) -> T?,
-        ): Comparator<SearchableProvider> {
+            crossinline selector: (ProviderItem) -> T?,
+        ): Comparator<ProviderItem> {
             return if (ascending) {
                 compareBy(selector)
             } else {
@@ -39,7 +39,7 @@ internal data class CommonSortFilters(
             }
         }
 
-        fun List<SearchableProvider>.sort(filter: CommonSortFilters): List<SearchableProvider> {
+        fun List<ProviderItem>.sort(filter: CommonSortFilters): List<ProviderItem> {
             val option = filter.options[filter.selectedValue.index]
 
             return when (option) {

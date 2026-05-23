@@ -119,7 +119,7 @@ internal fun BaseLibraryModificationDialog(
                         .weight(1F)
                         .heightIn(min = buttonMinHeight),
                 ) {
-                    Text(text = stringResource(LocaleR.string.cancel))
+                    Text(text = stringResource(LocaleR.string.label_cancel))
                 }
 
                 Button(
@@ -466,7 +466,7 @@ private fun TrackerSheetBottomPreview() {
                 trackers = Async.Success(
                     List(10) {
                         TrackerProvider(
-                            isEnabled = it % 3 != 0,
+                            isTrackerEnabled = it % 3 != 0,
                             isAuthenticated = it % 2 != 0,
                             metadata = DummyDataForPreview.getProviderMetadata(
                                 id = it.toString(),
@@ -491,7 +491,7 @@ private fun TrackerSheetItemPreview() {
         Surface {
             TrackerSheetItem(
                 tracker = TrackerProvider(
-                    isEnabled = false,
+                    isTrackerEnabled = false,
                     isAuthenticated = true,
                     metadata = DummyDataForPreview.getProviderMetadata()
                 ),

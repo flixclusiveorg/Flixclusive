@@ -19,8 +19,9 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
-import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
+import com.flixclusive.domain.provider.usecase.manage.ToggleCapabilityUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
 import com.flixclusive.feature.mobile.library.common.model.TrackerProvider
@@ -59,7 +60,7 @@ internal class ManageLibraryViewModel @Inject constructor(
     private val getTrackerProviders: GetTrackerProvidersUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val appDispatchers: AppDispatchers,
-    private val toggleProvider: ToggleProviderUseCase,
+    private val toggleCapability: ToggleCapabilityUseCase,
     private val getTrackerLists: GetTrackerListsUseCase,
     private val getTrackerApi: GetTrackerApiUseCase
 ) : ViewModel() {
@@ -206,7 +207,7 @@ internal class ManageLibraryViewModel @Inject constructor(
 
                                 TrackerProvider(
                                     metadata = provider.metadata ?: return@mapNotNull null,
-                                    isEnabled = provider.isEnabled,
+                                    isTrackerEnabled = provider.isTrackerEnabled,
                                     isAuthenticated = isAuthenticated,
                                 )
                             }
@@ -278,7 +279,7 @@ internal class ManageLibraryViewModel @Inject constructor(
     }
 
     fun onToggleTracker(tracker: TrackerProvider) {
-        toggleProvider(tracker.id)
+        toggleCapability(tracker.id, ProviderCapability.TRACKER)
     }
 
     fun onUpdateFilter(filter: LibrarySort) {

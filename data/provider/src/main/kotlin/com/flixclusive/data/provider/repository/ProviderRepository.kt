@@ -1,6 +1,7 @@
 package com.flixclusive.data.provider.repository
 
 import com.flixclusive.core.database.entity.provider.InstalledProvider
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.provider.ProviderPlugin
@@ -22,10 +23,14 @@ data class ProviderResponseWrapper(
 
     val status: ProviderStatus? get() = metadata?.status
 
-    val sortOrder: Double get() = provider.sortOrder
     val createdAt: Date get() = provider.createdAt
 
-    val isEnabled: Boolean get() = provider.isEnabled
+    val isCatalogEnabled: Boolean get() = provider.isCatalogEnabled
+    val isCrossMatchEnabled: Boolean get() = provider.isCrossMatchEnabled
+    val isMediaLinkEnabled: Boolean get() = provider.isMediaLinkEnabled
+    val isMetadataEnabled: Boolean get() = provider.isMetadataEnabled
+    val isSearchEnabled: Boolean get() = provider.isSearchEnabled
+    val isTrackerEnabled: Boolean get() = provider.isTrackerEnabled
 
     val isDebug: Boolean get() = provider.isDebug
 }
@@ -48,27 +53,17 @@ interface ProviderRepository {
 
     suspend fun getProvider(id: String, ownerId: String): ProviderResponseWrapper?
 
-    fun getEnabledProvidersAsFlow(ownerId: String): Flow<List<ProviderResponseWrapper>>
+    fun getProvidersWithCapabilityAsFlow(ownerId: String, capability: ProviderCapability): Flow<List<ProviderResponseWrapper>>
 
-    suspend fun getEnabledProviders(ownerId: String): List<ProviderResponseWrapper>
-
-    suspend fun isEnabled(id: String, ownerId: String): Boolean
+    suspend fun getProvidersWithCapability(ownerId: String, capability: ProviderCapability): List<ProviderResponseWrapper>
 
     suspend fun getProviders(ownerId: String): List<ProviderResponseWrapper>
 
     fun getProvidersAsFlow(ownerId: String): Flow<List<ProviderResponseWrapper>>
 
-    suspend fun getMaxSortOrder(ownerId: String): Double
-
-    suspend fun reorderPosition(
-        moved: InstalledProvider,
-        before: InstalledProvider?,
-        after: InstalledProvider?,
-    )
-
-    suspend fun renormalizePositions(ownerId: String)
-
     suspend fun clearAll()
 
-    suspend fun toggleProvider(id: String, ownerId: String)
+    suspend fun toggleCapability(id: String, ownerId: String, capability: ProviderCapability)
+
+    fun getProviderAsFlow(id: String, ownerId: String): Flow<ProviderResponseWrapper?>
 }

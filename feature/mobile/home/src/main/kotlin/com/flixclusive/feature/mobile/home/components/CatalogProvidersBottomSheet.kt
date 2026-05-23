@@ -152,7 +152,7 @@ private fun CatalogProvidersList(
     val isButtonEnabled by remember {
         derivedStateOf {
             currentProviders.values.forEachIndexed { index, wrapper ->
-                if (wrapper.isEnabled != providers[index].isEnabled) {
+                if (wrapper.isCatalogEnabled != providers[index].isCatalogEnabled) {
                     return@derivedStateOf true
                 }
             }
@@ -182,9 +182,9 @@ private fun CatalogProvidersList(
             ) { provider ->
                 CatalogProviderCard(
                     provider = provider,
-                    enabled = { provider.isEnabled },
+                    enabled = { provider.isCatalogEnabled },
                     onToggle = {
-                        val updatedProvider = provider.copy(isEnabled = !provider.isEnabled)
+                        val updatedProvider = provider.copy(isCatalogEnabled = !provider.isCatalogEnabled)
                         currentProviders[provider.id] = updatedProvider
                     },
                 )
@@ -321,7 +321,7 @@ private fun CatalogProvidersBottomSheetPreview() {
                 providers = Async.Success(
                     List(20) {
                         CatalogProvider(
-                            isEnabled = true,
+                            isCatalogEnabled = true,
                             provider = DummyDataForPreview.getProviderMetadata(
                                 id = "provider_$it",
                                 name = "Provider ${it + 1}",
@@ -355,7 +355,7 @@ private fun CatalogProviderCardPreview() {
 
                     CatalogProviderCard(
                         provider = CatalogProvider(
-                            isEnabled = true,
+                            isCatalogEnabled = true,
                             provider = item
                         ),
                         enabled = { true },

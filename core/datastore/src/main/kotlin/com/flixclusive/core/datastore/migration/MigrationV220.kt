@@ -125,8 +125,6 @@ internal class MigrationV220(
         return InstalledProvider(
             id = metadata.id,
             repositoryUrl = metadata.repositoryUrl,
-            isEnabled = !preference.isDisabled,
-            sortOrder = index.toDouble(),
             isDebug = preference.isDebug,
             filePath = updatedFilePath,
             ownerId = userId

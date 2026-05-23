@@ -29,6 +29,7 @@ import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.PlayerServer.Companion.getIndexOfPreferredQuality
 import com.flixclusive.data.database.repository.WatchProgressRepository
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.MediaLinks
 import com.flixclusive.data.provider.repository.MediaLinksCacheKey
 import com.flixclusive.data.provider.repository.MediaLinksCacheKey.Companion.toCacheKey
@@ -157,9 +158,10 @@ internal class PlayerScreenViewModel @Inject constructor(
     val providers = userSessionDataStore.currentUserId
         .filterNotNull()
         .flatMapLatest { userId ->
-            providerRepository.getEnabledProvidersAsFlow(ownerId = userId)
+            providerRepository.getProvidersWithCapabilityAsFlow(userId, ProviderCapability.MEDIA_LINK)
                 .mapLatest { list ->
                     list.fastMapNotNull { provider ->
+                        if (!provider.isMediaLinkEnabled) return@fastMapNotNull null
                         provider.metadata
                     }
                 }

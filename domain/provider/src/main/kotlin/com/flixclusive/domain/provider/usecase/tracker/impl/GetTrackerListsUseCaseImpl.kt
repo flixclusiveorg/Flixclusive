@@ -16,7 +16,7 @@ internal class GetTrackerListsUseCaseImpl @Inject constructor(
         providers: List<ProviderResponseWrapper>
     ): List<TrackerList> {
         return providers.mapNotNull { provider ->
-            if (!provider.isEnabled) return@mapNotNull null
+            if (!provider.isTrackerEnabled) return@mapNotNull null
 
             val api = safeCall {
                 getTrackerApi(provider.id)

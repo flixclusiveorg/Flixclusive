@@ -14,10 +14,10 @@ import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.provider.repository.ProviderResponseWrapper
 import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.provider.ProviderPlugin
 import com.flixclusive.provider.capability.MediaLinkType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -87,11 +87,11 @@ internal class ProviderManagerViewModel @Inject constructor(
             .mapLatest { list ->
                 list.mapNotNull { provider ->
                     val metadata = provider.metadata ?: return@mapNotNull null
-                    val plugin = provider.plugin ?: return@mapNotNull null
+                    provider.plugin ?: return@mapNotNull null
 
                     ProviderWithCapabilities(
                         metadata = metadata,
-                        capabilities = getCapabilities(plugin, metadata)
+                        capabilities = getCapabilities(provider)
                     )
                 }.let { metadataList ->
                     if (isSearching) {
@@ -121,11 +121,11 @@ internal class ProviderManagerViewModel @Inject constructor(
         )
 
     private suspend fun getCapabilities(
-        plugin: ProviderPlugin,
-        metadata: ProviderMetadata,
-    ): List<UiText> {
+        wrapper: ProviderResponseWrapper,
+    ): List<CapabilityUiItem> {
         return withContext(appDispatchers.io) {
             try {
+                val plugin = wrapper.plugin!!
                 val catalogApi = plugin.getCatalogApi(context)
                 val searchApi = plugin.getSearchApi(context)
                 val metadataApi = plugin.getMetadataApi(context)
@@ -139,25 +139,28 @@ internal class ProviderManagerViewModel @Inject constructor(
                             listOf(MediaLinkType.STREAMS, MediaLinkType.SUBTITLES)
                         )
 
-                        if (hasStreamsAndSubs) {
-                            add(UiText.from(R.string.label_provider_capability_links))
-                        } else if (linksApi.supportedLinkTypes.contains(MediaLinkType.STREAMS)) {
-                            add(UiText.from(R.string.label_provider_capability_streams))
-                        } else if (linksApi.supportedLinkTypes.contains(MediaLinkType.SUBTITLES)) {
-                            add(UiText.from(R.string.label_provider_capability_subs))
+                        val label = when {
+                            hasStreamsAndSubs -> UiText.from(R.string.label_provider_capability_links)
+                            linksApi.supportedLinkTypes.contains(MediaLinkType.STREAMS) -> UiText.from(R.string.label_provider_capability_streams)
+                            linksApi.supportedLinkTypes.contains(MediaLinkType.SUBTITLES) -> UiText.from(R.string.label_provider_capability_subs)
+                            else -> null
+                        }
+
+                        if (label != null) {
+                            add(CapabilityUiItem(label = label, isEnabled = wrapper.isMediaLinkEnabled))
                         }
                     }
 
-                    if (catalogApi != null) add(UiText.from(R.string.label_provider_capability_catalogs))
-                    if (trackerApi != null) add(UiText.from(R.string.label_provider_capability_tracking))
-                    if (searchApi != null) add(UiText.from(R.string.label_provider_capability_search))
-                    if (metadataApi != null) add(UiText.from(R.string.label_provider_capability_metadata))
-                    if (crossMatchApi != null) add(UiText.from(R.string.label_provider_capability_cross_match))
+                    if (catalogApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_catalogs), wrapper.isCatalogEnabled))
+                    if (trackerApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_tracking), wrapper.isTrackerEnabled))
+                    if (searchApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_search), wrapper.isSearchEnabled))
+                    if (metadataApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_metadata), wrapper.isMetadataEnabled))
+                    if (crossMatchApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_cross_match), wrapper.isCrossMatchEnabled))
                 }
             } catch (e: Throwable) {
                 _uiState.update {
                     val currentErrors = it.error ?: emptyList()
-                    it.copy(error = currentErrors + ProviderWithThrowable(metadata, e))
+                    it.copy(error = currentErrors + ProviderWithThrowable(wrapper.metadata!!, e))
                 }
                 emptyList()
             }
@@ -212,8 +215,14 @@ internal data class ProviderManageUiState(
 @Immutable
 internal data class ProviderWithCapabilities(
     val metadata: ProviderMetadata,
-    val capabilities: List<UiText> = emptyList(),
+    val capabilities: List<CapabilityUiItem> = emptyList(),
 ) {
     val id: String get() = metadata.id
     val name get() = metadata.name
 }
+
+@Immutable
+internal data class CapabilityUiItem(
+    val label: UiText,
+    val isEnabled: Boolean,
+)

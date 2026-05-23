@@ -168,7 +168,7 @@ private fun TrackerProvidersList(
     val isButtonEnabled by remember {
         derivedStateOf {
             currentTrackers.values.forEachIndexed { index, wrapper ->
-                if (wrapper.isEnabled != trackers[index].isEnabled) {
+                if (wrapper.isTrackerEnabled != trackers[index].isTrackerEnabled) {
                     return@derivedStateOf true
                 }
             }
@@ -198,10 +198,10 @@ private fun TrackerProvidersList(
             ) { tracker ->
                 TrackerCard(
                     tracker = tracker,
-                    enabled = { tracker.isEnabled },
+                    enabled = { tracker.isTrackerEnabled },
                     openProviderSettings = { openProviderSettings(tracker) },
                     onToggle = {
-                        val updatedTracker = tracker.copy(isEnabled = !tracker.isEnabled)
+                        val updatedTracker = tracker.copy(isTrackerEnabled = !tracker.isTrackerEnabled)
                         currentTrackers[tracker.id] = updatedTracker
                     },
                 )
@@ -398,7 +398,7 @@ private fun TrackerProvidersBottomSheetPreview() {
                     Async.Success(
                         List(20) {
                             TrackerProvider(
-                                isEnabled = true,
+                                isTrackerEnabled = true,
                                 isAuthenticated = it % 3 == 0,
                                 metadata = DummyDataForPreview.getProviderMetadata(
                                     id = "provider_$it",
@@ -435,7 +435,7 @@ private fun TrackerCardPreview() {
 
                     TrackerCard(
                         tracker = TrackerProvider(
-                            isEnabled = true,
+                            isTrackerEnabled = true,
                             isAuthenticated = false,
                             metadata = item,
                         ),

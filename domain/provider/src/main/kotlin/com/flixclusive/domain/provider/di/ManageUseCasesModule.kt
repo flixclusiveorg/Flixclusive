@@ -3,12 +3,12 @@ package com.flixclusive.domain.provider.di
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.InstallProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
-import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
+import com.flixclusive.domain.provider.usecase.manage.ToggleCapabilityUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.impl.InitializeProvidersUseCaseImpl
 import com.flixclusive.domain.provider.usecase.manage.impl.InstallProviderUseCaseImpl
 import com.flixclusive.domain.provider.usecase.manage.impl.LoadProviderUseCaseImpl
-import com.flixclusive.domain.provider.usecase.manage.impl.ToggleProviderUseCaseImpl
+import com.flixclusive.domain.provider.usecase.manage.impl.ToggleCapabilityUseCaseImpl
 import com.flixclusive.domain.provider.usecase.manage.impl.UnloadProviderUseCaseImpl
 import dagger.Binds
 import dagger.Module
@@ -36,5 +36,5 @@ internal abstract class ManageUseCasesModule {
     abstract fun bindInstallProviderUseCase(impl: InstallProviderUseCaseImpl): InstallProviderUseCase
 
     @Binds
-    abstract fun bindToggleProviderUseCase(impl: ToggleProviderUseCaseImpl): ToggleProviderUseCase
+    abstract fun bindToggleCapabilityUseCase(impl: ToggleCapabilityUseCaseImpl): ToggleCapabilityUseCase
 }

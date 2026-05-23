@@ -3,6 +3,7 @@ package com.flixclusive.domain.catalog.usecase.impl
 import android.content.Context
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
 import com.flixclusive.model.provider.Catalog
@@ -24,12 +25,14 @@ internal class GetHomeCatalogsUseCaseImpl @Inject constructor(
 ) : GetHomeCatalogsUseCase {
     @OptIn(FlowPreview::class)
     private fun getCatalogsFlow(userId: String) =
-        providerRepository.getEnabledProvidersAsFlow(userId)
+        providerRepository.getProvidersWithCapabilityAsFlow(userId, ProviderCapability.CATALOG)
             .debounce(600) // Debounce to prevent rapid emissions when providers change
             .mapLatest { providers ->
-                val apis = providers.mapNotNull { provider ->
-                    provider.plugin?.getCatalogApi(context)
-                }
+                val apis = providers
+                    .mapNotNull { provider ->
+                        if (!provider.isCatalogEnabled) return@mapNotNull null
+                        provider.plugin?.getCatalogApi(context)
+                    }
 
                 apis.flatMap { it.getCatalogs() }
             }

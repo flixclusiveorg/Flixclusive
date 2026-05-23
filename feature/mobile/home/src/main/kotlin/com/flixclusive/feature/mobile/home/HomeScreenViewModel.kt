@@ -20,12 +20,13 @@ import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
 import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
-import com.flixclusive.domain.provider.usecase.manage.ToggleProviderUseCase
+import com.flixclusive.domain.provider.usecase.manage.ToggleCapabilityUseCase
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
@@ -63,7 +64,7 @@ internal class HomeScreenViewModel @Inject constructor(
     private val getHomeCatalogs: GetHomeCatalogsUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val watchProgressRepository: WatchProgressRepository,
-    private val toggleProvider: ToggleProviderUseCase,
+    private val toggleCapability: ToggleCapabilityUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
@@ -115,7 +116,7 @@ internal class HomeScreenViewModel @Inject constructor(
             val providers = it.data.fastMapNotNull { provider ->
                 CatalogProvider(
                     provider = provider.metadata ?: return@fastMapNotNull null,
-                    isEnabled = provider.isEnabled,
+                    isCatalogEnabled = provider.isCatalogEnabled,
                 )
             }
 
@@ -346,7 +347,7 @@ internal class HomeScreenViewModel @Inject constructor(
     }
 
     fun onToggleProvider(id: String) {
-        toggleProvider(id)
+        toggleCapability(id, ProviderCapability.CATALOG)
     }
 }
 
@@ -371,7 +372,7 @@ internal data class HomeUiState(
 @Stable
 internal data class CatalogProvider(
     val provider: ProviderMetadata,
-    val isEnabled: Boolean,
+    val isCatalogEnabled: Boolean,
 ) {
     val id: String get() = provider.id
     val name: String get() = provider.name

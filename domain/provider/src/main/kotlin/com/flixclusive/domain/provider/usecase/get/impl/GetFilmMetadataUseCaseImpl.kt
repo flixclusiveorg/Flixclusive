@@ -55,6 +55,15 @@ internal class GetMediaMetadataUseCaseImpl @Inject constructor(
                 return@flow
             }
 
+            if (!provider.isMetadataEnabled) {
+                emit(
+                    Async.Failure(
+                        UiText.from(R.string.get_media_metadata_error_no_provider_api, media.providerId)
+                    )
+                )
+                return@flow
+            }
+
             val metadata = when (media.isMovie) {
                 true -> api.getMovie(media)
                 false -> api.getShow(media)

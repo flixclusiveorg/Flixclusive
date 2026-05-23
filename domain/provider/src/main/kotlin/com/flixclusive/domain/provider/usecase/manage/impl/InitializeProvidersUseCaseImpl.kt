@@ -159,7 +159,6 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                         repositoryUrl = metadata.repositoryUrl,
                         filePath = providerFile.absolutePath,
                         isDebug = true,
-                        sortOrder = installedProvider?.sortOrder ?: providerRepository.getMaxSortOrder(userId),
                         createdAt = installedProvider?.createdAt ?: Date()
                     ),
                 )

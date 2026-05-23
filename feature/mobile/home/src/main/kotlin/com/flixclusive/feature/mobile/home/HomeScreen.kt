@@ -538,7 +538,7 @@ private fun HomeScreenBasePreview() {
                             Async.Success(
                                 List(3) {
                                     CatalogProvider(
-                                        isEnabled = true,
+                                        isCatalogEnabled = true,
                                         provider = DummyDataForPreview.getProviderMetadata(
                                             id = "provider_$it",
                                             name = "Provider ${it + 1}",

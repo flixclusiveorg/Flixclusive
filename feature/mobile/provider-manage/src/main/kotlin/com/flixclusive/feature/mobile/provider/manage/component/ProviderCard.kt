@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider.manage.component
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +38,7 @@ import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.feature.mobile.provider.manage.CapabilityUiItem
 import com.flixclusive.feature.mobile.provider.manage.ProviderWithCapabilities
 import com.flixclusive.feature.mobile.provider.manage.R
 import com.flixclusive.model.provider.ProviderStatus
@@ -129,10 +132,18 @@ internal fun ProviderCard(
 
                 if (provider.capabilities.isNotEmpty()) {
                     FlowRow {
-                        provider.capabilities.fastForEach {
+                        provider.capabilities.fastForEach { capabilityItem ->
+                            val capabilityColor by animateColorAsState(
+                                targetValue = if (capabilityItem.isEnabled) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface.copy(0.4f)
+                                },
+                            )
+
                             TextChip(
-                                label = it.asString(),
-                                color = MaterialTheme.colorScheme.primary,
+                                label = capabilityItem.label.asString(),
+                                color = capabilityColor,
                                 modifier = Modifier.padding(end = 4.dp, bottom = 4.dp),
                             )
                         }
@@ -155,7 +166,7 @@ internal fun ProviderCard(
 
             ActionButton(
                 icon = painterResource(id = UiCommonR.drawable.delete_outlined),
-                contentDescription = stringResource(id = LocaleR.string.uninstall),
+                contentDescription = stringResource(id = LocaleR.string.label_uninstall),
                 tint = MaterialTheme.colorScheme.error,
                 onClick = onUninstall,
             )
@@ -241,7 +252,7 @@ private fun ProviderCardPreview() {
                                 "Search",
                                 "Track",
                                 "Cross-match"
-                            ).map { UiText.from(it) }
+                            ).map { CapabilityUiItem(label = UiText.from(it), isEnabled = true) }
                         },
                     ),
                 )
@@ -258,7 +269,7 @@ private fun ProviderCardPreview() {
                                 "Search",
                                 "Track",
                                 "Cross-match"
-                            ).map { UiText.from(it) }
+                            ).map { CapabilityUiItem(label = UiText.from(it), isEnabled = true) }
                         },
                     ),
                 )
@@ -275,7 +286,7 @@ private fun ProviderCardPreview() {
                             listOf(
                                 "Catalogs",
                                 "Media links",
-                            ).map { UiText.from(it) }
+                            ).map { CapabilityUiItem(label = UiText.from(it), isEnabled = false) }
                         },
                     ),
                 )

@@ -19,6 +19,7 @@ import com.flixclusive.domain.provider.util.extensions.toInstalledRepository
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -58,8 +59,20 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 downloadFile.downloadProvider(
                     file = file,
                     metadata = metadata,
-                    onProgressChange = { progress ->
-                        trySend(DownloadProviderResult.Downloading(progress = progress))
+                    onStateChange = { state ->
+                        val isFinished = state.status.isFinished
+
+                        when {
+                            isFinished && state.error != null -> throw ExceptionWithUiText(state.error)
+                            isFinished -> infoLog("Downloaded: ${state.file?.absolutePath ?: "unknown file path"}")
+                        }
+
+                        trySend(
+                            DownloadProviderResult.Downloading(
+                                progress = state.progress,
+                                downloadId = state.id,
+                            )
+                        )
                     },
                 )
             } catch (e: Throwable) {
@@ -69,6 +82,9 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 send(
                     DownloadProviderResult.Failure(
                         error = when (e) {
+                            is CancellationException -> CancellationException(
+                                context.getString(R.string.error_cancelled_provider_download, metadata.name)
+                            )
                             is ExceptionWithUiText -> e.cause ?: e
                             else -> e
                         },
@@ -93,7 +109,6 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 id = metadata.id,
                 filePath = file.absolutePath,
                 repositoryUrl = metadata.repositoryUrl,
-                sortOrder = providerRepository.getProviders(userId).size.toDouble()
             )
 
             providerRepository.install(installedProvider, metadata)

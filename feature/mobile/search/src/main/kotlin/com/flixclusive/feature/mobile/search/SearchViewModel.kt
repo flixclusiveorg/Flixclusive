@@ -77,7 +77,7 @@ internal class SearchViewModel @Inject constructor(
             .mapNotNull { provider ->
                 SearchProvider(
                     metadata = provider.metadata ?: return@mapNotNull null,
-                    isEnabled = provider.isEnabled,
+                    isSearchEnabled = provider.isSearchEnabled,
                 )
             }
             .sortedBy { it.name }
@@ -273,7 +273,7 @@ internal class SearchViewModel @Inject constructor(
     private suspend fun getSearchApi(providerId: String): SearchProviderApi? {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-        val providers = providerRepository.getEnabledProviders(userId)
+        val providers = providerRepository.getProviders(userId)
         val providerPlugin = providers.firstOrNull { it.metadata?.id == providerId }?.plugin
         return providerPlugin?.getSearchApi(context)
     }
@@ -301,7 +301,7 @@ internal data class SearchUiState(
 @Stable
 internal data class SearchProvider(
     val metadata: ProviderMetadata,
-    val isEnabled: Boolean,
+    val isSearchEnabled: Boolean,
 ) {
     val id: String get() = metadata.id
     val name: String get() = metadata.name

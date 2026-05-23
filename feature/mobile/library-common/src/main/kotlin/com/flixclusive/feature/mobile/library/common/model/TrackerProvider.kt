@@ -6,7 +6,7 @@ import com.flixclusive.model.provider.ProviderStatus
 
 @Stable
 data class TrackerProvider(
-    val isEnabled: Boolean,
+    val isTrackerEnabled: Boolean,
     val isAuthenticated: Boolean,
     val metadata: ProviderMetadata,
 ) {

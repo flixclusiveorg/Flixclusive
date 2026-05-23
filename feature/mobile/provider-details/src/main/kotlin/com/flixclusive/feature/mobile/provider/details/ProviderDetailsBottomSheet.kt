@@ -38,14 +38,18 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.UnsafeInstallAlertDialog
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallButton
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallState
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.feature.mobile.provider.details.component.AuthorCard
-import com.flixclusive.feature.mobile.provider.details.component.InstallStateButton
+import com.flixclusive.feature.mobile.provider.details.component.CapabilitiesSection
 import com.flixclusive.feature.mobile.provider.details.component.NavigationItem
 import com.flixclusive.feature.mobile.provider.details.component.ProviderDetailsDescription
 import com.flixclusive.feature.mobile.provider.details.component.ProviderDetailsDivider
@@ -64,6 +68,9 @@ import kotlin.math.roundToInt
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
+// From M3
+private val DialogMinWidth = 280.dp
+private val DialogMaxWidth = 560.dp
 
 @Destination<ExternalModuleGraph>(
     navArgs = ProviderMetadataNavArgs::class,
@@ -80,6 +87,7 @@ internal fun ProviderDetailsBottomSheet(
 
     val warnOnInstall by viewModel.warnOnInstall.collectAsStateWithLifecycle()
     val installState by viewModel.installState.collectAsStateWithLifecycle()
+    val capabilities by viewModel.capabilities.collectAsStateWithLifecycle()
 
     LaunchedEffect(true) {
         viewModel.errors
@@ -99,6 +107,8 @@ internal fun ProviderDetailsBottomSheet(
         onDisableInstallationWarning = viewModel::onDisableInstallationWarning,
         onForceUninstall = viewModel::onUninstall,
         installState = { installState },
+        capabilities = { capabilities },
+        onToggleCapability = viewModel::toggleCapability,
         onConfigure = {
             navigator.navigateToProviderSettings(provider = args.metadata)
         },
@@ -131,7 +141,7 @@ private fun String.getNewIssueUrl(): String {
 private fun ProviderDetailsBottomSheetContent(
     provider: ProviderMetadata,
     warnOnInstall: Boolean,
-    installState: () -> InstallState,
+    installState: () -> ProviderInstallState,
     onRepositoryClick: () -> Unit,
     onViewChangeLogs: () -> Unit,
     onToggleInstallState: () -> Unit,
@@ -139,6 +149,8 @@ private fun ProviderDetailsBottomSheetContent(
     onConfigure: () -> Unit,
     onForceUninstall: () -> Unit,
     onDisableInstallationWarning: (Boolean) -> Unit,
+    capabilities: () -> List<CapabilityItem>,
+    onToggleCapability: (ProviderCapability) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
@@ -152,7 +164,7 @@ private fun ProviderDetailsBottomSheetContent(
     val providerLatestChanges by remember {
         derivedStateOf {
             val state = installState()
-            if (state is InstallState.Outdated) {
+            if (state is ProviderInstallState.Outdated) {
                 state.newChangelogs to state.newVersion
             } else {
                 provider.changelog to provider.versionName
@@ -221,14 +233,14 @@ private fun ProviderDetailsBottomSheetContent(
                 }
 
                 item {
-                    InstallStateButton(
-                        installState = installState,
+                    ProviderInstallButton(
+                        state = installState,
                         onUninstall = onForceUninstall,
                         onConfigure = onConfigure,
                         onToggleInstallState = {
-                            if (installState() is InstallState.NotInstalled) {
+                            if (installState() is ProviderInstallState.NotInstalled) {
                                 isWarnOnInstallDialogOpened = true
-                                return@InstallStateButton
+                                return@ProviderInstallButton
                             }
 
                             onToggleInstallState()
@@ -256,10 +268,15 @@ private fun ProviderDetailsBottomSheetContent(
                     }
                 }
 
-
-//                if (provider.capabilities.isNotEmpty()) {
-//
-//                }
+                if (capabilities().isNotEmpty()) {
+                    item {
+                        CapabilitiesSection(
+                            installState = installState,
+                            capabilities = capabilities,
+                            onToggleCapability = onToggleCapability,
+                        )
+                    }
+                }
 
                 providerLatestChanges.first?.let { changelogs ->
                     item {
@@ -334,6 +351,7 @@ private fun ProviderDetailsBottomSheetContent(
                     onDisableInstallationWarning(disableWarning)
                     onToggleInstallState()
                 },
+                modifier = Modifier.padding(horizontal = 25.dp)
             )
         }
     }
@@ -364,7 +382,7 @@ private fun ProviderDetailsBottomSheetPreview() {
                     language = Language(code = "en")
                 ),
                 warnOnInstall = true,
-                installState = { InstallState.NotInstalled },
+                installState = { ProviderInstallState.NotInstalled },
                 onRepositoryClick = {},
                 onViewChangeLogs = {},
                 onToggleInstallState = {},
@@ -373,6 +391,19 @@ private fun ProviderDetailsBottomSheetPreview() {
                 onDisableInstallationWarning = {},
                 onConfigure = {},
                 onForceUninstall = {},
+                onToggleCapability = {},
+                capabilities = {
+                    buildList {
+                        add(
+                            CapabilityItem(
+                                capability = ProviderCapability.CROSS_MATCH,
+                                isEnabled = true,
+                                description = UiText.from("Sample description for cross match capability."),
+                                label = UiText.from("Cross Match")
+                            )
+                        )
+                    }
+                }
             )
         }
     }

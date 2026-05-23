@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.details.component
+package com.flixclusive.core.presentation.mobile.components.provider
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -6,12 +6,15 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,8 +31,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,10 +48,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.feature.mobile.provider.details.InstallState
-import com.flixclusive.feature.mobile.provider.details.R
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -62,20 +67,47 @@ private sealed class StableInstallState {
     data class Outdated(val version: String) : StableInstallState()
 }
 
+@Stable
+sealed class ProviderInstallState {
+    data object Loading : ProviderInstallState()
+    data object NotInstalled : ProviderInstallState()
+    data object Installed : ProviderInstallState()
+    data object Uninstalling : ProviderInstallState()
+    data class Installing(
+        val progress: Float,
+        val downloadId: String
+    ) : ProviderInstallState() {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Installing) return false
+
+            return progress.toInt() == other.progress.toInt()
+        }
+
+        override fun hashCode(): Int {
+            return progress.hashCode()
+        }
+    }
+    data class Outdated(
+        val newVersion: String,
+        val newChangelogs: String?,
+    ) : ProviderInstallState()
+}
+
 @Composable
-internal fun InstallStateButton(
-    installState: () -> InstallState,
+fun ProviderInstallButton(
+    state: () -> ProviderInstallState,
     onToggleInstallState: () -> Unit,
     onUninstall: () -> Unit,
     onConfigure: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     var isButtonEnabled by remember {
         mutableStateOf(
-            when (installState()) {
-                is InstallState.Installing,
-                is InstallState.Loading,
-                is InstallState.Uninstalling -> false
+            when (state()) {
+                is ProviderInstallState.Loading,
+                is ProviderInstallState.Uninstalling -> false
 
                 else -> true
             }
@@ -84,59 +116,57 @@ internal fun InstallStateButton(
 
     val isInstalled by remember {
         derivedStateOf {
-            installState() is InstallState.Installed
+            state() is ProviderInstallState.Installed
         }
     }
 
     val isOutdated by remember {
         derivedStateOf {
-            installState() is InstallState.Outdated
+            state() is ProviderInstallState.Outdated
         }
     }
 
-    val isDownloading by remember {
+    val isInstalling by remember {
         derivedStateOf {
-            installState() is InstallState.Installing
+            state() is ProviderInstallState.Installing
         }
     }
 
     val isStableState by remember {
         derivedStateOf {
-            when (val state = installState()) {
-                is InstallState.NotInstalled -> StableInstallState.NotInstalled
-                is InstallState.Installed -> StableInstallState.Installed
-                is InstallState.Loading -> StableInstallState.Loading
-                is InstallState.Uninstalling -> StableInstallState.Uninstalling
-                is InstallState.Outdated -> StableInstallState.Outdated(version = state.newVersion)
-                is InstallState.Installing -> StableInstallState.Installing
+            when (val deferred = state()) {
+                is ProviderInstallState.NotInstalled -> StableInstallState.NotInstalled
+                is ProviderInstallState.Installed -> StableInstallState.Installed
+                is ProviderInstallState.Loading -> StableInstallState.Loading
+                is ProviderInstallState.Uninstalling -> StableInstallState.Uninstalling
+                is ProviderInstallState.Outdated -> StableInstallState.Outdated(version = deferred.newVersion)
+                is ProviderInstallState.Installing -> StableInstallState.Installing
             }
         }
     }
 
     val containerColor by animateColorAsState(
-        targetValue = if (isInstalled) {
-            Color.Transparent
-        } else {
-            MaterialTheme.colorScheme.primary
+        targetValue = when {
+            isInstalled || isInstalling -> Color.Transparent
+            else -> MaterialTheme.colorScheme.primary
         },
         animationSpec = tween(durationMillis = 300)
     )
 
     val contentColor by animateColorAsState(
-        targetValue = if (isInstalled) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onPrimary
+        targetValue = when {
+            isInstalled -> MaterialTheme.colorScheme.error
+            isInstalling -> MaterialTheme.colorScheme.onSurface
+            else -> MaterialTheme.colorScheme.onPrimary
         },
         animationSpec = tween(durationMillis = 300)
     )
 
     LaunchedEffect(true) {
         snapshotFlow {
-            when (installState()) {
-                is InstallState.Installing,
-                is InstallState.Loading,
-                is InstallState.Uninstalling -> false
+            when (state()) {
+                is ProviderInstallState.Loading,
+                is ProviderInstallState.Uninstalling -> false
 
                 else -> true
             }
@@ -158,13 +188,13 @@ internal fun InstallStateButton(
             .padding(vertical = 8.dp),
     ) {
         AnimatedVisibility(
-            isDownloading,
+            isInstalling,
             enter = fadeIn() + slideInVertically { -it / 4 },
             exit = slideOutVertically { -it / 4 } + fadeOut(),
             modifier = Modifier.fillMaxWidth()
         ) {
             DownloadProgressIndicator(
-                installState = installState,
+                providerInstallState = state,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
         }
@@ -178,7 +208,7 @@ internal fun InstallStateButton(
         ) {
             Button(
                 onClick = onToggleInstallState,
-                enabled = isButtonEnabled,
+                enabled = isButtonEnabled && enabled,
                 shape = MaterialTheme.shapes.small,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = containerColor,
@@ -189,16 +219,18 @@ internal fun InstallStateButton(
                     .height(ButtonSize)
                     .weight(1f)
             ) {
-                AnimatedContent(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    targetState = isStableState,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() }
-                ) { state ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
-                    ) {
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
+                ) {
+                    AnimatedContent(
+                        targetState = isStableState,
+                        transitionSpec = {
+                            fadeIn() togetherWith
+                                fadeOut(tween(delayMillis = 300))
+                        }
+                    ) { state ->
                         if (
                             state is StableInstallState.NotInstalled
                             || state is StableInstallState.Outdated
@@ -212,24 +244,34 @@ internal fun InstallStateButton(
                         } else if (state is StableInstallState.Installed) {
                             Icon(
                                 painter = painterResource(UiCommonR.drawable.delete_outlined),
-                                contentDescription = stringResource(R.string.label_uninstall),
+                                contentDescription = stringResource(LocaleR.string.label_uninstall),
                                 tint = LocalContentColor.current,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
+                    }
 
+
+                    AnimatedContent(
+                        targetState = isStableState,
+                        transitionSpec = {
+                            slideInHorizontally { -it / 4 } togetherWith
+                                slideOutHorizontally { it / 4 }
+                        }
+                    ) { state ->
                         Text(
                             color = LocalContentColor.current,
                             text = when (state) {
-                                is StableInstallState.Loading -> stringResource(R.string.label_loading)
-                                is StableInstallState.NotInstalled -> stringResource(R.string.label_install)
-                                is StableInstallState.Installed -> stringResource(R.string.label_uninstall)
-                                is StableInstallState.Uninstalling -> stringResource(R.string.label_uninstalling)
-                                is StableInstallState.Installing -> stringResource(R.string.label_downloading)
-                                is StableInstallState.Outdated -> stringResource(R.string.label_update, state.version)
+                                is StableInstallState.Loading -> stringResource(LocaleR.string.label_loading)
+                                is StableInstallState.NotInstalled -> stringResource(LocaleR.string.label_install)
+                                is StableInstallState.Installed -> stringResource(LocaleR.string.label_uninstall)
+                                is StableInstallState.Uninstalling -> stringResource(LocaleR.string.label_uninstalling)
+                                is StableInstallState.Installing -> stringResource(LocaleR.string.label_cancel)
+                                is StableInstallState.Outdated -> stringResource(LocaleR.string.label_update, state.version)
                             }
                         )
                     }
+
                 }
             }
 
@@ -243,14 +285,14 @@ internal fun InstallStateButton(
                 ) {
                     OutlinedIconButton(
                         onClick = onUninstall,
-                        enabled = isButtonEnabled,
+                        enabled = isButtonEnabled && enabled,
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier
                             .height(ButtonSize)
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.delete_outlined),
-                            contentDescription = stringResource(LocaleR.string.uninstall),
+                            contentDescription = stringResource(LocaleR.string.label_uninstall),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -268,7 +310,7 @@ internal fun InstallStateButton(
                     OutlinedIconButton(
                         onClick = onConfigure,
                         shape = MaterialTheme.shapes.small,
-                        enabled = isButtonEnabled,
+                        enabled = isButtonEnabled && enabled,
                         modifier = Modifier.height(ButtonSize)
                     ) {
                         Icon(
@@ -286,16 +328,27 @@ internal fun InstallStateButton(
 
 @Composable
 private fun DownloadProgressIndicator(
-    installState: () -> InstallState,
+    providerInstallState: () -> ProviderInstallState,
     modifier: Modifier = Modifier
 ) {
-    val downloadProgress by remember {
+    var progress by remember { mutableFloatStateOf(0f) }
+    val formattedProgress by remember {
         derivedStateOf {
-            when (val state = installState()) {
-                is InstallState.Installing -> state.progress
+            "%.2f%%".format(progress)
+        }
+    }
+
+    LaunchedEffect(true) {
+        snapshotFlow {
+            when (val state = providerInstallState()) {
+                is ProviderInstallState.Installing -> state.progress
                 else -> null
             }
-        }
+        }.distinctUntilChanged()
+            .filterNotNull()
+            .collectLatest { value ->
+                progress = value
+            }
     }
 
     Column(
@@ -309,35 +362,33 @@ private fun DownloadProgressIndicator(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = stringResource(R.string.label_downloading_provider),
+                text = stringResource(LocaleR.string.label_downloading_provider),
                 style = MaterialTheme.typography.labelSmall,
                 color = LocalContentColor.current.copy(alpha = 0.8f)
             )
 
             Text(
-                text = "${downloadProgress ?: 0}%",
+                text = formattedProgress,
                 style = MaterialTheme.typography.labelSmall,
                 color = LocalContentColor.current.copy(alpha = 0.8f)
             )
         }
 
-        downloadProgress?.let {
-            LinearProgressIndicator(
-                progress = { it / 100f },
-                drawStopIndicator = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-            )
-        }
+        LinearProgressIndicator(
+            progress = { progress / 100f },
+            drawStopIndicator = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+        )
     }
 }
 
 @Preview
 @Composable
-private fun InstallStateButtonPreview() {
+private fun ProviderInstallButtonPreview() {
     val scope = rememberCoroutineScope()
-    var installState by remember { mutableStateOf<InstallState>(InstallState.Outdated("2.0.2", null)) }
+    var providerInstallState by remember { mutableStateOf<ProviderInstallState>(ProviderInstallState.Outdated("2.0.2", null)) }
 
 //    LaunchedEffect(true) {
 //        delay(800)
@@ -357,27 +408,33 @@ private fun InstallStateButtonPreview() {
         Surface(
             color = MaterialTheme.colorScheme.background,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
         ) {
-            InstallStateButton(
-                installState = { installState },
+            ProviderInstallButton(
+                state = { providerInstallState },
                 onUninstall = {},
                 onConfigure = {},
                 onToggleInstallState = {
                     scope.launch {
                         // Add delay to simulate processing time
-                        if (installState is InstallState.NotInstalled) {
-                            installState = InstallState.Installing(progress = 0f)
+                        if (providerInstallState is ProviderInstallState.NotInstalled) {
+                            providerInstallState = ProviderInstallState.Installing(
+                                progress = 0f,
+                                downloadId = "dummy_download_id"
+                            )
                             delay(2000)
-                            installState = InstallState.Installed
-                        } else if (installState is InstallState.Installed) {
-                            installState = InstallState.Uninstalling
+                            providerInstallState = ProviderInstallState.Installed
+                        } else if (providerInstallState is ProviderInstallState.Installed) {
+                            providerInstallState = ProviderInstallState.Uninstalling
                             delay(2000)
-                            installState = InstallState.NotInstalled
-                        } else if (installState is InstallState.Outdated) {
-                            installState = InstallState.Installing(progress = 0f)
+                            providerInstallState = ProviderInstallState.NotInstalled
+                        } else if (providerInstallState is ProviderInstallState.Outdated) {
+                            providerInstallState = ProviderInstallState.Installing(
+                                progress = 0f,
+                                downloadId = "dummy_download_id"
+                            )
                             delay(2000)
-                            installState = InstallState.Installed
+                            providerInstallState = ProviderInstallState.Installed
                         } else {
                             // No-op for other states
                         }

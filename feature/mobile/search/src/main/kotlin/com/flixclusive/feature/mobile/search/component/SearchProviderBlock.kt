@@ -48,9 +48,9 @@ internal fun SearchProviderBlock(
     Box(
         modifier = modifier
             .graphicsLayer {
-                alpha = if (provider.isEnabled) 1F else 0.5F
+                alpha = if (provider.isSearchEnabled) 1F else 0.5F
             }
-            .clickable(enabled = !isSelected && provider.isEnabled) {
+            .clickable(enabled = !isSelected && provider.isSearchEnabled) {
                 onClick()
             },
     ) {

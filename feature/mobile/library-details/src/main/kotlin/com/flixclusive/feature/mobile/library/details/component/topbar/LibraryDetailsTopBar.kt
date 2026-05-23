@@ -62,11 +62,11 @@ internal fun LibraryDetailsTopBar(
                 targetState = topBarState,
             ) { state ->
                 if (state == LibraryTopBarState.Selecting) {
-                    PlainTooltipBox(description = stringResource(R.string.cancel)) {
+                    PlainTooltipBox(description = stringResource(R.string.label_cancel)) {
                         ActionButton(onClick = onUnselectAll) {
                             AdaptiveIcon(
                                 painter = painterResource(UiCommonR.drawable.round_close_24),
-                                contentDescription = stringResource(R.string.cancel),
+                                contentDescription = stringResource(R.string.label_cancel),
                             )
                         }
                     }

@@ -231,7 +231,7 @@ private fun SearchScreenBasePreview() {
                         id = "$it",
                         name = "Provider $it",
                     ),
-                    isEnabled = it % 2 == 0,
+                    isSearchEnabled = it % 2 == 0,
                 )
             }
         )

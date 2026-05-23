@@ -320,7 +320,7 @@ private fun AppUpdatesScreenContent(
                                     var label = context.getString(LocaleR.string.update_label)
 
                                     if (downloadState.status == DownloadStatus.COMPLETED) {
-                                        label = context.getString(LocaleR.string.install)
+                                        label = context.getString(LocaleR.string.label_install)
                                     } else if (downloadState.status.isDownloading) {
                                         label = "${downloadState.progress}%"
                                     }
@@ -352,7 +352,7 @@ private fun AppUpdatesScreenBasePreview() {
     LaunchedEffect(state.progress) {
         state = when {
             state.status.isIdle -> DownloadState(
-                downloadId = "",
+                id = "",
                 status = DownloadStatus.DOWNLOADING,
                 progress = 0f,
             )
@@ -362,7 +362,7 @@ private fun AppUpdatesScreenBasePreview() {
             )
 
             state.status.isDownloading && state.progress >= 100 -> DownloadState(
-                downloadId = "",
+                id = "",
                 status = DownloadStatus.COMPLETED,
                 progress = 100f,
             )
@@ -392,7 +392,7 @@ private fun AppUpdatesScreenBasePreview() {
                 downloadState = state,
                 downloadUpdate = {
                     state = state.copy(
-                        downloadId = "",
+                        id = "",
                         status = DownloadStatus.DOWNLOADING,
                         progress = 0f,
                     )

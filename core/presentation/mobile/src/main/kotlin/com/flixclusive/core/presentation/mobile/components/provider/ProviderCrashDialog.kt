@@ -69,7 +69,7 @@ internal fun ProviderCrashDialog(
 
                 CommonButton(
                     onClick = onDismissRequest,
-                    label = stringResource(LocaleR.string.cancel),
+                    label = stringResource(LocaleR.string.label_cancel),
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3),
                     contentColor = MaterialTheme.colorScheme.onSurface.copy(0.6f),
                 )
