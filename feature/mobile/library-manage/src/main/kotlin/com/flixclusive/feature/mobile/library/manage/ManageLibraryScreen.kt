@@ -50,16 +50,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.collections.SortUtils
 import com.flixclusive.core.common.domain.Async
-import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
-import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
@@ -104,11 +103,11 @@ internal fun ManageLibraryScreen(
         uiState = uiState,
         searchQuery = { searchQuery },
         selectedLists = { viewModel.selectedLists },
-        lists = lists,
+        lists = { lists },
         trackers = { trackers },
         onToggleTracker = viewModel::onToggleTracker,
         onRefresh = { viewModel.initialize(isRefreshing = true) },
-        onRetry = viewModel::initialize,
+        onConsumeTrackerErrors = viewModel::onConsumeTrackerErrors,
         onRemoveLongClickedLibrary = viewModel::onRemoveLongClickedLibrary,
         onLongClickItem = viewModel::onLongClickItem,
         onStartMultiSelecting = viewModel::onStartMultiSelecting,
@@ -138,12 +137,12 @@ internal fun ManageLibraryScreen(
 @Composable
 private fun ManageLibraryScreenContent(
     uiState: ManageLibraryUiState,
-    lists: Async<List<LibraryListWithPreview>>,
+    lists: () -> Async<List<LibraryListWithPreview>>,
     trackers: () -> Async<List<TrackerProvider>>,
     selectedLists: () -> Set<LibraryListWithPreview>,
     searchQuery: () -> String,
     onRefresh: () -> Unit,
-    onRetry: () -> Unit,
+    onConsumeTrackerErrors: () -> Unit,
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
     onUnselectAll: () -> Unit,
@@ -183,8 +182,12 @@ private fun ManageLibraryScreenContent(
 
     val isListEmpty by remember {
         derivedStateOf {
-            lists is Async.Success && lists.data.isEmpty()
+            (lists() as? Async.Success)?.data?.isEmpty() == true
         }
+    }
+
+    val isFabVisible by remember {
+        derivedStateOf { !uiState.isMultiSelecting && lists() is Async.Success }
     }
 
     var showDeleteLibraryAlert by remember { mutableStateOf(false) }
@@ -193,7 +196,12 @@ private fun ManageLibraryScreenContent(
 
     PullToRefreshBox(
         isRefreshing = uiState.isRefreshing,
-        onRefresh = onRefresh,
+        onRefresh = {
+            val isLoadingAlready = trackers() is Async.Loading && uiState.isLoadingTrackers
+            if (!uiState.isRefreshing && !isLoadingAlready) {
+                onRefresh()
+            }
+        },
         state = refreshState,
         indicator = {
             RefreshIndicator(
@@ -209,9 +217,7 @@ private fun ManageLibraryScreenContent(
                 .padding(LocalGlobalScaffoldPadding.current),
             contentWindowInsets = WindowInsets(0.dp),
             floatingActionButton = {
-                AnimatedVisibility(
-                    visible = !uiState.isMultiSelecting && lists is Async.Success,
-                ) {
+                AnimatedVisibility(visible = isFabVisible) {
                     ExtendedFloatingActionButton(
                         onClick = { onToggleCreateDialog(true) },
                         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
@@ -281,40 +287,25 @@ private fun ManageLibraryScreenContent(
                 }
             },
         ) { padding ->
-            AsyncAnimatedContent(
-                targetState = lists,
-                label = "LibraryListContentAnimation",
-                loadingContent = { LoadingStateScreen(padding) },
-                errorContent = { error ->
-                    RetryButton(
-                        error = error.message.asString(),
-                        onRetry = onRetry,
-                        modifier = Modifier
-                            .padding(padding)
-                            .fillMaxSize(),
+            AnimatedContent(
+                targetState = isListEmpty,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                modifier = Modifier.fillMaxSize(),
+            ) { isEmpty ->
+                if (isEmpty) {
+                    EmptyDataMessage(modifier = Modifier.padding(padding))
+                } else {
+                    ManageLibraryScreenContent(
+                        data = lists,
+                        uiState = uiState,
+                        listState = listState,
+                        padding = padding,
+                        selectedLists = selectedLists,
+                        onToggleSelect = onToggleSelect,
+                        onViewLibraryContent = onViewLibraryContent,
+                        onLongClickItem = onLongClickItem,
+                        onToggleOptionsSheet = onToggleOptionsSheet,
                     )
-                },
-            ) { data ->
-                AnimatedContent(
-                    targetState = data().isEmpty(),
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    modifier = Modifier.fillMaxSize(),
-                ) { isEmpty ->
-                    if (isEmpty) {
-                        EmptyDataMessage(modifier = Modifier.padding(padding))
-                    } else {
-                        NonEmptyContent(
-                            lists = data,
-                            uiState = uiState,
-                            listState = listState,
-                            padding = padding,
-                            selectedLists = selectedLists,
-                            onToggleSelect = onToggleSelect,
-                            onViewLibraryContent = onViewLibraryContent,
-                            onLongClickItem = onLongClickItem,
-                            onToggleOptionsSheet = onToggleOptionsSheet,
-                        )
-                    }
                 }
             }
         }
@@ -366,6 +357,13 @@ private fun ManageLibraryScreenContent(
             onToggle = onToggleTracker
         )
     }
+    if (uiState.trackerErrors.isNotEmpty()) {
+        ProviderCrashBottomSheet(
+            isLoading = false,
+            errors = uiState.trackerErrors,
+            onDismissRequest = onConsumeTrackerErrors,
+        )
+    }
 
     if (showDeleteLibraryAlert || showDeleteSelectionAlert) {
         val alertDescription =
@@ -396,8 +394,8 @@ private fun ManageLibraryScreenContent(
 }
 
 @Composable
-private fun NonEmptyContent(
-    lists: () -> List<LibraryListWithPreview>,
+private fun ManageLibraryScreenContent(
+    data: () -> Async<List<LibraryListWithPreview>>,
     listState: LazyGridState,
     padding: PaddingValues,
     uiState: ManageLibraryUiState,
@@ -409,6 +407,18 @@ private fun NonEmptyContent(
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
+
+    val lists by remember(data) {
+        derivedStateOf {
+            (data() as? Async.Success)?.data ?: emptyList()
+        }
+    }
+
+    val isLoading by remember(uiState) {
+        derivedStateOf {
+            data() is Async.Loading || uiState.isLoadingTrackers
+        }
+    }
 
     LazyVerticalGrid(
         state = listState,
@@ -432,7 +442,7 @@ private fun NonEmptyContent(
         }
 
         items(
-            items = lists(),
+            items = lists,
             key = { it.id + it.provider?.id },
         ) { library ->
             val selected by remember {
@@ -468,26 +478,11 @@ private fun NonEmptyContent(
                     ),
             )
         }
-    }
-}
 
-@Composable
-private fun LoadingStateScreen(padding: PaddingValues) {
-    LazyVerticalGrid(
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-        contentPadding = padding,
-        modifier = Modifier.fillMaxSize(),
-        columns = GridCells.Adaptive(
-            getAdaptiveDp(
-                compact = 300.dp,
-                medium = 350.dp,
-                expanded = 400.dp,
-            ),
-        ),
-    ) {
-        items(4) {
-            LibraryCardPlaceholder()
+        if (isLoading) {
+            items(count = 4, key = { "tracker_placeholder_$it" }) {
+                LibraryCardPlaceholder()
+            }
         }
     }
 }
@@ -572,7 +567,7 @@ private fun ManageLibraryScreenBasePreview() {
             ) {
                 ManageLibraryScreenContent(
                     uiState = uiState,
-                    lists = safeLibraries,
+                    lists = { safeLibraries },
                     trackers = { Async.Success(emptyList()) },
                     selectedLists = { selectedLibraries },
                     searchQuery = { searchQuery },
@@ -622,7 +617,7 @@ private fun ManageLibraryScreenBasePreview() {
                     onLongClickItem = { uiState = uiState.copy(longClickedLibrary = it) },
                     openProviderSettings = { },
                     onToggleTracker = { },
-                    onRetry = {},
+                    onConsumeTrackerErrors = {},
                     onUpdateFilter = {
                         if (uiState.selectedFilter == it) {
                             uiState.selectedFilter.toggleAscending()
