@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.util.exception.safeCall
@@ -74,6 +75,8 @@ internal fun SearchScreen(
         onChangeView = viewModel::onChangeView,
         onChangeProvider = viewModel::onChangeProvider,
         onUpdateFilters = viewModel::onUpdateFilters,
+        onToggleProvider = viewModel::onToggleProvider,
+        onConsumeSearchApiErrors = viewModel::onConsumeSearchApiErrors,
         deleteSearchHistoryItem = viewModel::deleteSearchHistoryItem,
         paginateItems = viewModel::paginate,
         openMediaScreen = navigator::navigateToMediaScreen,
@@ -96,6 +99,8 @@ private fun SearchScreenContent(
     onChangeView: (SearchViewType) -> Unit,
     onChangeProvider: (String) -> Unit,
     onUpdateFilters: (FilterList) -> Unit,
+    onToggleProvider: (SearchProvider) -> Unit,
+    onConsumeSearchApiErrors: () -> Unit,
     deleteSearchHistoryItem: (SearchHistory) -> Unit,
     paginateItems: () -> Unit,
     openMediaScreen: (MediaMetadata) -> Unit,
@@ -189,6 +194,7 @@ private fun SearchScreenContent(
                         providers = providers,
                         selectedProviderId = uiState.selectedProviderId,
                         onChangeProvider = onChangeProvider,
+                        onToggleProvider = onToggleProvider,
                         scaffoldPadding = innerPadding,
                     )
                 }
@@ -210,11 +216,19 @@ private fun SearchScreenContent(
         }
     }
 
-    if (filterGroupIndexToShow != null) {
+    filterGroupIndexToShow?.let {
         FilterBottomSheet(
-            filters = sortedFilters[filterGroupIndexToShow!!],
+            filters = { sortedFilters[it] },
             onUpdateFilters = { onUpdateFilters(sortedFilters) },
             onDismissRequest = { filterGroupIndexToShow = null },
+        )
+    }
+
+    if (uiState.searchApiErrors != null) {
+        ProviderCrashBottomSheet(
+            isLoading = false,
+            errors = uiState.searchApiErrors,
+            onDismissRequest = onConsumeSearchApiErrors,
         )
     }
 }
@@ -277,6 +291,8 @@ private fun SearchScreenBasePreview() {
                 onChangeView = {},
                 onChangeProvider = {},
                 onUpdateFilters = {},
+                onToggleProvider = {},
+                onConsumeSearchApiErrors = {},
                 deleteSearchHistoryItem = {},
                 paginateItems = {},
                 openMediaScreen = {},

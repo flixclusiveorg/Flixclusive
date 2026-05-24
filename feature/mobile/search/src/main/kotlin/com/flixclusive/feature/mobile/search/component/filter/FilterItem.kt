@@ -28,7 +28,7 @@ import com.flixclusive.provider.filter.FilterGroup
 @Composable
 internal fun FilterItem(
     filter: Filter<*>,
-    filterGroup: FilterGroup,
+    filterGroup: () -> FilterGroup,
     onUpdateFilters: () -> Unit,
 ) {
     when (filter) {
@@ -74,7 +74,7 @@ internal fun FilterItem(
         }
 
         is Filter.Select<*> -> {
-            if (filter.options.size < 5 && filterGroup.size == 1) {
+            if (filter.options.size < 5 && filterGroup().size == 1) {
                 SelectRadioMenu(
                     options = filter.options,
                     selected = filter.state,
@@ -84,7 +84,7 @@ internal fun FilterItem(
                     },
                 )
             } else {
-                val dropdownLabel = when (filterGroup.size) {
+                val dropdownLabel = when (filterGroup().size) {
                     1 -> null
                     else -> filter.name
                 }
@@ -138,7 +138,7 @@ private fun FilterItemPreview() {
 
             FilterItem(
                 filter = filters.first(),
-                filterGroup = filters,
+                filterGroup = { filters },
             ) {}
         }
     }

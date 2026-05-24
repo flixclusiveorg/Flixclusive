@@ -15,6 +15,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
@@ -22,8 +23,10 @@ import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.SearchHistoryRepository
+import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetSearchProvidersUseCase
+import com.flixclusive.domain.provider.usecase.manage.ToggleCapabilityUseCase
 import com.flixclusive.feature.mobile.search.SearchUiState.Companion.resetPagination
 import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.media.MediaMetadata
@@ -60,6 +63,7 @@ internal class SearchViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val appDispatchers: AppDispatchers,
     private val providerRepository: ProviderRepository,
+    private val toggleCapability: ToggleCapabilityUseCase,
     getSearchProviders: GetSearchProvidersUseCase,
     dataStoreManager: DataStoreManager,
 ) : ViewModel() {
@@ -209,6 +213,14 @@ internal class SearchViewModel @Inject constructor(
         }
     }
 
+    fun onToggleProvider(provider: SearchProvider) {
+        toggleCapability(provider.id, ProviderCapability.SEARCH)
+    }
+
+    fun onConsumeSearchApiErrors() {
+        _uiState.update { it.copy(searchApiErrors = null) }
+    }
+
     fun deleteSearchHistoryItem(item: SearchHistory) {
         appDispatchers.ioScope.launch {
             searchHistoryRepository.remove(id = item.id)
@@ -266,6 +278,11 @@ internal class SearchViewModel @Inject constructor(
             Async.Success(result)
         } catch (e: Exception) {
             errorLog(e)
+            val metadata = (providers.value as? Async.Success)?.data
+                ?.firstOrNull { it.id == providerId }?.metadata
+            if (metadata != null) {
+                _uiState.update { it.copy(searchApiErrors = listOf(ProviderWithThrowable(provider = metadata, throwable = e))) }
+            }
             Async.Failure(e)
         }
     }
@@ -286,6 +303,7 @@ internal data class SearchUiState(
     val currentViewType: SearchViewType = SearchViewType.Providers,
     val pagingState: PagingState = PagingState.Loading,
     val selectedProviderId: String? = null,
+    val searchApiErrors: List<ProviderWithThrowable>? = null,
 ) {
     companion object {
         fun SearchUiState.resetPagination(lastQuerySearched: String) =

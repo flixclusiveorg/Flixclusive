@@ -30,7 +30,6 @@ internal class GetSearchProvidersUseCaseImpl @Inject constructor(
                     val metadata = providers
                         .filter { provider ->
                             provider.plugin?.getSearchApi(context) != null
-                                && provider.isSearchEnabled
                         }
 
                     Async.Success(metadata) as Async<List<ProviderResponseWrapper>>

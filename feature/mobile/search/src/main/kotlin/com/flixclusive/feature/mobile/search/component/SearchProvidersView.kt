@@ -49,6 +49,7 @@ internal fun SearchProvidersView(
     selectedProviderId: String?,
     scaffoldPadding: PaddingValues,
     onChangeProvider: (String) -> Unit,
+    onToggleProvider: (SearchProvider) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedIndex = remember {
@@ -75,6 +76,7 @@ internal fun SearchProvidersView(
             selectedProviderId = selectedProviderId,
             scaffoldPadding = scaffoldPadding,
             onChangeProvider = onChangeProvider,
+            onToggleProvider = onToggleProvider,
             modifier = modifier,
             listState = listState,
         )
@@ -87,8 +89,9 @@ private fun SearchProvidersList(
     selectedProviderId: String?,
     scaffoldPadding: PaddingValues,
     onChangeProvider: (String) -> Unit,
+    onToggleProvider: (SearchProvider) -> Unit,
     modifier: Modifier,
-    listState: LazyGridState
+    listState: LazyGridState,
 ) {
     LazyVerticalGrid(
         modifier = modifier,
@@ -108,6 +111,7 @@ private fun SearchProvidersList(
                 provider = item,
                 isSelected = item.id == selectedProviderId,
                 onClick = { onChangeProvider(item.id) },
+                onToggle = { onToggleProvider(item) },
             )
         }
     }

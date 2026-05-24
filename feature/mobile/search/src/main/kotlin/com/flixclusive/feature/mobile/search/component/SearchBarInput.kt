@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
@@ -24,6 +27,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -39,8 +43,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -51,13 +57,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil
 import com.flixclusive.feature.mobile.search.SearchProvider
 import com.flixclusive.feature.mobile.search.SearchViewType
 import com.flixclusive.feature.mobile.search.component.filter.ProviderFilterButton
@@ -80,9 +85,12 @@ internal fun SearchBarInput(
     onNavigationIconClick: () -> Unit,
     onToggleFilterSheet: (Int) -> Unit,
     onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
+
+    val bgColor = MaterialTheme.colorScheme.surface
 
     var isError by remember { mutableStateOf(false) }
     var textFieldValue by remember { mutableStateOf(searchQuery().toTextFieldValue()) }
@@ -117,8 +125,17 @@ internal fun SearchBarInput(
     Column(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .drawBehind {
+                drawRect(
+                    Brush.verticalGradient(
+                        0f to bgColor,
+                        0.9f to bgColor,
+                        1f to Color.Transparent,
+                    )
+                )
+            }
             .padding(horizontal = 10.dp),
     ) {
         OutlinedTextField(
@@ -235,7 +252,10 @@ internal fun SearchBarInput(
                 }
             }
 
-            itemsIndexed(filters) { i, filterGroup ->
+            itemsIndexed(
+                filters,
+                key = { _, filterGroup -> filterGroup.hashCode() }
+            ) { i, filterGroup ->
                 val isBeingUsed = remember(filterGroup) { filterGroup.isBeingUsed() }
 
                 OutlinedButton(
@@ -246,16 +266,14 @@ internal fun SearchBarInput(
                     border = ButtonDefaults.outlinedButtonBorder(isBeingUsed),
                     modifier = Modifier
                         .height(getAdaptiveDp(32.dp))
-                        .widthIn(min = getAdaptiveDp(80.dp)),
+                        .widthIn(min = getAdaptiveDp(80.dp))
+                        .animateItem()
                 ) {
-                    AnimatedContent(
-                        targetState = filterGroup.getFormattedName(context = context),
-                        label = "",
-                    ) {
+                    AnimatedContent(targetState = filterGroup.getFormattedName(context = context)) {
                         Text(
                             text = it,
                             fontWeight = FontWeight.Medium,
-                            style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(14.sp),
+                            style = MaterialTheme.typography.labelSmall,
                         )
                     }
                 }
@@ -269,20 +287,46 @@ internal fun SearchBarInput(
 @Preview
 @Composable
 private fun SearchBarExpandedPreview() {
+    val listState = rememberLazyListState()
+
     FlixclusiveTheme {
-        Surface {
-            SearchBarInput(
-                searchQuery = { "Star Wars" },
-                lastQuerySearched = "Iron Man",
-                onSearch = {},
-                onNavigationIconClick = {},
-                onQueryChange = {},
-                onToggleFilterSheet = {},
-                filters = FilterList(),
-                provider = SearchProvider(getProviderMetadata(), true),
-                currentViewType = SearchViewType.History,
-                onChangeView = {},
-            )
+        Surface(
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Scaffold(
+                topBar = {
+                    SearchBarInput(
+                        searchQuery = { "Star Wars" },
+                        lastQuerySearched = "Iron Man",
+                        onSearch = {},
+                        onNavigationIconClick = {},
+                        onQueryChange = {},
+                        onToggleFilterSheet = {},
+                        filters = FilterList(),
+                        provider = SearchProvider(getProviderMetadata(), true),
+                        currentViewType = SearchViewType.History,
+                        onChangeView = {},
+                    )
+                }
+            ) {
+                LazyColumn(
+                    state = listState,
+                    contentPadding = it,
+                ) {
+                    items(30) {
+                        Spacer(
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .fillMaxWidth()
+                                .height(MobileUiUtil.DefaultMediaCardPosterWidth)
+                                .background(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.shapes.small
+                                )
+                        )
+                    }
+                }
+            }
         }
     }
 }
