@@ -6,9 +6,11 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.exception.actualMessage
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
+import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
@@ -24,7 +26,8 @@ internal class GetMediaMetadataUseCaseImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
-    private val appDispatchers: AppDispatchers
+    private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
+    private val appDispatchers: AppDispatchers,
 ) : GetMediaMetadataUseCase {
     override operator fun invoke(media: PartialMedia): Flow<Async<MediaMetadata>> = flow {
         try {
@@ -46,16 +49,22 @@ internal class GetMediaMetadataUseCaseImpl @Inject constructor(
             }
 
             val api = provider.plugin?.getMetadataApi(context)
-            if (api == null) {
-                emit(
-                    Async.Failure(
-                        UiText.from(R.string.get_media_metadata_error_no_provider_api, media.providerId)
-                    )
-                )
-                return@flow
-            }
+            if (api == null || !provider.isMetadataEnabled) {
+                val providers = providerRepository.getProviders(ownerId = userId)
 
-            if (!provider.isMetadataEnabled) {
+                providers.forEach {
+                    val crossMatchedMedia = safeCall {
+                        getCrossMatchedMediaMetadata(
+                            media = media, providerId = it.id
+                        )
+                    }
+
+                    if (crossMatchedMedia != null) {
+                        emit(Async.Success(crossMatchedMedia))
+                        return@flow
+                    }
+                }
+
                 emit(
                     Async.Failure(
                         UiText.from(R.string.get_media_metadata_error_no_provider_api, media.providerId)
@@ -70,7 +79,7 @@ internal class GetMediaMetadataUseCaseImpl @Inject constructor(
             }
 
             emit(Async.Success(metadata))
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             errorLog(e)
             emit(
                 Async.Failure(
