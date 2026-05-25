@@ -13,8 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.transformLatest
 import javax.inject.Inject
 
 internal class GetTrackerProvidersUseCaseImpl @Inject constructor(
@@ -26,16 +25,21 @@ internal class GetTrackerProvidersUseCaseImpl @Inject constructor(
     override fun invoke(): Flow<Async<List<ProviderResponseWrapper>>> {
         return userSessionDataStore.currentUserId.filterNotNull().flatMapLatest { userId ->
             providerRepository.getProvidersAsFlow(userId)
-                .mapLatest { providers ->
+                .distinctUntilChanged()
+                .transformLatest { providers ->
+                    if (providers.isEmpty()) {
+                        emit(Async.Success(emptyList()))
+                        return@transformLatest
+                    }
+
+                    emit(Async.Loading)
                     val metadata = providers
                         .filter { provider ->
                             provider.plugin?.getTrackerApi(context) != null
                         }
 
-                    Async.Success(metadata) as Async<List<ProviderResponseWrapper>>
+                    emit(Async.Success(metadata))
                 }
-                .distinctUntilChanged()
-                .onStart { emit(Async.Loading) }
                 .catch { emit(Async.Failure(it)) }
         }
     }

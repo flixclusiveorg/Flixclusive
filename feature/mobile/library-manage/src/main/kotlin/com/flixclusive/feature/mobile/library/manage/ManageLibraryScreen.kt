@@ -434,7 +434,7 @@ private fun ManageLibraryScreenContent(
 
         items(
             items = lists,
-            key = { it.id + it.provider?.id },
+            key = { it.hashCode() },
         ) { library ->
             val selected by remember {
                 derivedStateOf { selectedLists().contains(library) }
@@ -472,7 +472,9 @@ private fun ManageLibraryScreenContent(
 
         if (isLoading) {
             items(count = 4, key = { "tracker_placeholder_$it" }) {
-                LibraryCardPlaceholder()
+                LibraryCardPlaceholder(
+                    modifier = Modifier.animateItem(),
+                )
             }
         }
     }

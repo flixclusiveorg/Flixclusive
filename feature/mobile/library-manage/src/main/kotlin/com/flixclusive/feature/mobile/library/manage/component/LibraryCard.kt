@@ -124,7 +124,7 @@ internal fun LibraryCard(
                     )
                 }
 
-                if (libraryListWithPreview.itemsCount >= 0) {
+                if (libraryListWithPreview.itemsCount > 0) {
                     Text(
                         text = resources.getQuantityString(
                             LocaleR.plurals.number_of_items_format,
