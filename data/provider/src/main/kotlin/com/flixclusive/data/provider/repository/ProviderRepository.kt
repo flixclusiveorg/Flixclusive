@@ -63,7 +63,7 @@ interface ProviderRepository {
 
     suspend fun clearAll()
 
-    suspend fun toggleCapability(id: String, ownerId: String, capability: ProviderCapability)
+    suspend fun setCapabilityEnabled(id: String, ownerId: String, capability: ProviderCapability, enabled: Boolean)
 
     fun getProviderAsFlow(id: String, ownerId: String): Flow<ProviderResponseWrapper?>
 }

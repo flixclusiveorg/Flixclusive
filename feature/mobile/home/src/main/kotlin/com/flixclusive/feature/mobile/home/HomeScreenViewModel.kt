@@ -113,10 +113,11 @@ internal class HomeScreenViewModel @Inject constructor(
                 return@mapLatest it as Async<List<CatalogProvider>>
             }
 
-            val providers = it.data.fastMapNotNull { provider ->
+            val providers = it.data.fastMapNotNull { wrapper ->
                 CatalogProvider(
-                    provider = provider.metadata ?: return@fastMapNotNull null,
-                    isCatalogEnabled = provider.isCatalogEnabled,
+                    provider = wrapper.metadata ?: return@fastMapNotNull null,
+                    isCatalogEnabled = wrapper.isCatalogEnabled,
+                    createdAt = wrapper.provider.createdAt.time
                 )
             }
 
@@ -346,8 +347,12 @@ internal class HomeScreenViewModel @Inject constructor(
         }
     }
 
-    fun onToggleProvider(id: String) {
-        toggleCapability(id, ProviderCapability.CATALOG)
+    fun onToggleProvider(provider: CatalogProvider) {
+        toggleCapability(
+            id = provider.id,
+            capability = ProviderCapability.CATALOG,
+            enabled = provider.isCatalogEnabled
+        )
     }
 }
 
@@ -373,6 +378,7 @@ internal data class HomeUiState(
 internal data class CatalogProvider(
     val provider: ProviderMetadata,
     val isCatalogEnabled: Boolean,
+    val createdAt: Long = System.currentTimeMillis(),
 ) {
     val id: String get() = provider.id
     val name: String get() = provider.name

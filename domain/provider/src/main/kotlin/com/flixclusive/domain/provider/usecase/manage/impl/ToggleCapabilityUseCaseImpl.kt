@@ -16,14 +16,55 @@ internal class ToggleCapabilityUseCaseImpl @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
 ) : ToggleCapabilityUseCase {
-    private val toggleJobs: MutableMap<ProviderCapability, Job> = mutableMapOf()
+    private val toggleJobs: MutableMap<String, Job> = mutableMapOf()
+
+    private fun getJobId(providerId: String, capability: ProviderCapability): String {
+        return "$providerId-${capability.name}"
+    }
 
     override fun invoke(id: String, capability: ProviderCapability) {
-        if (toggleJobs[capability]?.isActive == true) return
+        val jobId = getJobId(id, capability)
+        if (toggleJobs[jobId]?.isActive == true) return
 
-        toggleJobs[capability] = appDispatchers.ioScope.launch {
+        toggleJobs[jobId] = appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            providerRepository.toggleCapability(id = id, ownerId = userId, capability = capability)
+            val newToggleState = providerRepository.getProvider(id = id, ownerId = userId)
+                ?.let {
+                    when (capability) {
+                        ProviderCapability.CATALOG -> !it.isCatalogEnabled
+                        ProviderCapability.CROSS_MATCH -> !it.isCrossMatchEnabled
+                        ProviderCapability.MEDIA_LINK -> !it.isMediaLinkEnabled
+                        ProviderCapability.METADATA -> !it.isMetadataEnabled
+                        ProviderCapability.SEARCH -> !it.isSearchEnabled
+                        ProviderCapability.TRACKER -> !it.isTrackerEnabled
+                    }
+                } ?: true
+
+            providerRepository.setCapabilityEnabled(
+                id = id,
+                ownerId = userId,
+                capability = capability,
+                enabled = newToggleState
+            )
+        }
+    }
+
+    override fun invoke(
+        id: String,
+        capability: ProviderCapability,
+        enabled: Boolean
+    ) {
+        val jobId = getJobId(id, capability)
+        if (toggleJobs[jobId]?.isActive == true) return
+
+        toggleJobs[jobId] = appDispatchers.ioScope.launch {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            providerRepository.setCapabilityEnabled(
+                id = id,
+                ownerId = userId,
+                capability = capability,
+                enabled = enabled
+            )
         }
     }
 }

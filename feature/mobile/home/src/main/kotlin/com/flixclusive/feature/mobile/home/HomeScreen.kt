@@ -103,7 +103,7 @@ internal fun HomeScreen(
         showMediaTitles = { showMediaTitles },
         providers = { catalogProviders },
         continueWatchingItems = { continueWatchingItems },
-        onToggle = { viewModel.onToggleProvider(it.id) },
+        onToggle = viewModel::onToggleProvider,
         paginate = viewModel::paginate,
         onRetry = viewModel::initialize,
     )

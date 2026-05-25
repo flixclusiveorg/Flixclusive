@@ -146,15 +146,19 @@ internal class ProviderRepositoryImpl @Inject constructor(
         metadataMap.clear()
     }
 
-    override suspend fun toggleCapability(id: String, ownerId: String, capability: ProviderCapability) {
-        val provider = installedProviderDao.get(id, ownerId) ?: return
+    override suspend fun setCapabilityEnabled(
+        id: String,
+        ownerId: String,
+        capability: ProviderCapability,
+        enabled: Boolean
+    ) {
         when (capability) {
-            ProviderCapability.CATALOG -> installedProviderDao.setCatalogEnabled(id, ownerId, !provider.isCatalogEnabled)
-            ProviderCapability.CROSS_MATCH -> installedProviderDao.setCrossMatchEnabled(id, ownerId, !provider.isCrossMatchEnabled)
-            ProviderCapability.MEDIA_LINK -> installedProviderDao.setMediaLinkEnabled(id, ownerId, !provider.isMediaLinkEnabled)
-            ProviderCapability.METADATA -> installedProviderDao.setMetadataEnabled(id, ownerId, !provider.isMetadataEnabled)
-            ProviderCapability.SEARCH -> installedProviderDao.setSearchEnabled(id, ownerId, !provider.isSearchEnabled)
-            ProviderCapability.TRACKER -> installedProviderDao.setTrackerEnabled(id, ownerId, !provider.isTrackerEnabled)
+            ProviderCapability.CATALOG -> installedProviderDao.setCatalogEnabled(id, ownerId, enabled)
+            ProviderCapability.CROSS_MATCH -> installedProviderDao.setCrossMatchEnabled(id, ownerId, enabled)
+            ProviderCapability.MEDIA_LINK -> installedProviderDao.setMediaLinkEnabled(id, ownerId, enabled)
+            ProviderCapability.METADATA -> installedProviderDao.setMetadataEnabled(id, ownerId, enabled)
+            ProviderCapability.SEARCH -> installedProviderDao.setSearchEnabled(id, ownerId, enabled)
+            ProviderCapability.TRACKER -> installedProviderDao.setTrackerEnabled(id, ownerId, enabled)
         }
     }
 

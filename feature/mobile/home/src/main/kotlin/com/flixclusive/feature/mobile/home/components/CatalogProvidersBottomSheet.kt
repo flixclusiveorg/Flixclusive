@@ -120,7 +120,10 @@ internal fun CatalogProvidersBottomSheet(
             CatalogProvidersList(
                 providers = data(),
                 onSave = { list ->
-                    scope.launch { list.forEach(onToggle) }
+                    list.forEach {
+                        scope.launch { onToggle(it) }
+                    }
+
                     onDismiss()
                 }
             )
@@ -144,7 +147,7 @@ private fun CatalogProvidersList(
     }
 
     val sortedProviders by remember {
-        derivedStateOf { currentProviders.values.sortedBy { it.name } }
+        derivedStateOf { currentProviders.values.sortedBy { it.createdAt } }
     }
 
     val density = LocalDensity.current
@@ -203,7 +206,7 @@ private fun CatalogProvidersList(
             Button(
                 enabled = isButtonEnabled,
                 shape = MaterialTheme.shapes.small,
-                onClick = { onSave(sortedProviders) },
+                onClick = { onSave(currentProviders.values.toList()) },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -322,6 +325,7 @@ private fun CatalogProvidersBottomSheetPreview() {
                     List(20) {
                         CatalogProvider(
                             isCatalogEnabled = true,
+                            createdAt = System.currentTimeMillis() - it,
                             provider = DummyDataForPreview.getProviderMetadata(
                                 id = "provider_$it",
                                 name = "Provider ${it + 1}",
