@@ -431,7 +431,7 @@ private fun NonEmptyScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.list_exhausted_msg),
+                        text = stringResource(LocaleR.string.label_list_exhausted_msg),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.6f)
                     )

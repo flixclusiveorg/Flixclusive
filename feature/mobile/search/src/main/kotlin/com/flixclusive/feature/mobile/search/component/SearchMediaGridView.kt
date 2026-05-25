@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -54,9 +56,12 @@ internal fun SearchMediasGridView(
 ) {
     val currentState by remember {
         derivedStateOf {
+            val state = pagingState()
+            val results = searchResults()
+
             when {
-                pagingState().isError && searchResults().isEmpty() -> SearchMediasGridViewState.ERROR
-                searchResults().isEmpty() && pagingState().isIdle -> SearchMediasGridViewState.EMPTY
+                state.isError && results.isEmpty() -> SearchMediasGridViewState.ERROR
+                results.isEmpty() && (state.isIdle || state.isExhausted) -> SearchMediasGridViewState.EMPTY
                 else -> SearchMediasGridViewState.NON_EMPTY
             }
         }
@@ -167,6 +172,23 @@ private fun SearchNonEmptyState(
                     description = stringResource(R.string.search_failed_pagination_generic_message),
                     icon = {},
                 )
+            }
+        }
+
+        if (pagingState().isExhausted) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(LocaleR.string.label_list_exhausted_msg),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(0.6f)
+                    )
+                }
             }
         }
     }

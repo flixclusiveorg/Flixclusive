@@ -62,12 +62,12 @@ internal fun SearchScreen(
     val providers by viewModel.providers.collectAsStateWithLifecycle()
 
     SearchScreenContent(
-        uiState = uiState,
+        uiState = { uiState },
         searchQuery = { searchQuery },
         showMediaTitles = showMediaTitles,
         searchHistory = { searchHistory },
         searchResults = { viewModel.searchResults },
-        providers = providers,
+        providers = { providers },
         filters = { viewModel.filters },
         onGoBack = navigator::navigateBack,
         onQueryChange = viewModel::onQueryChange,
@@ -86,12 +86,12 @@ internal fun SearchScreen(
 
 @Composable
 private fun SearchScreenContent(
-    uiState: SearchUiState,
     showMediaTitles: Boolean,
+    uiState: () -> SearchUiState,
     searchQuery: () -> String,
     searchHistory: () -> List<SearchHistory>,
     searchResults: () -> Set<MediaMetadata>,
-    providers: Async<List<SearchProvider>>,
+    providers: () -> Async<List<SearchProvider>>,
     filters: () -> FilterList,
     onGoBack: () -> Unit,
     onQueryChange: (String) -> Unit,
@@ -112,8 +112,8 @@ private fun SearchScreenContent(
     var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
 
     val updatedPaginateItems by rememberUpdatedState(paginateItems)
-    LaunchedEffect(listState, uiState.pagingState) {
-        snapshotFlow { listState.shouldPaginate() && uiState.pagingState.isIdle }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.shouldPaginate() && uiState().pagingState.isIdle }
             .distinctUntilChanged()
             .filter { it }
             .collect {
@@ -127,23 +127,33 @@ private fun SearchScreenContent(
         }
     }
 
+    val viewTypes by remember {
+        derivedStateOf { uiState().currentViewType }
+    }
+
+    val apiErrors by remember {
+        derivedStateOf { uiState().searchApiErrors }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
-            val provider = remember(providers, uiState.selectedProviderId) {
-                if (providers !is Async.Success) return@remember null
-                val selectedProvider = uiState.selectedProviderId ?: return@remember null
-                providers.data.fastFirstOrNull { selectedProvider == it.id }
+            val provider by remember {
+                derivedStateOf {
+                    val state = providers()
+                    if (state !is Async.Success) return@derivedStateOf null
+                    val selectedProvider = uiState().selectedProviderId ?: return@derivedStateOf null
+                    state.data.fastFirstOrNull { selectedProvider == it.id }
+                }
             }
 
             SearchBarInput(
                 searchQuery = searchQuery,
-                lastQuerySearched = uiState.lastQuerySearched,
-                currentViewType = uiState.currentViewType,
                 provider = provider,
                 filters = sortedFilters,
                 onNavigationIconClick = onGoBack,
                 onQueryChange = onQueryChange,
+                uiState = uiState,
                 onToggleFilterSheet = { filterGroupIndexToShow = it },
                 onChangeView = onChangeView,
                 onSearch = {
@@ -156,7 +166,7 @@ private fun SearchScreenContent(
         },
     ) { innerPadding ->
         AnimatedContent(
-            targetState = uiState.currentViewType,
+            targetState = viewTypes,
             transitionSpec = {
                 val enter = when (targetState) {
                     SearchViewType.Medias -> slideInHorizontally { it } + fadeIn()
@@ -191,8 +201,8 @@ private fun SearchScreenContent(
                 SearchViewType.Providers -> {
                     SearchProvidersView(
                         modifier = modifier,
-                        providers = providers,
-                        selectedProviderId = uiState.selectedProviderId,
+                        providers = providers(),
+                        selectedProviderId = uiState().selectedProviderId,
                         onChangeProvider = onChangeProvider,
                         onToggleProvider = onToggleProvider,
                         scaffoldPadding = innerPadding,
@@ -206,7 +216,7 @@ private fun SearchScreenContent(
                         listState = listState,
                         previewMedia = previewMedia,
                         searchResults = searchResults,
-                        pagingState = { uiState.pagingState },
+                        pagingState = { uiState().pagingState },
                         scaffoldPadding = innerPadding,
                         paginateItems = paginateItems,
                         openMediaScreen = openMediaScreen,
@@ -224,11 +234,11 @@ private fun SearchScreenContent(
         )
     }
 
-    if (uiState.searchApiErrors != null) {
+    apiErrors?.let {
         ProviderCrashBottomSheet(
             isLoading = false,
-            errors = uiState.searchApiErrors,
             onDismissRequest = onConsumeSearchApiErrors,
+            errors = it,
         )
     }
 }
@@ -275,15 +285,17 @@ private fun SearchScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
             SearchScreenContent(
-                uiState = SearchUiState(
-                    lastQuerySearched = "MediaMetadata 1",
-                    currentViewType = SearchViewType.Providers,
-                ),
+                uiState = {
+                    SearchUiState(
+                        lastQuerySearched = "MediaMetadata 1",
+                        currentViewType = SearchViewType.Providers,
+                    )
+                },
                 searchQuery = { "MediaMetadata 1" },
                 showMediaTitles = true,
                 searchHistory = { searchHistory },
                 searchResults = { medias },
-                providers = providers,
+                providers = { providers },
                 filters = { filters },
                 onGoBack = {},
                 onQueryChange = {},

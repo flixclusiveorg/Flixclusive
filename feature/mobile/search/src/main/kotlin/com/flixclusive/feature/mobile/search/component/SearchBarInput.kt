@@ -64,6 +64,7 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil
 import com.flixclusive.feature.mobile.search.SearchProvider
+import com.flixclusive.feature.mobile.search.SearchUiState
 import com.flixclusive.feature.mobile.search.SearchViewType
 import com.flixclusive.feature.mobile.search.component.filter.ProviderFilterButton
 import com.flixclusive.feature.mobile.search.util.FilterHelper
@@ -75,11 +76,10 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun SearchBarInput(
-    currentViewType: SearchViewType,
     provider: SearchProvider?,
     searchQuery: () -> String,
-    lastQuerySearched: String,
     filters: FilterList,
+    uiState: () -> SearchUiState,
     onSearch: () -> Unit,
     onChangeView: (SearchViewType) -> Unit,
     onNavigationIconClick: () -> Unit,
@@ -97,7 +97,7 @@ internal fun SearchBarInput(
     val focusRequester = remember { FocusRequester() }
     val isTypingNewQuery by remember {
         derivedStateOf {
-            searchQuery() != lastQuerySearched
+            searchQuery() != uiState().lastQuerySearched
         }
     }
 
@@ -227,7 +227,7 @@ internal fun SearchBarInput(
         ) {
             item {
                 ProviderFilterButton(
-                    currentViewType = currentViewType,
+                    currentViewType = uiState().currentViewType,
                     provider = provider?.metadata,
                     onChangeView = onChangeView,
                 )
@@ -297,15 +297,14 @@ private fun SearchBarExpandedPreview() {
                 topBar = {
                     SearchBarInput(
                         searchQuery = { "Star Wars" },
-                        lastQuerySearched = "Iron Man",
                         onSearch = {},
                         onNavigationIconClick = {},
                         onQueryChange = {},
                         onToggleFilterSheet = {},
                         filters = FilterList(),
                         provider = SearchProvider(getProviderMetadata(), true),
-                        currentViewType = SearchViewType.History,
                         onChangeView = {},
+                        uiState = { SearchUiState() },
                     )
                 }
             ) {

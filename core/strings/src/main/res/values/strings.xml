@@ -294,6 +294,7 @@
     <string name="see_more">See more</string>
     <string name="mark_as_unwatched">Mark as unwatched</string>
     <string name="watched">Watched</string>
+    <string name="label_list_exhausted_msg">No more items to load</string>
 
     <!--  On-boarding messages  -->
     <string name="onboarding_profile_avatar_description">The next step to personalize your journey is to pick an avatar that feels just right!</string>
