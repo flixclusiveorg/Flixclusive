@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -339,6 +340,7 @@ private fun MediaScreenContent(
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             CollapsibleDescription(
                                 metadata = metadata,
+                                isCollapsible = tabs.isNotEmpty(),
                                 modifier = Modifier
                                     .padding(horizontal = DefaultScreenPaddingHorizontal)
                                     .padding(top = 30.dp),
@@ -354,6 +356,10 @@ private fun MediaScreenContent(
                                     modifier = Modifier
                                         .padding(top = 20.dp, bottom = 10.dp),
                                 )
+                            }
+                        } else {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Spacer(modifier = Modifier.padding(top = 20.dp, bottom = 10.dp))
                             }
                         }
 
