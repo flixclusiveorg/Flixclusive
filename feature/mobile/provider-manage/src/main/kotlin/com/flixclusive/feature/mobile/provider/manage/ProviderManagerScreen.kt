@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.provider.manage
 
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.ProviderWithThrowable
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -198,22 +200,26 @@ internal fun ProviderManagerScreenContent(
                 modifier = Modifier.fillMaxSize(),
             ) { state ->
                 if (state) {
-                    EmptyDataMessage(
-                        description = stringResource(LocaleR.string.empty_providers_list_message),
+                    AnimatedVisibility(
+                        visible = isLoadingWithDelay(),
+                        enter = fadeIn(),
+                        exit = fadeOut(),
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier =
-                                Modifier
-                                    .padding(bottom = 12.dp),
+                        EmptyDataMessage(
+                            description = stringResource(LocaleR.string.empty_providers_list_message),
                         ) {
-                            MissingProvidersLogo()
-                            OutlinedButton(
-                                onClick = openAddProviderScreen,
-                                modifier = Modifier,
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(5.dp),
+                                modifier = Modifier.padding(bottom = 12.dp),
                             ) {
-                                Text(text = stringResource(LocaleR.string.add_providers))
+                                MissingProvidersLogo()
+                                OutlinedButton(
+                                    onClick = openAddProviderScreen,
+                                    modifier = Modifier,
+                                ) {
+                                    Text(text = stringResource(LocaleR.string.add_providers))
+                                }
                             }
                         }
                     }

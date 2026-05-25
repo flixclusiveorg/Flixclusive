@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.navigation.navigator.NavigateBack
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -238,19 +239,21 @@ private fun RepositoryManagerScreenContent(
                 }
             }
 
-            AnimatedVisibility(
-                visible = isListOfRepositoryEmpty,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxSize()
-                    .padding(it),
-            ) {
-                EmptyDataMessage(
-                    description = stringResource(LocaleR.string.empty_repositories_list_message),
-                    modifier = Modifier.alpha(0.8F),
-                )
+            if (isListOfRepositoryEmpty) {
+                AnimatedVisibility(
+                    visible = isLoadingWithDelay(),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxSize()
+                        .padding(it),
+                ) {
+                    EmptyDataMessage(
+                        description = stringResource(LocaleR.string.empty_repositories_list_message),
+                        modifier = Modifier.alpha(0.8F),
+                    )
+                }
             }
         }
     }
