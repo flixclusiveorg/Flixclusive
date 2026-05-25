@@ -33,6 +33,7 @@ internal fun Project.configureKotlinAndroid(
 
                 buildTypes {
                     create("preview") {
+                        isJniDebuggable = false
                         matchingFallbacks.addAll(listOf("release", "debug"))
                     }
                 }
@@ -51,7 +52,17 @@ internal fun Project.configureKotlinAndroid(
 
                 buildTypes {
                     create("preview") {
+                        isJniDebuggable = false
+                        isDebuggable = false
+                        isProfileable = false
+                        isCrunchPngs = true
+
                         matchingFallbacks.addAll(listOf("release", "debug"))
+                    }
+
+                    create("benchmark") {
+                        initWith(getByName("preview"))
+                        isProfileable = true
                     }
                 }
             }

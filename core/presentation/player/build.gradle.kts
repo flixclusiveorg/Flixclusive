@@ -37,7 +37,7 @@ dependencies {
     api(libs.media3.effect)
     api(libs.media3.session)
     api(libs.media3.ui)
-    api(libs.android.concurrency)
+//    api(libs.android.concurrency)
     compileOnly(libs.checkerframework)
     compileOnly(libs.google.errorProne.annotations)
     implementation(libs.media3.ui.compose)

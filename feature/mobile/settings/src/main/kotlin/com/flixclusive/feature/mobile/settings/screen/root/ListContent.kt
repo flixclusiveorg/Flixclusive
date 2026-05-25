@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -193,12 +193,12 @@ private fun ListContentFooter(
     buildType: BuildType,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val mode = remember {
         when {
-            buildType.isDebug -> context.getString(LocaleR.string.debug)
-            buildType.isPreview -> context.getString(LocaleR.string.pre_release)
-            else -> context.getString(LocaleR.string.release)
+            buildType.isDebug -> resources.getString(LocaleR.string.debug)
+            buildType.isPreview -> resources.getString(LocaleR.string.pre_release)
+            else -> resources.getString(LocaleR.string.release)
         }
     }
 

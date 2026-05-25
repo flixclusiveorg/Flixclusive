@@ -20,6 +20,7 @@ val semanticVersion = "$versionMajor.$versionMinor.$versionPatch"
 val commitCount by lazy { getCommitCount() }
 val previewVersionCode by lazy { "p$commitCount" }
 val debugVersionCode by lazy { "d$commitCount" }
+val benchmarkVersionCode by lazy { "b$commitCount" }
 
 android {
     namespace = appId
@@ -42,6 +43,7 @@ android {
         }
 
         release {
+            isDebuggable = false
             resValue("string", "app_name", appName)
             buildConfigField("int", "BUILD_TYPE", "1") // 1 for stable
         }
@@ -51,6 +53,15 @@ android {
 
             resValue("string", "app_name", "PRE-$appName")
             buildConfigField("int", "BUILD_TYPE", "2") // 2 for preview
+        }
+
+        getByName("benchmark") {
+            applicationIdSuffix = ".benchmark"
+
+            resValue("string", "app_name", "BENCHMARK-$appName")
+            buildConfigField("int", "BUILD_TYPE", "3") // 3 for benchmark
+
+            // Debug key signing is available on all machines, you can also use your own signing keys.
         }
     }
 
@@ -85,6 +96,13 @@ androidComponents {
                 variant.outputs.forEach { output ->
                     output.versionCode.set(commitCount.toInt())
                     output.versionName.set(previewVersionCode)
+                }
+            }
+
+            "benchmark" -> {
+                variant.outputs.forEach { output ->
+                    output.versionCode.set(commitCount.toInt())
+                    output.versionName.set(benchmarkVersionCode)
                 }
             }
         }
