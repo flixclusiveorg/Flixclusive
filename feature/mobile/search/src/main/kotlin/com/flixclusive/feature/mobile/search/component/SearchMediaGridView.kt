@@ -140,7 +140,9 @@ private fun SearchNonEmptyState(
             results().size,
             key = { results().elementAt(it).id },
         ) {
-            val media = results().elementAt(it)
+            val media by remember {
+                derivedStateOf { results().elementAt(it) }
+            }
 
             MediaCard(
                 media = media,

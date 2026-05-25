@@ -149,10 +149,10 @@ private fun SeeAllScreenContent(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .padding(LocalGlobalScaffoldPadding.current),
-    ) {
+    ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(getAdaptiveMediaCardWidth()),
-            contentPadding = it,
+            contentPadding = padding,
             state = listState,
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -163,7 +163,9 @@ private fun SeeAllScreenContent(
                     media.id
                 },
             ) {
-                val media = items().elementAt(it)
+                val media by remember {
+                    derivedStateOf { items().elementAt(it) }
+                }
 
                 MediaCard(
                     isShowingTitle = showMediaTitles,

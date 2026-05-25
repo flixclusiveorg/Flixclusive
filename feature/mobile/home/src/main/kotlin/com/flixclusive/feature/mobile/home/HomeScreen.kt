@@ -63,6 +63,7 @@ import com.flixclusive.core.presentation.common.components.GradientCircularProgr
 import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.CommonPullToRefreshBox
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
@@ -106,6 +107,7 @@ internal fun HomeScreen(
         onToggle = viewModel::onToggleProvider,
         paginate = viewModel::paginate,
         onRetry = viewModel::initialize,
+        onRefresh = { viewModel.initialize(isRefreshing = true) },
     )
 }
 
@@ -119,6 +121,7 @@ private fun HomeScreenContent(
     onToggle: (CatalogProvider) -> Unit,
     paginate: (CatalogWithPagingState) -> Unit,
     onRetry: () -> Unit,
+    onRefresh: () -> Unit,
     continueWatchingItems: () -> List<WatchProgressWithMetadata>,
 ) {
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
@@ -150,62 +153,68 @@ private fun HomeScreenContent(
         }
     }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(LocalGlobalScaffoldPadding.current),
-        topBar = {
-            HomeScreenTopBar(
-                title = stringResource(LocaleR.string.home),
-                containerAlpha = { appBarContainerAlpha },
-                onSearch = navigator::navigateToSearchScreen,
-                onFilterClick = { isSheetOpen = true },
-                enableFilterButton = { providers().let { it is Async.Success && it.data.isNotEmpty() } },
-            )
-        },
+    CommonPullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
     ) {
-        AsyncAnimatedContent(
-            targetState = uiState.catalogs,
-            modifier = Modifier.fillMaxSize(),
-            loadingContent = { LoadingScreen(modifier = Modifier.padding(it)) },
-             errorContent = { error ->
-                 RetryButton(
-                     error = error.message.asString(),
-                     modifier = Modifier
-                         .fillMaxSize()
-                         .padding(it),
-                     onRetry = onRetry,
-                 )
-             }
-        ) { data ->
-            AnimatedContent(
-                targetState = data().isEmpty(),
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(LocalGlobalScaffoldPadding.current),
+            topBar = {
+                HomeScreenTopBar(
+                    title = stringResource(LocaleR.string.home),
+                    containerAlpha = { appBarContainerAlpha },
+                    onSearch = navigator::navigateToSearchScreen,
+                    onFilterClick = { isSheetOpen = true },
+                    enableFilterButton = { providers().let { it is Async.Success && it.data.isNotEmpty() } },
+                )
+            },
+        ) {
+            AsyncAnimatedContent(
+                targetState = uiState.catalogs,
                 modifier = Modifier.fillMaxSize(),
-            ) { isEmpty ->
-                if (isEmpty) {
-                    EmptyScreenContent(
-                        openAddProviderScreen = navigator::navigateToAddProviderScreen,
+                loadingContent = { LoadingScreen(modifier = Modifier.padding(it)) },
+                errorContent = { error ->
+                    RetryButton(
+                        error = error.message.asString(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(it),
+                        onRetry = onRetry,
                     )
-                } else {
-                    val updatedData by rememberUpdatedState(data)
-                    val catalogValues by remember {
-                        derivedStateOf { updatedData().values.toList() }
-                    }
+                }
+            ) { data ->
+                AnimatedContent(
+                    targetState = data().isEmpty(),
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    modifier = Modifier.fillMaxSize(),
+                ) { isEmpty ->
+                    if (isEmpty) {
+                        EmptyScreenContent(
+                            openAddProviderScreen = navigator::navigateToAddProviderScreen,
+                        )
+                    } else {
+                        val updatedData by rememberUpdatedState(data)
+                        val catalogValues by remember {
+                            derivedStateOf { updatedData().values.toList() }
+                        }
 
-                    NonEmptyScreenContent(
-                        navigator = navigator,
-                        showMediaTitles = showMediaTitles,
-                        paginate = paginate,
-                        continueWatchingItems = continueWatchingItems,
-                        catalogs = catalogValues,
-                        headerItem = uiState.itemHeader,
-                        listState = listState,
-                    )
+                        NonEmptyScreenContent(
+                            navigator = navigator,
+                            showMediaTitles = showMediaTitles,
+                            paginate = paginate,
+                            continueWatchingItems = continueWatchingItems,
+                            catalogs = catalogValues,
+                            headerItem = uiState.itemHeader,
+                            listState = listState,
+                        )
+                    }
                 }
             }
         }
     }
+
 
     if (isSheetOpen) {
         CatalogProvidersBottomSheet(
@@ -303,7 +312,10 @@ private fun NonEmptyScreenContent(
             }
         }
 
-        items(catalogs) { data ->
+        items(
+            catalogs,
+            key = { it.catalog.hashCode() }
+        ) { data ->
             CatalogRow(
                 catalog = data.catalog,
                 pagingState = data.state,
@@ -395,11 +407,12 @@ private fun HomeScreenBasePreview() {
                         navigator = dummyNavigator,
                         uiState = HomeUiState(),
                         showMediaTitles = { true },
-                        paginate = { },
-                        onRetry = { },
+                        providers = { Async.Loading },
                         continueWatchingItems = { emptyList() },
                         onToggle = { },
-                        providers = { Async.Loading },
+                        paginate = { },
+                        onRetry = { },
+                        onRefresh = { },
                     )
                 }
 
@@ -410,11 +423,12 @@ private fun HomeScreenBasePreview() {
                             catalogs = Async.Failure(stringResource(LocaleR.string.something_went_wrong))
                         ),
                         showMediaTitles = { true },
-                        paginate = { },
-                        onRetry = { },
+                        providers = { Async.Failure(resources.getString(LocaleR.string.something_went_wrong)) },
                         continueWatchingItems = { emptyList() },
                         onToggle = { },
-                        providers = { Async.Failure(resources.getString(LocaleR.string.something_went_wrong)) }
+                        paginate = { },
+                        onRetry = { },
+                        onRefresh = { },
                     )
                 }
 
@@ -530,10 +544,6 @@ private fun HomeScreenBasePreview() {
                             catalogs = Async.Success(dummyPagingStates),
                         ),
                         showMediaTitles = { true },
-                        paginate = { },
-                        onRetry = { },
-                        onToggle = { },
-                        continueWatchingItems = { continueWatchingItems },
                         providers = {
                             Async.Success(
                                 List(3) {
@@ -547,6 +557,11 @@ private fun HomeScreenBasePreview() {
                                 }
                             )
                         },
+                        continueWatchingItems = { continueWatchingItems },
+                        onToggle = { },
+                        paginate = { },
+                        onRetry = { },
+                        onRefresh = { },
                     )
                 }
             }

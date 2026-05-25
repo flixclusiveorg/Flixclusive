@@ -171,7 +171,11 @@ internal fun CatalogRow(
                             count = items().size,
                             key = { items().elementAt(it).id },
                         ) {
-                            val item = items().elementAt(it)
+                            val item by remember {
+                                derivedStateOf {
+                                    items().elementAt(it)
+                                }
+                            }
 
                             MediaCard(
                                 modifier = Modifier.width(getAdaptiveMediaCardWidth()),

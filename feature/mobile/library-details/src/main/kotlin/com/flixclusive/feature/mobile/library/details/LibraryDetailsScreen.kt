@@ -386,7 +386,9 @@ private fun NonEmptyScreen(
             count = items().size,
             key = { items().elementAt(it).mediaId }
         ) { i ->
-            val item = items().elementAt(i)
+            val item by remember {
+                derivedStateOf { items().elementAt(i) }
+            }
             val media = item.toMediaMetadata()
             val isSelected by remember {
                 derivedStateOf { selectedItems().contains(item) }

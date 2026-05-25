@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -35,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +52,7 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.CommonPullToRefreshBox
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
@@ -75,7 +74,6 @@ import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryCardPlaceholder
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
 import com.flixclusive.feature.mobile.library.manage.component.ManageLibraryTopBar
-import com.flixclusive.feature.mobile.library.manage.component.RefreshIndicator
 import com.flixclusive.feature.mobile.library.manage.component.TrackerProvidersBottomSheet
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
@@ -194,22 +192,15 @@ private fun ManageLibraryScreenContent(
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
     var showTrackerOptions by remember { mutableStateOf(false) }
 
-    PullToRefreshBox(
+    CommonPullToRefreshBox(
         isRefreshing = uiState.isRefreshing,
+        state = refreshState,
         onRefresh = {
             val isLoadingAlready = trackers() is Async.Loading && uiState.isLoadingTrackers
             if (!uiState.isRefreshing && !isLoadingAlready) {
                 onRefresh()
             }
-        },
-        state = refreshState,
-        indicator = {
-            RefreshIndicator(
-                refreshState = refreshState,
-                isRefreshing = uiState.isRefreshing,
-                modifier = Modifier.align(Alignment.TopCenter),
-            )
-        },
+        }
     ) {
         Scaffold(
             modifier = Modifier

@@ -47,7 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastForEachIndexed
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.common.domain.Async
@@ -60,7 +60,6 @@ import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.home.getBackdropAspectRatio
 import com.flixclusive.model.media.MediaMetadata
@@ -196,9 +195,7 @@ private fun MediaContent(
                 if (showTextInsteadOfLogo) {
                     Text(
                         text = media.title,
-                        style = MaterialTheme.typography.headlineMedium.asAdaptiveTextStyle(
-                            increaseBy = 5.sp,
-                        ),
+                        style = MaterialTheme.typography.headlineMedium,
                         textAlign = TextAlign.Center,
                         softWrap = true,
                         modifier = Modifier.padding(
@@ -229,12 +226,11 @@ private fun MediaContent(
                     verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 ) {
-                    details.forEachIndexed { index, detail ->
+                    details.fastForEachIndexed { index, detail ->
                         Text(
                             text = detail,
                             color = LocalContentColor.current.copy(0.6f),
-                            style = MaterialTheme.typography.labelMedium
-                                .asAdaptiveTextStyle(increaseBy = 5.sp),
+                            style = MaterialTheme.typography.labelMedium,
                         )
 
                         if (index < details.lastIndex) {

@@ -34,6 +34,7 @@ import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -196,51 +197,64 @@ internal class HomeScreenViewModel @Inject constructor(
 
     private fun observeCatalogs() {
         if (observeCatalogsJob?.isActive == true) {
-            return
+            observeCatalogsJob?.cancel()
         }
 
         observeCatalogsJob = viewModelScope.launch {
-            getHomeCatalogs().collect { response ->
-                when (response) {
-                    is Async.Loading -> {
-                        _uiState.update { state ->
-                            state.copy(catalogs = Async.Loading)
-                        }
-                    }
+            getHomeCatalogs()
+                .distinctUntilChanged()
+                .collect { response ->
+                    if (_uiState.value.isRefreshing && response is Async.Loading) return@collect
 
-                    is Async.Success -> {
-                        val catalogs = response.data
-                        val catalogMap = catalogs.associateBy { it.url + it.providerId }
-                            .mapValues { entry ->
-                                CatalogWithPagingState(
-                                    catalog = entry.value,
-                                    page = 1,
-                                    state = PagingState.Idle,
-                                    medias = emptySet(),
+                    when (response) {
+                        is Async.Loading -> {
+                            _uiState.update { state ->
+                                state.copy(catalogs = Async.Loading)
+                            }
+                        }
+
+                        is Async.Failure -> {
+                            if (response.cause is CancellationException) return@collect
+
+                            _uiState.update { state ->
+                                state.copy(catalogs = Async.Failure(response.message))
+                            }
+                        }
+
+                        is Async.Success -> {
+                            val catalogs = response.data
+                            val catalogMap = catalogs.associateBy { it.url + it.providerId }
+                                .mapValues { entry ->
+                                    CatalogWithPagingState(
+                                        catalog = entry.value,
+                                        page = 1,
+                                        state = PagingState.Idle,
+                                        medias = emptySet(),
+                                    )
+                                }
+
+                            catalogMap.forEach { (_, data) ->
+                                paginate(data)
+                            }
+
+                            _uiState.update { state ->
+                                state.copy(
+                                    catalogs = Async.Success(catalogMap),
+                                    itemHeader = Async.Loading,
+                                    isRefreshing = false,
                                 )
                             }
 
-                        catalogMap.forEach { (_, data) ->
-                            paginate(data)
-                        }
-
-                        _uiState.update { state ->
-                            state.copy(catalogs = Async.Success(catalogMap))
-                        }
-                    }
-
-                    is Async.Failure -> {
-                        if (response.cause is CancellationException) return@collect
-
-                        _uiState.update { state ->
-                            state.copy(catalogs = Async.Failure(response.message))
+                            if (catalogMap.isNotEmpty()) {
+                                loadHeaderItem()
+                            }
                         }
                     }
                 }
-            }
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun loadHeaderItem() {
         if (loadFetchHeaderJob?.isActive == true) {
             loadFetchHeaderJob?.cancel()
@@ -293,9 +307,14 @@ internal class HomeScreenViewModel @Inject constructor(
         }
     }
 
-    fun initialize() {
+    fun initialize(isRefreshing: Boolean = false) {
+        if (isRefreshing && _uiState.value.catalogs is Async.Loading) return
+
+        _uiState.update { state ->
+            state.copy(isRefreshing = isRefreshing)
+        }
+
         observeCatalogs()
-        loadHeaderItem()
     }
 
     fun paginate(catalogWithState: CatalogWithPagingState) {
@@ -360,6 +379,7 @@ internal class HomeScreenViewModel @Inject constructor(
 internal data class HomeUiState(
     val itemHeader: Async<MediaMetadata> = Async.Loading,
     val catalogs: Async<Map<String, CatalogWithPagingState>> = Async.Loading,
+    val isRefreshing: Boolean = false,
 ) {
     fun updateCatalog(
         key: String,
