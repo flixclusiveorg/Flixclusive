@@ -3,6 +3,7 @@ package com.flixclusive.core.database.entity.media
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.MediaIdSource
 import java.util.Date
@@ -44,7 +45,23 @@ data class DBMediaExternalId(
         }
 
         fun List<DBMediaExternalId>.toExternalIdMap(): Map<MediaIdSource, String> {
-            return associate { MediaIdSource.valueOf(it.source) to it.externalId }
+            return buildMap {
+                this@toExternalIdMap.forEach {
+                    val key = when (it.source.lowercase()) {
+                        "tmdb" -> MediaIdSource.TMDB
+                        "tvdb" -> MediaIdSource.TVDB
+                        "imdb" -> MediaIdSource.IMDB
+                        "trakt" -> MediaIdSource.TRAKT
+                        "anilist" -> MediaIdSource.ANILIST
+                        "kitsu" -> MediaIdSource.KITSU
+                        else -> safeCall { MediaIdSource.valueOf(it.source) }
+                    }
+
+                    if (key != null) {
+                        put(key, it.externalId)
+                    }
+                }
+            }
         }
     }
 }
