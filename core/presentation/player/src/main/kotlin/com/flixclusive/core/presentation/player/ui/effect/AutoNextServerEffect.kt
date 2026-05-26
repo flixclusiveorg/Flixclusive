@@ -1,5 +1,6 @@
 package com.flixclusive.core.presentation.player.ui.effect
 
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -7,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.media3.common.Player
 import androidx.media3.common.listen
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.AppPlayer.Companion.isPrepareNeeded
 import com.flixclusive.core.presentation.player.R
@@ -14,6 +16,7 @@ import com.flixclusive.core.presentation.player.extensions.getDisplayMessage
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 
+@OptIn(UnstableApi::class)
 @Composable
 fun AutoNextServerEffect(
     key: () -> String,

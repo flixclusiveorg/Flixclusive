@@ -5,7 +5,6 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.warnLog
@@ -240,8 +239,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             errorLog("Failed to get media links from provider ${metadata.name} for media ${media.title} (${media.id})")
             errorLog(e)
 
-            val parsedError = e.toNetworkException()
-            send(LoadLinksState.Error(parsedError.error))
+            send(LoadLinksState.Error(e))
             return false
         }
     }

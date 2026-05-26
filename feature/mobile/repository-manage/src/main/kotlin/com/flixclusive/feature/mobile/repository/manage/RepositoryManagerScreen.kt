@@ -175,10 +175,10 @@ private fun RepositoryManagerScreenContent(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .padding(LocalGlobalScaffoldPadding.current),
-    ) {
+    ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(
-                contentPadding = it,
+                contentPadding = padding,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 columns = getAdaptiveGridCellsCount(),
@@ -247,7 +247,7 @@ private fun RepositoryManagerScreenContent(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .fillMaxSize()
-                        .padding(it),
+                        .padding(padding),
                 ) {
                     EmptyDataMessage(
                         description = stringResource(LocaleR.string.empty_repositories_list_message),

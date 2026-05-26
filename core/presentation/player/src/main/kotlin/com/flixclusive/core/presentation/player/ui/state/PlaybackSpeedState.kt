@@ -1,5 +1,6 @@
 package com.flixclusive.core.presentation.player.ui.state
 
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -10,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.listen
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
 
@@ -45,6 +47,7 @@ class PlaybackSpeedState(
      * * [Player.EVENT_AVAILABLE_COMMANDS_CHANGED] in order to determine whether the UI element
      *   responsible for setting the playback speed should be enabled, i.e. respond to user input.
      */
+    @OptIn(UnstableApi::class)
     internal suspend fun observe(): Nothing {
         playbackSpeed = player.playbackParameters.speed
         isEnabled = arePlaybackParametersEnabled(player)

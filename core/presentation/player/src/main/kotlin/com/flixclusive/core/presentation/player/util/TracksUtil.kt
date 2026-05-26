@@ -13,7 +13,7 @@ internal object TracksUtil {
      *
      * @return List of [Format] objects representing the supported formats in all track groups.
      * */
-    fun List<Tracks.Group>.getFormats() = map { it.getFormats() }.flatten()
+    fun List<Tracks.Group>.getFormats() = flatMap { it.getFormats() }
 
     /**
      * Gets all supported formats in a list

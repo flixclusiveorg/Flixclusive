@@ -64,6 +64,7 @@ class ScrubState private constructor(
         }
     }
 
+    @OptIn(UnstableApi::class)
     private suspend fun observe(scope: CoroutineScope) {
         player.listen { events ->
             if (events.containsAny(Player.EVENT_IS_PLAYING_CHANGED, Player.EVENT_POSITION_DISCONTINUITY)) {

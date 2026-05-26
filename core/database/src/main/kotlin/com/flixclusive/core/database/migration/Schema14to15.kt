@@ -29,7 +29,7 @@ internal object Schema14to15 : Migration(14, 15) {
             "SELECT `mediaId`, `listId`, `createdAt`, `updatedAt` FROM `library_list_items`",
         )
 
-        try {
+        cursor.use { cursor ->
             val mediaIdIndex = cursor.getColumnIndexOrThrow("mediaId")
             val listIdIndex = cursor.getColumnIndexOrThrow("listId")
             val createdAtIndex = cursor.getColumnIndexOrThrow("createdAt")
@@ -44,15 +44,13 @@ internal object Schema14to15 : Migration(14, 15) {
 
                 db.execSQL(
                     """
-                    INSERT INTO `library_list_items_new` (
-                        `id`, `mediaId`, `listId`, `createdAt`, `updatedAt`
-                    ) VALUES (?, ?, ?, ?, ?)
-                    """.trimIndent(),
+                        INSERT INTO `library_list_items_new` (
+                            `id`, `mediaId`, `listId`, `createdAt`, `updatedAt`
+                        ) VALUES (?, ?, ?, ?, ?)
+                        """.trimIndent(),
                     arrayOf(newId, mediaId, listId, createdAt, updatedAt),
                 )
             }
-        } finally {
-            cursor.close()
         }
 
         db.execSQL("DROP TABLE `library_list_items`")

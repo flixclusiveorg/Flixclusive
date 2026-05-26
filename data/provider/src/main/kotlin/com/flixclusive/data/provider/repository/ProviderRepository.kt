@@ -17,7 +17,6 @@ data class ProviderResponseWrapper(
     val id: String get() = provider.id
     val name: String? get() = metadata?.name
 
-    val logoUrl: String? get() = metadata?.iconUrl
     val versionName: String? get() = metadata?.versionName
     val versionCode: Long? get() = metadata?.versionCode
 
@@ -42,7 +41,7 @@ interface ProviderRepository {
     )
 
     suspend fun uninstall(provider: InstalledProvider)
-    
+
     suspend fun load(
         provider: ProviderPlugin,
         classLoader: PathClassLoader,

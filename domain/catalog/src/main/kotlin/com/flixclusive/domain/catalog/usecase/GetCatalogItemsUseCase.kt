@@ -1,7 +1,6 @@
 package com.flixclusive.domain.catalog.usecase
 
 import com.flixclusive.core.common.domain.Async
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.PaginatedMedia
 import com.flixclusive.model.provider.Catalog
@@ -20,7 +19,7 @@ interface GetCatalogItemsUseCase {
      * @param catalog The catalog from which to fetch items.
      * @param page The page number to fetch.
      *
-     * @return A [Resource] containing a [PaginatedMedia] of [PartialMedia]s.
+     * @return A [Async] containing a [PaginatedMedia] of [PartialMedia]s.
      * */
     operator fun invoke(
         catalog: Catalog,

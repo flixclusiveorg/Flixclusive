@@ -520,12 +520,12 @@ private fun ManageLibraryScreenBasePreview() {
 
     LaunchedEffect(true) {
         libraries.addAll(
-            List(10) {
-                val previews = List(3) {
+            List(10) { i ->
+                val previews = List(3) { j ->
                     DummyDataForPreview
                         .getMovie(
-                            title = "MediaMetadata #$it",
-                            id = it.toString(),
+                            title = "MediaMetadata #$j",
+                            id = j.toString(),
                         ).toPreviewPoster()
                 }
                 val description =
@@ -536,9 +536,9 @@ private fun ManageLibraryScreenBasePreview() {
                     }
 
                 val list = LibraryList(
-                    id = it.toString(),
+                    id = i.toString(),
                     ownerId = "preview-user",
-                    name = "Library $it",
+                    name = "Library $i",
                     description = description,
                 )
 

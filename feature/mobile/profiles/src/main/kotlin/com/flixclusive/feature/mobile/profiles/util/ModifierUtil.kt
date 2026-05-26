@@ -42,12 +42,4 @@ internal object ModifierUtil {
             null
         }
     }
-
-    fun GraphicsLayerScope.getPagerScale(pageOffset: Float): Float {
-        return lerp(
-            start = 0.7f,
-            stop = 1f,
-            fraction = 1f - pageOffset,
-        )
-    }
 }

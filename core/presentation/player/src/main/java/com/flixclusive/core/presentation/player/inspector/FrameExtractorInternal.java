@@ -43,6 +43,7 @@ import android.os.Looper;
 import androidx.annotation.CallSuper;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.annotation.RestrictTo;
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.media3.common.C;
@@ -56,6 +57,7 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoFrameProcessingException;
 import androidx.media3.common.VideoGraph;
+import androidx.media3.common.util.ExperimentalApi;
 import androidx.media3.common.util.GlProgram;
 import androidx.media3.common.util.GlUtil;
 import androidx.media3.common.util.NullableType;
@@ -346,6 +348,7 @@ public final class FrameExtractorInternal {
                 });
     }
 
+    @OptIn(markerClass = ExperimentalApi.class)
     private void ensurePlayerInitialized(FrameExtractionRequest request, boolean needsNewPlayer) {
         if (needsNewPlayer) {
             if (player != null) {
@@ -648,6 +651,7 @@ public final class FrameExtractorInternal {
             effectsFromPlayer = ImmutableList.of();
         }
 
+        @OptIn(markerClass = ExperimentalApi.class)
         @SuppressLint("RestrictedApi")
         @Override
         protected PlaybackVideoGraphWrapper createPlaybackVideoGraphWrapper(

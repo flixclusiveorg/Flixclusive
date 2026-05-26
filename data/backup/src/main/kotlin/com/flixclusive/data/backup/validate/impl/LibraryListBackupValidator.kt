@@ -62,8 +62,7 @@ internal class LibraryListBackupValidator @Inject constructor(
     }
 
     private suspend fun validateRestore(ownerId: String, backup: List<BackupLibraryList>): Set<String> {
-        val expectedLists = backup
-        if (expectedLists.isEmpty()) return emptySet()
+        if (backup.isEmpty()) return emptySet()
 
         val actualLists = libraryListDao.getAll(userId = ownerId)
         val actualWatched = actualLists.firstOrNull { it.list.listType == LibraryListType.WATCHED }
@@ -73,7 +72,7 @@ internal class LibraryListBackupValidator @Inject constructor(
             .associateBy { it.name }
 
         val missing = linkedSetOf<String>()
-        expectedLists.forEach { expected ->
+        backup.forEach { expected ->
             val actual = when (expected.listType) {
                 LibraryListType.WATCHED -> actualWatched
                 LibraryListType.CUSTOM -> actualCustomByName[expected.name]

@@ -43,7 +43,6 @@ import com.flixclusive.core.strings.R as LocaleR
 object UserAvatarDefaults {
     val DefaultAvatarShape = RoundedCornerShape(8.0.dp)
     val DefaultAvatarSize = 100.dp
-    const val AVATAR_PREFIX = "avatar"
     const val AVATARS_IMAGE_COUNT = 13
 }
 

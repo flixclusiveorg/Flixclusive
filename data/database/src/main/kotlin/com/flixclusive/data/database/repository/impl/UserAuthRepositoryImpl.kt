@@ -33,9 +33,8 @@ internal class UserAuthRepositoryImpl @Inject constructor(
             if (sessionTimeout < System.currentTimeMillis()) return@withContext false
 
             val user = userRepository.getUser(id = savedUserId)
-            if (user == null) return@withContext false
 
-            return@withContext true
+            return@withContext user != null
         }
     }
 

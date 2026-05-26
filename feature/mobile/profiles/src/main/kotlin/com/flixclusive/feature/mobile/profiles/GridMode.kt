@@ -132,7 +132,7 @@ internal fun GridMode(
                     .align(Alignment.Center)
                     .then(lazyGridSizeModifier)
             ) {
-                items(profiles) {
+                items(profiles) { profile ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -140,7 +140,7 @@ internal fun GridMode(
                         UserAvatarWithEdit(
                             modifier = Modifier
                                 .animateItem(),
-                            user = it,
+                            user = profile,
                             isEditing = isEditing,
                             onSelect = {
                                 if (isEditing) {
@@ -151,7 +151,7 @@ internal fun GridMode(
                             },
                         )
 
-                        UsernameTag(user = it)
+                        UsernameTag(user = profile)
                     }
                 }
             }

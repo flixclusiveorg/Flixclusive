@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components.material3.dialog
+package com.flixclusive.feature.mobile.provider.details.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,11 +34,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.mobile.components.material3.CommonCheckbox
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.CommonAlertDialog
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
-fun UnsafeInstallAlertDialog(
+internal fun UnsafeInstallAlertDialog(
     quantity: Int,
     formattedName: Any,
     warnOnInstall: Boolean,

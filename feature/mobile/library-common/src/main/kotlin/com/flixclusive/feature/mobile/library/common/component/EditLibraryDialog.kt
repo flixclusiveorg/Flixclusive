@@ -16,7 +16,7 @@ fun EditLibraryDialog(
     onCancel: () -> Unit,
 ) {
     var name by remember { mutableStateOf(library.name) }
-    var description by remember { mutableStateOf<String?>(library.description) }
+    var description by remember { mutableStateOf(library.description) }
 
     BaseLibraryModificationDialog(
         label = stringResource(LocaleR.string.edit_library),

@@ -1,5 +1,6 @@
 package com.flixclusive.core.presentation.player.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import androidx.annotation.OptIn
@@ -68,6 +69,7 @@ internal object PlayerBuilderHelper {
                         // Required to make the decoder work with old subtitles
                         // Upgrade CustomSubtitleDecoderFactory when media3 supports it
                         @Suppress("DEPRECATION")
+                        @SuppressLint("UnsafeOptInUsageError")
                         experimentalSetLegacyDecodingEnabled(true)
                     }
 

@@ -191,7 +191,7 @@ internal fun SettingsScreen(
                             transitionSpec = {
                                 val spring = spring<IntOffset>(Spring.DampingRatioLowBouncy)
 
-                                if (initialState.isSubNavigation == true) {
+                                if (initialState.isSubNavigation) {
                                     slideInHorizontally(spring) { -it } togetherWith
                                         slideOutHorizontally(spring) { it }
                                 } else {

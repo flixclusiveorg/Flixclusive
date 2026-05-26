@@ -34,7 +34,7 @@ internal fun SortFilter(
                     label = option.toOptionString(),
                     isSelected = filter.selectedValue.index == index,
                     onClick = {
-                        var newState = filter.selectedValue.updateSelection(index = index)
+                        val newState = filter.selectedValue.updateSelection(index = index)
                         onUpdateFilter(newState)
                     },
                 ) {

@@ -9,17 +9,6 @@ import org.gradle.kotlin.dsl.getByType
 val Project.libs
     get(): VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-fun Project.getCommitSha(): String {
-    val gitCommitShaProvider =
-        providers.exec {
-            commandLine = "git rev-parse --short HEAD".split(" ")
-        }
-
-    return gitCommitShaProvider.standardOutput.asText
-        .get()
-        .trim()
-}
-
 fun Project.getCommitCount(): String {
     val gitCommitCountProvider =
         providers.exec {

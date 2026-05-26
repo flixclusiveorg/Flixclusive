@@ -143,7 +143,7 @@ internal fun MediaLinksBottomSheet(
             uiState.metadata !is PartialMedia &&
                 uiState.loadLinksState.isSuccess &&
                 linksCache != null &&
-                linksCache.hasStreamableLinks
+                linksCache.hasPlayableLinks
         }.filter { it }
             .distinctUntilChanged()
             .debounce(800)

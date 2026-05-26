@@ -12,14 +12,20 @@ class AppVersion private constructor(
     private val version: Comparable<*>,
 ) : Comparable<AppVersion> {
     override fun compareTo(other: AppVersion): Int {
-        return if (version is Int && other.version is Int) {
-            version.compareTo(other.version)
-        } else if (version is SemVer && other.version is SemVer) {
-            version.compareTo(other.version)
-        } else {
-            throw IllegalArgumentException(
-                "Cannot compare different versions from different build types: $version and ${other.version}",
-            )
+        return when (version) {
+            is Int if other.version is Int -> {
+                version.compareTo(other.version)
+            }
+
+            is SemVer if other.version is SemVer -> {
+                version.compareTo(other.version)
+            }
+
+            else -> {
+                throw IllegalArgumentException(
+                    "Cannot compare different versions from different build types: $version and ${other.version}",
+                )
+            }
         }
     }
 

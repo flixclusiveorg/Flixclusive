@@ -7,19 +7,6 @@ import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.channels.ProducerScope
 
 /**
- * Sends a message on the [ProducerScope] indicating that the media is being fetched from a specific provider.
- * */
-fun ProducerScope<LoadLinksState>.sendFetchingMediaMessage(provider: String) =
-    trySend(
-        LoadLinksState.Fetching(
-            UiText.StringResource(
-                R.string.get_media_links_fetching_from_provider,
-                provider,
-            ),
-        ),
-    )
-
-/**
  * Sends a message on the [ProducerScope] indicating that links are being extracted from a specific provider.
  *
  * @param provider the name of the provider from which links are being extracted

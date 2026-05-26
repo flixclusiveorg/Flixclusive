@@ -43,7 +43,7 @@ internal fun DisplayChangelogsObserver(
             return@LaunchedEffect
         }
 
-        val (title, changelogs) = resources.getStringArray(changelogsId)
+//        val (title, changelogs) = resources.getStringArray(changelogsId)
 
 //        navController.navigateIfResumed(
 //            direction = MarkdownScreenDestination(title = title, description = changelogs),

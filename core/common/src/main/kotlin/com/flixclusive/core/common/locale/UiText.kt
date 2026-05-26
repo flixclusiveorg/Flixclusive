@@ -20,8 +20,6 @@ sealed class UiText {
     data class StringValue(
         val str: String,
     ) : UiText() {
-        constructor(e: Throwable?) : this(e?.message ?: "")
-
         override fun toString(): String {
             return str
         }

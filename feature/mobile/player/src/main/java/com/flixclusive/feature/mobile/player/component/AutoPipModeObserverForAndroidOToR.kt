@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.player.component
 
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -29,6 +30,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState
  *
  * Requires Android Oreo (26) or up to Android R (30).
  * */
+@SuppressLint("WrongConstant")
 @OptIn(UnstableApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

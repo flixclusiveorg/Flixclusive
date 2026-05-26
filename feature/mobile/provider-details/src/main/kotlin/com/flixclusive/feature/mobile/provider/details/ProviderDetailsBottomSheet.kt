@@ -42,7 +42,6 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
-import com.flixclusive.core.presentation.mobile.components.material3.dialog.UnsafeInstallAlertDialog
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallButton
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallState
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -57,6 +56,7 @@ import com.flixclusive.feature.mobile.provider.details.component.ProviderDetails
 import com.flixclusive.feature.mobile.provider.details.component.ProviderDetailsHeader
 import com.flixclusive.feature.mobile.provider.details.component.ProviderDetailsWhatsNew
 import com.flixclusive.feature.mobile.provider.details.component.SectionLabel
+import com.flixclusive.feature.mobile.provider.details.component.UnsafeInstallAlertDialog
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
@@ -67,10 +67,6 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-
-// From M3
-private val DialogMinWidth = 280.dp
-private val DialogMaxWidth = 560.dp
 
 @Destination<ExternalModuleGraph>(
     navArgs = ProviderMetadataNavArgs::class,

@@ -1,5 +1,6 @@
 package com.flixclusive.core.presentation.player.ui.state
 
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -11,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.media3.common.Player
 import androidx.media3.common.listen
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import kotlinx.coroutines.delay
 
@@ -52,6 +54,7 @@ class ControlsVisibilityState(
      *
      * @param isScrubbing A boolean indicating whether the user is currently scrubbing (or seeking).
      * */
+    @OptIn(UnstableApi::class)
     private suspend fun observe(isScrubbing: Boolean) {
         player.listen { events ->
             if (

@@ -64,10 +64,10 @@ fun MarkdownScreen(
                 onNavigate = navigator::navigateBack,
             )
         },
-    ) {
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
             MarkdownText(

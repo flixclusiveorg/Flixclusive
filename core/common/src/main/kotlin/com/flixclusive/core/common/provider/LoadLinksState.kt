@@ -146,17 +146,6 @@ sealed class LoadLinksState(
                 ?: UiText.from(defaultUnavailableMessageId),
         ) {
         override val ordinal = 4
-
-        /**
-         * Constructor with a string resource ID for the error message.
-         *
-         * @param errorMessageId The string resource ID for the error message.
-         */
-        constructor(
-            @StringRes errorMessageId: Int,
-        ) : this(
-            errorMessage = UiText.from(errorMessageId),
-        )
     }
 
     /**
