@@ -232,7 +232,15 @@ internal fun AddProviderScreenContent(
                                         )
                                         .pointerInput(Unit) {
                                             detectTapGestures(
-                                                onLongPress = { _ -> onToggleSelect(item.metadata) },
+                                                onLongPress = { _ ->
+                                                    val canBeSelected =
+                                                        installStates[item.id] is ProviderInstallState.NotInstalled
+                                                            || installStates[item.id] is ProviderInstallState.Outdated
+
+                                                    if (canBeSelected) {
+                                                        onToggleSelect(item.metadata)
+                                                    }
+                                                },
                                                 onTap = { _ ->
                                                     val isSelecting = selectedProviders().isNotEmpty()
                                                     val canBeSelected =
