@@ -294,10 +294,10 @@ internal fun ProviderManagerScreenContent(
         )
     }
 
-    if (uiState.error != null) {
+    if (uiState.errors.isNotEmpty()) {
         ProviderCrashBottomSheet(
             isLoading = false,
-            errors = uiState.error,
+            errors = uiState.errors,
             onDismissRequest = onConsumeError,
         )
     }
@@ -337,7 +337,7 @@ private fun ProviderManagerScreenBasePreview() {
     var query by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<ProviderWithThrowable?>(null) }
     var uiState by remember(error) {
-        mutableStateOf(ProviderManageUiState(error = listOfNotNull(error)))
+        mutableStateOf(ProviderManageUiState(errors = listOfNotNull(error)))
     }
 
     val list = remember {

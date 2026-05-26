@@ -78,7 +78,6 @@ internal class ProviderManagerViewModel @Inject constructor(
     ) { isSearching, query, providers ->
         providers.mapNotNull { provider ->
             val metadata = provider.metadata ?: return@mapNotNull null
-            provider.plugin ?: return@mapNotNull null
 
             ProviderWithCapabilities(
                 metadata = metadata,
@@ -114,7 +113,21 @@ internal class ProviderManagerViewModel @Inject constructor(
     ): List<CapabilityUiItem> {
         return withContext(appDispatchers.io) {
             try {
-                val plugin = wrapper.plugin!!
+                val plugin = wrapper.plugin
+                if (plugin == null) {
+                    warnLog("Plugin is null for provider with id ${wrapper.metadata?.id}, skipping capabilities check.")
+                    _uiState.update {
+                        it.copy(
+                            errors = it.errors +
+                                ProviderWithThrowable(
+                                    provider = wrapper.metadata!!,
+                                    throwable = IllegalStateException(context.getString(R.string.error_missing_provider_plugin))
+                                )
+                        )
+                    }
+                    return@withContext emptyList()
+                }
+
                 val catalogApi = plugin.getCatalogApi(context)
                 val searchApi = plugin.getSearchApi(context)
                 val metadataApi = plugin.getMetadataApi(context)
@@ -173,8 +186,7 @@ internal class ProviderManagerViewModel @Inject constructor(
                 }
             } catch (e: Throwable) {
                 _uiState.update {
-                    val currentErrors = it.error ?: emptyList()
-                    it.copy(error = currentErrors + ProviderWithThrowable(wrapper.metadata!!, e))
+                    it.copy(errors = it.errors + ProviderWithThrowable(wrapper.metadata!!, e))
                 }
                 emptyList()
             }
@@ -212,7 +224,7 @@ internal class ProviderManagerViewModel @Inject constructor(
     }
 
     fun onConsumeError() {
-        _uiState.update { it.copy(error = null) }
+        _uiState.update { it.copy(errors = emptyList()) }
     }
 
     fun onToggleSearchBar(state: Boolean) {
@@ -223,7 +235,7 @@ internal class ProviderManagerViewModel @Inject constructor(
 @Immutable
 internal data class ProviderManageUiState(
     val isSearching: Boolean = false,
-    val error: List<ProviderWithThrowable>? = null,
+    val errors: List<ProviderWithThrowable> = emptyList(),
 )
 
 @Immutable

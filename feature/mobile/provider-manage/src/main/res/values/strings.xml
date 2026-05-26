@@ -9,4 +9,5 @@
     <string name="label_provider_capability_search">Search</string>
     <string name="label_provider_capability_streams">Streams</string>
     <string name="label_provider_capability_subs">Subs</string>
+    <string name="error_missing_provider_plugin">Provider plugin is not registered, cannot check capabilities.</string>
 </resources>
