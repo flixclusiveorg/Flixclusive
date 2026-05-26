@@ -23,7 +23,7 @@ import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.feature.mobile.provider.details.CapabilityItem
 import com.flixclusive.feature.mobile.provider.details.R
 
-private val AnimationDuration = 300
+private const val DURATION_ANIMATION = 300
 
 @Composable
 internal fun CapabilitiesSection(
@@ -34,20 +34,21 @@ internal fun CapabilitiesSection(
 ) {
     val isVisible by remember {
         derivedStateOf {
-            installState() is ProviderInstallState.Installed
+            installState() is ProviderInstallState.Installed ||
+                installState() is ProviderInstallState.Outdated
         }
     }
 
     AnimatedVisibility(
         visible = isVisible,
         enter = expandVertically(
-            animationSpec = tween(durationMillis = AnimationDuration),
+            animationSpec = tween(durationMillis = DURATION_ANIMATION),
             expandFrom = Alignment.Top,
-        ) + fadeIn(animationSpec = tween(durationMillis = AnimationDuration)),
+        ) + fadeIn(animationSpec = tween(durationMillis = DURATION_ANIMATION)),
         exit = shrinkVertically(
-            animationSpec = tween(durationMillis = AnimationDuration),
+            animationSpec = tween(durationMillis = DURATION_ANIMATION),
             shrinkTowards = Alignment.Top,
-        ) + fadeOut(animationSpec = tween(durationMillis = AnimationDuration)),
+        ) + fadeOut(animationSpec = tween(durationMillis = DURATION_ANIMATION)),
         modifier = modifier,
     ) {
         Column {

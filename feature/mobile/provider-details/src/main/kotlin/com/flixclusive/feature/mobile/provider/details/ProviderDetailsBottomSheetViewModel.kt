@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
@@ -13,6 +14,8 @@ import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallState
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
@@ -200,13 +203,14 @@ internal class ProviderDetailsBottomSheetViewModel @Inject constructor(
 
             _installState.value = state
         } catch (e: Throwable) {
-            // This catch only expects errors from the update check, so we can
-            // still show the provider details even if the update check fails
+            val message = when (e) {
+                is ExceptionWithUiText -> e.uiText
+                else -> null
+            }
+
             _errors.emit(
-                UiText.from(
-                    R.string.error_msg_failed_to_check_for_updates,
-                    e.message ?: "Unknown error"
-                )
+                message
+                    ?: UiText.from(R.string.error_msg_failed_to_check_for_updates, e.message ?: "Unknown error")
             )
 
             _installState.value = ProviderInstallState.Installed
@@ -291,7 +295,12 @@ internal class ProviderDetailsBottomSheetViewModel @Inject constructor(
                 }
             }
         } catch (e: Throwable) {
-            _installState.value = ProviderInstallState.Installed
+            errorLog(e.cause)
+
+            _installState.value = safeCall {
+                getInstallState(provider)
+            } ?: ProviderInstallState.Installed
+
             _errors.emit(
                 UiText.from(
                     R.string.error_msg_failed_to_update_provider,
@@ -316,7 +325,7 @@ internal class ProviderDetailsBottomSheetViewModel @Inject constructor(
         val provider = getPlugin(local.id) ?: return ProviderInstallState.NotInstalled
 
         val oldManifest = provider.manifest
-        if (oldManifest.updateUrl == null || oldManifest.updateUrl.equals("")) {
+        if (oldManifest.updateUrl.isNullOrEmpty()) {
             return ProviderInstallState.NotInstalled
         }
 

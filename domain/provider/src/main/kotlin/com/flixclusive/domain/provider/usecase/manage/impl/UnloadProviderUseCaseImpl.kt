@@ -37,7 +37,7 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
             if (uninstall) {
                 providerRepository.uninstall(provider = provider)
             } else {
-                providerRepository.unload(id = provider.id)
+                providerWrapper.plugin?.onUnload(context)
             }
         } catch (e: Throwable) {
             throw Throwable(

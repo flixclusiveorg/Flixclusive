@@ -1,7 +1,9 @@
 package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
@@ -17,6 +19,7 @@ import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.util.DynamicResourceLoader
+import com.flixclusive.domain.provider.util.DynamicResourceLoader.getResourcesFromProvider
 import com.flixclusive.domain.provider.util.extensions.getFileFromPath
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderManifest
@@ -34,6 +37,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val MANIFEST_FILE = "manifest.json"
@@ -44,9 +48,9 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
 ) : LoadProviderUseCase {
-    private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
+    private val cacheLocalMetadataMap by lazy { HashMap<String, ProviderMetadata>() }
 
-    private val cacheLocalMetadataMap = HashMap<String, ProviderMetadata>()
+    private val dataStores by lazy { ConcurrentHashMap<String, DataStore<Preferences>>() }
 
     // TODO: Create a separate service for loading providers
     //       since `InitializeProvidersUseCase` also needs to load providers
@@ -64,18 +68,6 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                         provider = createMissingMetadata(installedProvider),
                         error = IllegalStateException(
                             context.getString(R.string.missing_metadata, installedProvider.id)
-                        ),
-                    ),
-                )
-                return@flow
-            }
-
-            if (isProviderAlreadyLoaded(userId, metadata)) {
-                emit(
-                    ProviderResult.Failure(
-                        provider = metadata,
-                        error = IllegalStateException(
-                            context.getString(R.string.provider_already_exists, metadata.name)
                         ),
                     ),
                 )
@@ -111,7 +103,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 infoLog("Loading provider: ${metadata.name} [${file.name}]")
 
                 val loader = PathClassLoader(file.absolutePath, context.classLoader)
-                val manifest: ProviderManifest = withContext<ProviderManifest>(appDispatchers.io) {
+                val manifest = withContext<ProviderManifest>(appDispatchers.io) {
                     loader.getFileFromPath(MANIFEST_FILE)
                 }.let {
                     if (!metadata.id.endsWith(ProviderPreferences.DEBUG_SUFFIX))
@@ -126,15 +118,17 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 val providerClass: Class<out ProviderPlugin?> = loader.loadClass(manifest.providerClassName) as Class<out ProviderPlugin>
                 val provider = providerClass.getDeclaredConstructor().newInstance() as ProviderPlugin
 
-                val providerPrefs = PreferenceDataStoreFactory.create {
-                    val settingsDirPath = createSettingsDirPath(
-                        userId = installedProvider.ownerId,
-                        repositoryUrl = installedProvider.repositoryUrl,
-                        isDebugProvider = installedProvider.isDebug,
-                    )
+                val providerPrefs = dataStores.getOrPut(installedProvider.id) {
+                    PreferenceDataStoreFactory.create {
+                        val settingsDirPath = createSettingsDirPath(
+                            userId = installedProvider.ownerId,
+                            repositoryUrl = installedProvider.repositoryUrl,
+                            isDebugProvider = installedProvider.isDebug,
+                        )
 
-                    File("$settingsDirPath/${manifest.id}.preferences_pb").apply {
-                        parentFile?.mkdirs()
+                        File("$settingsDirPath/${manifest.id}.preferences_pb").apply {
+                            parentFile?.mkdirs()
+                        }
                     }
                 }
 
@@ -143,10 +137,10 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
 
                 if (manifest.requiresResources) {
                     withContext(appDispatchers.io) {
-                        provider.resources = dynamicResourceLoader.load(inputFile = file)
+                        provider.resources = context.getResourcesFromProvider(inputFile = file)
 
-                        if (dynamicResourceLoader.forceCleanUp) {
-                            dynamicResourceLoader.cleanupArtifacts(file)
+                        if (DynamicResourceLoader.needsCleanUp) {
+                            DynamicResourceLoader.cleanupArtifacts(file)
                         }
                     }
                 }
@@ -169,18 +163,6 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 errorLog(e)
             }
         }
-
-    private suspend fun isProviderAlreadyLoaded(
-        userId: String,
-        metadata: ProviderMetadata
-    ): Boolean {
-        if (providerRepository.getProvider(metadata.id, userId)?.plugin != null) {
-            warnLog("Provider with name ${metadata.name} already exists")
-            return true
-        }
-
-        return false
-    }
 
     /**
      * On Android 14+, files created/downloaded by ADB or other external means

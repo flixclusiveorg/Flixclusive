@@ -73,11 +73,12 @@ internal class ProviderManagerViewModel @Inject constructor(
         .filterNotNull()
         .flatMapLatest { userId ->
             providerRepository.getProvidersAsFlow(ownerId = userId)
+                .debounce(600)
         }
 
     val providers = combine(
         _uiState.map { it.isSearching }.distinctUntilChanged(),
-        searchQuery,
+        _searchQuery.debounce(800).distinctUntilChanged(),
         installedProviders,
     ) { isSearching, query, providers ->
         providers.map { wrapper ->
@@ -86,7 +87,7 @@ internal class ProviderManagerViewModel @Inject constructor(
                 capabilities = getCapabilities(wrapper)
             )
         }.let { metadataList ->
-            if (isSearching) {
+            if (!isSearching) {
                 return@let metadataList
             }
 

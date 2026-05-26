@@ -47,7 +47,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
     @Throws(Throwable::class)
     override fun invoke(provider: ProviderMetadata): Flow<DownloadProviderResult> = channelFlow {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        if (providerRepository.getProvider(userId, provider.id) == null) {
+        if (providerRepository.getProvider(id = provider.id, ownerId = userId) == null) {
             send(
                 DownloadProviderResult.Failure(
                     IllegalStateException(
@@ -55,6 +55,7 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
                     )
                 )
             )
+            return@channelFlow
         }
 
         val repository = provider.repositoryUrl.toValidRepositoryLink()
@@ -102,7 +103,9 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
         }
 
         try {
-            unloadProvider(provider = old)
+            if (old.id != new.id) {
+                unloadProvider(provider = old)
+            }
         } catch (e: Throwable) {
             send(DownloadProviderResult.Failure(e))
             return@channelFlow
@@ -113,19 +116,34 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
             // If the provider failed to load, but it was
             // previously loaded, just log the exception
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            if (it is ProviderResult.Failure && providerRepository.getProvider(userId, provider.id) != null) {
+            val updatedProvider = providerRepository.getProvider(id = provider.id, ownerId = userId)
+            if (it is ProviderResult.Failure && updatedProvider != null) {
                 // If the provider is loaded, just log the exception and continue
                 infoLog("Provider ${provider.name} updated but failed to load with exception: ${it.error}")
+                send(
+                    DownloadProviderResult.Failure(
+                        IllegalStateException(
+                            context.getString(R.string.error_provider_updated_but_failed_to_load, provider.name),
+                            it.error
+                        )
+                    )
+                )
                 return@onEach
             }
 
             // If the provider failed to load, and it wasn't previously
             // loaded, restore the backup and throw an exception
             if (it is ProviderResult.Failure) {
-                restoreBackup(old)
-                providerRepository.install(old, provider)
-                loadProvider(installedProvider = old).collect()
-                send(DownloadProviderResult.Failure(it.error))
+                try {
+                    restoreBackup(old)
+                    providerRepository.install(old, provider)
+                    loadProvider(installedProvider = old).collect()
+                    send(DownloadProviderResult.Failure(it.error))
+                } catch (e: Throwable) {
+                    infoLog("Failed to restore old provider after update failure for provider ${provider.name} with exception: $e")
+                    send(DownloadProviderResult.Failure(e))
+                }
+
                 return@onEach
             }
 

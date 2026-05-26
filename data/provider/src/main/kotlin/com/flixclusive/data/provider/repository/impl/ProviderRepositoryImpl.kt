@@ -59,16 +59,6 @@ internal class ProviderRepositoryImpl @Inject constructor(
         _metadataMap[metadata.id] = metadata
     }
 
-    override suspend fun unload(id: String) {
-        withContext(appDispatchers.io) {
-            _pluginsMap[id]?.onUnload(context)
-        }
-
-        _metadataMap.remove(id)
-        classLoadersMap.remove(id)
-        _pluginsMap.remove(id)
-    }
-
     override suspend fun install(
         provider: InstalledProvider,
         metadata: ProviderMetadata
@@ -78,7 +68,14 @@ internal class ProviderRepositoryImpl @Inject constructor(
     }
 
     override suspend fun uninstall(provider: InstalledProvider) = withContext(appDispatchers.io) {
-        unload(provider.id)
+        withContext(appDispatchers.io) {
+            _pluginsMap[provider.id]?.onUnload(context)
+        }
+
+        _pluginsMap.remove(provider.id)
+        _metadataMap.remove(provider.id)
+        classLoadersMap.remove(provider.id)
+
         installedProviderDao.delete(provider)
     }
 

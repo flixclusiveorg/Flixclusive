@@ -201,7 +201,7 @@ internal fun ProviderManagerScreenContent(
             ) { state ->
                 if (state) {
                     AnimatedVisibility(
-                        visible = isLoadingWithDelay(),
+                        visible = isLoadingWithDelay(600L + 300L),
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
@@ -244,6 +244,7 @@ internal fun ProviderManagerScreenContent(
                                 openSettings = { openProviderSettings(provider.metadata) },
                                 onClick = { openProviderDetails(provider.metadata) },
                                 onUninstall = { providerToUninstall = provider.metadata },
+                                // modifier = Modifier.animateItem() // TODO: Re-enable when `weight` + `animateItem` bug has been fixed
                             )
                         }
                     }

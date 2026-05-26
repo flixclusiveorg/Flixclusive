@@ -42,9 +42,7 @@ interface ProviderRepository {
     )
 
     suspend fun uninstall(provider: InstalledProvider)
-
-    suspend fun unload(id: String)
-
+    
     suspend fun load(
         provider: ProviderPlugin,
         classLoader: PathClassLoader,
