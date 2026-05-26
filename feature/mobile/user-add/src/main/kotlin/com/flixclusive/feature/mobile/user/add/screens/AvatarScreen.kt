@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,9 +43,8 @@ internal class AvatarScreen(
     @Composable
     override fun Content() {
         val user = LocalUserToAdd.current.value
-        val context = LocalContext.current
         val avatarId = remember(user.image) {
-            context.getAvatarResource(user.image)
+            getAvatarResource(user.image)
         }
 
         val surface = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)

@@ -2,8 +2,6 @@
 <resources>
     <string name="provider_null_error_message">This one has no provider ID set</string>
     <string name="default_overview">No overview provided</string>
-    <string name="provider_source">Source: %1$s</string>
-    <string name="provider_language">Language: %1$s</string>
     <string name="casts">Casts: %1$s</string>
     <string name="production">Production: %1$s</string>
     <string name="tv_network">Network: %1$s</string>

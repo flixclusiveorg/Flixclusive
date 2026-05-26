@@ -1,17 +1,24 @@
 package com.flixclusive.core.presentation.mobile.extensions
 
-import android.annotation.SuppressLint
-import android.content.Context
-import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.AVATAR_PREFIX
+import com.flixclusive.core.drawables.R as UiCommonR
 
-@SuppressLint("DiscouragedApi")
-fun Context.getAvatarResource(imageIndex: Int): Int {
-    val resourceName = "$AVATAR_PREFIX$imageIndex"
-    val id = resources.getIdentifier(resourceName, "drawable", packageName)
+fun getAvatarResource(imageIndex: Int): Int {
+    val list = listOf(
+        UiCommonR.drawable.avatar0,
+        UiCommonR.drawable.avatar1,
+        UiCommonR.drawable.avatar2,
+        UiCommonR.drawable.avatar3,
+        UiCommonR.drawable.avatar4,
+        UiCommonR.drawable.avatar5,
+        UiCommonR.drawable.avatar6,
+        UiCommonR.drawable.avatar7,
+        UiCommonR.drawable.avatar8,
+        UiCommonR.drawable.avatar9,
+        UiCommonR.drawable.avatar10,
+        UiCommonR.drawable.avatar11,
+        UiCommonR.drawable.avatar12,
+        UiCommonR.drawable.avatar13,
+    )
 
-    require(id != 0) {
-        "Avatar image could not be found: avatar$imageIndex"
-    }
-
-    return id
+    return list[imageIndex % list.size]
 }

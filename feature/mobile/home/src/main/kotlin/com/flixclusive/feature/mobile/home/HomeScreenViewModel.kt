@@ -157,7 +157,7 @@ internal class HomeScreenViewModel @Inject constructor(
                 }
 
                 if (tvShow == null) {
-                    throw NullPointerException("MediaMetadata metadata not found for id: ${item.media.id}")
+                    return item
                 }
 
                 // Get next episode

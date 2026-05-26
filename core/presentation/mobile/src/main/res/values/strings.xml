@@ -6,7 +6,6 @@
     <string name="an_error_occurred">An error occurred</string>
     <string name="expand_stack_trace">Expand stack trace</string>
     <string name="collapse_stack_trace">Collapse stack trace</string>
-    <string name="type_filter">Types</string>
     <string name="report">Report</string>
     <string name="provider_failure">Provider failure</string>
     <plurals name="provider_failure_sub_text">

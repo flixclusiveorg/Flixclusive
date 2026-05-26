@@ -233,7 +233,7 @@ private fun getAdaptiveBackground(currentUser: User?): Brush {
     return remember(currentUser?.image) {
         val colors =
             if (currentUser != null) {
-                val avatarId = context.getAvatarResource(currentUser.image)
+                val avatarId = getAvatarResource(currentUser.image)
                 val drawable = ContextCompat.getDrawable(context, avatarId)!!
 
                 val palette =

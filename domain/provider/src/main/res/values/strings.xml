@@ -3,18 +3,11 @@
     <string name="already_added_repo_error">Repository has already been added!</string>
     <string name="empty_repository_message">This repository has no providers</string>
     <string name="failed_repository_fetch_message">Couldn\'t parse providers from the repository</string>
-    <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
     <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
-    <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now…"</string>
-    <string name="fetching_episode_message">Fetching show episode…</string>
-    <string name="invalid_provider_file_msg_format">Invalid provider file detected for %1$s</string>
-    <string name="invalid_repo_link">Could not parse url link.</string>
     <string name="invalid_repository">Invalid repository</string>
     <string name="invalid_repository_url">Repository URL is invalid</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
-    <string name="no_tmdb_id_found">No TMDB ID provided for this one</string>
     <string name="provider_already_exists">Provider with name %1$s already exists</string>
-    <string name="get_media_links_no_provider_api">Failed to fetch media links: no MetadataProviderApi found for %1$s</string>
     <string name="provider_file_not_found">Provider file not found for %1$s.</string>
     <string name="provider_not_found_message">Provider is not available or has been removed</string>
     <string name="repository_not_found_message">Repository does not exist or has been removed</string>
@@ -23,7 +16,6 @@
     <string name="provider_not_found">Provider [%1$s (%2$s)] not found. Cannot be unloaded</string>
     <string name="provider_not_even_installed">No such installed provider: %1$s</string>
     <string name="unload_exception_message">An error occurred while unloading %1$s (%2$s): %3$s</string>
-    <string name="failed_to_load_provider">Failed to load provider %1$s (%2$s) after updating. Try reinstalling to see if it could fix the problem.</string>
     <string name="missing_metadata">Metadata not found for provider with id: %1$s</string>
 
     <string name="get_media_metadata_error_unk_exception">Failed to fetch metadata: %1$s</string>

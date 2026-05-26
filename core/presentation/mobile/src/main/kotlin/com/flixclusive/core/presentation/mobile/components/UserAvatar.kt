@@ -59,7 +59,7 @@ fun UserAvatar(
 ) {
     val context = LocalContext.current
     val avatarId = remember(avatar) {
-        context.getAvatarResource(avatar)
+        getAvatarResource(avatar)
     }
 
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface.copy(0.8F)
@@ -109,7 +109,7 @@ fun UserAvatar(
 fun getUserBackgroundPalette(avatar: Int): Palette {
     val context = LocalContext.current
 
-    val avatarId = context.getAvatarResource(avatar)
+    val avatarId = getAvatarResource(avatar)
     val drawable = ContextCompat.getDrawable(context, avatarId)!!
 
     return remember {
