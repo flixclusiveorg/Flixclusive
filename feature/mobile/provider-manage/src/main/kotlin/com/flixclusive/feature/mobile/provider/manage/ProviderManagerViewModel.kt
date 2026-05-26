@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -71,44 +70,34 @@ internal class ProviderManagerViewModel @Inject constructor(
         .flatMapLatest { userId ->
             providerRepository.getProvidersAsFlow(ownerId = userId)
         }
-        .stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList(),
-        )
 
     val providers = combine(
         _uiState.map { it.isSearching }.distinctUntilChanged(),
         searchQuery,
-    ) { isSearching, query ->
-        isSearching to query
-    }.flatMapLatest { (isSearching, query) ->
-        installedProviders
-            .mapLatest { list ->
-                list.mapNotNull { provider ->
-                    val metadata = provider.metadata ?: return@mapNotNull null
-                    provider.plugin ?: return@mapNotNull null
+        installedProviders,
+    ) { isSearching, query, providers ->
+        providers.mapNotNull { provider ->
+            val metadata = provider.metadata ?: return@mapNotNull null
+            provider.plugin ?: return@mapNotNull null
 
-                    ProviderWithCapabilities(
-                        metadata = metadata,
-                        capabilities = getCapabilities(provider)
-                    )
-                }.let { metadataList ->
-                    if (isSearching) {
-                        return@let metadataList
-                    }
-
-                    metadataList.fastFilter { metadata ->
-                        metadata.name.contains(query, ignoreCase = true)
-                    }
-                }
+            ProviderWithCapabilities(
+                metadata = metadata,
+                capabilities = getCapabilities(provider)
+            )
+        }.let { metadataList ->
+            if (isSearching) {
+                return@let metadataList
             }
-    }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Lazily,
-            initialValue = emptyList(),
-        )
+
+            metadataList.fastFilter { metadata ->
+                metadata.name.contains(query, ignoreCase = true)
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = emptyList(),
+    )
 
     val isFirstTimeOnProvidersScreen = dataStoreManager
         .getUserPrefs(UserPreferences.USER_ON_BOARDING_PREFS_KEY, UserOnBoarding::class)
@@ -151,11 +140,36 @@ internal class ProviderManagerViewModel @Inject constructor(
                         }
                     }
 
-                    if (catalogApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_catalogs), wrapper.isCatalogEnabled))
-                    if (trackerApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_tracking), wrapper.isTrackerEnabled))
-                    if (searchApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_search), wrapper.isSearchEnabled))
-                    if (metadataApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_metadata), wrapper.isMetadataEnabled))
-                    if (crossMatchApi != null) add(CapabilityUiItem(UiText.from(R.string.label_provider_capability_cross_match), wrapper.isCrossMatchEnabled))
+                    if (catalogApi != null) add(
+                        CapabilityUiItem(
+                            UiText.from(R.string.label_provider_capability_catalogs),
+                            wrapper.isCatalogEnabled
+                        )
+                    )
+                    if (trackerApi != null) add(
+                        CapabilityUiItem(
+                            UiText.from(R.string.label_provider_capability_tracking),
+                            wrapper.isTrackerEnabled
+                        )
+                    )
+                    if (searchApi != null) add(
+                        CapabilityUiItem(
+                            UiText.from(R.string.label_provider_capability_search),
+                            wrapper.isSearchEnabled
+                        )
+                    )
+                    if (metadataApi != null) add(
+                        CapabilityUiItem(
+                            UiText.from(R.string.label_provider_capability_metadata),
+                            wrapper.isMetadataEnabled
+                        )
+                    )
+                    if (crossMatchApi != null) add(
+                        CapabilityUiItem(
+                            UiText.from(R.string.label_provider_capability_cross_match),
+                            wrapper.isCrossMatchEnabled
+                        )
+                    )
                 }
             } catch (e: Throwable) {
                 _uiState.update {
