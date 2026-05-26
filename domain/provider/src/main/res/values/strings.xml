@@ -36,4 +36,5 @@
     <string name="failed_scrobbling_progress_to_provider">Scrobbling failed for %1$s: %2$s</string>
     <string name="error_msg_failed_to_download_provider_file">Failed to download provider file</string>
     <string name="error_cancelled_provider_download">Download has been cancelled by the user for provider: %1$s</string>
+    <string name="error_provider_updated_but_failed_to_load">Provider %1$s updated but failed to load. The provider is still updated</string>
 </resources>

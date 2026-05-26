@@ -6,6 +6,7 @@ import com.flixclusive.core.common.file.rmrf
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.util.log.infoLog
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
@@ -28,7 +29,7 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
 
         val file = provider.file
         if (!file.exists()) {
-            error(context.getString(R.string.provider_not_found, providerWrapper.name, providerWrapper.id))
+            warnLog("Provider file not found for provider: ${providerWrapper.name} at path: ${file.absolutePath}")
         }
 
         infoLog("Unloading provider: ${providerWrapper.name}")

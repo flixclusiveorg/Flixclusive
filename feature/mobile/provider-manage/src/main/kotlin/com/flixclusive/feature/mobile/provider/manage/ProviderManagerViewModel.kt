@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.ProviderWithThrowable
+import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.UserOnBoarding
@@ -17,7 +18,10 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.provider.repository.ProviderResponseWrapper
 import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
+import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
+import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.provider.capability.MediaLinkType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -76,12 +80,10 @@ internal class ProviderManagerViewModel @Inject constructor(
         searchQuery,
         installedProviders,
     ) { isSearching, query, providers ->
-        providers.mapNotNull { provider ->
-            val metadata = provider.metadata ?: return@mapNotNull null
-
+        providers.map { wrapper ->
             ProviderWithCapabilities(
-                metadata = metadata,
-                capabilities = getCapabilities(provider)
+                metadata = wrapper.metadata ?: getFallbackProviderMetadata(wrapper.provider),
+                capabilities = getCapabilities(wrapper)
             )
         }.let { metadataList ->
             if (isSearching) {
@@ -108,19 +110,35 @@ internal class ProviderManagerViewModel @Inject constructor(
             initialValue = false,
         )
 
+    private fun getFallbackProviderMetadata(provider: InstalledProvider): ProviderMetadata {
+        return ProviderMetadata(
+            id = provider.id,
+            name = provider.id,
+            repositoryUrl = provider.repositoryUrl,
+            buildUrl = "",
+            versionName = "-1",
+            versionCode = -1,
+            language = Language.Multiple,
+            providerType = ProviderType(context.getString(R.string.label_invalid)),
+            status = ProviderStatus.Down,
+        )
+    }
+
     private suspend fun getCapabilities(
         wrapper: ProviderResponseWrapper,
     ): List<CapabilityUiItem> {
         return withContext(appDispatchers.io) {
+            val metadata = wrapper.metadata ?: getFallbackProviderMetadata(wrapper.provider)
+
             try {
                 val plugin = wrapper.plugin
-                if (plugin == null) {
+                if (plugin == null || wrapper.metadata == null) {
                     warnLog("Plugin is null for provider with id ${wrapper.metadata?.id}, skipping capabilities check.")
                     _uiState.update {
                         it.copy(
                             errors = it.errors +
                                 ProviderWithThrowable(
-                                    provider = wrapper.metadata!!,
+                                    provider = metadata,
                                     throwable = IllegalStateException(context.getString(R.string.error_missing_provider_plugin))
                                 )
                         )
@@ -186,7 +204,7 @@ internal class ProviderManagerViewModel @Inject constructor(
                 }
             } catch (e: Throwable) {
                 _uiState.update {
-                    it.copy(errors = it.errors + ProviderWithThrowable(wrapper.metadata!!, e))
+                    it.copy(errors = it.errors + ProviderWithThrowable(metadata, e))
                 }
                 emptyList()
             }
@@ -208,7 +226,13 @@ internal class ProviderManagerViewModel @Inject constructor(
                 return@launch
             }
 
-            unloadProvider(provider)
+            try {
+                unloadProvider(provider)
+            } catch (e: Throwable) {
+                _uiState.update {
+                    it.copy(errors = it.errors + ProviderWithThrowable(metadata, e))
+                }
+            }
         }
     }
 
