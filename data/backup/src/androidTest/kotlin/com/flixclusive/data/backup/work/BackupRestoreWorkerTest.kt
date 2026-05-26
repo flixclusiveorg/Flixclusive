@@ -17,7 +17,7 @@ import com.flixclusive.data.backup.model.BackupDbMedia
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.model.BackupLibraryListItem
 import com.flixclusive.data.backup.repository.BackupResult
-import com.flixclusive.model.media.util.MediaType
+import com.flixclusive.model.media.common.MediaType
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
@@ -162,7 +162,7 @@ class BackupRestoreWorkerTest {
                     listType = LibraryListType.CUSTOM,
                     items = listOf(
                         BackupLibraryListItem(
-                            listId = 0,
+                            listId = "list-1",
                             media = BackupDbMedia(
                                 id = mediaId,
                                 title = "Test Media",
@@ -175,7 +175,6 @@ class BackupRestoreWorkerTest {
                                 rating = null,
                                 backdropImage = null,
                                 releaseDate = null,
-                                year = null,
                                 createdAt = timestamp,
                                 updatedAt = timestamp,
                             ),

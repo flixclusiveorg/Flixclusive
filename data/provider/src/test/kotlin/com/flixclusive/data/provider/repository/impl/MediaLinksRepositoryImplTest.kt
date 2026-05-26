@@ -19,7 +19,6 @@ import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNull
-import java.util.Date
 
 class MediaLinksRepositoryImplTest {
     private lateinit var repository: MediaLinksRepositoryImpl
@@ -269,7 +268,9 @@ class MediaLinksRepositoryImplTest {
             val episode = Episode(
                 season = 1,
                 number = 1,
-                airDate = Date()
+                releaseDate = System.currentTimeMillis(),
+                id = "episode123",
+                isReleased = true,
             )
             val keyWithEpisode = MediaLinksCacheKey.create(
                 mediaId = "media123",

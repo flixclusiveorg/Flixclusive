@@ -41,7 +41,7 @@ import com.flixclusive.data.backup.validate.impl.ProviderBackupValidator
 import com.flixclusive.data.backup.validate.impl.RepositoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.SearchHistoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.WatchProgressBackupValidator
-import com.flixclusive.model.media.util.MediaType
+import com.flixclusive.model.media.common.MediaType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -313,8 +313,10 @@ class BackupRepositoryImplTest {
         listName: String,
         mediaId: String,
     ) {
-        val listId = db.libraryListDao().insert(
+        val listId = "list-${UUID.randomUUID()}"
+        db.libraryListDao().insert(
             LibraryList(
+                id = listId,
                 ownerId = ownerId,
                 name = listName,
                 description = null,
@@ -322,7 +324,7 @@ class BackupRepositoryImplTest {
                 createdAt = Date(1_700_000_000_000),
                 updatedAt = Date(1_700_000_000_000),
             )
-        ).toInt()
+        )
 
         db.libraryListItemDao().upsertMedia(
             DBMedia(
@@ -330,14 +332,13 @@ class BackupRepositoryImplTest {
                 title = "Test Media",
                 providerId = "test-provider",
                 adult = false,
-                mediaType = MediaType.MOVIE,
+                type = MediaType.MOVIE,
                 overview = null,
                 posterImage = null,
                 language = null,
                 rating = null,
                 backdropImage = null,
                 releaseDate = null,
-                year = null,
                 createdAt = Date(1_700_000_000_000),
                 updatedAt = Date(1_700_000_000_000),
             )

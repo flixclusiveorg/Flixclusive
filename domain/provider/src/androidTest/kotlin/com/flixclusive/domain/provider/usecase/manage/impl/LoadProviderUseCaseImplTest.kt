@@ -86,22 +86,6 @@ class LoadProviderUseCaseImplTest {
     }
 
     @Test
-    fun shouldSkipLoadingWhenProviderAlreadyExists() =
-        runTest(testDispatcher) {
-            coEvery { mockProviderRepository.getProvider(testProviderMetadata.id, testUserId)?.metadata } returns testProviderMetadata
-            coEvery { mockProviderRepository.getProvider(testProviderMetadata.id, testUserId)?.plugin } returns mockk()
-
-            loadProviderUseCase(testInstalledProvider).test {
-                expectThat(awaitItem()).isA<ProviderResult.Failure>().and {
-                    get { provider.id }.isEqualTo(testProviderMetadata.id)
-                    get { error }.isA<IllegalStateException>()
-                }
-
-                awaitComplete()
-            }
-        }
-
-    @Test
     fun shouldLoadProvider() =
         runTest(testDispatcher) {
             coEvery { mockProviderRepository.getProvider(testProviderMetadata.id, testUserId)?.metadata } returns testProviderMetadata

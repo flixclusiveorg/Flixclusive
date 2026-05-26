@@ -41,7 +41,4 @@ dependencies {
     compileOnly(libs.checkerframework)
     compileOnly(libs.google.errorProne.annotations)
     implementation(libs.media3.ui.compose)
-
-    androidTestImplementation(projects.coreTesting)
-    androidTestImplementation(libs.media3.test.utils)
 }

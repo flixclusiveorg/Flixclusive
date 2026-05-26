@@ -12,7 +12,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 internal class BuildConfigProviderImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : BuildConfigProvider {
     override fun get(): CustomBuildConfig {
         val buildType = BuildType.entries[BuildConfig.BUILD_TYPE]

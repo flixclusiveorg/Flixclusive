@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.shareIn
 import javax.inject.Inject
 
 internal class NetworkMonitorImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     appDispatchers: AppDispatchers,
 ) : NetworkMonitor {
     override val isOnline: Flow<Boolean> = callbackFlow {

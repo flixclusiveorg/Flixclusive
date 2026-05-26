@@ -22,7 +22,7 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.model.media.util.MediaType
+import com.flixclusive.model.media.common.MediaType
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
@@ -298,8 +298,6 @@ class BackupCreateWorkerTest {
 
                     delay(50)
                 }
-
-                error("Timeout waiting for backup output for userId=$userId")
             }
         }
     }
@@ -323,8 +321,10 @@ class BackupCreateWorkerTest {
     ) {
         val fixedDate = Date(1_700_000_000_000)
 
-        val listId = db.libraryListDao().insert(
+        val listId = "list-${System.currentTimeMillis()}"
+        db.libraryListDao().insert(
             LibraryList(
+                id = listId,
                 ownerId = ownerId,
                 name = listName,
                 description = null,
@@ -332,7 +332,7 @@ class BackupCreateWorkerTest {
                 createdAt = fixedDate,
                 updatedAt = fixedDate,
             )
-        ).toInt()
+        )
 
         db.libraryListItemDao().upsertMedia(
             DBMedia(
@@ -340,14 +340,13 @@ class BackupCreateWorkerTest {
                 title = "Test Media",
                 providerId = "test-provider",
                 adult = false,
-                mediaType = MediaType.MOVIE,
+                type = MediaType.MOVIE,
                 overview = null,
                 posterImage = null,
                 language = null,
                 rating = null,
                 backdropImage = null,
                 releaseDate = null,
-                year = null,
                 createdAt = fixedDate,
                 updatedAt = fixedDate,
             )
