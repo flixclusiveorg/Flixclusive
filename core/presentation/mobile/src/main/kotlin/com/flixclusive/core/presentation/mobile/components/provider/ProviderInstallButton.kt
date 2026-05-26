@@ -219,18 +219,19 @@ fun ProviderInstallButton(
                     .height(ButtonSize)
                     .weight(1f)
             ) {
-                Row(
+                AnimatedContent(
+                    targetState = isStableState,
+                    transitionSpec = {
+                        slideInHorizontally { -it / 10 } + fadeIn() togetherWith
+                            slideOutHorizontally { it / 10 } + fadeOut()
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
-                ) {
-                    AnimatedContent(
-                        targetState = isStableState,
-                        transitionSpec = {
-                            fadeIn() togetherWith
-                                fadeOut(tween(delayMillis = 300))
-                        }
-                    ) { state ->
+                ) { state ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
+                    ) {
                         if (
                             state is StableInstallState.NotInstalled
                             || state is StableInstallState.Outdated
@@ -249,16 +250,7 @@ fun ProviderInstallButton(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
-                    }
 
-
-                    AnimatedContent(
-                        targetState = isStableState,
-                        transitionSpec = {
-                            slideInHorizontally { -it / 4 } togetherWith
-                                slideOutHorizontally { it / 4 }
-                        }
-                    ) { state ->
                         Text(
                             color = LocalContentColor.current,
                             text = when (state) {
@@ -268,10 +260,9 @@ fun ProviderInstallButton(
                                 is StableInstallState.Uninstalling -> stringResource(LocaleR.string.label_uninstalling)
                                 is StableInstallState.Installing -> stringResource(LocaleR.string.label_cancel)
                                 is StableInstallState.Outdated -> stringResource(LocaleR.string.label_update, state.version)
-                            }
+                            },
                         )
                     }
-
                 }
             }
 
