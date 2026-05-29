@@ -17,8 +17,8 @@ import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.util.extensions.sendCrossMatchingMessage
 import com.flixclusive.domain.provider.util.extensions.sendExtractingLinksMessage
 import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
-import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.capability.CrossMatchProviderApi
@@ -84,22 +84,44 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
         val mediaLinksApi = provider.plugin?.getMediaLinkApi(context)
         if (mediaLinksApi != null && provider.isMediaLinkEnabled) {
-            processProvider(
-                media = media,
-                id = provider.id,
-                mediaLinksApi = mediaLinksApi,
-                metadata = provider.metadata!!,
-                episode = episode
+            val key = MediaLinksCacheKey.create(
+                mediaId = media.id,
+                providerId = media.providerId,
+                episode = episode,
+            )
+
+            sendExtractingLinksMessage(provider.metadata!!)
+
+            val success = try {
+                processProvider(
+                    key = key,
+                    media = media,
+                    id = provider.id,
+                    mediaLinksApi = mediaLinksApi,
+                    episode = episode
+                )
+            } catch (e: Throwable) {
+                errorLog(e)
+                send(LoadLinksState.Error(e))
+                false
+            }
+
+            if (success) {
+                send(LoadLinksState.Success(providerId = media.providerId))
+                return@channelFlow
+            }
+        }
+
+        if (media.externalIds.isEmpty()) {
+            send(
+                LoadLinksState.Unavailable(
+                    UiText.from(R.string.no_links_loaded_format_message, provider.name!!),
+                ),
             )
             return@channelFlow
         }
 
-        if (media.externalIds.isEmpty()) {
-            warnLog("Failed to fetch media links: no external IDs found for media with id: ${media.id}")
-            send(LoadLinksState.Unavailable())
-            return@channelFlow
-        }
-
+        send(LoadLinksState.Fetching(R.string.label_check_cross_match_providers))
         val combinedApis = providers.filter { enabledProvider ->
             val crossMatchApi = enabledProvider.plugin?.getCrossMatchApi(context)
             val mediaLinkApi = enabledProvider.plugin?.getMediaLinkApi(context)
@@ -126,21 +148,28 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
         launch {
             subtitlesOnlyApi.mapAsync { (provider, crossMatcherApi, mediaLinkApi) ->
-                sendCrossMatchingMessage(provider)
                 val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
                 if (crossMatchedMedia == null) {
                     warnLog("Cross-matching failed for subtitle-only provider ${provider.name} with media ${media.title} (${media.id})")
                     return@mapAsync null
                 }
 
-                val success = processProvider(
-                    media = crossMatchedMedia,
-                    id = provider.id,
-                    mediaLinksApi = mediaLinkApi,
-                    metadata = provider,
-                    episode = episode,
-                    quiet = true, // Don't send fetching/extracting messages for subtitle-only providers, as it can be confusing to users
-                )
+                val success = try {
+                    processProvider(
+                        key = MediaLinksCacheKey.create(
+                            mediaId = media.id,
+                            providerId = provider.id,
+                            episode = episode,
+                        ),
+                        media = crossMatchedMedia,
+                        id = provider.id,
+                        mediaLinksApi = mediaLinkApi,
+                        episode = episode,
+                    )
+                } catch (e: Throwable) {
+                    errorLog(e)
+                    false
+                }
 
                 if (!success) {
                     warnLog("Failed to fetch subtitles from provider ${provider.name} for media ${media.title} (${media.id})")
@@ -148,46 +177,62 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             }
         }
 
-        val streamProviders = combinedApis - subtitlesOnlyApi.toSet()
-        streamProviders.forEach { (provider, crossMatcherApi, mediaLinkApi) ->
-            val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
-            if (crossMatchedMedia == null) {
-                warnLog("Cross-matching failed for stream links provider ${provider.name} with media ${media.title} (${media.id})")
-                return@forEach
+        launch {
+            val streamProviders = combinedApis - subtitlesOnlyApi.toSet()
+            streamProviders.forEach { (provider, crossMatcherApi, mediaLinkApi) ->
+                val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
+                if (crossMatchedMedia == null) {
+                    warnLog("Cross-matching failed for stream links provider ${provider.name} with media ${media.title} (${media.id})")
+                    return@forEach
+                }
+
+                sendCrossMatchingMessage(provider)
+
+                val crossMatchedEpisode = if (crossMatchedMedia is Show && episode != null) {
+                    val season = crossMatchedMedia.getSeason(episode.season)
+                    season?.getEpisode(episode.number)
+                } else {
+                    null
+                }
+
+                if (crossMatchedMedia is Show && crossMatchedEpisode == null) {
+                    send(LoadLinksState.Unavailable())
+                    return@forEach
+                }
+
+                val success = try {
+                    processProvider(
+                        key = MediaLinksCacheKey.create(
+                            mediaId = media.id,
+                            providerId = provider.id,
+                            episode = episode,
+                        ),
+                        media = crossMatchedMedia,
+                        episode = crossMatchedEpisode,
+                        id = provider.id,
+                        mediaLinksApi = mediaLinkApi,
+                    )
+                } catch (e: Throwable) {
+                    errorLog(e)
+                    false
+                }
+
+                if (success) {
+                    return@launch
+                }
             }
 
-            val success = processProvider(
-                media = crossMatchedMedia,
-                id = provider.id,
-                mediaLinksApi = mediaLinkApi,
-                metadata = provider,
-                episode = episode
-            )
-
-            if (success) {
-                // If we successfully found stream links, we can stop here and not check subtitle-only providers
-                return@channelFlow
-            }
+            send(LoadLinksState.Unavailable())
         }
-
-        send(LoadLinksState.Unavailable())
-    }
-        .flowOn(appDispatchers.io)
+    }.flowOn(appDispatchers.io)
 
     private suspend fun ProducerScope<LoadLinksState>.processProvider(
         id: String,
         media: MediaMetadata,
+        key: MediaLinksCacheKey,
         episode: Episode? = null,
-        metadata: ProviderMetadata,
         mediaLinksApi: MediaLinkProviderApi,
-        quiet: Boolean = false,
     ): Boolean {
-        val key = MediaLinksCacheKey.create(
-            providerId = id,
-            mediaId = media.id,
-            episode = episode,
-        )
-
         // Check if the cache already exists for this provider
         val mediaLinks = mediaLinksRepository.getLinks(key)
             ?: MediaLinks(
@@ -197,51 +242,32 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             )
 
         if (mediaLinks.isReady) {
-            send(LoadLinksState.Success(providerId = mediaLinks.providerId))
             return true
         }
 
         mediaLinksRepository.insertLinks(mediaLinks = mediaLinks, key = key)
 
-        if (!quiet) {
-            sendExtractingLinksMessage(provider = metadata)
-        }
+        mediaLinksApi.getLinks(
+            media = media,
+            episode = episode,
+            onLinkFound = { link ->
+                when (link) {
+                    is Stream -> mediaLinksRepository.addStream(key, link)
+                    is Subtitle -> mediaLinksRepository.addSubtitle(key, link)
+                }
+            },
+        )
 
-        try {
-            mediaLinksApi.getLinks(
-                media = media,
-                episode = episode,
-                onLinkFound = { link ->
-                    when (link) {
-                        is Stream -> mediaLinksRepository.addStream(key, link)
-                        is Subtitle -> mediaLinksRepository.addSubtitle(key, link)
-                    }
-                },
-            )
-
-            val updatedLinks = mediaLinksRepository.getLinks(key)
-            if (updatedLinks != null && updatedLinks.hasStreamableLinks) {
-                mediaLinksRepository.insertLinks(
-                    key,
-                    updatedLinks.copy(hasExtractedSuccessfully = true)
-                )
-                send(LoadLinksState.Success(providerId = updatedLinks.providerId))
-            } else {
-                send(
-                    LoadLinksState.Error(
-                        UiText.from(R.string.no_links_loaded_format_message, metadata.name),
-                    ),
-                )
-            }
-
-            return true
-        } catch (e: Throwable) {
-            errorLog("Failed to get media links from provider ${metadata.name} for media ${media.title} (${media.id})")
-            errorLog(e)
-
-            send(LoadLinksState.Error(e))
+        val updatedLinks = mediaLinksRepository.getLinks(key)
+        if (updatedLinks == null || !updatedLinks.hasValidLinks) {
             return false
         }
+
+        mediaLinksRepository.insertLinks(
+            key = key,
+            mediaLinks = updatedLinks.copy(hasExtractedSuccessfully = true)
+        )
+        return true
     }
 
     private suspend fun getCrossMatchedMedia(

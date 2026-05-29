@@ -74,13 +74,13 @@ data class MediaLinks(
     val failedStreamUrls: Set<String> = emptySet(),
     val hasExtractedSuccessfully: Boolean = false,
 ) {
-    val hasStreamableLinks get() = streams.filterOutExpiredLinks().isNotEmpty()
+    val hasValidLinks get() = streams.filterOutExpiredLinks().isNotEmpty()
 
-    val hasPlayableLinks get() = hasStreamableLinks
-        && streams.any { it.getFlagOfType<Flag.ThirdPartyGateway>() != null }
+    val hasStreamableLinks get() = hasValidLinks
+        && streams.any { it.getFlagOfType<Flag.ThirdPartyGateway>() == null }
 
     /** Indicates whether the cached links are ready to be used, which is true when there are valid streams available and the extraction process has finished. */
-    val isReady get() = hasStreamableLinks && hasExtractedSuccessfully
+    val isReady get() = hasValidLinks && hasExtractedSuccessfully
 
     companion object {
         fun MediaLinks.markStreamAsFailed(streamUrl: String): MediaLinks {

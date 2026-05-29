@@ -75,7 +75,9 @@ internal object DynamicResourceLoader {
     private fun Context.getDynamicResources(filePath: String): Resources {
         val assets = AssetManager::class.java.getDeclaredConstructor().newInstance()
         val addAssetPath = AssetManager::class.java.getMethod("addAssetPath", String::class.java)
+
         addAssetPath.invoke(assets, filePath)
+        addAssetPath.invoke(this@getDynamicResources.assets, filePath)
 
         return Resources(
             assets,

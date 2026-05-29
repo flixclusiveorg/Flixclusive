@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -63,6 +65,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -77,6 +80,7 @@ import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceho
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.data.provider.repository.MediaLinks
+import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaLinksBottomSheet
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
@@ -143,7 +147,7 @@ internal fun MediaLinksBottomSheet(
             uiState.metadata !is PartialMedia &&
                 uiState.loadLinksState.isSuccess &&
                 linksCache != null &&
-                linksCache.hasPlayableLinks
+                linksCache.hasStreamableLinks
         }.filter { it }
             .distinctUntilChanged()
             .debounce(800)
@@ -190,6 +194,14 @@ private fun MediaLinksBottomSheetContent(
         }
     }
 
+
+    val isLoading by remember {
+        derivedStateOf {
+            state().isLoading
+                || (state().isSuccess && links()?.hasStreamableLinks == true)
+        }
+    }
+
     Surface(
         tonalElevation = 1.dp,
         color = MaterialTheme.colorScheme.surfaceColorAtElevation(level = 1),
@@ -205,12 +217,12 @@ private fun MediaLinksBottomSheetContent(
             verticalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier.padding(vertical = 20.dp)
         ) {
-            if (state().isLoading) {
+            if (isLoading) {
                 item {
                     val canSkipLoading by remember {
                         derivedStateOf {
                             state().isLoading
-                                && links()?.hasStreamableLinks == true
+                                && links()?.hasValidLinks == true
                         }
                     }
 
@@ -229,7 +241,7 @@ private fun MediaLinksBottomSheetContent(
                 val hasErrors by remember {
                     derivedStateOf {
                         val currentLinks = links()
-                        state().isError && (currentLinks == null || !currentLinks.hasStreamableLinks)
+                        state().isError && (currentLinks == null || !currentLinks.hasValidLinks)
                     }
                 }
 
@@ -247,7 +259,7 @@ private fun MediaLinksBottomSheetContent(
                 }
             }
 
-            if (links()?.hasStreamableLinks == true) {
+            if (links()?.hasValidLinks == true) {
                 if (state().isError) {
                     item {
                         ErrorItem(
@@ -290,16 +302,18 @@ private fun ProgressHeader(
     ) {
         AnimatedContent(
             targetState = state(),
+            contentAlignment = Alignment.Center,
             transitionSpec = {
+                val fadeSpec = tween<Float>(durationMillis = 320, easing = FastOutSlowInEasing)
+                val slideSpec = tween<IntOffset>(durationMillis = 320, easing = FastOutSlowInEasing)
+
                 if (targetState > initialState) {
-                    fadeIn() + slideInHorizontally { it } togetherWith
-                        fadeOut() + slideOutHorizontally { -it }
+                    fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { it / 10 } togetherWith
+                        fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { -it / 10 }
                 } else {
-                    fadeIn() + slideInHorizontally { -it } + fadeIn() togetherWith
-                        fadeOut() + slideOutHorizontally { it }
-                }.using(
-                    SizeTransform(clip = false),
-                )
+                    fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { -it / 10 } togetherWith
+                        fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { it / 10 }
+                }.using(SizeTransform(clip = false))
             },
         ) {
             Text(
@@ -350,7 +364,7 @@ private fun ErrorMessage(
 
     fun getTitle(): String {
         return if (state.isIdle || state.isUnavailable) {
-            resources.getString(LocaleR.string.empty_data_default_label)
+            resources.getString(R.string.label_empty_streams)
         } else {
             resources.getString(LocaleR.string.something_went_wrong)
         }

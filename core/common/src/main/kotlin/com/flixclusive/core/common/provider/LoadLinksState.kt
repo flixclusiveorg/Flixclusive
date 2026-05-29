@@ -163,7 +163,7 @@ sealed class LoadLinksState(
     val isUnavailable get() = this is Unavailable
     val isExtracting get() = this is Extracting
     val isFetching get() = this is Fetching
-    val isLoading get() = isFetching || isExtracting || isSuccess
+    val isLoading get() = isFetching || isExtracting
     val isError get() = this is Error || isUnavailable
 
     operator fun compareTo(other: LoadLinksState): Int {

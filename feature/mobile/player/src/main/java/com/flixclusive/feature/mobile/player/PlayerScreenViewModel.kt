@@ -244,7 +244,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 flowOf(false)
             } else {
                 mediaLinksRepository.observeLinks(cacheKey)
-                    .map { it?.hasStreamableLinks == true }
+                    .map { it?.hasValidLinks == true }
             }
         }
         .distinctUntilChanged()
@@ -431,7 +431,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         ) ?: return
 
         val cache = mediaLinksRepository.getLinks(cacheKey)
-        if (cache == null || !cache.hasStreamableLinks) return
+        if (cache == null || !cache.hasValidLinks) return
 
         mediaLinksRepository.setCurrentObservable(cacheKey)
 
@@ -788,7 +788,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             )
 
             val cache = mediaLinksRepository.getLinks(mediaLinksCacheKey)
-            if (cache == null || !cache.hasStreamableLinks) {
+            if (cache == null || !cache.hasValidLinks) {
                 return@launch
             }
 

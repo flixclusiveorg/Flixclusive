@@ -152,7 +152,7 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
 
         return loadLinksState.isError
             && currentCache != null
-            && currentCache.hasStreamableLinks
+            && currentCache.hasValidLinks
     }
 
     fun updateLoadLinksState(state: LoadLinksState) {
