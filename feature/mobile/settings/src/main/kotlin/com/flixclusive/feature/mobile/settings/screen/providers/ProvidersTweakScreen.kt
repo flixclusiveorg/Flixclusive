@@ -127,12 +127,9 @@ internal class ProvidersTweakScreen(
     @Composable
     private fun getDataTweaks(providers: () -> List<ProviderResponseWrapper>): TweakGroup {
         val resources = LocalResources.current
-        val clearCachedLinksLabel = stringResource(LocaleR.string.clear_cached_links)
         val deleteProvidersLabel = stringResource(LocaleR.string.delete_providers)
         val deleteRepositoriesLabel = stringResource(LocaleR.string.delete_repositories)
         val warningLabel = stringResource(LocaleR.string.warning)
-
-        val cacheSize by viewModel.cachedLinksSize.collectAsStateWithLifecycle()
 
         val formatWarningMessage = fun(action: String): String =
             resources.getString(
@@ -151,19 +148,6 @@ internal class ProvidersTweakScreen(
         return TweakGroup(
             title = stringResource(LocaleR.string.data),
             tweaks = persistentListOf(
-                TweakUI.DialogTweak(
-                    title = clearCachedLinksLabel,
-                    dialogTitle = warningLabel,
-                    enabledProvider = { cacheSize > 0 },
-                    description = {
-                        resources.getString(
-                            LocaleR.string.cached_links_description_format,
-                            cacheSize,
-                        )
-                    },
-                    dialogMessage = formatWarningMessage(clearCachedLinksLabel),
-                    onConfirm = viewModel::clearCacheLinks,
-                ),
                 TweakUI.DialogTweak(
                     title = deleteProvidersLabel,
                     iconId = UiCommonR.drawable.warning_outline,

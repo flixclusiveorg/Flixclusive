@@ -11,6 +11,7 @@ import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.backup.work.AutoBackupScheduler
 import com.flixclusive.data.database.repository.UserAuthRepository
 import com.flixclusive.data.database.repository.UserRepository
+import com.flixclusive.data.provider.work.CacheCleanupScheduler
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -36,6 +37,9 @@ internal class FlixclusiveApplication :
     @Inject
     lateinit var autoBackupScheduler: AutoBackupScheduler
 
+    @Inject
+    lateinit var cacheCleanupScheduler: CacheCleanupScheduler
+
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader
             .Builder(context)
@@ -50,6 +54,7 @@ internal class FlixclusiveApplication :
         GlobalCrashHandler.initialize(applicationContext)
 
         autoBackupScheduler.start()
+        cacheCleanupScheduler.start()
 
         appDispatchers.ioScope.launch {
             launch {

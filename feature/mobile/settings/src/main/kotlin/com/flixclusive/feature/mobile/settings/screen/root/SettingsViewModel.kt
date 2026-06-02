@@ -27,13 +27,13 @@ import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,10 +43,10 @@ internal class SettingsViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val userSessionDataStore: UserSessionDataStore,
     private val dataStoreManager: DataStoreManager,
+    private val mediaLinksRepository: MediaLinksRepository,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val providerRepository: ProviderRepository,
     private val unloadProviderUseCase: UnloadProviderUseCase,
-    private val mediaLinksRepository: MediaLinksRepository,
     private val appDispatchers: AppDispatchers,
     private val installedRepoRepository: InstalledRepoRepository,
     private val initializeProviders: InitializeProvidersUseCase,
@@ -81,14 +81,15 @@ internal class SettingsViewModel @Inject constructor(
                 initialValue = 0,
             )
 
-    val cachedLinksSize =
-        mediaLinksRepository.caches
-            .mapLatest { it.size }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = 0,
-            )
+    val cachedLinksCount: StateFlow<Int> = userSessionDataStore.currentUserId
+        .filterNotNull()
+        .flatMapLatest { id ->
+            mediaLinksRepository.getCacheSize(id)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0,
+        )
 
     val systemPreferences = dataStoreManager
         .getSystemPrefs()
@@ -151,7 +152,10 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun clearCacheLinks() {
-        mediaLinksRepository.clear()
+        appDispatchers.ioScope.launch {
+            val userId = getCurrentUserId()
+            mediaLinksRepository.deleteAll(userId)
+        }
     }
 
     fun deleteRepositories() {

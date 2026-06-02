@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -37,13 +36,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
@@ -72,6 +72,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
+import com.flixclusive.core.database.entity.provider.CachedMediaLinksWithData
+import com.flixclusive.core.database.entity.provider.DBMediaLink
+import com.flixclusive.core.database.entity.provider.DBStream
+import com.flixclusive.core.database.entity.provider.DBSubtitle
 import com.flixclusive.core.presentation.common.components.GradientLinearProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
@@ -79,28 +83,18 @@ import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
-import com.flixclusive.data.provider.repository.MediaLinks
 import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaLinksBottomSheet
 import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.MediaLink
-import com.flixclusive.model.provider.link.MediaLink.Companion.getOrNull
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.bottomsheet.spec.DestinationStyleBottomSheet
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.mobile.R as UiMobileR
@@ -115,7 +109,6 @@ data class MediaLinksBottomSheetArgs(
     val episode: Episode? = null,
 )
 
-@OptIn(FlowPreview::class)
 @Destination<ExternalModuleGraph>(
     style = DestinationStyleBottomSheet::class,
     navArgs = MediaLinksBottomSheetArgs::class
@@ -126,7 +119,7 @@ internal fun MediaLinksBottomSheet(
     viewModel: MediaLinksBottomSheetViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val links by viewModel.currentObservableLinks.collectAsStateWithLifecycle()
+    val links by viewModel.links.collectAsStateWithLifecycle()
 
     val activity = LocalContext.current.getActivity<ComponentActivity>()
     val window = activity.window
@@ -139,36 +132,17 @@ internal fun MediaLinksBottomSheet(
         }
     }
 
-    LaunchedEffect(true) {
-        combine(
-            viewModel.uiState,
-            viewModel.currentObservableLinks,
-        ) { uiState, linksCache ->
-            uiState.metadata !is PartialMedia &&
-                uiState.loadLinksState.isSuccess &&
-                linksCache != null &&
-                linksCache.hasStreamableLinks
-        }.filter { it }
-            .distinctUntilChanged()
-            .debounce(800)
-            .collectLatest {
-                navigator.showPlayerSplashScreen(
-                    media = uiState.metadata,
-                    episode = uiState.episode,
-                )
-                cancel()
-            }
-    }
-
     MediaLinksBottomSheetContent(
         state = { uiState.loadLinksState },
         links = { links },
-        onLinkClick = { /* TODO: Handle this soon */ },
-        onSkipLoading = {
-            navigator.navigateBack()
+        onResetAndRetry = viewModel::onResetAndRetry,
+        onTestLinks = viewModel::onTestLinks,
+        onLinkClick = {
             navigator.showPlayerSplashScreen(
                 media = uiState.metadata,
                 episode = uiState.episode,
+                cacheId = it.parentId,
+                streamUrl = it.url
             )
         },
     )
@@ -178,19 +152,16 @@ internal fun MediaLinksBottomSheet(
 @Composable
 private fun MediaLinksBottomSheetContent(
     state: () -> LoadLinksState,
-    links: () -> MediaLinks?,
-    onLinkClick: (MediaLink) -> Unit,
-    onSkipLoading: () -> Unit,
+    links: () -> CachedMediaLinksWithData?,
+    onLinkClick: (DBStream) -> Unit,
+    onResetAndRetry: () -> Unit,
+    onTestLinks: () -> Unit,
 ) {
     val combinedLinks by remember {
         derivedStateOf {
-            val streams = (links()?.streams ?: emptyList())
-            val subtitles = (links()?.subtitles ?: emptyList())
-
-            val combined = streams + subtitles
-
-            combined
-                .sortedByDescending { it is Stream }
+            val streams = links()?.streams ?: emptyList()
+            val subtitles = links()?.subtitles ?: emptyList()
+            (streams + subtitles).sortedByDescending { it is DBStream }
         }
     }
 
@@ -198,7 +169,7 @@ private fun MediaLinksBottomSheetContent(
     val isLoading by remember {
         derivedStateOf {
             state().isLoading
-                || (state().isSuccess && links()?.hasStreamableLinks == true)
+                || (state().isSuccess && links()?.hasValidLinks == true)
         }
     }
 
@@ -219,17 +190,8 @@ private fun MediaLinksBottomSheetContent(
         ) {
             if (isLoading) {
                 item {
-                    val canSkipLoading by remember {
-                        derivedStateOf {
-                            state().isLoading
-                                && links()?.hasValidLinks == true
-                        }
-                    }
-
                     ProgressHeader(
                         state = state,
-                        canSkipLoading = canSkipLoading,
-                        onSkipLoading = onSkipLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 10.dp),
@@ -276,8 +238,43 @@ private fun MediaLinksBottomSheetContent(
                     MediaLinkItem(
                         link = it,
                         modifier = Modifier.animateItem(),
-                        onClick = { onLinkClick(it) },
+                        onClick = {
+                            if (it is DBStream) {
+                                onLinkClick(it)
+                            }
+                        },
                     )
+                }
+            }
+
+            item {
+                val showActions by remember {
+                    derivedStateOf {
+                        val currentState = state()
+                        val currentLinks = links()
+                        currentState.isSuccess ||
+                            (currentState.isError && currentLinks?.hasValidLinks == true)
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = showActions,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                    ) {
+                        OutlinedButton(onClick = onTestLinks) {
+                            Text(text = stringResource(LocaleR.string.test_links_label))
+                        }
+                        Button(onClick = onResetAndRetry) {
+                            Text(text = stringResource(LocaleR.string.reset_and_retry))
+                        }
+                    }
                 }
             }
 
@@ -291,43 +288,41 @@ private fun MediaLinksBottomSheetContent(
 @Composable
 private fun ProgressHeader(
     state: () -> LoadLinksState,
-    canSkipLoading: Boolean,
-    onSkipLoading: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier,
+    AnimatedVisibility(
+        visible = state().isLoading,
+        enter = fadeIn(),
+        exit = scaleOut() + fadeOut(),
     ) {
-        AnimatedContent(
-            targetState = state(),
-            contentAlignment = Alignment.Center,
-            transitionSpec = {
-                val fadeSpec = tween<Float>(durationMillis = 320, easing = FastOutSlowInEasing)
-                val slideSpec = tween<IntOffset>(durationMillis = 320, easing = FastOutSlowInEasing)
-
-                if (targetState > initialState) {
-                    fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { it / 10 } togetherWith
-                        fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { -it / 10 }
-                } else {
-                    fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { -it / 10 } togetherWith
-                        fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { it / 10 }
-                }.using(SizeTransform(clip = false))
-            },
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = modifier,
         ) {
-            Text(
-                text = it.message.asString().trim(),
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
-            )
-        }
+            AnimatedContent(
+                targetState = state(),
+                contentAlignment = Alignment.Center,
+                transitionSpec = {
+                    val fadeSpec = tween<Float>(durationMillis = 320, easing = FastOutSlowInEasing)
+                    val slideSpec = tween<IntOffset>(durationMillis = 320, easing = FastOutSlowInEasing)
 
-        AnimatedVisibility(
-            visible = state().isLoading,
-            enter = fadeIn(),
-            exit = scaleOut() + fadeOut(),
-        ) {
+                    if (targetState > initialState) {
+                        fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { it / 10 } togetherWith
+                            fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { -it / 10 }
+                    } else {
+                        fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { -it / 10 } togetherWith
+                            fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { it / 10 }
+                    }.using(SizeTransform(clip = false))
+                },
+            ) {
+                Text(
+                    text = it.message.asString().trim(),
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
+                )
+            }
+
             GradientLinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(0.7F),
                 colors = listOf(
@@ -335,22 +330,6 @@ private fun ProgressHeader(
                     MaterialTheme.colorScheme.tertiary,
                 ),
             )
-        }
-
-        if (canSkipLoading) {
-            ElevatedButton(
-                onClick = onSkipLoading,
-                shape = MaterialTheme.shapes.extraSmall,
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier =
-                    Modifier
-                        .height(30.dp),
-            ) {
-                Text(
-                    text = stringResource(id = LocaleR.string.skip_loading_message),
-                    style = MaterialTheme.typography.labelMedium,
-                )
-            }
         }
     }
 }
@@ -411,20 +390,28 @@ private fun ErrorMessage(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MediaLinkItem(
-    link: MediaLink,
+    link: DBMediaLink,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val clipboardManager = rememberClipboardManager()
     val thirdPartyFlag = remember {
-        link.flags?.getOrNull(Flag.ThirdPartyGateway::class)
+        if (link is DBStream && link.isThirdPartyGateway) {
+            Flag.ThirdPartyGateway(
+                name = link.thirdPartyGatewayName ?: return@remember null,
+                logo = link.thirdPartyGatewayLogo ?: return@remember null,
+            )
+        } else {
+            null
+        }
     }
-    val requiresUri = thirdPartyFlag != null
+    val requiresUriHandling = thirdPartyFlag != null
 
     val clickLink = {
         when {
-            requiresUri -> uriHandler.openUri(uri = link.url)
+            requiresUriHandling -> uriHandler.openUri(uri = link.url)
+            link is DBSubtitle -> Unit
             else -> onClick.invoke()
         }
     }
@@ -441,9 +428,9 @@ private fun MediaLinkItem(
                     clipboardManager.setText(
                         if (link.customHeaders?.isNotEmpty() == true) {
                             buildString {
-                                append("Stream name: ${link.name}\n")
-                                append("Stream link: ${link.url}\n")
-                                append("Stream headers:\n")
+                                append("Name: ${link.label}\n")
+                                append("URL: ${link.url}\n")
+                                append("Headers:\n")
                                 link.customHeaders?.forEach { (key, value) ->
                                     append("  - $key: $value\n")
                                 }
@@ -461,7 +448,7 @@ private fun MediaLinkItem(
                 .heightIn(min = MediaLinkCardMinHeight)
                 .padding(10.dp),
         ) {
-            if (requiresUri) {
+            if (requiresUriHandling) {
                 ImageWithSmallPlaceholder(
                     urlImage = thirdPartyFlag.logo,
                     placeholder = painterResource(UiCommonR.drawable.provider_logo),
@@ -477,7 +464,7 @@ private fun MediaLinkItem(
                 modifier = Modifier.weight(1F)
             ) {
                 Text(
-                    text = link.name.trim(),
+                    text = link.label.trim(),
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -491,7 +478,7 @@ private fun MediaLinkItem(
                     ),
                 )
 
-                if (!requiresUri) {
+                if (!requiresUriHandling) {
                     MediaLinkIndicatorChip(
                         link = link,
                         modifier = Modifier.padding(top = 8.dp),
@@ -499,7 +486,7 @@ private fun MediaLinkItem(
                 }
             }
 
-            if (link is Stream && requiresUri) {
+            if (link is DBStream && requiresUriHandling) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -522,17 +509,17 @@ private fun MediaLinkItem(
 
 @Composable
 private fun MediaLinkIndicatorChip(
-    link: MediaLink,
+    link: DBMediaLink,
     modifier: Modifier = Modifier
 ) {
     val indicatorColor = when (link) {
-        is Stream -> MaterialTheme.colorScheme.tertiary
-        is Subtitle -> MaterialTheme.colorScheme.onSurface
+        is DBStream -> MaterialTheme.colorScheme.tertiary
+        is DBSubtitle -> MaterialTheme.colorScheme.onSurface
     }
 
     Text(
         text = when (link) {
-            is Subtitle -> stringResource(id = LocaleR.string.subtitle)
+            is DBSubtitle -> stringResource(id = LocaleR.string.subtitle)
             else -> stringResource(id = LocaleR.string.stream)
         },
         style = MaterialTheme.typography.labelSmall,
@@ -631,9 +618,7 @@ private fun MediaLinksBottomSheetContentPreview() {
             itemCount++
         }
         delay(delayTime)
-        state = LoadLinksState.Success(
-            providerId = "provider-id",
-        )
+        state = LoadLinksState.Success
         delay(delayTime)
         state = LoadLinksState.Unavailable()
         delay(delayTime * 3L)
@@ -646,18 +631,11 @@ private fun MediaLinksBottomSheetContentPreview() {
         ) {
             MediaLinksBottomSheetContent(
                 state = { state },
-                links = {
-                    MediaLinks(
-                        streams = links.filterIsInstance<Stream>(),
-                        subtitles = links.filterIsInstance<Subtitle>(),
-                        watchId = "watch-id",
-                        providerId = "provider-id",
-                    )
-                },
-                onSkipLoading = {},
+                links = { null },
                 onLinkClick = {},
+                onResetAndRetry = {},
+                onTestLinks = {},
             )
         }
     }
 }
-

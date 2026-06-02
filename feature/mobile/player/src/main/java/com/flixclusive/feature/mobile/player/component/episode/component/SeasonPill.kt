@@ -73,7 +73,7 @@ internal fun SeasonPill(
                 )
         ) {
             Text(
-                text = season.title ?: stringResource(LocaleR.string.untitled_season, season.number),
+                text = season.title ?: stringResource(LocaleR.string.label_format_untitled_season, season.number),
                 style = MaterialTheme.typography.labelMedium
             )
         }

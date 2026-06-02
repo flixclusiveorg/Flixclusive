@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
     implementation(projects.coreDatabase)
+    implementation(libs.work.runtime.ktx)
 
     testImplementation(libs.stubs.model.provider)
     testImplementation(projects.coreTesting)

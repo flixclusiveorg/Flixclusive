@@ -58,6 +58,10 @@
     <string name="label_cancel">Cancel</string>
     <string name="choose_an_avatar">Choose an avatar</string>
     <string name="clear_cached_links">Clear cached links</string>
+    <string name="label_manage_cached_links">Manage cached links</string>
+    <string name="label_cached_links">Cached links</string>
+    <string name="reset_and_retry">Reset &amp; Retry</string>
+    <string name="test_links_label">Test links</string>
     <string name="my_library">My Library</string>
     <string name="library">Library</string>
     <string name="clear_library">Clear library</string>
@@ -220,7 +224,7 @@
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
     <string name="count_selection_format">%1$d selected</string>
     <string name="n_seconds_format">%1$d seconds</string>
-    <string name="untitled_season">Season %1$d</string>
+    <string name="label_format_untitled_season">Season %1$d</string>
     <string name="untitled_episode">Episode %1$d</string>
 
 
@@ -241,7 +245,6 @@
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
     <string name="restart_app_for_changes_message">Restart is required for this to take effect.</string>
-    <string name="skip_loading_message">Skip loading links</string>
     <string name="tooltip_providers_screen_help_guide">This guide contains all the useful information about the providers system. Check it out for more details!</string>
     <string name="failed_to_load_episode">Failed to load episode</string>
     <string name="up_to_date">Version is up to date!</string>
@@ -264,6 +267,17 @@
     <string name="avatar_chosen_content_desc">Avatar chosen</string>
     <string name="backspace_content_desc">Backspace button to delete text</string>
     <string name="cached_links_description_format">Links are cached to avoid reloading them from their source provider, reducing unnecessary network calls. Currently, you have %1$d links in the cache.</string>
+    <string name="desc_manage_cached_links_content_desc">Browse and manage links cached by providers.</string>
+    <string name="clear_dead_links">Clear dead links</string>
+    <string name="show_dead_links">Show dead links</string>
+    <string name="copy_url">Copy URL</string>
+    <string name="ip_locked">IP Locked</string>
+    <string name="all_providers">All providers</string>
+    <string name="label_no_cached_media">No cached media yet</string>
+    <string name="dead_link_retention_days_title">Dead link retention period</string>
+    <string name="dead_link_retention_days_desc">Remove dead links after %1$d day(s). Set to 0 to remove them immediately on the next cleanup.</string>
+    <string name="links_test_done_format">Test complete: %1$d alive, %2$d dead</string>
+    <string name="testing_link_format">Testing link %1$d of %2$d…</string>
     <string name="change_avatar_content_desc">Change user\'s avatar</string>
     <string name="clear_library_content_desc">Clears a specific library or list this user has made</string>
     <string name="clear_text_button">Clear text button</string>

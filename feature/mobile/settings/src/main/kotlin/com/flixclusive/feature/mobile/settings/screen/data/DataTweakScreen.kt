@@ -1,7 +1,10 @@
 package com.flixclusive.feature.mobile.settings.screen.data
 
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
@@ -13,9 +16,12 @@ import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.links.MediaLinkCardsTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
+import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -54,6 +60,8 @@ internal class DataTweakScreen(
                     }
                 },
             ),
+            getSearchTweaks(),
+            getCachedLinksTweaks(dataPreferences = dataPreferences),
             backupTweakGroup(
                 dataPreferences = { dataPreferences },
                 systemPreferences = { systemPreferences },
@@ -62,7 +70,61 @@ internal class DataTweakScreen(
                 createBackup = viewModel::createBackup,
                 restoreBackup = viewModel::restoreBackup,
             ),
-            getSearchTweaks(),
+        )
+    }
+
+    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
+    @Composable
+    private fun getCachedLinksTweaks(dataPreferences: DataPreferences): TweakGroup {
+        val resources = LocalResources.current
+        val navigator = LocalScaffoldNavigator.current
+        val cachedLinksCount by viewModel.cachedLinksCount.collectAsStateWithLifecycle()
+        val scope = rememberCoroutineScope()
+
+        return TweakGroup(
+            title = stringResource(LocaleR.string.label_cached_links),
+            tweaks = persistentListOf(
+                TweakUI.ClickableTweak(
+                    title = stringResource(LocaleR.string.label_manage_cached_links),
+                    description = {
+                        resources.getString(LocaleR.string.desc_manage_cached_links_content_desc)
+                    },
+                    onClick = {
+                        scope.launch {
+                            navigator?.navigateTo(
+                                pane = ListDetailPaneScaffoldRole.Detail,
+                                contentKey = MediaLinkCardsTweakScreen.key.name,
+                            )
+                        }
+                    },
+                ),
+                TweakUI.ClickableTweak(
+                    title = stringResource(LocaleR.string.clear_cached_links),
+                    enabledProvider = { cachedLinksCount > 0 },
+                    onClick = viewModel::clearCacheLinks,
+                    description = {
+                        resources.getString(
+                            LocaleR.string.cached_links_description_format,
+                            cachedLinksCount,
+                        )
+                    },
+                ),
+                TweakUI.SliderTweak(
+                    title = stringResource(LocaleR.string.dead_link_retention_days_title),
+                    description = {
+                        resources.getString(
+                            LocaleR.string.dead_link_retention_days_desc,
+                            dataPreferences.deadLinkRetentionDays,
+                        )
+                    },
+                    value = { dataPreferences.deadLinkRetentionDays.toFloat() },
+                    range = 0f..30f,
+                    steps = 29,
+                    onTweaked = { days ->
+                        onUpdatePreferences { it.copy(deadLinkRetentionDays = days.toInt()) }
+                    },
+                ),
+            ),
         )
     }
 

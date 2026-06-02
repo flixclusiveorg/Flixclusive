@@ -24,7 +24,10 @@ fun ProducerScope<LoadLinksState>.sendCrossMatchingMessage(provider: ProviderMet
     trySend(
         LoadLinksState.Extracting(
             providerId = provider.id,
-            message = UiText.StringResource(R.string.get_media_links_cross_matching_provider, provider.name),
+            message = UiText.from(
+                R.string.get_media_links_cross_matching_provider,
+                provider.name,
+            ),
         ),
     )
 }

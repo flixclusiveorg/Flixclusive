@@ -65,6 +65,7 @@ import com.ramcosta.composedestinations.generated.media.destinations.MediaLinksB
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
+import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination.invoke
 import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsBottomSheetDestination
@@ -338,13 +339,17 @@ internal class MobileAppNavigator(
 
     override fun showPlayerSplashScreen(
         media: MediaMetadata,
-        episode: Episode?
+        streamUrl: String,
+        episode: Episode?,
+        cacheId: String?,
     ) {
         runOnResumed {
             navigator.navigate(
                 PlayerSplashScreenDestination(
                     media = media,
                     episode = episode,
+                    streamUrl = streamUrl,
+                    cacheId = cacheId,
                 ),
             )
         }

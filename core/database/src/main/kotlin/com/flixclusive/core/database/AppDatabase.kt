@@ -6,10 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.flixclusive.core.database.converters.DateConverter
+import com.flixclusive.core.database.converters.StringMapConverter
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
+import com.flixclusive.core.database.dao.provider.CachedMediaLinksDao
+import com.flixclusive.core.database.dao.provider.DBMediaLinkDao
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
@@ -20,6 +23,9 @@ import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.media.DBMediaExternalId
 import com.flixclusive.core.database.entity.media.DBMediaFts
+import com.flixclusive.core.database.entity.provider.CachedMediaLinks
+import com.flixclusive.core.database.entity.provider.DBStream
+import com.flixclusive.core.database.entity.provider.DBSubtitle
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.database.entity.provider.InstalledRepository
 import com.flixclusive.core.database.entity.search.SearchHistory
@@ -33,6 +39,7 @@ import com.flixclusive.core.database.migration.Schema13to14
 import com.flixclusive.core.database.migration.Schema14to15
 import com.flixclusive.core.database.migration.Schema15to16
 import com.flixclusive.core.database.migration.Schema16to17
+import com.flixclusive.core.database.migration.Schema17to18
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -59,13 +66,17 @@ internal const val APP_DATABASE = "app_database"
         EpisodeProgress::class,
         InstalledRepository::class,
         InstalledProvider::class,
+        CachedMediaLinks::class,
+        DBStream::class,
+        DBSubtitle::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 17,
+    version = 18,
     exportSchema = true,
 )
 @TypeConverters(
     DateConverter::class,
+    StringMapConverter::class,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
@@ -83,6 +94,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun repositoryDao(): InstalledRepositoryDao
 
     abstract fun installedProviderDao(): InstalledProviderDao
+
+    abstract fun cachedMediaLinksDao(): CachedMediaLinksDao
+
+    abstract fun dbMediaLinkDao(): DBMediaLinkDao
 
     companion object {
         @Volatile
@@ -116,6 +131,7 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema14to15,
                         Schema15to16,
                         Schema16to17,
+                        Schema17to18,
                     ).build()
                     .also { INSTANCE = it }
             }

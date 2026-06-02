@@ -33,7 +33,7 @@ internal fun SeasonPill(
 ) {
     val resources = LocalResources.current
     val title = remember(season) {
-        season.title ?: resources.getString(LocaleR.string.untitled_season, season.number)
+        season.title ?: resources.getString(LocaleR.string.label_format_untitled_season, season.number)
     }
 
     val containerColor by animateColorAsState(

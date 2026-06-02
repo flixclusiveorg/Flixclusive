@@ -9,11 +9,12 @@ import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.provider.repository.MediaLinksCacheKey.Companion.toCacheKey
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
+import com.flixclusive.domain.provider.usecase.links.TestLinksProgress
+import com.flixclusive.domain.provider.usecase.links.TestMediaLinksUseCase
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
@@ -22,10 +23,13 @@ import com.ramcosta.composedestinations.generated.media.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,6 +41,7 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     private val getMediaMetadata: GetMediaMetadataUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val mediaLinksRepository: MediaLinksRepository,
+    private val testMediaLinksUseCase: TestMediaLinksUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
     savedStateHandle: SavedStateHandle
@@ -44,6 +49,8 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     private val args = savedStateHandle.navArgs<MediaLinksBottomSheetArgs>()
 
     private var onFetchMediaLinksJob: Job? = null
+    private var onRefetchLinks: Job? = null
+    private var onTestLinksJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         MediaLinksBottomSheetUiState(
@@ -53,10 +60,61 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     )
     val uiState = _uiState.asStateFlow()
 
-    val currentObservableLinks = mediaLinksRepository.currentObservable
+
+    val links = userSessionDataStore.currentUserId
+        .filterNotNull()
+        .flatMapLatest { ownerId ->
+            mediaLinksRepository.observeLinks(
+                ownerId = ownerId,
+                mediaId = args.media.id,
+                episodeNumber = args.episode?.number,
+                seasonNumber = args.episode?.season,
+            )
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null,
+        )
+
+    val testProgress: MutableStateFlow<TestLinksProgress?> = MutableStateFlow(null)
 
     init {
-        onFetchMediaLinks()
+        viewModelScope.launch {
+            onFetchMediaLinks()
+        }
+    }
+
+    private suspend fun getEpisodeToWatch(tvShow: Show): Episode? {
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        val progress = watchProgressRepository.get(
+            id = tvShow.id,
+            ownerId = userId,
+            type = tvShow.type,
+        ) as? EpisodeProgressWithMetadata
+
+        if (progress?.watchData?.isCompleted == true) {
+            return getNextEpisode(
+                show = tvShow,
+                season = progress.watchData.seasonNumber,
+                episode = progress.watchData.episodeNumber,
+            )
+        }
+
+        val seasonNumber = progress?.watchData?.seasonNumber ?: 1
+        val episodeNumber = progress?.watchData?.episodeNumber ?: 1
+
+        val seasonIndex = tvShow.seasons.binarySearch {
+            it.number.compareTo(seasonNumber)
+        }
+
+        val season = tvShow.seasons.getOrNull(seasonIndex)
+
+        val episode = season?.episodes?.binarySearch {
+            it.number.compareTo(episodeNumber)
+        }?.let { index -> season.episodes.getOrNull(index) }
+
+        return episode
     }
 
     fun onFetchMediaLinks() {
@@ -64,27 +122,25 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
 
         onFetchMediaLinksJob?.cancel()
         onFetchMediaLinksJob = viewModelScope.launch {
-            mediaLinksRepository.setCurrentObservable(null)
             updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.media_data_fetching))
 
-            val media = args.media
-            val metadata = if (args.media is PartialMedia) {
-                getMediaMetadata(media = media).last().let {
-                    when (it) {
-                        is Async.Success -> it.data
-                        else -> {
-                            updateLoadLinksState(LoadLinksState.Error(LocaleR.string.media_data_fetch_failed))
-                            return@launch
+            var metadata = args.media
+
+            if (metadata is PartialMedia) {
+                metadata = getMediaMetadata(media = metadata).last()
+                    .let {
+                        when (it) {
+                            is Async.Success -> it.data
+                            else -> {
+                                updateLoadLinksState(LoadLinksState.Error(LocaleR.string.media_data_fetch_failed))
+                                return@launch
+                            }
                         }
                     }
-                }
-            } else {
-                media
             }
 
             _uiState.update { it.copy(metadata = metadata) }
 
-            // Data to be passed to the player screen
             var episodeToLoad = args.episode
             if (metadata is Show) {
                 if (args.episode == null) {
@@ -105,69 +161,48 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             )
 
             response.collect(::updateLoadLinksState)
+        }
+    }
 
-            if (isFailureButHasLinks()) {
-                mediaLinksRepository.setCurrentObservable(null)
+    fun onResetAndRetry() {
+        if (onRefetchLinks?.isActive == true || onFetchMediaLinksJob?.isActive == true) return
+
+        onRefetchLinks = viewModelScope.launch {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val data = mediaLinksRepository.getLinks(
+                ownerId = userId,
+                mediaId = args.media.id,
+                episodeNumber = args.episode?.number,
+                seasonNumber = args.episode?.season,
+            )
+
+            if (data != null) {
+                mediaLinksRepository.deleteAll(data.id)
+            }
+
+            onFetchMediaLinks()
+        }
+    }
+
+    fun onTestLinks() {
+        if (onTestLinksJob?.isActive == true) return
+
+        onTestLinksJob = viewModelScope.launch {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val data = mediaLinksRepository.getLinks(
+                ownerId = userId,
+                mediaId = args.media.id,
+                episodeNumber = args.episode?.number,
+                seasonNumber = args.episode?.season,
+            ) ?: return@launch
+
+            testMediaLinksUseCase(data.id).collect { progress ->
+                testProgress.value = progress
             }
         }
-    }
-
-    private suspend fun getEpisodeToWatch(tvShow: Show): Episode? {
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val progress = watchProgressRepository.get(
-            id = tvShow.id,
-            ownerId = userId,
-            type = tvShow.type,
-        ) as? EpisodeProgressWithMetadata
-
-        if (progress?.watchData?.isCompleted == true) {
-            return getNextEpisode(
-                show = tvShow,
-                season = progress.watchData.seasonNumber,
-                episode = progress.watchData.episodeNumber,
-            )
-        }
-
-        // Default to 1 if this has not been saved yet
-        val seasonNumber = progress?.watchData?.seasonNumber ?: 1
-        val episodeNumber = progress?.watchData?.episodeNumber ?: 1
-
-
-        val seasonIndex = tvShow.seasons.binarySearch {
-            it.number.compareTo(seasonNumber)
-        }
-
-        val season = tvShow.seasons.getOrNull(seasonIndex)
-
-        val episode = season?.episodes?.binarySearch {
-            it.number.compareTo(episodeNumber)
-        }?.let { index -> season.episodes.getOrNull(index) }
-
-        return episode
-    }
-
-    private fun isFailureButHasLinks(): Boolean {
-        val currentCache = currentObservableLinks.value
-        val loadLinksState = _uiState.value.loadLinksState
-
-        return loadLinksState.isError
-            && currentCache != null
-            && currentCache.hasValidLinks
     }
 
     fun updateLoadLinksState(state: LoadLinksState) {
-        if (state.hasProviderId) {
-            val (media, episode) = _uiState.value
-            val cache = state.toCacheKey(
-                mediaId = media.id,
-                episode = episode,
-            )
-
-            if (cache != null) {
-                mediaLinksRepository.setCurrentObservable(cache)
-            }
-        }
-
         _uiState.update { it.copy(loadLinksState = state) }
     }
 }

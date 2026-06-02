@@ -11,5 +11,7 @@ import com.flixclusive.model.media.common.tv.Episode
  * */
 data class PlayerScreenNavArgs(
     val media: MediaMetadata,
+    val streamUrl: String,
     val episode: Episode?,
+    val cacheId: String?,
 )

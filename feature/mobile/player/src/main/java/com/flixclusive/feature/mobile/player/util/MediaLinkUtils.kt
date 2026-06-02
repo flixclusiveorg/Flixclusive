@@ -1,6 +1,9 @@
 package com.flixclusive.feature.mobile.player.util
 
 import androidx.compose.ui.util.fastMap
+import com.flixclusive.core.database.entity.provider.DBStream
+import com.flixclusive.core.database.entity.provider.DBSubtitle
+import com.flixclusive.core.database.entity.provider.isAliveAndValid
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.PlayerTrack
@@ -58,6 +61,37 @@ internal object MediaLinkUtils {
         return PlayerSubtitle(
             label = name,
             url = url,
+            source = TrackSource.REMOTE,
+        )
+    }
+}
+
+/** Filters alive+non-expired streams, deduplicates names, and maps to [PlayerServer]. */
+internal fun List<DBStream>.toPlayerServers(): List<PlayerServer> {
+    val names = mutableMapOf<String, Int>()
+    return filter { it.isAliveAndValid }.map { stream ->
+        val count = names[stream.label] ?: 1
+        val label = if (count > 1) "${stream.label} $count" else stream.label
+        names[stream.label] = count + 1
+        PlayerServer(
+            label = label,
+            url = stream.url,
+            headers = stream.customHeaders ?: emptyMap(),
+            source = TrackSource.REMOTE,
+        )
+    }
+}
+
+/** Deduplicates subtitle languages and maps to [PlayerSubtitle]. */
+internal fun List<DBSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
+    val names = mutableMapOf<String, Int>()
+    return map { subtitle ->
+        val count = names[subtitle.label] ?: 1
+        val label = if (count > 1) "${subtitle.label} $count" else subtitle.label
+        names[subtitle.label] = count + 1
+        PlayerSubtitle(
+            label = label,
+            url = subtitle.url,
             source = TrackSource.REMOTE,
         )
     }

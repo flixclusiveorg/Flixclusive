@@ -25,7 +25,7 @@
     <string name="get_media_links_error_empty_provider_list">Failed to fetch media links: no providers installed to fetch from</string>
     <string name="get_media_links_error_no_provider_plugin">Failed to fetch media links: no provider plugin found for %1$s</string>
     <string name="get_media_links_fetching_from_provider">Fetching from %1$s…</string>
-    <string name="get_media_links_cross_matching_provider">Cross-matching %1$s with %2$s…</string>
+    <string name="get_media_links_cross_matching_provider">Cross-matching with %1$s…</string>
     <string name="get_media_links_extracting_from_provider">Extracting from %1$s…</string>
     <string name="tracker_failed_to_add_item_to_list_from_tracker">Failed to add item to list from tracker</string>
     <string name="tracker_no_list_management_feature">%1$s doesn\'t allow list management features.</string>

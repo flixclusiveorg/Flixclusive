@@ -147,8 +147,13 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                 }
 
                 val installedProvider = providerRepository.getProvider(
-                    ownerId = userId, id = metadata.id,
+                    ownerId = userId,
+                    id = metadata.id,
                 )
+
+                if (installedProvider == null) {
+                    return@subDirectory
+                }
 
                 infoLog("New debug provider found: ${metadata.name}. Installing...")
                 providerRepository.install(

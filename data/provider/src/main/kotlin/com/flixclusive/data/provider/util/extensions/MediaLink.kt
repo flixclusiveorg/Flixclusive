@@ -1,19 +1,37 @@
 package com.flixclusive.data.provider.util.extensions
 
+import com.flixclusive.core.database.entity.provider.DBStream
+import com.flixclusive.core.database.entity.provider.DBSubtitle
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 
-internal fun List<Stream>.filterOutExpiredLinks(): List<Stream> {
-    return filter {
-        val expiryDate = it.flags?.getExpiredFlag()
+fun Stream.toDBStream(parentId: String): DBStream {
+    val expiresFlag = flags?.filterIsInstance<Flag.Expires>()?.firstOrNull()
+    val requiresAuthFlag = flags?.filterIsInstance<Flag.RequiresAuth>()?.firstOrNull()
+    val thirdPartyFlag = flags?.filterIsInstance<Flag.ThirdPartyGateway>()?.firstOrNull()
 
-        when {
-            expiryDate == null -> return@filter true
-            expiryDate.expiresOn < (System.currentTimeMillis() / 1000) -> return@filter false
-            else -> true
-        }
-    }.toList()
+    return DBStream(
+        url = url,
+        parentId = parentId,
+        label = name,
+        description = description,
+        expiresOn = expiresFlag?.expiresOn,
+        customHeaders = requiresAuthFlag?.customHeaders?.takeIf { it.isNotEmpty() },
+        isThirdPartyGateway = thirdPartyFlag != null,
+        thirdPartyGatewayName = thirdPartyFlag?.name,
+        thirdPartyGatewayLogo = thirdPartyFlag?.logo,
+    )
 }
 
-private fun Set<Flag>.getExpiredFlag(): Flag.Expires?
-    = filterIsInstance<Flag.Expires>().firstOrNull()
+fun Subtitle.toDBSubtitle(parentId: String): DBSubtitle {
+    val requiresAuthFlag = flags?.filterIsInstance<Flag.RequiresAuth>()?.firstOrNull()
+
+    return DBSubtitle(
+        url = url,
+        parentId = parentId,
+        label = language,
+        subtitleSource = type.name,
+        customHeaders = requiresAuthFlag?.customHeaders?.takeIf { it.isNotEmpty() },
+    )
+}

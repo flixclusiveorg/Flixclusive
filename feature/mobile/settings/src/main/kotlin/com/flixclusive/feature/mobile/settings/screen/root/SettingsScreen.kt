@@ -55,12 +55,16 @@ import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.github.ReportBugTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.links.ManageMediaLinksTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.links.MediaLinkCardsTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.links.MediaLinksShowDetailTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
+import com.flixclusive.model.media.MediaMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentMapOf
@@ -104,12 +108,17 @@ internal fun SettingsScreen(
 
     val items = remember {
         persistentMapOf(
-            null to listOf(SwitchProfileNavigation),
+            null to listOf(
+                SwitchProfileNavigation,
+            ),
             LocaleR.string.application to
                 listOf(
                     AppearanceTweakScreen(viewModel),
                     PlayerTweakScreen(viewModel),
                     DataTweakScreen(viewModel),
+                    MediaLinkCardsTweakScreen,
+                    MediaLinksShowDetailTweakScreen,
+                    ManageMediaLinksTweakScreen,
                     ProvidersTweakScreen(viewModel),
                     SubtitlesTweakScreen(viewModel),
                     SystemTweakScreen(viewModel),
@@ -168,6 +177,9 @@ internal fun SettingsScreen(
                     }
                 },
                 detailPane = {
+                    AnimatedPane {
+
+                    }
                     val screen by remember {
                         derivedStateOf {
                             navigationItems.fastFirstOrNull {
@@ -275,6 +287,8 @@ private fun TabletPreview() {
                     override fun navigateToUserProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
                     override fun navigateToEditUserScreen(userId: String) = Unit
+
+                    override fun showMediaPreviewBottomSheet(media: MediaMetadata) = Unit
                 },
             )
         }
@@ -299,6 +313,8 @@ private fun PhonePreview() {
                     override fun navigateToUserProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
                     override fun navigateToEditUserScreen(userId: String) = Unit
+
+                    override fun showMediaPreviewBottomSheet(media: MediaMetadata) = Unit
                 },
             )
         }

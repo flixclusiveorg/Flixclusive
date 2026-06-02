@@ -3,4 +3,6 @@
     <string name="report_a_bug">Report a bug</string>
     <string name="github">GitHub</string>
     <string name="feature_request">Request a feature!</string>
+    <string name="label_links_size">%1$d links</string>
+    <string name="error_selected_media_has_no_cached_links">Selected media has no cached links</string>
 </resources>

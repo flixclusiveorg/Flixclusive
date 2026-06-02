@@ -150,11 +150,9 @@ sealed class LoadLinksState(
 
     /**
      * The state when the resource has been successfully fetched and extracted.
-     *
-     * @property providerId The ID of the provider that provided the links.
      */
     @Stable
-    data class Success(val providerId: String) : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
+    data object Success : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
         override val ordinal = 5
     }
 
