@@ -5,4 +5,6 @@
     <string name="feature_request">Request a feature!</string>
     <string name="label_links_size">%1$d links</string>
     <string name="error_selected_media_has_no_cached_links">Selected media has no cached links</string>
+    <string name="label_links_filter_count">Count</string>
+    <string name="label_links_filter_title">Title</string>
 </resources>

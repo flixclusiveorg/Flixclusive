@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.reflect.KClass
 
 @HiltViewModel
 internal class MediaLinksTweakViewModel @Inject constructor(
@@ -57,7 +56,7 @@ internal class MediaLinksTweakViewModel @Inject constructor(
     private val _selectedCache = MutableStateFlow<CachedMediaLinks?>(null)
     val selectedCache: StateFlow<CachedMediaLinks?> = _selectedCache
 
-    private val _mediaSort = MutableStateFlow<MediaSortType>(MediaSortType.Size(asc = false))
+    private val _mediaSort = MutableStateFlow<MediaSortType>(MediaSortType.LinksCount(asc = false))
     val mediaSort = _mediaSort.asStateFlow()
 
     private val _linksSortType = MutableStateFlow<LinksSortType>(LinksSortType.GeneratedAt(asc = true))
@@ -187,24 +186,21 @@ internal data class ProviderWithCachedLinks(
 
 @Stable
 internal sealed class MediaSortType(val asc: Boolean) {
-    class Size(asc: Boolean) : MediaSortType(asc)
+    class LinksCount(asc: Boolean) : MediaSortType(asc)
     class Title(asc: Boolean) : MediaSortType(asc)
 
     fun toggle(): MediaSortType {
         return when (this) {
-            is Size -> Size(asc = !asc)
+            is LinksCount -> LinksCount(asc = !asc)
             is Title -> Title(asc = !asc)
         }
     }
 
-    fun changeType(
-        currentType: KClass<out MediaSortType>,
-        isAscending: Boolean,
-    ): MediaSortType {
-        return when (currentType) {
-            Size::class -> Title(asc = isAscending)
-            Title::class -> Size(asc = isAscending)
-            else -> throw IllegalArgumentException("Unknown MediaSortType: $currentType")
+    fun changeType(): MediaSortType {
+        return when (this::class) {
+            LinksCount::class -> Title(asc = asc)
+            Title::class -> LinksCount(asc = asc)
+            else -> throw IllegalArgumentException("Unknown MediaSortType: $this")
         }
     }
 }

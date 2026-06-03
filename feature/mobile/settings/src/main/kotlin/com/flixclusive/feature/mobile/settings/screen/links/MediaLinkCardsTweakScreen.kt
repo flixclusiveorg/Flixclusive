@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +25,7 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -116,6 +119,24 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                 )
             }
         ) { items ->
+            val filteredItems by remember {
+                derivedStateOf {
+                    items()
+                        .let { list ->
+                            when (mediaSort) {
+                                is MediaSortType.LinksCount -> {
+                                    if (mediaSort.asc) list.sortedBy { it.size }
+                                    else list.sortedByDescending { it.size }
+                                }
+                                is MediaSortType.Title -> {
+                                    if (mediaSort.asc) list.sortedBy { it.media.title }
+                                    else list.sortedByDescending { it.media.title }
+                                }
+                            }
+                        }
+                }
+            }
+
             if (items().isEmpty()) {
                 EmptyDataMessage(
                     modifier = Modifier.fillMaxSize(),
@@ -129,30 +150,28 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                 columns = GridCells.Adaptive(getAdaptiveMediaCardWidth()),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                item {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     val sorts = remember {
                         listOf(
-                            MediaSortType.Size::class,
+                            MediaSortType.LinksCount::class,
                             MediaSortType.Title::class
                         )
                     }
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         sorts.fastForEach {
-                            val isSelected = mediaSort == it
+                            val isSelected = mediaSort::class == it
 
                             FilterChip(
                                 selected = isSelected,
                                 onClick = {
                                     viewModel.onMediaSortChange(
                                         if (isSelected) mediaSort.toggle()
-                                        else mediaSort.changeType(
-                                            currentType = it,
-                                            isAscending = mediaSort.asc
-                                        )
+                                        else mediaSort.changeType()
                                     )
                                 },
                                 leadingIcon = {
@@ -177,14 +196,22 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                                         }
                                     }
                                 },
-                                label = { Text(stringResource(LocaleR.string.all_providers)) },
+                                label = {
+                                    Text(
+                                        when (it) {
+                                            MediaSortType.LinksCount::class -> stringResource(R.string.label_links_filter_count)
+                                            MediaSortType.Title::class -> stringResource(R.string.label_links_filter_title)
+                                            else -> "Unknown filter"
+                                        }
+                                    )
+                                },
                             )
                         }
                     }
                 }
 
                 gridItems(
-                    items = items(),
+                    items = filteredItems,
                     key = { it.media.id }
                 ) { group ->
                     PosterCard(
@@ -219,8 +246,8 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                             }
                         },
                         modifier = Modifier
-                            .animateItem()
                             .fillMaxWidth()
+                            .animateItem()
                     )
                 }
             }

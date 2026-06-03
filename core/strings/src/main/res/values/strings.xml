@@ -273,7 +273,6 @@
     <string name="show_dead_links">Show dead links</string>
     <string name="copy_url">Copy URL</string>
     <string name="ip_locked">IP Locked</string>
-    <string name="all_providers">All providers</string>
     <string name="label_no_cached_media">No cached media yet</string>
     <string name="dead_link_retention_days_title">Dead link retention period</string>
     <string name="dead_link_retention_days_desc">Remove dead links after %1$d day(s). Set to 0 to remove them immediately on the next cleanup.</string>
