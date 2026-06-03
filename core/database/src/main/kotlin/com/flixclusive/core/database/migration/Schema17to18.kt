@@ -2,9 +2,50 @@ package com.flixclusive.core.database.migration
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import java.util.Date
 
-internal object Schema17to18 : Migration(19, 20) {
+internal object Schema17to18 : Migration(17, 18) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        seedRepositoryWithDefaultProviderRepo(db)
+        migrateCacheLinksTable(db)
+    }
+
+    fun seedRepositoryWithDefaultProviderRepo(db: SupportSQLiteDatabase) {
+        val now = Date().time
+        db.execSQL(
+            """
+                INSERT INTO `repositories` (
+                    url, userId, owner, name, rawLinkFormat, createdAt, updatedAt
+                ) SELECT
+                    'https://github.com/flixclusiveorg/flx-providers',
+                    userId,
+                    'flixclusiveorg',
+                    'flx-providers',
+                    'https://raw.githubusercontent.com/flixclusiveorg/flx-providers/%branch%/%filename%',
+                    $now,
+                    $now
+                FROM User
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+                INSERT INTO `repositories` (
+                    url, userId, owner, name, rawLinkFormat, createdAt, updatedAt
+                ) SELECT
+                    'https://github.com/flixclusiveorg/provider-template',
+                    userId,
+                    'flixclusiveorg',
+                    'provider-template',
+                    'https://raw.githubusercontent.com/flixclusiveorg/provider-template/%branch%/%filename%',
+                    $now,
+                    $now
+                FROM User
+            """.trimIndent()
+        )
+    }
+
+    private fun migrateCacheLinksTable(db: SupportSQLiteDatabase) {
         // Drop child tables first to respect FK ordering
         db.execSQL("DROP TABLE IF EXISTS `cached_streams`")
         db.execSQL("DROP TABLE IF EXISTS `cached_subtitles`")

@@ -67,7 +67,8 @@ interface CachedMediaLinksDao {
     @Query("SELECT * FROM cached_media_links WHERE ownerId = :ownerId")
     fun getAllAsFlow(ownerId: String): Flow<List<CachedMediaLinksWithData>>
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*)
         FROM (
             SELECT parentId
@@ -88,7 +89,8 @@ interface CachedMediaLinksDao {
                 WHERE ownerId = :ownerId
             )
         )
-    """)
+    """
+    )
     fun getCacheSize(ownerId: String): Flow<Int>
 
     @Transaction
@@ -115,7 +117,7 @@ interface CachedMediaLinksDao {
         DELETE FROM cached_media_links
         WHERE ownerId = :ownerId
           AND NOT EXISTS (
-              SELECT 1 FROM cached_streams    WHERE parentId = cached_media_links.id
+              SELECT 1 FROM cached_streams WHERE parentId = cached_media_links.id
           )
           AND NOT EXISTS (
               SELECT 1 FROM cached_subtitles WHERE parentId = cached_media_links.id

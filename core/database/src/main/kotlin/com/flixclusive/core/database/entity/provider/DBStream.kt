@@ -33,4 +33,9 @@ data class DBStream(
     val isThirdPartyGateway: Boolean = false,
     val thirdPartyGatewayName: String? = null,
     val thirdPartyGatewayLogo: String? = null,
-) : DBMediaLink
+) : DBMediaLink {
+    val isAliveAndValid: Boolean
+        get() = !isDead &&
+            !isThirdPartyGateway &&
+            (expiresOn == null || expiresOn > System.currentTimeMillis())
+}

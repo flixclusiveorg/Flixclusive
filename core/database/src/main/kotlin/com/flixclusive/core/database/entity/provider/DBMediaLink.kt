@@ -12,6 +12,3 @@ sealed interface DBMediaLink {
     val createdAt: Date
     val updatedAt: Date
 }
-
-val DBStream.isAliveAndValid: Boolean
-    get() = !isDead && (expiresOn == null || expiresOn > System.currentTimeMillis())
