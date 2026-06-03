@@ -1,7 +1,7 @@
 package com.flixclusive.crash
 
 import com.flixclusive.core.common.exception.CrashReportSender
-import com.flixclusive.core.common.exception.REMOTE_FORM_URL
+import com.flixclusive.core.common.exception.URL_CRASH_REPORT_FORM
 import com.flixclusive.core.util.network.okhttp.HttpMethod
 import com.flixclusive.core.util.network.okhttp.formRequest
 import kotlinx.coroutines.test.runTest
@@ -43,7 +43,7 @@ class CrashReportSenderTest : CrashReportSender {
 
     override suspend fun send(errorLog: String) {
         val response = client.formRequest(
-            url = REMOTE_FORM_URL,
+            url = URL_CRASH_REPORT_FORM,
             method = HttpMethod.POST,
             body = mapOf("entry.1687138646" to errorLog)
         ).execute()

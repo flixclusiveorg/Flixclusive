@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles
+package com.flixclusive.feature.mobile.user.profiles
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastFilter

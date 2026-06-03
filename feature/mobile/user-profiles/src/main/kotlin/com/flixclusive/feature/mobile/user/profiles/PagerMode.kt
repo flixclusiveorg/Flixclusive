@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles
+package com.flixclusive.feature.mobile.user.profiles
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
@@ -60,9 +60,9 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveTextUnit
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.feature.mobile.profiles.component.EditButton
-import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.getPagerBlur
-import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.scaleDownOnPress
+import com.flixclusive.feature.mobile.user.profiles.component.EditButton
+import com.flixclusive.feature.mobile.user.profiles.util.ModifierUtil.getPagerBlur
+import com.flixclusive.feature.mobile.user.profiles.util.ModifierUtil.scaleDownOnPress
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import com.flixclusive.core.drawables.R as UiCommonR

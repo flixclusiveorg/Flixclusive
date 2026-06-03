@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles
+package com.flixclusive.feature.mobile.user.profiles
 
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToAddProfileScreen

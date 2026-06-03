@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles
+package com.flixclusive.feature.mobile.user.profiles
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent

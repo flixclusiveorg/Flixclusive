@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles.util
+package com.flixclusive.feature.mobile.user.profiles.util
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.MutableState

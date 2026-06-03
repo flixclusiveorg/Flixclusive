@@ -133,7 +133,7 @@ internal class MobileAppViewModel @Inject constructor(
     }
 
     private suspend fun updateProviders() {
-        val providerPrefs = dataStoreManager.getUserPrefs(
+        val providerPrefs = dataStoreManager.getUserPrefsAsFlow(
             key = UserPreferences.PROVIDER_PREFS_KEY,
             type = ProviderPreferences::class
         ).first()

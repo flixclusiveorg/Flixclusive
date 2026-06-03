@@ -24,12 +24,12 @@ import com.ramcosta.composedestinations.generated.media.destinations.MediaLinksB
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
-import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsBottomSheetDestination
 import com.ramcosta.composedestinations.generated.splashscreen.destinations.SplashScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.UsereditModuleDestinations
+import com.ramcosta.composedestinations.generated.userprofiles.destinations.UserProfilesScreenDestination
 
 
 @NavHostGraph(defaultTransitions = AppDefaultTransition::class)

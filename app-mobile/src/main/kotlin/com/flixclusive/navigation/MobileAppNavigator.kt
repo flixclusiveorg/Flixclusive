@@ -30,7 +30,7 @@ import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaPreviewBotto
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaScreen
 import com.flixclusive.feature.mobile.onboarding.NavigatorOnboardingScreen
 import com.flixclusive.feature.mobile.player.NavigatorPlayerSplashScreen
-import com.flixclusive.feature.mobile.profiles.NavigatorUserProfilesScreen
+import com.flixclusive.feature.mobile.player.PlayerScreenInitialHeader
 import com.flixclusive.feature.mobile.provider.add.NavigatorAddProviderScreen
 import com.flixclusive.feature.mobile.provider.details.NavigatorProviderDetailsBottomSheet
 import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerScreen
@@ -39,6 +39,7 @@ import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
 import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
 import com.flixclusive.feature.mobile.user.add.NavigatorAddUserScreenNavigateTo
 import com.flixclusive.feature.mobile.user.edit.NavigatorUserEditScreen
+import com.flixclusive.feature.mobile.user.profiles.NavigatorUserProfilesScreen
 import com.flixclusive.feature.splashScreen.NavigatorSplashScreen
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.tv.Episode
@@ -65,8 +66,6 @@ import com.ramcosta.composedestinations.generated.media.destinations.MediaLinksB
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
-import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination.invoke
-import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsBottomSheetDestination
 import com.ramcosta.composedestinations.generated.providermanage.destinations.ProviderManagerScreenDestination
@@ -78,6 +77,7 @@ import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetup
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.UserAvatarSelectScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.UserEditScreenDestination
+import com.ramcosta.composedestinations.generated.userprofiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 internal class MobileAppNavigator(
@@ -339,17 +339,21 @@ internal class MobileAppNavigator(
 
     override fun showPlayerSplashScreen(
         media: MediaMetadata,
-        streamUrl: String,
+        initialStreamUrl: String,
         episode: Episode?,
-        cacheId: String?,
+        initialCacheId: String?,
+        initialHeaders: Map<String, String>?
     ) {
         runOnResumed {
             navigator.navigate(
                 PlayerSplashScreenDestination(
                     media = media,
                     episode = episode,
-                    streamUrl = streamUrl,
-                    cacheId = cacheId,
+                    initialStreamUrl = initialStreamUrl,
+                    initialCacheId = initialCacheId,
+                    initialHeaders = initialHeaders?.let {
+                        PlayerScreenInitialHeader(headers = it)
+                    }
                 ),
             )
         }
@@ -357,17 +361,35 @@ internal class MobileAppNavigator(
 
     override fun navigateToPlayerScreen(
         media: MediaMetadata,
-        episode: Episode?
+        initialStreamUrl: String,
+        episode: Episode?,
+        initialCacheId: String?,
+        initialHeaders: Map<String, String>?
     ) {
         runOnResumed {
             navigator.navigate(
                 PlayerScreenDestination(
                     media = media,
                     episode = episode,
+                    initialStreamUrl = initialStreamUrl,
+                    initialCacheId = initialCacheId,
+                    initialHeaders = initialHeaders?.let {
+                        PlayerScreenInitialHeader(headers = it)
+                    }
                 ),
             ) {
                 // Clear player splash screen from back stack to prevent going back to it
-                popUpTo(PlayerSplashScreenDestination(media = media, episode = episode)) {
+                popUpTo(
+                    PlayerSplashScreenDestination(
+                        media = media,
+                        episode = episode,
+                        initialStreamUrl = initialStreamUrl,
+                        initialCacheId = initialCacheId,
+                        initialHeaders = initialHeaders?.let {
+                            PlayerScreenInitialHeader(headers = it)
+                        }
+                    )
+                ) {
                     inclusive = true
                 }
             }

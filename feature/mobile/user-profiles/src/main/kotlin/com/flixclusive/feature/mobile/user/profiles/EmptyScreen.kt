@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles
+package com.flixclusive.feature.mobile.user.profiles
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable

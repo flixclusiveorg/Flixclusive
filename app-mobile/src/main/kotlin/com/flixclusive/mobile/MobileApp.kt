@@ -1,7 +1,5 @@
 package com.flixclusive.mobile
 
-//noinspection UsingMaterialAndMaterial3Libraries
-//noinspection UsingMaterialAndMaterial3Libraries
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.compose.animation.AnimatedVisibility
@@ -16,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.navigation.ModalBottomSheetLayout
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.navigation.rememberBottomSheetNavigator
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,7 +71,6 @@ import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpd
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
-import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
 import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
@@ -81,6 +80,7 @@ import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetup
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.UserAvatarSelectScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.UserEditScreenDestination
+import com.ramcosta.composedestinations.generated.userprofiles.destinations.UserProfilesScreenDestination
 import com.ramcosta.composedestinations.spec.Route
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
