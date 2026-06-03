@@ -40,7 +40,7 @@ internal object PlayerModule {
         appDispatchers: AppDispatchers
     ): AppDataSourceFactory {
         val playerPreferences = runBlocking(appDispatchers.io) {
-            dataStoreManager.getUserPrefs(
+            dataStoreManager.getUserPrefsAsFlow(
                 key = UserPreferences.PLAYER_PREFS_KEY,
                 type = PlayerPreferences::class
             ).first()

@@ -102,7 +102,7 @@ internal class ProviderManagerViewModel @Inject constructor(
     )
 
     val isFirstTimeOnProvidersScreen = dataStoreManager
-        .getUserPrefs(UserPreferences.USER_ON_BOARDING_PREFS_KEY, UserOnBoarding::class)
+        .getUserPrefsAsFlow(UserPreferences.USER_ON_BOARDING_PREFS_KEY, UserOnBoarding::class)
         .map { it.isFirstTimeOnProvidersScreen }
         .distinctUntilChanged()
         .stateIn(

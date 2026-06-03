@@ -15,6 +15,8 @@ data class PlayerPreferences(
     val isDurationReversed: Boolean = true,
     val isPiPModeEnabled: Boolean = true,
     val isUsingVolumeBoost: Boolean = false,
+    val isAutoSelectingServer: Boolean = true,
+    val thresholdForNextEpisodeQueue: Float = 0.8f,
     val audioLanguage: String = "en",
     /** Unset = -1 = Default */
     val bufferCacheSize: Long = -1,

@@ -30,6 +30,7 @@ internal object PreviewPlayerData {
                 url = url,
                 headers = null,
                 source = TrackSource.REMOTE,
+                isDead = false
             )
         }
     }
@@ -39,12 +40,14 @@ internal object PreviewPlayerData {
             PlayerSubtitle(
                 label = "Portuguese",
                 url = "https://cdmdemo.contentdm.oclc.org/utils/getfile/collection/p15700coll2/id/18/filename/video2.vtt",
-                source = TrackSource.REMOTE
+                source = TrackSource.REMOTE,
+                isDead = false
             ),
             PlayerSubtitle(
                 label = "English",
                 url = "https://commons.wikimedia.org/w/api.php?action=timedtext&title=File%3ABig_Buck_Bunny_4K.webm&lang=en&trackformat=vtt",
-                source = TrackSource.REMOTE
+                source = TrackSource.REMOTE,
+                isDead = false
             ),
         )
     }

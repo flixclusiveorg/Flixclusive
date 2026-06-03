@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -39,6 +40,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -83,6 +85,7 @@ import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
+import com.flixclusive.domain.provider.util.LinkMatcher.getIndexOfPreferredQuality
 import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaLinksBottomSheet
 import com.flixclusive.model.media.MediaMetadata
@@ -119,6 +122,7 @@ internal fun MediaLinksBottomSheet(
     viewModel: MediaLinksBottomSheetViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val playerPrefs by viewModel.playerPrefs.collectAsStateWithLifecycle()
     val links by viewModel.links.collectAsStateWithLifecycle()
 
     val activity = LocalContext.current.getActivity<ComponentActivity>()
@@ -135,14 +139,38 @@ internal fun MediaLinksBottomSheet(
     MediaLinksBottomSheetContent(
         state = { uiState.loadLinksState },
         links = { links },
+        canSkipLoading = {
+            playerPrefs.isAutoSelectingServer
+                && links?.streams?.any { it.isValid } == true
+                && uiState.loadLinksState.isLoading
+        },
+        canAutoSelectStream = { playerPrefs.isAutoSelectingServer },
         onResetAndRetry = viewModel::onResetAndRetry,
         onTestLinks = viewModel::onTestLinks,
+        onSkipLoading = {
+            val selectedStreamIndex = links?.streams?.getIndexOfPreferredQuality(playerPrefs.quality) {
+                containsMatchIn(it.label) || containsMatchIn(it.url)
+            }
+
+            if (selectedStreamIndex != null) {
+                val stream = links!!.streams[selectedStreamIndex]
+
+                navigator.showPlayerSplashScreen(
+                    media = uiState.metadata,
+                    episode = uiState.episode,
+                    initialCacheId = stream.parentId,
+                    initialStreamUrl = stream.url,
+                    initialHeaders = stream.customHeaders
+                )
+            }
+        },
         onLinkClick = {
             navigator.showPlayerSplashScreen(
                 media = uiState.metadata,
                 episode = uiState.episode,
-                cacheId = it.parentId,
-                streamUrl = it.url
+                initialCacheId = it.parentId,
+                initialStreamUrl = it.url,
+                initialHeaders = it.customHeaders
             )
         },
     )
@@ -153,9 +181,12 @@ internal fun MediaLinksBottomSheet(
 private fun MediaLinksBottomSheetContent(
     state: () -> LoadLinksState,
     links: () -> CachedMediaLinksWithData?,
+    canSkipLoading: () -> Boolean,
+    canAutoSelectStream: () -> Boolean,
     onLinkClick: (DBStream) -> Unit,
     onResetAndRetry: () -> Unit,
     onTestLinks: () -> Unit,
+    onSkipLoading: () -> Unit,
 ) {
     val combinedLinks by remember {
         derivedStateOf {
@@ -169,7 +200,21 @@ private fun MediaLinksBottomSheetContent(
     val isLoading by remember {
         derivedStateOf {
             state().isLoading
-                || (state().isSuccess && links()?.hasValidLinks == true)
+                || (
+                    state().isSuccess
+                        && links()?.hasValidLinks == true
+                        && links()?.hasPlayableLinks == true
+                        && canAutoSelectStream()
+                    )
+        }
+    }
+
+    val showActions by remember {
+        derivedStateOf {
+            val currentState = state()
+            val currentLinks = links()
+            currentState.isSuccess ||
+                (currentState.isError && currentLinks?.hasValidLinks == true)
         }
     }
 
@@ -189,13 +234,45 @@ private fun MediaLinksBottomSheetContent(
             modifier = Modifier.padding(vertical = 20.dp)
         ) {
             if (isLoading) {
-                item {
+                item(
+                    key = "progress_header"
+                ) {
                     ProgressHeader(
                         state = state,
+                        canSkipLoading = canSkipLoading,
+                        onSkipLoading = onSkipLoading,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 10.dp),
+                            .animateItem(),
                     )
+                }
+            }
+
+            if (showActions) {
+                item(
+                    key = "actions_row"
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
+                            .animateItem(),
+                    ) {
+                        OutlinedButton(
+                            onClick = onTestLinks,
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(text = stringResource(LocaleR.string.test_links_label))
+                        }
+
+                        Button(
+                            onClick = onResetAndRetry,
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(text = stringResource(LocaleR.string.reset_and_retry))
+                        }
+                    }
                 }
             }
 
@@ -222,6 +299,10 @@ private fun MediaLinksBottomSheetContent(
             }
 
             if (links()?.hasValidLinks == true) {
+                item {
+                    Spacer(modifier = Modifier.padding(top = 10.dp))
+                }
+
                 if (state().isError) {
                     item {
                         ErrorItem(
@@ -248,37 +329,6 @@ private fun MediaLinksBottomSheetContent(
             }
 
             item {
-                val showActions by remember {
-                    derivedStateOf {
-                        val currentState = state()
-                        val currentLinks = links()
-                        currentState.isSuccess ||
-                            (currentState.isError && currentLinks?.hasValidLinks == true)
-                    }
-                }
-
-                AnimatedVisibility(
-                    visible = showActions,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                    ) {
-                        OutlinedButton(onClick = onTestLinks) {
-                            Text(text = stringResource(LocaleR.string.test_links_label))
-                        }
-                        Button(onClick = onResetAndRetry) {
-                            Text(text = stringResource(LocaleR.string.reset_and_retry))
-                        }
-                    }
-                }
-            }
-
-            item {
                 Spacer(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars))
             }
         }
@@ -288,48 +338,60 @@ private fun MediaLinksBottomSheetContent(
 @Composable
 private fun ProgressHeader(
     state: () -> LoadLinksState,
+    canSkipLoading: () -> Boolean,
+    onSkipLoading: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AnimatedVisibility(
-        visible = state().isLoading,
-        enter = fadeIn(),
-        exit = scaleOut() + fadeOut(),
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier,
-        ) {
-            AnimatedContent(
-                targetState = state(),
-                contentAlignment = Alignment.Center,
-                transitionSpec = {
-                    val fadeSpec = tween<Float>(durationMillis = 320, easing = FastOutSlowInEasing)
-                    val slideSpec = tween<IntOffset>(durationMillis = 320, easing = FastOutSlowInEasing)
+        AnimatedContent(
+            targetState = state(),
+            contentAlignment = Alignment.Center,
+            transitionSpec = {
+                val fadeSpec = tween<Float>(durationMillis = 320, easing = FastOutSlowInEasing)
+                val slideSpec = tween<IntOffset>(durationMillis = 320, easing = FastOutSlowInEasing)
 
-                    if (targetState > initialState) {
-                        fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { it / 10 } togetherWith
-                            fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { -it / 10 }
-                    } else {
-                        fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { -it / 10 } togetherWith
-                            fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { it / 10 }
-                    }.using(SizeTransform(clip = false))
-                },
+                if (targetState > initialState) {
+                    fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { it / 10 } togetherWith
+                        fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { -it / 10 }
+                } else {
+                    fadeIn(fadeSpec) + slideInHorizontally(slideSpec) { -it / 10 } togetherWith
+                        fadeOut(fadeSpec) + slideOutHorizontally(slideSpec) { it / 10 }
+                }.using(SizeTransform(clip = false))
+            },
+        ) {
+            Text(
+                text = it.message.asString().trim(),
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
+            )
+        }
+
+        GradientLinearProgressIndicator(
+            modifier = Modifier.fillMaxWidth(0.7F),
+            colors = listOf(
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.tertiary,
+            ),
+        )
+
+        if (canSkipLoading()) {
+            ElevatedButton(
+                onClick = onSkipLoading,
+                shape = MaterialTheme.shapes.extraSmall,
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier =
+                    Modifier
+                        .height(30.dp),
             ) {
                 Text(
-                    text = it.message.asString().trim(),
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
+                    text = stringResource(id = LocaleR.string.label_skip_loading),
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
-
-            GradientLinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(0.7F),
-                colors = listOf(
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.tertiary,
-                ),
-            )
         }
     }
 }
@@ -632,9 +694,12 @@ private fun MediaLinksBottomSheetContentPreview() {
             MediaLinksBottomSheetContent(
                 state = { state },
                 links = { null },
+                canSkipLoading = { true },
+                canAutoSelectStream = { true },
                 onLinkClick = {},
                 onResetAndRetry = {},
                 onTestLinks = {},
+                onSkipLoading = {}
             )
         }
     }

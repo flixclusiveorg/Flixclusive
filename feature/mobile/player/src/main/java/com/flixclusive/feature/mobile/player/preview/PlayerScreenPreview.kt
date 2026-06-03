@@ -105,7 +105,7 @@ private fun PlayerScreenBasePreview() {
         delay(3000)
         loadLinksState = LoadLinksState.Unavailable()
         delay(3000)
-        loadLinksState = LoadLinksState.Success(providerId = currentProvider.id)
+        loadLinksState = LoadLinksState.Success
         delay(1500)
         loadLinksState = LoadLinksState.Idle
     }
@@ -145,7 +145,6 @@ private fun PlayerScreenBasePreview() {
                 playerPreferences = playerPrefs,
                 subtitlesPreferences = subtitlePrefs,
                 servers = { servers },
-                failedStreamUrls = { setOf(servers[1].url) },
                 currentServer = { currentServer },
                 onServerChange = { onServerChange(it) },
                 onBack = { player.release() },

@@ -28,5 +28,6 @@ data class CachedMediaLinksWithData(
     val id: String get() = cache.id
     val size: Int get() = streams.size
     val providerId: String get() = cache.providerId
-    val hasValidLinks: Boolean get() = streams.any { it.isAliveAndValid }
+    val hasValidLinks: Boolean get() = streams.any { it.isValid }
+    val hasPlayableLinks: Boolean get() = streams.any { !it.isThirdPartyGateway }
 }

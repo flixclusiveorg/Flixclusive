@@ -72,7 +72,7 @@ class LoadProviderUseCaseImplTest {
         every { mockUserSessionDataStore.currentUserId } returns flowOf(testUserId)
 
         coEvery {
-            mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            mockDataStoreManager.getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
         } returns flowOf(ProviderPreferences())
 
         coEvery { mockProviderRepository.getProvider(any(), any()) } returns null

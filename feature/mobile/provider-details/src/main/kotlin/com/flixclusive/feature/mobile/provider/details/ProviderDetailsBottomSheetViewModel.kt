@@ -75,7 +75,7 @@ internal class ProviderDetailsBottomSheetViewModel @Inject constructor(
     val errors = _errors.asSharedFlow()
 
     val warnOnInstall = dataStoreManager
-        .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+        .getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
         .map { it.shouldWarnBeforeInstall }
         .distinctUntilChanged()
         .stateIn(

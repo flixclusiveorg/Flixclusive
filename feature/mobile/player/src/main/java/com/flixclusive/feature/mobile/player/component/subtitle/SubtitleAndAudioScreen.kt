@@ -78,7 +78,8 @@ internal fun SubtitleAndAudioScreen(
             val localSub = PlayerSubtitle(
                 url = filePath,
                 label = name,
-                source = TrackSource.LOCAL
+                source = TrackSource.LOCAL,
+                isDead = false
             )
 
             tracksState.onAddSubtitle(localSub)

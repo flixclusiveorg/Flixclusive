@@ -40,10 +40,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
-import com.flixclusive.core.database.entity.provider.CachedMediaLinksWithData
 import com.flixclusive.core.database.entity.provider.DBStream
 import com.flixclusive.core.database.entity.provider.DBSubtitle
-import com.flixclusive.core.database.entity.provider.isAliveAndValid
 import com.flixclusive.core.datastore.model.FlixclusivePrefs
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
@@ -104,7 +102,7 @@ internal object ManageMediaLinksTweakScreen : BaseTweakScreen<FlixclusivePrefs> 
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = entry.media?.title ?: entry.cache.mediaId,
+                    text = entry.media.title,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -142,7 +140,7 @@ internal object ManageMediaLinksTweakScreen : BaseTweakScreen<FlixclusivePrefs> 
 
             // Streams and subtitles list
             val visibleStreams: List<DBStream> = remember(entry.streams, showDeadLinks) {
-                if (showDeadLinks) entry.streams else entry.streams.filter { it.isAliveAndValid }
+                if (showDeadLinks) entry.streams else entry.streams.filter { it.isValid }
             }
             val visibleSubtitles: List<DBSubtitle> = remember(entry.subtitles, showDeadLinks) {
                 if (showDeadLinks) entry.subtitles else entry.subtitles.filter { !it.isDead }
@@ -209,7 +207,6 @@ internal object ManageMediaLinksTweakScreen : BaseTweakScreen<FlixclusivePrefs> 
             // Action row
             HorizontalDivider()
             ActionRow(
-                entry = entry,
                 testState = testState,
                 onTestLinks = viewModel::onTestLinks,
                 onDeleteEntry = { viewModel.deleteEntry(entry.cache) },
@@ -376,7 +373,6 @@ private fun SubtitleItem(
 
 @Composable
 private fun ActionRow(
-    entry: CachedMediaLinksWithData,
     testState: Async<TestLinksProgress>?,
     onTestLinks: () -> Unit,
     onDeleteEntry: () -> Unit,
@@ -385,10 +381,10 @@ private fun ActionRow(
         (testState is Async.Success && testState.data is TestLinksProgress.Testing)
 
     Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         OutlinedButton(
             onClick = onTestLinks,
@@ -397,6 +393,7 @@ private fun ActionRow(
         ) {
             Text(stringResource(LocaleR.string.test_links_label))
         }
+
         Button(
             onClick = onDeleteEntry,
             colors = ButtonDefaults.buttonColors(

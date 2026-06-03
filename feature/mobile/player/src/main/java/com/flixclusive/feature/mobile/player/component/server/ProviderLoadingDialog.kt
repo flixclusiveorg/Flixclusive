@@ -140,7 +140,7 @@ internal fun ProviderLoadingDialog(
                             modifier = Modifier.height(30.dp),
                         ) {
                             Text(
-                                text = stringResource(id = LocaleR.string.skip_loading_message),
+                                text = stringResource(id = LocaleR.string.label_skip_loading),
                                 style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                             )
                         }

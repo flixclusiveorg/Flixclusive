@@ -552,7 +552,7 @@ class BackupRepositoryImplTest {
             transform: suspend (t: SystemPreferences) -> SystemPreferences
         ) = Unit
 
-        override fun <T : UserPreferences> getUserPrefs(
+        override fun <T : UserPreferences> getUserPrefsAsFlow(
             key: Preferences.Key<String>,
             type: KClass<T>
         ): Flow<T> {

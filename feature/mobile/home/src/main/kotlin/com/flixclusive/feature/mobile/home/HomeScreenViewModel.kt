@@ -98,7 +98,7 @@ internal class HomeScreenViewModel @Inject constructor(
 
     /** Displays the title of the media under the card */
     val showMediaTitles = dataStoreManager
-        .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
+        .getUserPrefsAsFlow(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
         .mapLatest { it.shouldShowTitleOnCards }
         .distinctUntilChanged()
         .stateIn(

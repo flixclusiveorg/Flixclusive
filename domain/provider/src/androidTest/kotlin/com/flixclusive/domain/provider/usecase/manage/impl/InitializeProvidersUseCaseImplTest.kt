@@ -83,7 +83,7 @@ class InitializeProvidersUseCaseImplTest {
 
         // Setup default mock behavior
         coEvery {
-            mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            mockDataStoreManager.getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
         } returns flowOf(ProviderPreferences())
 
         coEvery {
@@ -173,7 +173,7 @@ class InitializeProvidersUseCaseImplTest {
             )
 
             coEvery {
-                mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+                mockDataStoreManager.getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
             } returns flowOf(preferencesWithDebugProvider)
 
             val expectedDebugMetadata = debugMetadata.copy(

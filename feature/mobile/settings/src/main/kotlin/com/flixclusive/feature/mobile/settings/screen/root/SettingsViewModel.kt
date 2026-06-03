@@ -121,7 +121,7 @@ internal class SettingsViewModel @Inject constructor(
 
     inline fun <reified T : UserPreferences> getUserPrefsAsState(key: Preferences.Key<String>) =
         dataStoreManager
-            .getUserPrefs(key, type = T::class)
+            .getUserPrefsAsFlow(key, type = T::class)
             .distinctUntilChanged()
             .stateIn(
                 scope = viewModelScope,

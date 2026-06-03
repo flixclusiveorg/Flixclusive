@@ -7,7 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.DataStoreManager.Companion.getUserPrefsAsFlow
 import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.core.datastore.model.user.PlayerPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
@@ -44,6 +48,7 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     private val testMediaLinksUseCase: TestMediaLinksUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
+    private val dataStoreManager: DataStoreManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val args = savedStateHandle.navArgs<MediaLinksBottomSheetArgs>()
@@ -59,6 +64,14 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
         )
     )
     val uiState = _uiState.asStateFlow()
+
+    val playerPrefs = dataStoreManager
+        .getUserPrefsAsFlow<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = PlayerPreferences(),
+        )
 
 
     val links = userSessionDataStore.currentUserId

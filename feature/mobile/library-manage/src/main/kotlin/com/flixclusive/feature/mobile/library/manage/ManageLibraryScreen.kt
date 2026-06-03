@@ -502,7 +502,7 @@ private fun ManageLibraryScreenBasePreview() {
 
             val sortedList =
                 list.sortedWith(
-                    SortUtils.compareBy<LibraryListWithPreview>(
+                    SortUtils.compareBy(
                         ascending = uiState.selectedFilter.ascending,
                         selector = {
                             when (uiState.selectedFilter) {

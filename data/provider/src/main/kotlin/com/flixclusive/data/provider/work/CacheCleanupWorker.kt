@@ -32,7 +32,7 @@ internal class CacheCleanupWorker(
             dataStoreManager.usePreferencesByUserId(userId)
 
             val dataPrefs = dataStoreManager
-                .getUserPrefs(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
+                .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
                 .first()
 
             val retentionMs = dataPrefs.deadLinkRetentionDays.toLong() * 24L * 60L * 60L * 1000L

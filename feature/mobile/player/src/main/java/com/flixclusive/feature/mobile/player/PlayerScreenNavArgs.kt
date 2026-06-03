@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.player
 
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.tv.Episode
+import kotlinx.serialization.Serializable
 
 /**
  * Navigation arguments for the PlayerScreen.
@@ -11,7 +12,13 @@ import com.flixclusive.model.media.common.tv.Episode
  * */
 data class PlayerScreenNavArgs(
     val media: MediaMetadata,
-    val streamUrl: String,
+    val initialStreamUrl: String,
+    val initialCacheId: String?,
+    val initialHeaders: PlayerScreenInitialHeader?,
     val episode: Episode?,
-    val cacheId: String?,
+)
+
+@Serializable
+data class PlayerScreenInitialHeader(
+    val headers: Map<String, String>
 )

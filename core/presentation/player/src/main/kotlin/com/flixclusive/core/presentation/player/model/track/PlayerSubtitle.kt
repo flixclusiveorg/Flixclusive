@@ -9,6 +9,7 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class PlayerSubtitle(
     override val label: String,
+    override val isDead: Boolean,
     val url: String,
     val source: TrackSource,
 ) : PlayerTrack {

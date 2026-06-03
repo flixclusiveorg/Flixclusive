@@ -3,4 +3,5 @@
     <string name="unlock">Unlock</string>
     <string name="lock">Lock</string>
     <string name="no_servers_error">Player found no streamable sources, returning to previous screen…</string>
+    <string name="error_on_server_change_fail">Server doesn\'t belong to any cache</string>
 </resources>

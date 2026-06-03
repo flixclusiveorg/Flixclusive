@@ -92,7 +92,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
         val repositoryDirectory = localDir.listFiles()
 
         val addDebugSuffix = dataStoreManager
-            .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            .getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
             .map { it.shouldAddDebugPrefix }
             .first()
 

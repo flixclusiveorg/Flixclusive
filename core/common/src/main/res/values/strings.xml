@@ -3,7 +3,7 @@
     <string name="source_data_dialog_state_error_default">Something went wrong trying to get links</string>
     <string name="source_data_dialog_state_extracting">Extracting video data…</string>
     <string name="source_data_dialog_state_fetching">Fetching video data…</string>
-    <string name="source_data_dialog_state_success">Links found!</string>
+    <string name="source_data_dialog_state_success">Starting player…</string>
     <string name="source_data_dialog_state_unavailable_default">No links available</string>
     <string name="paging_state_default_error">An error occurred while loading data</string>
 

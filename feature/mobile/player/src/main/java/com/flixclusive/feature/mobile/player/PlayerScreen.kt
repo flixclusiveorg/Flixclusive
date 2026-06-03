@@ -62,7 +62,6 @@ internal fun PlayerScreen(
     val currentSeason by viewModel.seasonToDisplay.collectAsStateWithLifecycle()
 
     val servers by viewModel.servers.collectAsStateWithLifecycle()
-    val failedStreamUrls by viewModel.failedStreamUrls.collectAsStateWithLifecycle()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val canSkipLoading by viewModel.canSkipLoading.collectAsStateWithLifecycle()
@@ -90,7 +89,7 @@ internal fun PlayerScreen(
 
         merge(
             viewModel.player.errors,
-            viewModel.scrobblingError
+            viewModel.playerErrors
         ).collect { error ->
             snackbarState.showError(error.asString(context))
         }
@@ -116,7 +115,6 @@ internal fun PlayerScreen(
         currentProvider = currentProvider,
         providers = providers,
         servers = { servers },
-        failedStreamUrls = { failedStreamUrls },
         currentSeason = { currentSeason },
         currentServer = { uiState.currentServer },
         loadLinksState = { uiState.loadLinksState },
@@ -149,7 +147,6 @@ internal fun PlayerScreenContent(
     subtitlesPreferences: SubtitlesPreferences,
     currentEpisode: Episode?,
     servers: () -> List<PlayerServer>,
-    failedStreamUrls: () -> Set<String>,
     currentSeason: () -> SeasonWithProgress?,
     currentServer: () -> Int,
     currentProvider: ProviderMetadata,
@@ -159,7 +156,7 @@ internal fun PlayerScreenContent(
     snackbarState: PlayerSnackbarState,
     onBack: () -> Unit,
     onServerChange: (Int) -> Unit,
-    onServerFail: (Int) -> Unit,
+    onServerFail: (String) -> Unit,
     onProviderChange: (ProviderMetadata) -> Unit,
     onSkipProviderLoading: () -> Unit,
     onCancelLoading: () -> Unit,
@@ -198,7 +195,6 @@ internal fun PlayerScreenContent(
             currentSeason = currentSeason,
             currentResizeMode = resizeMode,
             servers = servers,
-            failedStreamUrls = failedStreamUrls,
             currentServer = currentServer,
             onEpisodeChange = currentEpisode?.let { onEpisodeChange },
             onSeasonChange = currentEpisode?.let { onSeasonChange },

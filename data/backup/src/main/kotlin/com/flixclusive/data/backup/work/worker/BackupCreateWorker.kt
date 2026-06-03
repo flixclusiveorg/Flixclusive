@@ -92,7 +92,7 @@ internal class BackupCreateWorker(
                 )
 
             val dataPreferences = dataStoreManager
-                .getUserPrefs(UserPreferences.DATA_PREFS_KEY, type = DataPreferences::class)
+                .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, type = DataPreferences::class)
                 .first()
 
             val maxBackups = dataPreferences.maxBackups.coerceAtLeast(1)

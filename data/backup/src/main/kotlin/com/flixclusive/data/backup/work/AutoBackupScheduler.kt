@@ -43,7 +43,7 @@ class AutoBackupScheduler @Inject constructor(
 
                     previousUserId = currentUserId
                     dataStoreManager
-                        .getUserPrefs(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
+                        .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
                         .map { it.autoBackupFrequencyDays }
                         .distinctUntilChanged()
                         .debounce(2000L)

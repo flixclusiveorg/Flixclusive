@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
-const val REMOTE_FORM_URL =
+const val URL_CRASH_REPORT_FORM =
     "https://docs.google.com/forms/u/0/d/e/1FAIpQLSfTVmgiOeF7RlDbjBR10RQG6C6uKioSk-toqKecPvpkAe9ffw/formResponse?pli=1"
 
 internal class CrashReportSenderImpl @Inject constructor(
@@ -23,7 +23,7 @@ internal class CrashReportSenderImpl @Inject constructor(
         withContext(dispatchers.io) {
             val response = client
                 .formRequest(
-                    url = REMOTE_FORM_URL,
+                    url = URL_CRASH_REPORT_FORM,
                     method = HttpMethod.POST,
                     body = mapOf("entry.1687138646" to errorLog),
                 ).execute()

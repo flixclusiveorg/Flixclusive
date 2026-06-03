@@ -76,7 +76,7 @@ internal class MediaLinksTweakViewModel @Inject constructor(
         )
 
     val showMediaTitles = dataStoreManager
-        .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
+        .getUserPrefsAsFlow(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
         .map { it.shouldShowTitleOnCards }
         .distinctUntilChanged()
         .stateIn(

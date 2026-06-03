@@ -1,7 +1,6 @@
 package com.flixclusive.domain.provider.usecase.links.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.database.entity.provider.isAliveAndValid
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.provider.usecase.links.TestLinksProgress
 import com.flixclusive.domain.provider.usecase.links.TestMediaLinksUseCase
@@ -21,7 +20,7 @@ internal class TestMediaLinksUseCaseImpl @Inject constructor(
     override operator fun invoke(id: String) = flow {
         val entry = mediaLinksRepository.getLinksById(id) ?: return@flow
         val parentId = entry.cache.id
-        val streams = entry.streams.filter { it.isAliveAndValid }
+        val streams = entry.streams.filter { it.isValid }
         val total = streams.size
 
         var aliveCount = 0

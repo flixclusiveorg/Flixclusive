@@ -104,7 +104,7 @@ internal class DataStoreManagerImpl @Inject constructor(
         }
     }
 
-    override fun <T : UserPreferences> getUserPrefs(
+    override fun <T : UserPreferences> getUserPrefsAsFlow(
         key: Preferences.Key<String>,
         type: KClass<T>
     ): Flow<T> {

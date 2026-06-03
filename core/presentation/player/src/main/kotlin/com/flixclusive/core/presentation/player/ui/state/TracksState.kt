@@ -113,7 +113,8 @@ class TracksState(
                 PlayerSubtitle(
                     url = format.id ?: "",
                     label = format.getName(type, i),
-                    source = source
+                    source = source,
+                    isDead = false
                 )
             )
         }
@@ -186,7 +187,8 @@ class TracksState(
             PlayerSubtitle(
                 url = "",
                 label = "Off",
-                source = TrackSource.EMBEDDED
+                source = TrackSource.EMBEDDED,
+                isDead = false
             )
         )
     }
