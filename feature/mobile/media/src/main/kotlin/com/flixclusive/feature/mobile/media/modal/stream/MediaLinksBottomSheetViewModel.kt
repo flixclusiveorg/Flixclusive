@@ -131,8 +131,6 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     }
 
     fun onFetchMediaLinks() {
-        if (onFetchMediaLinksJob?.isActive == true) return
-
         onFetchMediaLinksJob?.cancel()
         onFetchMediaLinksJob = viewModelScope.launch {
             updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.media_data_fetching))
@@ -190,7 +188,7 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             )
 
             if (data != null) {
-                mediaLinksRepository.deleteAll(data.id)
+                mediaLinksRepository.deleteCache(data.id)
             }
 
             onFetchMediaLinks()
