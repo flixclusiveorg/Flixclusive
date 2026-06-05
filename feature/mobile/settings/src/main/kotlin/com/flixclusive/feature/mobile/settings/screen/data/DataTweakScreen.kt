@@ -35,13 +35,13 @@ internal class DataTweakScreen(
     }
 
     @Composable
-    override fun getTitle(): String = stringResource(LocaleR.string.data_and_backup)
+    override fun getTitle(): String = stringResource(LocaleR.string.data)
 
     @Composable
     override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.database_icon_thin)
 
     @Composable
-    override fun getDescription(): String = stringResource(LocaleR.string.data_and_backup_settings_content_desc)
+    override fun getDescription(): String = stringResource(LocaleR.string.data_settings_content_desc)
 
     @Composable
     override fun getTweaks(): List<Tweak> {

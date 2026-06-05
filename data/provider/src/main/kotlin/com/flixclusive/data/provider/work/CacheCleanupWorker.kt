@@ -44,6 +44,7 @@ internal class CacheCleanupWorker(
             )
 
             entryPoint.cachedMediaLinksDao().deleteOrphaned(userId)
+            // TODO: Remove also cache that only have third party gateway links
 
             Result.success()
         }

@@ -74,7 +74,6 @@
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
     <string name="data">Data</string>
-    <string name="data_and_backup">Data and backup</string>
     <string name="debug">DEBUG</string>
     <string name="decoder_priority">Player\'s decoder priority</string>
     <string name="default_label">(default)</string>
@@ -97,7 +96,6 @@
     <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
     <string name="general">General</string>
     <string name="get_search_results_from">Get search results from:</string>
-    <string name="github">GITHUB</string>
     <string name="heads_up">Heads up!</string>
     <string name="help">Help</string>
     <string name="hide_error_logs">Hide error logs</string>
@@ -333,7 +331,7 @@
 
     <!--  Tweak/settings screens descriptions  -->
     <string name="appearance_settings_content_desc">This contains all the settings to customize how the general appearance of the app look and feel.</string>
-    <string name="data_and_backup_settings_content_desc">This contains all the settings to customize how your data is handled.</string>
+    <string name="data_settings_content_desc">This contains all the settings to customize how your data is handled.</string>
     <string name="player_settings_content_desc">This contains all the settings that are related to the player including subtitles, audio and UI.</string>
     <string name="providers_settings_content_desc">This contains all the settings to manage how providers are managed.</string>
     <string name="subtitles_settings_content_desc">This contains all the settings to customize how subtitles are displayed.</string>

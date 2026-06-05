@@ -60,7 +60,7 @@ import com.flixclusive.core.presentation.mobile.components.media.MediaCard
 import com.flixclusive.core.presentation.mobile.components.media.MediaCardPlaceholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
-import com.flixclusive.feature.mobile.preferences.R
+import com.flixclusive.feature.mobile.settings.R
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator

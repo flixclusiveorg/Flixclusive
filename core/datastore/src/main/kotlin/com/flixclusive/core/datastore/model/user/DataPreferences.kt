@@ -34,4 +34,4 @@ data class DataPreferences(
 
 private const val DEFAULT_AUTO_BACKUP_FREQUENCY_DAYS = 7
 private const val DEFAULT_MAX_BACKUPS = 5
-private const val DEFAULT_DEAD_LINK_RETENTION_DAYS = 7
+private const val DEFAULT_DEAD_LINK_RETENTION_DAYS = 1

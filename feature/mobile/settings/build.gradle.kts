@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.preferences"
+    namespace = "com.flixclusive.feature.mobile.settings"
 }
 
 dependencies {

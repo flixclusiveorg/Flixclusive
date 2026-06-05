@@ -2,24 +2,17 @@ package com.flixclusive.feature.mobile.settings.screen.root
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationItem
 import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
+import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -37,7 +30,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -49,6 +41,7 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.presentation.mobile.extensions.getAvatarResource
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.feature.mobile.settings.R
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
@@ -123,7 +116,7 @@ internal fun SettingsScreen(
                     SubtitlesTweakScreen(viewModel),
                     SystemTweakScreen(viewModel),
                 ),
-            LocaleR.string.github to
+            R.string.github to
                 listOf(
                     ReportBugTweakNavigation,
                     FeatureRequestTweakNavigation,
@@ -133,18 +126,13 @@ internal fun SettingsScreen(
     }
     val navigationItems = remember { items.values.flatten() }
 
-    BackHandler(scaffoldNavigator.canNavigateBack()) {
-        scope.launch {
-            scaffoldNavigator.navigateBack()
-        }
-    }
-
     if (currentUser != null) {
         CompositionLocalProvider(
             LocalScaffoldNavigator provides scaffoldNavigator,
             LocalSettingsNavigator provides navigator,
         ) {
-            ListDetailPaneScaffold(
+            NavigableListDetailPaneScaffold(
+                navigator = scaffoldNavigator,
                 modifier = Modifier
                     .padding(LocalGlobalScaffoldPadding.current)
                     .drawBehind {
@@ -152,8 +140,6 @@ internal fun SettingsScreen(
                             drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
                         }
                     },
-                directive = scaffoldNavigator.scaffoldDirective,
-                value = scaffoldNavigator.scaffoldValue,
                 listPane = {
                     AnimatedPane {
                         ListContent(
@@ -178,44 +164,27 @@ internal fun SettingsScreen(
                 },
                 detailPane = {
                     AnimatedPane {
+                        val screen by remember {
+                            derivedStateOf {
+                                navigationItems.fastFirstOrNull {
+                                    if (it is BaseTweakNavigation) {
+                                        return@fastFirstOrNull false
+                                    }
 
-                    }
-                    val screen by remember {
-                        derivedStateOf {
-                            navigationItems.fastFirstOrNull {
-                                if (it is BaseTweakNavigation) {
-                                    return@fastFirstOrNull false
+                                    it.key.name == scaffoldNavigator.currentDestination?.contentKey
                                 }
-
-                                it.key.name == scaffoldNavigator.currentDestination?.contentKey
                             }
                         }
-                    }
 
-                    if (screen != null) {
-                        val isListVisible =
-                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
-                                PaneAdaptedValue.Expanded
+                        if (screen != null) {
+                            val isListVisible =
+                                scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
+                                    PaneAdaptedValue.Expanded
 
-                        AnimatedContent(
-                            targetState = screen!!,
-                            label = "DetailsContent",
-                            transitionSpec = {
-                                val spring = spring<IntOffset>(Spring.DampingRatioLowBouncy)
-
-                                if (initialState.isSubNavigation) {
-                                    slideInHorizontally(spring) { -it } togetherWith
-                                        slideOutHorizontally(spring) { it }
-                                } else {
-                                    slideInHorizontally(spring) { it } togetherWith
-                                        slideOutHorizontally(spring) { -it }
-                                }
-                            },
-                        ) {
                             DetailsScaffold(
                                 isListAndDetailVisible = isListAndDetailVisible,
                                 isDetailsVisible = !isListVisible,
-                                content = { it.Content() },
+                                content = { screen!!.Content() },
                                 navigateBack = {
                                     scope.launch {
                                         if (scaffoldNavigator.canNavigateBack()) {
