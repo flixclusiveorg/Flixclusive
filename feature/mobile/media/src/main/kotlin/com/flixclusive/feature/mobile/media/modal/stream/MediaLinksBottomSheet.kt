@@ -155,7 +155,9 @@ internal fun MediaLinksBottomSheet(
             }
 
             val selectedStreamIndex = links?.streams?.getIndexOfPreferredQuality(playerPrefs.quality) {
-                containsMatchIn(it.label) || containsMatchIn(it.url)
+                (containsMatchIn(it.label) || containsMatchIn(it.url))
+                    && it.isValid
+                    && !it.isThirdPartyGateway
             } ?: return@combine null
 
             links.streams.getOrNull(selectedStreamIndex)
@@ -187,7 +189,9 @@ internal fun MediaLinksBottomSheet(
         onTestLinks = viewModel::onTestLinks,
         onSkipLoading = {
             val selectedStreamIndex = links?.streams?.getIndexOfPreferredQuality(playerPrefs.quality) {
-                containsMatchIn(it.label) || containsMatchIn(it.url)
+                (containsMatchIn(it.label) || containsMatchIn(it.url))
+                    && it.isValid
+                    && !it.isThirdPartyGateway
             }
 
             if (selectedStreamIndex != null) {
@@ -202,7 +206,7 @@ internal fun MediaLinksBottomSheet(
                 )
             }
         },
-        onLinkClick = {
+        onPlayLink = {
             navigator.showPlayerSplashScreen(
                 media = uiState.metadata,
                 episode = uiState.episode,
@@ -221,7 +225,7 @@ private fun MediaLinksBottomSheetContent(
     links: () -> CachedMediaLinksWithData?,
     canSkipLoading: () -> Boolean,
     canAutoSelectStream: () -> Boolean,
-    onLinkClick: (DBStream) -> Unit,
+    onPlayLink: (DBStream) -> Unit,
     onResetAndRetry: () -> Unit,
     onTestLinks: () -> Unit,
     onSkipLoading: () -> Unit,
@@ -359,7 +363,7 @@ private fun MediaLinksBottomSheetContent(
                         modifier = Modifier.animateItem(),
                         onClick = {
                             if (it is DBStream) {
-                                onLinkClick(it)
+                                onPlayLink(it)
                             }
                         },
                     )
@@ -734,7 +738,7 @@ private fun MediaLinksBottomSheetContentPreview() {
                 links = { null },
                 canSkipLoading = { true },
                 canAutoSelectStream = { true },
-                onLinkClick = {},
+                onPlayLink = {},
                 onResetAndRetry = {},
                 onTestLinks = {},
                 onSkipLoading = {}
