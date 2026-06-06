@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.media3.common.C
@@ -86,7 +87,14 @@ class TracksState(
             val name = format.getName(type, i)
             infoLog("Found audio track ${i + 1}: ${format.getName(type, i)}")
 
-            audios.add(name)
+            // Check if the audio track is already added then add a suffix to differentiate them
+            var uniqueName = name
+            var suffix = 1
+            while (audios.fastAny { it == uniqueName }) {
+                uniqueName = "$name (${suffix++})"
+            }
+
+            audios.add(uniqueName)
         }
     }
 
