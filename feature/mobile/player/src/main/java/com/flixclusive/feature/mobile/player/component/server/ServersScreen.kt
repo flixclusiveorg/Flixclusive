@@ -48,15 +48,19 @@ internal fun ServersScreen(
     servers: () -> List<PlayerServer>,
     currentServer: () -> Int,
     onServerChange: (Int) -> Unit,
-    providers: List<ProviderMetadata>,
-    currentProvider: ProviderMetadata,
+    providers: () -> List<ProviderMetadata>,
+    currentProvider: () -> ProviderMetadata,
     onProviderChange: (ProviderMetadata) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val clipboardManager = LocalClipboard.current
-    val selectedProviderIndex by remember(currentProvider) {
-        derivedStateOf { providers.indexOfFirst { it.id == currentProvider.id }.coerceAtLeast(0) }
+    val selectedProviderIndex by remember {
+        derivedStateOf {
+            providers()
+                .indexOfFirst { it.id == currentProvider().id }
+                .coerceAtLeast(0)
+        }
     }
 
     val hasFailedStreams by remember {
@@ -107,10 +111,10 @@ internal fun ServersScreen(
                     icon = painterResource(id = UiCommonR.drawable.provider_logo),
                     contentDescription = stringResource(id = LocaleR.string.providers),
                     label = stringResource(id = LocaleR.string.providers),
-                    items = providers,
+                    items = providers(),
                     selectedIndex = selectedProviderIndex,
                     onItemClick = {
-                        val provider = providers[it]
+                        val provider = providers()[it]
                         onProviderChange(provider)
                     },
                     modifier = Modifier

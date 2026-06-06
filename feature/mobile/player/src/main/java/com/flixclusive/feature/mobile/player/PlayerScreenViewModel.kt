@@ -32,6 +32,8 @@ import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.model.track.PlayerServer
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.MediaLinksRepository
@@ -39,6 +41,7 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.domain.provider.usecase.tracker.SyncToScrobblersUseCase
 import com.flixclusive.domain.provider.util.LinkMatcher.getIndexOfPreferredQuality
@@ -48,6 +51,7 @@ import com.flixclusive.feature.mobile.player.util.extensions.toPlayerSubtitles
 import com.flixclusive.model.media.Movie
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.tracker.ScrobbleAction
 import com.ramcosta.composedestinations.generated.player.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,6 +65,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -89,6 +94,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val getMediaLinks: GetMediaLinksUseCase,
     private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     private val providerRepository: ProviderRepository,
+    private val getProviderMetadata: GetProviderMetadataUseCase,
     private val setWatchProgress: SetWatchProgressUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
@@ -154,24 +160,11 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     private val media get() = navArgs.media
 
-    val providers = userSessionDataStore.currentUserId
-        .filterNotNull()
-        .flatMapLatest { userId ->
-            providerRepository.getProvidersWithCapabilityAsFlow(
-                ownerId = userId,
-                capability = ProviderCapability.MEDIA_LINK
-            ).mapLatest { list ->
-                list.fastMapNotNull { provider ->
-                    if (!provider.isMediaLinkEnabled) return@fastMapNotNull null
-                    provider.metadata
-                }
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList(),
-        )
+    private val _providers = MutableStateFlow<Async<List<ProviderMetadata>>>(Async.Loading)
+    val providers = _providers.asStateFlow()
+
+    private val _servers = MutableStateFlow<Async<List<PlayerServer>>>(Async.Loading)
+    val servers = _servers.asStateFlow()
 
     private val _uiState = MutableStateFlow(
         value = PlayerUiState(
@@ -192,28 +185,10 @@ internal class PlayerScreenViewModel @Inject constructor(
             initialValue = navArgs.episode
         )
 
-    val servers = combine(
-        userSessionDataStore.currentUserId.filterNotNull(),
-        selectedEpisode.debounce(600)
-    ) { userId, episode -> userId to episode }
-        .flatMapLatest { (userId, episode) ->
-            mediaLinksRepository.observeLinks(
-                ownerId = userId,
-                mediaId = navArgs.media.id,
-                episodeNumber = episode?.number,
-                seasonNumber = episode?.season
-            ).mapLatest {
-                it?.streams?.toPlayerServers() ?: emptyList()
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList(),
-        )
-
     val canSkipLoading = servers
         .debounce(600)
-        .mapLatest { it.isNotEmpty() }
+        .mapLatest { (it as? Async.Success)?.data }
+        .mapLatest { it?.isNotEmpty() == true }
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
@@ -332,7 +307,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         val currentServer = _uiState.value.currentServer
         val currentProvider = _uiState.value.currentProvider
         _uiState.update {
-            it.copy(currentProvider = providerId, currentServer = 0)
+            it.copy(currentProvider = providerId, currentServer = -1)
         }
 
         changeProviderJob = viewModelScope.launch {
@@ -543,14 +518,17 @@ internal class PlayerScreenViewModel @Inject constructor(
 
         val prefs = playerPreferences.value
 
-        var currentServer = _uiState.value.currentServer
-        if (prefs.isAutoSelectingServer && currentServer !in servers.indices) {
-            currentServer = servers.getIndexOfPreferredQuality(prefs.quality) {
-                containsMatchIn(it.label) || containsMatchIn(it.url)
+        val currentServer = when {
+            !prefs.isAutoSelectingServer -> 0
+            prefs.isAutoSelectingServer && _uiState.value.currentServer !in servers.indices -> {
+                servers.getIndexOfPreferredQuality(prefs.quality) {
+                    containsMatchIn(it.label) || containsMatchIn(it.url)
+                }
             }
-
-            _uiState.update { it.copy(currentServer = currentServer) }
+            else -> _uiState.value.currentServer
         }
+
+        _uiState.update { it.copy(currentServer = currentServer) }
 
         prepare(
             server = servers[currentServer],
@@ -723,38 +701,111 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     private fun initialize() {
         viewModelScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val cache = navArgs.initialCacheId?.let {
-                mediaLinksRepository.getLinksById(it)
-            } ?: CachedMediaLinksWithData(
-                subtitles = emptyList(),
-                media = navArgs.media.toDBMedia(),
-                cache = CachedMediaLinks(
-                    providerId = KEY_LOCAL_PROVIDER,
-                    id = KEY_LOCAL_CACHE,
-                    ownerId = userId,
-                    mediaId = navArgs.media.id,
-                ),
-                streams = listOf(
-                    DBStream(
-                        parentId = KEY_LOCAL_CACHE,
-                        url = navArgs.initialStreamUrl,
-                        label = navArgs.initialStreamUrl,
-                        customHeaders = navArgs.initialHeaders?.headers
-                    )
-                ),
-            )
+            launch {
+                userSessionDataStore.currentUserId
+                    .filterNotNull()
+                    .flatMapLatest { userId ->
+                        providerRepository.getProvidersWithCapabilityAsFlow(
+                            ownerId = userId,
+                            capability = ProviderCapability.MEDIA_LINK
+                        ).mapLatest { list ->
+                            var foundMetadataProvider = false
+                            val mappedList = list.fastMapNotNull { provider ->
+                                if (provider.id == navArgs.media.providerId) {
+                                    foundMetadataProvider = true
+                                    return@fastMapNotNull provider.metadata
+                                }
 
-            val nextEpisode = getNextEpisode(navArgs.episode)
-            _uiState.update {
-                it.copy(nextEpisode = nextEpisode)
+                                if (!provider.isMediaLinkEnabled) return@fastMapNotNull null
+
+                                provider.metadata
+                            }
+
+                            if (!foundMetadataProvider) {
+                                val metadata = getProviderMetadata(
+                                    id = navArgs.media.providerId
+                                ) ?: return@mapLatest emptyList() // Fails player and navigate back
+
+                                return@mapLatest mappedList + listOf(metadata)
+                            }
+
+                            mappedList
+                        }
+                    }.catch { error ->
+                        errorLog(error)
+                        _providers.emit(Async.Success(emptyList()))
+                    }.collectLatest {
+                        _providers.emit(Async.Success(it))
+                    }
             }
 
-            withContext(appDispatchers.main) {
-                player.prepare(
-                    cache = cache,
-                    startPositionMs = getSavedStartPositionMs(navArgs.episode),
+            launch {
+                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+
+                // App is supposed to ALWAYS load and save cache first before starting player.
+                // So, if cache here is null, it means that the media being played is locally hosted.
+                val cache = navArgs.initialCacheId?.let {
+                    mediaLinksRepository.getLinksById(it)
+                } ?: mediaLinksRepository.getLinks(
+                    ownerId = userId,
+                    mediaId = navArgs.media.id,
+                    episodeNumber = selectedEpisode.value?.number,
+                    seasonNumber = selectedEpisode.value?.season
+                ) ?: CachedMediaLinksWithData(
+                    subtitles = emptyList(),
+                    media = navArgs.media.toDBMedia(),
+                    cache = CachedMediaLinks(
+                        providerId = KEY_LOCAL_PROVIDER,
+                        id = KEY_LOCAL_CACHE,
+                        ownerId = userId,
+                        mediaId = navArgs.media.id,
+                    ),
+                    streams = listOf(
+                        DBStream(
+                            parentId = KEY_LOCAL_CACHE,
+                            url = navArgs.initialStreamUrl,
+                            label = navArgs.initialStreamUrl,
+                            customHeaders = navArgs.initialHeaders?.headers
+                        )
+                    ),
                 )
+
+                _servers.update { Async.Success(cache.streams.toPlayerServers()) }
+
+                val nextEpisode = getNextEpisode(navArgs.episode)
+                _uiState.update {
+                    it.copy(nextEpisode = nextEpisode)
+                }
+
+                withContext(appDispatchers.main) {
+                    player.prepare(
+                        cache = cache,
+                        startPositionMs = getSavedStartPositionMs(navArgs.episode),
+                    )
+                }
+            }.invokeOnCompletion {
+                launch {
+                    combine(
+                        userSessionDataStore.currentUserId.filterNotNull(),
+                        selectedEpisode.debounce(600)
+                    ) { userId, episode ->
+                        userId to episode
+                    }.flatMapLatest { (userId, episode) ->
+                        mediaLinksRepository.observeLinks(
+                            ownerId = userId,
+                            mediaId = navArgs.media.id,
+                            episodeNumber = episode?.number,
+                            seasonNumber = episode?.season
+                        ).catch { error ->
+                            errorLog(error)
+                            _servers.emit(Async.Success(emptyList()))
+                        }.mapLatest {
+                            it?.streams?.toPlayerServers() ?: emptyList()
+                        }
+                    }.collectLatest {
+                        _servers.emit(Async.Success(it))
+                    }
+                }
             }
         }
     }

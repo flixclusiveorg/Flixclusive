@@ -112,8 +112,8 @@ internal fun PlayerControls(
     playerPrefs: PlayerPreferences,
     subtitlesPrefs: SubtitlesPreferences,
     currentResizeMode: ResizeMode,
-    currentProvider: ProviderMetadata,
-    providers: List<ProviderMetadata>,
+    currentProvider: () -> ProviderMetadata,
+    providers: () -> List<ProviderMetadata>,
     servers: () -> List<PlayerServer>,
     currentServer: () -> Int,
     onServerChange: (Int) -> Unit,
@@ -136,7 +136,7 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
     var savedSpeed by remember { mutableFloatStateOf(0f) }
     var volumeSliderHideJob by remember { mutableStateOf<Job?>(null) }
-    val key = remember(currentEpisode, currentProvider) { currentEpisode?.id + currentProvider.id }
+    val key = remember(currentEpisode, currentProvider) { currentEpisode?.id + currentProvider().id }
 
     val scope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }

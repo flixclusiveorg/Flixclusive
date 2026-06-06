@@ -97,7 +97,14 @@ import com.flixclusive.model.provider.link.Subtitle
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.bottomsheet.spec.DestinationStyleBottomSheet
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.mobile.R as UiMobileR
@@ -112,12 +119,14 @@ data class MediaLinksBottomSheetArgs(
     val episode: Episode? = null,
 )
 
+@OptIn(FlowPreview::class)
 @Destination<ExternalModuleGraph>(
     style = DestinationStyleBottomSheet::class,
     navArgs = MediaLinksBottomSheetArgs::class
 )
 @Composable
 internal fun MediaLinksBottomSheet(
+    args: MediaLinksBottomSheetArgs,
     navigator: NavigatorMediaLinksBottomSheet,
     viewModel: MediaLinksBottomSheetViewModel = hiltViewModel()
 ) {
@@ -134,6 +143,35 @@ internal fun MediaLinksBottomSheet(
         onDispose {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+    }
+
+    LaunchedEffect(viewModel, playerPrefs) {
+        combine(
+            viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
+            viewModel.links
+        ) { state, links ->
+            if (!playerPrefs.isAutoSelectingServer || state.isLoading || links?.hasPlayableLinks == false) {
+                return@combine null
+            }
+
+            val selectedStreamIndex = links?.streams?.getIndexOfPreferredQuality(playerPrefs.quality) {
+                containsMatchIn(it.label) || containsMatchIn(it.url)
+            } ?: return@combine null
+
+            links.streams.getOrNull(selectedStreamIndex)
+        }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .debounce(1000L) // Debounce to prevent rapid navigation if links change quickly
+            .collectLatest { stream ->
+                navigator.showPlayerSplashScreen(
+                    media = args.media,
+                    episode = args.episode,
+                    initialCacheId = stream.parentId,
+                    initialStreamUrl = stream.url,
+                    initialHeaders = stream.customHeaders
+                )
+            }
     }
 
     MediaLinksBottomSheetContent(
@@ -201,11 +239,11 @@ private fun MediaLinksBottomSheetContent(
         derivedStateOf {
             state().isLoading
                 || (
-                    state().isSuccess
-                        && links()?.hasValidLinks == true
-                        && links()?.hasPlayableLinks == true
-                        && canAutoSelectStream()
-                    )
+                state().isSuccess
+                    && links()?.hasValidLinks == true
+                    && links()?.hasPlayableLinks == true
+                    && canAutoSelectStream()
+                )
         }
     }
 
