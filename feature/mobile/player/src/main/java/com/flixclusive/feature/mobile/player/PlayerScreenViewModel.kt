@@ -389,7 +389,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 seasonNumber = episode?.season
             ) ?: return@launch
 
-            mediaLinksRepository.markLinkAsAlive(server, cache.id)
+            mediaLinksRepository.markLinkAsDead(server, cache.id)
         }
     }
 
