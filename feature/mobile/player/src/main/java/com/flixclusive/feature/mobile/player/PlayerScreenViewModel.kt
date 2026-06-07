@@ -272,9 +272,10 @@ internal class PlayerScreenViewModel @Inject constructor(
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val episode = _uiState.value.currentEpisode
 
-            val cache = mediaLinksRepository.getLinks(
+            val cache = mediaLinksRepository.getProviderLinks(
                 ownerId = userId,
-                mediaId = navArgs.media.id,
+                mediaId = media.id,
+                providerId = media.providerId,
                 seasonNumber = episode?.season,
                 episodeNumber = episode?.number
             )
@@ -353,9 +354,10 @@ internal class PlayerScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val episode = _uiState.value.currentEpisode
-            val cache = mediaLinksRepository.getLinks(
+            val cache = mediaLinksRepository.getProviderLinks(
                 ownerId = userId,
                 mediaId = media.id,
+                providerId = media.providerId,
                 episodeNumber = episode?.number,
                 seasonNumber = episode?.season
             )
@@ -382,9 +384,10 @@ internal class PlayerScreenViewModel @Inject constructor(
         appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val episode = _uiState.value.currentEpisode
-            val cache = mediaLinksRepository.getLinks(
+            val cache = mediaLinksRepository.getProviderLinks(
                 ownerId = userId,
                 mediaId = media.id,
+                providerId = media.providerId,
                 episodeNumber = episode?.number,
                 seasonNumber = episode?.season
             ) ?: return@launch
@@ -462,9 +465,10 @@ internal class PlayerScreenViewModel @Inject constructor(
     ): CachedMediaLinksWithData? {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-        val cache = mediaLinksRepository.getLinks(
+        val cache = mediaLinksRepository.getProviderLinks(
             ownerId = userId,
             mediaId = media.id,
+            providerId = media.providerId,
             episodeNumber = episode?.number,
             seasonNumber = episode?.season
         )
@@ -500,9 +504,10 @@ internal class PlayerScreenViewModel @Inject constructor(
                 }
             }
 
-        return mediaLinksRepository.getLinks(
+        return mediaLinksRepository.getProviderLinks(
             ownerId = userId,
             mediaId = media.id,
+            providerId = media.providerId,
             episodeNumber = episode?.number,
             seasonNumber = episode?.season
         )
@@ -525,6 +530,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                     containsMatchIn(it.label) || containsMatchIn(it.url)
                 }
             }
+
             else -> _uiState.value.currentServer
         }
 
@@ -745,10 +751,11 @@ internal class PlayerScreenViewModel @Inject constructor(
                 // App is supposed to ALWAYS load and save cache first before starting player.
                 // So, if cache here is null, it means that the media being played is locally hosted.
                 val cache = navArgs.initialCacheId?.let {
-                    mediaLinksRepository.getLinksById(it)
-                } ?: mediaLinksRepository.getLinks(
+                    mediaLinksRepository.getById(it)
+                } ?: mediaLinksRepository.getProviderLinks(
                     ownerId = userId,
-                    mediaId = navArgs.media.id,
+                    mediaId = media.id,
+                    providerId = media.providerId,
                     episodeNumber = selectedEpisode.value?.number,
                     seasonNumber = selectedEpisode.value?.season
                 ) ?: CachedMediaLinksWithData(
@@ -791,16 +798,17 @@ internal class PlayerScreenViewModel @Inject constructor(
                     ) { userId, episode ->
                         userId to episode
                     }.flatMapLatest { (userId, episode) ->
-                        mediaLinksRepository.observeLinks(
+                        mediaLinksRepository.observeProviderLinks(
                             ownerId = userId,
-                            mediaId = navArgs.media.id,
+                            mediaId = media.id,
+                            providerId = media.providerId,
                             episodeNumber = episode?.number,
                             seasonNumber = episode?.season
-                        ).catch { error ->
-                            errorLog(error)
-                            _servers.emit(Async.Success(emptyList()))
-                        }.mapLatest {
+                        ).mapLatest {
                             it?.streams?.toPlayerServers() ?: emptyList()
+                        }.catch { error ->
+                            errorLog(error)
+                            emit(emptyList())
                         }
                     }.collectLatest {
                         _servers.emit(Async.Success(it))

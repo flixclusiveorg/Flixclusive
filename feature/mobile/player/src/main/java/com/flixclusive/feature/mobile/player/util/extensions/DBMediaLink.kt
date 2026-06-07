@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.player.util.extensions
 
-import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.core.database.entity.provider.DBStream
 import com.flixclusive.core.database.entity.provider.DBSubtitle
@@ -30,7 +29,9 @@ internal fun List<DBStream>.toPlayerServers(): List<PlayerServer> {
 /** Deduplicates subtitle languages and maps to [PlayerSubtitle]. */
 internal fun List<DBSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
     val names = mutableMapOf<String, Int>()
-    return fastMap { subtitle ->
+    return fastMapNotNull { subtitle ->
+        if (subtitle.isDead) return@fastMapNotNull null
+
         val count = names[subtitle.label] ?: 0
         val label = if (count > 0) "${subtitle.label} $count" else subtitle.label
         names[subtitle.label] = count + 1

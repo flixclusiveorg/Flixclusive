@@ -49,9 +49,10 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val providers = providerRepository.getProviders(ownerId = userId)
 
-        val existingCache = mediaLinksRepository.getLinks(
+        val existingCache = mediaLinksRepository.getProviderLinks(
             ownerId = userId,
             mediaId = media.id,
+            providerId = media.providerId,
             episodeNumber = episode?.number,
             seasonNumber = episode?.season
         )
@@ -259,7 +260,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             )
         }
 
-        val updatedLinks = mediaLinksRepository.getLinksById(cacheId)
+        val updatedLinks = mediaLinksRepository.getById(cacheId)
         return updatedLinks != null && updatedLinks.hasValidLinks
     }
 

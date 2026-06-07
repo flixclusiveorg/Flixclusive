@@ -1,9 +1,11 @@
 package com.flixclusive.feature.mobile.media.modal.stream
 
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.util.fastFlatMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
@@ -33,6 +35,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,7 +51,8 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     private val testMediaLinksUseCase: TestMediaLinksUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
-    private val dataStoreManager: DataStoreManager,
+    private val appDispatchers: AppDispatchers,
+    dataStoreManager: DataStoreManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val args = savedStateHandle.navArgs<MediaLinksBottomSheetArgs>()
@@ -82,20 +86,20 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
                 mediaId = args.media.id,
                 episodeNumber = args.episode?.number,
                 seasonNumber = args.episode?.season,
-            )
+            ).mapLatest { data ->
+                data.fastFlatMap { it.streams + it.subtitles }
+            }
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null,
+            initialValue = emptyList(),
         )
 
     val testProgress: MutableStateFlow<TestLinksProgress?> = MutableStateFlow(null)
 
     init {
-        viewModelScope.launch {
-            onFetchMediaLinks()
-        }
+        onFetchMediaLinks()
     }
 
     private suspend fun getEpisodeToWatch(tvShow: Show): Episode? {
@@ -178,7 +182,7 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     fun onResetAndRetry() {
         if (onRefetchLinks?.isActive == true || onFetchMediaLinksJob?.isActive == true) return
 
-        onRefetchLinks = viewModelScope.launch {
+        onRefetchLinks = appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val data = mediaLinksRepository.getLinks(
                 ownerId = userId,
@@ -187,11 +191,11 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
                 seasonNumber = args.episode?.season,
             )
 
-            if (data != null) {
-                mediaLinksRepository.deleteCache(data.id)
+            data.forEach {
+                mediaLinksRepository.deleteById(it.id)
             }
-
-            onFetchMediaLinks()
+        }.also {
+            it.invokeOnCompletion { onFetchMediaLinks() }
         }
     }
 
@@ -200,14 +204,21 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
 
         onTestLinksJob = viewModelScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val data = mediaLinksRepository.getLinks(
+            val links = mediaLinksRepository.getLinks(
                 ownerId = userId,
                 mediaId = args.media.id,
                 episodeNumber = args.episode?.number,
                 seasonNumber = args.episode?.season,
-            ) ?: return@launch
+            )
 
-            testMediaLinksUseCase(data.id).collect { progress ->
+            if (links.isEmpty()) {
+                return@launch
+            }
+
+            val streams = links.fastFlatMap { it.streams }
+            val subtitles = links.fastFlatMap { it.subtitles }
+
+            testMediaLinksUseCase(streams + subtitles).collect { progress ->
                 testProgress.value = progress
             }
         }

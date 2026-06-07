@@ -17,23 +17,39 @@ interface MediaLinksRepository {
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
+    ): List<CachedMediaLinksWithData>
+
+    suspend fun getProviderLinks(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
     ): CachedMediaLinksWithData?
+
+    suspend fun observeProviderLinks(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): Flow<CachedMediaLinksWithData?>
 
     fun observeLinks(
         ownerId: String,
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): Flow<CachedMediaLinksWithData?>
+    ): Flow<List<CachedMediaLinksWithData>>
 
-    suspend fun getLinksById(id: String): CachedMediaLinksWithData?
-    fun observeLinksById(id: String): Flow<CachedMediaLinksWithData?>
-    fun getAllAsFlow(ownerId: String): Flow<List<CachedMediaLinksWithData>>
-    fun getCacheSize(ownerId: String): Flow<Int>
-    fun getAllByMediaAsFlow(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>>
+    suspend fun getById(id: String): CachedMediaLinksWithData?
+    fun observeById(id: String): Flow<CachedMediaLinksWithData?>
+    fun observeAll(ownerId: String): Flow<List<CachedMediaLinksWithData>>
+    fun getSize(ownerId: String): Flow<Int>
+    fun observeAllByMedia(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>>
     suspend fun markLinkAsAlive(url: String, parentId: String)
     suspend fun markLinkAsDead(url: String, parentId: String)
-    suspend fun deleteCache(id: String)
+    suspend fun deleteById(id: String)
     suspend fun deleteAll(ownerId: String)
 }
 

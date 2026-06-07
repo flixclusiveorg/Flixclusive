@@ -1,6 +1,7 @@
 package com.flixclusive.domain.provider.usecase.links.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.database.entity.provider.DBMediaLink
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.provider.usecase.links.TestLinksProgress
 import com.flixclusive.domain.provider.usecase.links.TestMediaLinksUseCase
@@ -17,22 +18,18 @@ internal class TestMediaLinksUseCaseImpl @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val appDispatchers: AppDispatchers,
 ) : TestMediaLinksUseCase {
-    override operator fun invoke(id: String) = flow {
-        val entry = mediaLinksRepository.getLinksById(id) ?: return@flow
-        val parentId = entry.cache.id
-        val streams = entry.streams.filter { it.isValid }
-        val total = streams.size
-
+    override operator fun invoke(links: List<DBMediaLink>) = flow {
+        val total = links.size
         var aliveCount = 0
         var deadCount = 0
 
-        streams.forEachIndexed { index, stream ->
-            emit(TestLinksProgress.Testing(url = stream.url, index = index + 1, total = total))
+        links.forEachIndexed { index, link ->
+            emit(TestLinksProgress.Testing(url = link.url, index = index + 1, total = total))
 
             val isAlive = try {
                 withContext(appDispatchers.io) {
-                    val requestBuilder = Request.Builder().url(stream.url).head()
-                    stream.customHeaders?.forEach { (name, value) ->
+                    val requestBuilder = Request.Builder().url(link.url).head()
+                    link.customHeaders?.forEach { (name, value) ->
                         requestBuilder.addHeader(name, value)
                     }
                     val response = okHttpClient.newCall(requestBuilder.build()).execute()
@@ -43,10 +40,10 @@ internal class TestMediaLinksUseCaseImpl @Inject constructor(
             }
 
             if (isAlive) {
-                mediaLinksRepository.markLinkAsAlive(stream.url, parentId)
+                mediaLinksRepository.markLinkAsAlive(link.url, link.parentId)
                 aliveCount++
             } else {
-                mediaLinksRepository.markLinkAsDead(stream.url, parentId)
+                mediaLinksRepository.markLinkAsDead(link.url, link.parentId)
                 deadCount++
             }
         }

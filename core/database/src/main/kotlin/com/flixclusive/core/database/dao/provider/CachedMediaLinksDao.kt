@@ -27,7 +27,6 @@ interface CachedMediaLinksDao {
           AND mediaId       = :mediaId
           AND episodeNumber IS :episodeNumber
           AND seasonNumber  IS :seasonNumber
-        LIMIT 1
         """,
     )
     suspend fun getByKey(
@@ -35,7 +34,7 @@ interface CachedMediaLinksDao {
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?,
-    ): CachedMediaLinksWithData?
+    ): List<CachedMediaLinksWithData>
 
     @Transaction
     @Query(
@@ -45,7 +44,6 @@ interface CachedMediaLinksDao {
           AND mediaId       = :mediaId
           AND episodeNumber IS :episodeNumber
           AND seasonNumber  IS :seasonNumber
-        LIMIT 1
         """,
     )
     fun getByKeyAsFlow(
@@ -53,6 +51,44 @@ interface CachedMediaLinksDao {
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?,
+    ): Flow<List<CachedMediaLinksWithData>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM cached_media_links
+        WHERE ownerId       = :ownerId
+          AND providerId    = :providerId
+          AND mediaId       = :mediaId
+          AND episodeNumber IS :episodeNumber
+          AND seasonNumber  IS :seasonNumber
+        """,
+    )
+    fun getByProviderId(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): CachedMediaLinksWithData?
+
+    @Transaction
+    @Query(
+"""
+        SELECT * FROM cached_media_links
+        WHERE ownerId       = :ownerId
+          AND providerId    = :providerId
+          AND mediaId       = :mediaId
+          AND episodeNumber IS :episodeNumber
+          AND seasonNumber  IS :seasonNumber
+        """,
+    )
+    fun getByProviderIdAsFlow(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
     ): Flow<CachedMediaLinksWithData?>
 
     @Transaction

@@ -84,7 +84,7 @@ internal class SettingsViewModel @Inject constructor(
     val cachedLinksCount: StateFlow<Int> = userSessionDataStore.currentUserId
         .filterNotNull()
         .flatMapLatest { id ->
-            mediaLinksRepository.getCacheSize(id)
+            mediaLinksRepository.getSize(id)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

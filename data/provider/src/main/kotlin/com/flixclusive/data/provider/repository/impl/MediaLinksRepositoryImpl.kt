@@ -34,29 +34,51 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLinks(ownerId: String, mediaId: String, episodeNumber: Int?, seasonNumber: Int?): CachedMediaLinksWithData? =
+    override suspend fun getLinks(ownerId: String, mediaId: String, episodeNumber: Int?, seasonNumber: Int?): List<CachedMediaLinksWithData> =
         withContext(appDispatchers.io) {
             cachedMediaLinksDao.getByKey(ownerId, mediaId, episodeNumber, seasonNumber)
         }
 
-    override fun observeLinks(ownerId: String, mediaId: String, episodeNumber: Int?, seasonNumber: Int?): Flow<CachedMediaLinksWithData?> =
+    override fun observeLinks(ownerId: String, mediaId: String, episodeNumber: Int?, seasonNumber: Int?): Flow<List<CachedMediaLinksWithData>> =
         cachedMediaLinksDao.getByKeyAsFlow(ownerId, mediaId, episodeNumber, seasonNumber)
 
-    override suspend fun getLinksById(id: String): CachedMediaLinksWithData? =
+    override suspend fun getById(id: String): CachedMediaLinksWithData? =
         withContext(appDispatchers.io) {
             cachedMediaLinksDao.getById(id)
         }
 
-    override fun observeLinksById(id: String): Flow<CachedMediaLinksWithData?> =
+    override suspend fun getProviderLinks(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): CachedMediaLinksWithData? {
+        return withContext(appDispatchers.io) {
+            cachedMediaLinksDao.getByProviderId(ownerId, providerId, mediaId, episodeNumber, seasonNumber)
+        }
+    }
+
+    override suspend fun observeProviderLinks(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): Flow<CachedMediaLinksWithData?> {
+        return cachedMediaLinksDao.getByProviderIdAsFlow(ownerId, providerId, mediaId, episodeNumber, seasonNumber)
+    }
+
+    override fun observeById(id: String): Flow<CachedMediaLinksWithData?> =
         cachedMediaLinksDao.getByIdAsFlow(id)
 
-    override fun getAllAsFlow(ownerId: String): Flow<List<CachedMediaLinksWithData>> =
+    override fun observeAll(ownerId: String): Flow<List<CachedMediaLinksWithData>> =
         cachedMediaLinksDao.getAllAsFlow(ownerId)
 
-    override fun getCacheSize(ownerId: String): Flow<Int>
+    override fun getSize(ownerId: String): Flow<Int>
         = cachedMediaLinksDao.getCacheSize(ownerId)
 
-    override fun getAllByMediaAsFlow(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>> =
+    override fun observeAllByMedia(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>> =
         cachedMediaLinksDao.getAllByMediaAsFlow(ownerId, mediaId)
 
     override suspend fun markLinkAsAlive(url: String, parentId: String) =
@@ -70,7 +92,7 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteCache(id: String) =
+    override suspend fun deleteById(id: String) =
         withContext(appDispatchers.io) {
             cachedMediaLinksDao.delete(id)
         }

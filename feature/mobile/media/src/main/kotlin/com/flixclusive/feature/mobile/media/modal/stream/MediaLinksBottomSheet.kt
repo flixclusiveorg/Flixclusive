@@ -70,11 +70,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastAny
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
-import com.flixclusive.core.database.entity.provider.CachedMediaLinksWithData
 import com.flixclusive.core.database.entity.provider.DBMediaLink
 import com.flixclusive.core.database.entity.provider.DBStream
 import com.flixclusive.core.database.entity.provider.DBSubtitle
@@ -119,6 +119,14 @@ data class MediaLinksBottomSheetArgs(
     val episode: Episode? = null,
 )
 
+private val List<DBMediaLink>.hasPlayableLinks: Boolean get() {
+    return fastAny { it is DBStream && !it.isThirdPartyGateway }
+}
+
+private val List<DBMediaLink>.hasValidLinks: Boolean get() {
+    return fastAny { it.isValid }
+}
+
 @OptIn(FlowPreview::class)
 @Destination<ExternalModuleGraph>(
     style = DestinationStyleBottomSheet::class,
@@ -137,6 +145,15 @@ internal fun MediaLinksBottomSheet(
     val activity = LocalContext.current.getActivity<ComponentActivity>()
     val window = activity.window
 
+    val getSelectedStreamIndex = fun(list: List<DBMediaLink>): Int {
+        return list.getIndexOfPreferredQuality(playerPrefs.quality) {
+            (containsMatchIn(it.label) || containsMatchIn(it.url))
+                && it is DBStream
+                && it.isValid
+                && !it.isThirdPartyGateway
+        }
+    }
+
     DisposableEffect(true) {
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -150,17 +167,12 @@ internal fun MediaLinksBottomSheet(
             viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
             viewModel.links
         ) { state, links ->
-            if (!playerPrefs.isAutoSelectingServer || state.isLoading || links?.hasPlayableLinks == false) {
+            if (!playerPrefs.isAutoSelectingServer || state.isLoading || !links.hasPlayableLinks) {
                 return@combine null
             }
 
-            val selectedStreamIndex = links?.streams?.getIndexOfPreferredQuality(playerPrefs.quality) {
-                (containsMatchIn(it.label) || containsMatchIn(it.url))
-                    && it.isValid
-                    && !it.isThirdPartyGateway
-            } ?: return@combine null
-
-            links.streams.getOrNull(selectedStreamIndex)
+            val selectedStreamIndex = getSelectedStreamIndex(links)
+            links.getOrNull(selectedStreamIndex)
         }
             .filterNotNull()
             .distinctUntilChanged()
@@ -181,28 +193,23 @@ internal fun MediaLinksBottomSheet(
         links = { links },
         canSkipLoading = {
             playerPrefs.isAutoSelectingServer
-                && links?.streams?.any { it.isValid } == true
+                && links.fastAny { it.isValid }
                 && uiState.loadLinksState.isLoading
         },
         canAutoSelectStream = { playerPrefs.isAutoSelectingServer },
         onResetAndRetry = viewModel::onResetAndRetry,
         onTestLinks = viewModel::onTestLinks,
         onSkipLoading = {
-            val selectedStreamIndex = links?.streams?.getIndexOfPreferredQuality(playerPrefs.quality) {
-                (containsMatchIn(it.label) || containsMatchIn(it.url))
-                    && it.isValid
-                    && !it.isThirdPartyGateway
-            }
+            val selectedStreamIndex = getSelectedStreamIndex(links)
+            val selectedStream = links.getOrNull(selectedStreamIndex)
 
-            if (selectedStreamIndex != null) {
-                val stream = links!!.streams[selectedStreamIndex]
-
+            if (selectedStream != null) {
                 navigator.showPlayerSplashScreen(
                     media = uiState.metadata,
                     episode = uiState.episode,
-                    initialCacheId = stream.parentId,
-                    initialStreamUrl = stream.url,
-                    initialHeaders = stream.customHeaders
+                    initialCacheId = selectedStream.parentId,
+                    initialStreamUrl = selectedStream.url,
+                    initialHeaders = selectedStream.customHeaders
                 )
             }
         },
@@ -222,7 +229,7 @@ internal fun MediaLinksBottomSheet(
 @Composable
 private fun MediaLinksBottomSheetContent(
     state: () -> LoadLinksState,
-    links: () -> CachedMediaLinksWithData?,
+    links: () -> List<DBMediaLink>,
     canSkipLoading: () -> Boolean,
     canAutoSelectStream: () -> Boolean,
     onPlayLink: (DBStream) -> Unit,
@@ -232,20 +239,21 @@ private fun MediaLinksBottomSheetContent(
 ) {
     val combinedLinks by remember {
         derivedStateOf {
-            val streams = links()?.streams ?: emptyList()
-            val subtitles = links()?.subtitles ?: emptyList()
-            (streams + subtitles).sortedByDescending { it is DBStream }
+            links().sortedByDescending { it is DBStream }
         }
     }
 
+    val hasValidLinks by remember {
+        derivedStateOf { links().hasValidLinks }
+    }
 
     val isLoading by remember {
         derivedStateOf {
             state().isLoading
                 || (
                 state().isSuccess
-                    && links()?.hasValidLinks == true
-                    && links()?.hasPlayableLinks == true
+                    && links().hasValidLinks
+                    && links().hasPlayableLinks
                     && canAutoSelectStream()
                 )
         }
@@ -255,8 +263,7 @@ private fun MediaLinksBottomSheetContent(
         derivedStateOf {
             val currentState = state()
             val currentLinks = links()
-            currentState.isSuccess ||
-                (currentState.isError && currentLinks?.hasValidLinks == true)
+            currentState.isSuccess || (currentState.isError && currentLinks.hasValidLinks)
         }
     }
 
@@ -322,7 +329,7 @@ private fun MediaLinksBottomSheetContent(
                 val hasErrors by remember {
                     derivedStateOf {
                         val currentLinks = links()
-                        state().isError && (currentLinks == null || !currentLinks.hasValidLinks)
+                        state().isError && !currentLinks.hasValidLinks
                     }
                 }
 
@@ -340,7 +347,7 @@ private fun MediaLinksBottomSheetContent(
                 }
             }
 
-            if (links()?.hasValidLinks == true) {
+            if (hasValidLinks) {
                 item {
                     Spacer(modifier = Modifier.padding(top = 10.dp))
                 }
@@ -735,7 +742,7 @@ private fun MediaLinksBottomSheetContentPreview() {
         ) {
             MediaLinksBottomSheetContent(
                 state = { state },
-                links = { null },
+                links = { emptyList() },
                 canSkipLoading = { true },
                 canAutoSelectStream = { true },
                 onPlayLink = {},

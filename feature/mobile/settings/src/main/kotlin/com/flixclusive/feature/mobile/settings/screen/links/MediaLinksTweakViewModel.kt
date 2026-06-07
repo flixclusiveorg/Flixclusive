@@ -67,7 +67,7 @@ internal class MediaLinksTweakViewModel @Inject constructor(
     val selectedEntry: StateFlow<CachedMediaLinksWithData?> = _selectedEntryId
         .filterNotNull()
         .flatMapLatest { id ->
-            mediaLinksRepository.observeLinksById(id)
+            mediaLinksRepository.observeById(id)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -97,7 +97,7 @@ internal class MediaLinksTweakViewModel @Inject constructor(
         initJob = viewModelScope.launch {
             userSessionDataStore.currentUserId.filterNotNull()
                 .flatMapLatest { id ->
-                    mediaLinksRepository.getAllAsFlow(id)
+                    mediaLinksRepository.observeAll(id)
                         .mapLatest { links ->
                             val groupedLinksByMedia = links.groupBy { it.cache.mediaId }
 
@@ -144,7 +144,7 @@ internal class MediaLinksTweakViewModel @Inject constructor(
 
     fun deleteEntry(entry: CachedMediaLinks) {
         viewModelScope.launch(appDispatchers.io) {
-            mediaLinksRepository.deleteCache(entry.id)
+            mediaLinksRepository.deleteById(entry.id)
         }
     }
 
@@ -152,7 +152,15 @@ internal class MediaLinksTweakViewModel @Inject constructor(
         val id = _selectedEntryId.value ?: return
         viewModelScope.launch {
             _testState.value = Async.Loading
-            testMediaLinksUseCase(id)
+
+            val entry = mediaLinksRepository.getById(id)
+
+            if (entry == null) {
+                _testState.value = Async.Failure(IllegalArgumentException("Selected entry not found"))
+                return@launch
+            }
+
+            testMediaLinksUseCase(entry.streams + entry.subtitles)
                 .catch { e -> _testState.value = Async.Failure(e) }
                 .collect { progress ->
                     _testState.value = Async.Success(progress)
