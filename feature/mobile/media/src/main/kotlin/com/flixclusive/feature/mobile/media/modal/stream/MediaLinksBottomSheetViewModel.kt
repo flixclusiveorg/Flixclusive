@@ -154,6 +154,11 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
                     }
             }
 
+            if (metadata is PartialMedia) {
+                updateLoadLinksState(LoadLinksState.Error(LocaleR.string.media_data_fetch_failed))
+                return@launch
+            }
+
             _uiState.update { it.copy(metadata = metadata) }
 
             var episodeToLoad = args.episode

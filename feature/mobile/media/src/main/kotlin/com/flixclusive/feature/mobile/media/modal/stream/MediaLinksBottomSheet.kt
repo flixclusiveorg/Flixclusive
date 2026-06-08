@@ -133,12 +133,9 @@ private val List<DBMediaLink>.hasValidLinks: Boolean get() {
 )
 @Composable
 internal fun MediaLinksBottomSheet(
-    args: MediaLinksBottomSheetArgs,
     navigator: NavigatorMediaLinksBottomSheet,
     viewModel: MediaLinksBottomSheetViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val playerPrefs by viewModel.playerPrefs.collectAsStateWithLifecycle()
     val links by viewModel.links.collectAsStateWithLifecycle()
@@ -165,14 +162,11 @@ internal fun MediaLinksBottomSheet(
             .distinctUntilChanged()
             .debounce(1000L) // Debounce to prevent rapid navigation if links change quickly
             .collectLatest {
-                val cacheId = links
-                    .filterIsInstance<DBStream>()
-                    .first { !it.isThirdPartyGateway }
-                    .parentId
+                val cacheId = links.first().parentId
 
                 navigator.showPlayerSplashScreen(
-                    media = args.media,
-                    episode = args.episode,
+                    media = uiState.metadata,
+                    episode = uiState.episode,
                     initialCacheId = cacheId,
                 )
             }
