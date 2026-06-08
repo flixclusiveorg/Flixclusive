@@ -271,11 +271,15 @@ internal class PlayerScreenViewModel @Inject constructor(
         changeServerJob = viewModelScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val episode = _uiState.value.currentEpisode
+            val currentProvider = _uiState.value.currentProvider.ifEmpty {
+                _playerErrors.emit(UiText.from(R.string.error_no_provider_selected))
+                return@launch
+            }
 
             val cache = mediaLinksRepository.getProviderLinks(
                 ownerId = userId,
                 mediaId = media.id,
-                providerId = media.providerId,
+                providerId = currentProvider,
                 seasonNumber = episode?.season,
                 episodeNumber = episode?.number
             )
@@ -354,10 +358,15 @@ internal class PlayerScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val episode = _uiState.value.currentEpisode
+            val currentProvider = _uiState.value.currentProvider.ifEmpty {
+                _playerErrors.emit(UiText.from(R.string.error_no_provider_selected))
+                return@launch
+            }
+
             val cache = mediaLinksRepository.getProviderLinks(
                 ownerId = userId,
                 mediaId = media.id,
-                providerId = media.providerId,
+                providerId = currentProvider,
                 episodeNumber = episode?.number,
                 seasonNumber = episode?.season
             )
@@ -384,10 +393,15 @@ internal class PlayerScreenViewModel @Inject constructor(
         appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val episode = _uiState.value.currentEpisode
+            val currentProvider = _uiState.value.currentProvider.ifEmpty {
+                _playerErrors.emit(UiText.from(R.string.error_no_provider_selected))
+                return@launch
+            }
+
             val cache = mediaLinksRepository.getProviderLinks(
                 ownerId = userId,
                 mediaId = media.id,
-                providerId = media.providerId,
+                providerId = currentProvider,
                 episodeNumber = episode?.number,
                 seasonNumber = episode?.season
             ) ?: return@launch
@@ -468,7 +482,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         val cache = mediaLinksRepository.getProviderLinks(
             ownerId = userId,
             mediaId = media.id,
-            providerId = media.providerId,
+            providerId = providerId,
             episodeNumber = episode?.number,
             seasonNumber = episode?.season
         )
@@ -507,7 +521,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         return mediaLinksRepository.getProviderLinks(
             ownerId = userId,
             mediaId = media.id,
-            providerId = media.providerId,
+            providerId = providerId,
             episodeNumber = episode?.number,
             seasonNumber = episode?.season
         )
@@ -532,6 +546,11 @@ internal class PlayerScreenViewModel @Inject constructor(
             }
 
             else -> _uiState.value.currentServer
+        }
+
+        if (currentServer !in servers.indices) {
+            _playerErrors.tryEmit(UiText.from(R.string.error_no_valid_servers_found))
+            return
         }
 
         _uiState.update { it.copy(currentServer = currentServer) }
@@ -794,14 +813,15 @@ internal class PlayerScreenViewModel @Inject constructor(
                 launch {
                     combine(
                         userSessionDataStore.currentUserId.filterNotNull(),
-                        selectedEpisode.debounce(600)
-                    ) { userId, episode ->
-                        userId to episode
-                    }.flatMapLatest { (userId, episode) ->
+                        selectedEpisode.debounce(600),
+                        _uiState.map { it.currentProvider }.filterNotNull().distinctUntilChanged()
+                    ) { userId, episode, providerId ->
+                        Triple(userId, episode, providerId)
+                    }.flatMapLatest { (userId, episode, providerId) ->
                         mediaLinksRepository.observeProviderLinks(
                             ownerId = userId,
                             mediaId = media.id,
-                            providerId = media.providerId,
+                            providerId = providerId,
                             episodeNumber = episode?.number,
                             seasonNumber = episode?.season
                         ).mapLatest {

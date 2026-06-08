@@ -11,7 +11,7 @@ import com.flixclusive.core.presentation.player.model.track.TrackSource
 internal fun List<DBStream>.toPlayerServers(): List<PlayerServer> {
     val names = mutableMapOf<String, Int>()
     return fastMapNotNull { stream ->
-        if (!stream.isValid) return@fastMapNotNull null
+        if (stream.isThirdPartyGateway) return@fastMapNotNull null
 
         val count = names[stream.label] ?: 0
         val label = if (count > 0) "${stream.label} $count" else stream.label
@@ -30,8 +30,6 @@ internal fun List<DBStream>.toPlayerServers(): List<PlayerServer> {
 internal fun List<DBSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
     val names = mutableMapOf<String, Int>()
     return fastMapNotNull { subtitle ->
-        if (subtitle.isDead) return@fastMapNotNull null
-
         val count = names[subtitle.label] ?: 0
         val label = if (count > 0) "${subtitle.label} $count" else subtitle.label
         names[subtitle.label] = count + 1
