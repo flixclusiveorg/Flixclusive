@@ -58,7 +58,7 @@ internal object TracksUtil {
                 }
             }
 
-            if (language != null && language != "und" && label == null) {
+            if (language != null && language != "und") {
                 append(": ")
                 val locale = Locale.Builder().setLanguage(language).build()
                 append(locale.displayLanguage)
