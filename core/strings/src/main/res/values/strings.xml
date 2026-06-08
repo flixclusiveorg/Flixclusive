@@ -178,7 +178,6 @@
     <string name="update_label">Update</string>
     <string name="user_avatar">User avatar</string>
     <string name="user_interface">User interface</string>
-    <string name="video">Video</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
     <string name="video_buffer_size">Buffer size</string>
     <string name="volume_booster">Volume booster</string>

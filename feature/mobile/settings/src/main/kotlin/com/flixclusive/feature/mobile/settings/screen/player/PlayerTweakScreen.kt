@@ -16,6 +16,7 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.model.user.player.DecoderPriority
 import com.flixclusive.core.datastore.model.user.player.PlayerQuality
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
+import com.flixclusive.feature.mobile.settings.R
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
@@ -60,10 +61,10 @@ internal class PlayerTweakScreen(
         val playerPreferences = preferencesAsState.collectAsStateWithLifecycle()
 
         return listOf(
+            getUiTweaks { playerPreferences.value },
             getGeneralTweaks { playerPreferences.value },
             getAudioTweaks { playerPreferences.value },
             getAdvancedTweaks { playerPreferences.value },
-            getUiTweaks { playerPreferences.value },
         )
     }
 
@@ -80,8 +81,18 @@ internal class PlayerTweakScreen(
         }
 
         return TweakGroup(
-            title = stringResource(LocaleR.string.video),
+            title = stringResource(LocaleR.string.general),
             tweaks = persistentListOf(
+                TweakUI.SwitchTweak(
+                    title = stringResource(R.string.label_prefs_auto_select_server),
+                    description = { resources.getString(R.string.desc_prefs_auto_select_server) },
+                    value = { playerPreferences().isAutoSelectingServer },
+                    onTweaked = {
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(isAutoSelectingServer = it)
+                        }
+                    },
+                ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.resize_mode),
                     description = {
