@@ -55,6 +55,7 @@ fun AutoNextServerEffect(
                 currentServer = currentIndex,
                 failedStreamIndices = failedServers
             )
+
             if (nextIndex == null) {
                 pause()
                 snackbarState.showMessage(resources.getString(R.string.all_servers_failed))
@@ -71,11 +72,12 @@ private fun List<PlayerServer>.getNextAvailableServerIndex(
     currentServer: Int,
     failedStreamIndices: Set<Int> = emptySet(),
 ): Int? {
-    if (currentServer + 1 in indices) {
-        return currentServer + 1
+    for (offset in 1 until size) {
+        val index = (currentServer + offset).mod(size)
+        if (index !in failedStreamIndices && !this[index].isDead) {
+            return index
+        }
     }
 
-    return indices.firstOrNull {
-        it !in failedStreamIndices
-    }
+    return null
 }
