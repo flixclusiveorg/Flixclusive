@@ -16,12 +16,19 @@ object LinkMatcher {
             return preferredQualityIndex
         }
 
-        return entries.firstNotNullOfOrNull { quality ->
+        // If the preferred quality is not found, check for other qualities in order of preference
+        // We start from the next quality after the preferred one, and loop through the qualities in a circular manner
+        for (i in 1 until entries.size) {
+            val nextQuality = entries[(preference.ordinal + i) % entries.size]
             val index = indexOfFirst {
-                quality.regex.match(it)
+                nextQuality.regex.match(it)
             }
 
-            if (index != -1) index else null
-        } ?: 0
+            if (index != -1) {
+                return index
+            }
+        }
+
+        return 0 // Default to the first link if no matches are found
     }
 }
