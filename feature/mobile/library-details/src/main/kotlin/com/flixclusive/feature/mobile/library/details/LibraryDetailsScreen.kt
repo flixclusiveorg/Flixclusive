@@ -125,8 +125,13 @@ internal fun LibraryDetailsScreen(
         selectedItems = { viewModel.selectedItems },
         onGoBack = navigator::navigateBack,
         onViewMedia = navigator::navigateToMediaScreen,
-        onRemoveLongClickedItem = viewModel::onRemoveLongClickedItem,
-        onLongClickItem = viewModel::onLongClickItem,
+        onLongClickItem = {
+            if (!uiState.isMultiSelecting) {
+                navigator.showMediaPreviewBottomSheet(it.toMediaMetadata())
+            } else {
+                viewModel.onToggleSelect(it)
+            }
+        },
         onStartMultiSelecting = viewModel::onStartMultiSelecting,
         onToggleSelect = viewModel::onToggleSelect,
         onUpdateFilter = viewModel::onUpdateFilter,
@@ -152,7 +157,6 @@ private fun LibraryDetailsScreenContent(
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
     onUnselectAll: () -> Unit,
-    onRemoveLongClickedItem: () -> Unit,
     onViewMedia: (MediaMetadata) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
@@ -183,7 +187,6 @@ private fun LibraryDetailsScreenContent(
         }
     }
 
-    var showDeleteItemAlert by remember { mutableStateOf(false) }
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -279,6 +282,7 @@ private fun LibraryDetailsScreenContent(
                             .padding(paddingValues),
                     )
                 }
+
                 else -> {
                     AnimatedContent(
                         targetState = isListEmpty && !uiState().pagingState.isLoading,
@@ -311,30 +315,15 @@ private fun LibraryDetailsScreenContent(
         }
     }
 
-    if (showDeleteItemAlert || showDeleteSelectionAlert) {
-        val alertDescription =
-            if (showDeleteItemAlert) {
-                val itemName = uiState().longClickedItem?.metadata?.title ?: ""
-                stringResource(LocaleR.string.warn_delete_library_format, itemName)
-            } else {
-                stringResource(LocaleR.string.warn_delete_selected_libraries_format)
-            }
+    if (showDeleteSelectionAlert) {
+        val alertDescription = stringResource(LocaleR.string.warn_delete_selected_libraries_format)
 
         IconAlertDialog(
             painter = painterResource(UiCommonR.drawable.warning_outline),
             contentDescription = null,
             description = alertDescription,
-            onConfirm = {
-                if (showDeleteItemAlert) {
-                    onRemoveLongClickedItem()
-                } else {
-                    onRemoveSelection()
-                }
-            },
-            onDismiss = {
-                showDeleteItemAlert = false
-                showDeleteSelectionAlert = false
-            },
+            onConfirm = onRemoveSelection,
+            onDismiss = { showDeleteSelectionAlert = false },
         )
     }
 }
@@ -577,12 +566,6 @@ private fun LibraryDetailsScreenBasePreview() {
                         uiState = uiState.copy(isMultiSelecting = false)
                         selectedItems.clear()
                     },
-                    onRemoveLongClickedItem = {
-                        val mediaToRemove = uiState.longClickedItem
-                        medias.removeIf { mediaToRemove?.metadata?.id == it.metadata.id }
-
-                        uiState = uiState.copy(longClickedItem = null)
-                    },
                     onViewMedia = {},
                     onQueryChange = { searchQuery = it },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
@@ -593,7 +576,7 @@ private fun LibraryDetailsScreenBasePreview() {
                             selectedItems.add(it)
                         }
                     },
-                    onLongClickItem = { uiState = uiState.copy(longClickedItem = it) },
+                    onLongClickItem = { },
                     onUpdateFilter = {
                         uiState = if (uiState.selectedFilter == it) {
                             uiState.copy(selectedFilter = uiState.selectedFilter.toggleAscending())

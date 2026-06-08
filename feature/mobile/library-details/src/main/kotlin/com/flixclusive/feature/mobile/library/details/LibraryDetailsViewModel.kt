@@ -57,7 +57,6 @@ internal class LibraryDetailsViewModel @Inject constructor(
 ) : ViewModel() {
     private val navArgs = savedStateHandle.navArgs<LibraryDetailsNavArgs>()
 
-    private var removeJob: Job? = null
     private var removeSelectionJob: Job? = null
     private var paginateJob: Job? = null
 
@@ -229,19 +228,6 @@ internal class LibraryDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onRemoveLongClickedItem() {
-        if (removeJob?.isActive == true) return
-
-        val item = _uiState.value.longClickedItem
-        requireNotNull(item) {
-            "Long clicked item should not be null when trying to remove it."
-        }
-
-        removeJob = appDispatchers.ioScope.launch {
-            removeItem(item)
-        }
-    }
-
     fun onRemoveSelection() {
         if (removeSelectionJob?.isActive == true) return
 
@@ -280,10 +266,6 @@ internal class LibraryDetailsViewModel @Inject constructor(
     fun onToggleSearchBar(isVisible: Boolean) {
         _uiState.update { it.copy(isShowingSearchBar = isVisible) }
     }
-
-    fun onLongClickItem(item: LibraryListItemWithMetadata?) {
-        _uiState.update { it.copy(longClickedItem = item) }
-    }
 }
 
 private fun MediaMetadata.toLibraryListItemWithMetadata(
@@ -318,7 +300,6 @@ internal fun LibraryList.toTrackerList(
 internal data class LibraryDetailsUiState(
     val isShowingSearchBar: Boolean = false,
     val isMultiSelecting: Boolean = false,
-    val longClickedItem: LibraryListItemWithMetadata? = null,
     val selectedFilter: LibrarySort = LibrarySort.Added(ascending = false),
     val currentPage: Int = 1,
     val pagingState: PagingState = PagingState.Idle,

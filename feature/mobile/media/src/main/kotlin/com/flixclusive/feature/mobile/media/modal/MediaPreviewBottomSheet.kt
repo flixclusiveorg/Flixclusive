@@ -166,7 +166,11 @@ private fun MediaPreviewBottomSheetContent(
 
                     media.releaseDate?.let {
                         val year = remember {
-                            val ms = if (it < 1000000000000) it * 1000 else it
+                            val ms = when {
+                                it < 1000000000000 -> it * 1000
+                                it > 10000000000000 -> it / 1000
+                                else -> it
+                            }
 
                             val calendar = Calendar.getInstance()
                             calendar.timeInMillis = ms
