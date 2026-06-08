@@ -12,10 +12,10 @@ import kotlinx.serialization.Serializable
  * */
 data class PlayerScreenNavArgs(
     val media: MediaMetadata,
-    val initialStreamUrl: String,
+    val episode: Episode?,
+    val initialStreamUrl: String?,
     val initialCacheId: String?,
     val initialHeaders: PlayerScreenInitialHeader?,
-    val episode: Episode?,
 )
 
 @Serializable

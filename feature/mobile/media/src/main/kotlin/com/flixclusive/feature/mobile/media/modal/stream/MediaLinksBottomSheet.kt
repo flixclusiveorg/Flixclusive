@@ -85,7 +85,6 @@ import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
-import com.flixclusive.domain.provider.util.LinkMatcher.getIndexOfPreferredQuality
 import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaLinksBottomSheet
 import com.flixclusive.model.media.MediaMetadata
@@ -103,7 +102,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -138,21 +137,14 @@ internal fun MediaLinksBottomSheet(
     navigator: NavigatorMediaLinksBottomSheet,
     viewModel: MediaLinksBottomSheetViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val playerPrefs by viewModel.playerPrefs.collectAsStateWithLifecycle()
     val links by viewModel.links.collectAsStateWithLifecycle()
 
     val activity = LocalContext.current.getActivity<ComponentActivity>()
     val window = activity.window
-
-    val getSelectedStreamIndex = fun(list: List<DBMediaLink>): Int {
-        return list.getIndexOfPreferredQuality(playerPrefs.quality) {
-            (containsMatchIn(it.label) || containsMatchIn(it.url))
-                && it is DBStream
-                && it.isValid
-                && !it.isThirdPartyGateway
-        }
-    }
 
     DisposableEffect(true) {
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -167,23 +159,21 @@ internal fun MediaLinksBottomSheet(
             viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
             viewModel.links
         ) { state, links ->
-            if (!playerPrefs.isAutoSelectingServer || state.isLoading || !links.hasPlayableLinks) {
-                return@combine null
-            }
-
-            val selectedStreamIndex = getSelectedStreamIndex(links)
-            links.getOrNull(selectedStreamIndex)
+            playerPrefs.isAutoSelectingServer && !state.isLoading && links.hasPlayableLinks
         }
-            .filterNotNull()
+            .filter { it }
             .distinctUntilChanged()
             .debounce(1000L) // Debounce to prevent rapid navigation if links change quickly
-            .collectLatest { stream ->
+            .collectLatest {
+                val cacheId = links
+                    .filterIsInstance<DBStream>()
+                    .first { !it.isThirdPartyGateway }
+                    .parentId
+
                 navigator.showPlayerSplashScreen(
                     media = args.media,
                     episode = args.episode,
-                    initialCacheId = stream.parentId,
-                    initialStreamUrl = stream.url,
-                    initialHeaders = stream.customHeaders
+                    initialCacheId = cacheId,
                 )
             }
     }
@@ -200,18 +190,16 @@ internal fun MediaLinksBottomSheet(
         onResetAndRetry = viewModel::onResetAndRetry,
         onTestLinks = viewModel::onTestLinks,
         onSkipLoading = {
-            val selectedStreamIndex = getSelectedStreamIndex(links)
-            val selectedStream = links.getOrNull(selectedStreamIndex)
+            val cacheId = links
+                .filterIsInstance<DBStream>()
+                .first { !it.isThirdPartyGateway }
+                .parentId
 
-            if (selectedStream != null) {
-                navigator.showPlayerSplashScreen(
-                    media = uiState.metadata,
-                    episode = uiState.episode,
-                    initialCacheId = selectedStream.parentId,
-                    initialStreamUrl = selectedStream.url,
-                    initialHeaders = selectedStream.customHeaders
-                )
-            }
+            navigator.showPlayerSplashScreen(
+                media = uiState.metadata,
+                episode = uiState.episode,
+                initialCacheId = cacheId,
+            )
         },
         onPlayLink = {
             navigator.showPlayerSplashScreen(

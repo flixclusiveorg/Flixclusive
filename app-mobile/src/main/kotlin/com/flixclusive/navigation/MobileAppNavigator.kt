@@ -339,8 +339,8 @@ internal class MobileAppNavigator(
 
     override fun showPlayerSplashScreen(
         media: MediaMetadata,
-        initialStreamUrl: String,
         episode: Episode?,
+        initialStreamUrl: String?,
         initialCacheId: String?,
         initialHeaders: Map<String, String>?
     ) {
@@ -361,8 +361,8 @@ internal class MobileAppNavigator(
 
     override fun navigateToPlayerScreen(
         media: MediaMetadata,
-        initialStreamUrl: String,
         episode: Episode?,
+        initialStreamUrl: String?,
         initialCacheId: String?,
         initialHeaders: Map<String, String>?
     ) {

@@ -46,6 +46,7 @@ import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUse
 import com.flixclusive.domain.provider.usecase.tracker.SyncToScrobblersUseCase
 import com.flixclusive.domain.provider.util.LinkMatcher.getIndexOfPreferredQuality
 import com.flixclusive.feature.mobile.player.util.extensions.isSameEpisode
+import com.flixclusive.feature.mobile.player.util.extensions.toPlayerServer
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerServers
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerSubtitles
 import com.flixclusive.model.media.Movie
@@ -531,20 +532,23 @@ internal class PlayerScreenViewModel @Inject constructor(
     private fun AppPlayer.prepare(
         cache: CachedMediaLinksWithData,
         startPositionMs: Long,
+        preferredServer: String? = null,
     ) {
-        val servers = cache.streams.toPlayerServers()
+        val servers = cache.streams
         val subtitles = cache.subtitles.toPlayerSubtitles()
 
         val prefs = playerPreferences.value
 
         val currentServer = when {
+            preferredServer != null -> servers.indexOfFirst { it.url == preferredServer }
             !prefs.isAutoSelectingServer -> 0
             prefs.isAutoSelectingServer && _uiState.value.currentServer !in servers.indices -> {
                 servers.getIndexOfPreferredQuality(prefs.quality) {
-                    containsMatchIn(it.label) || containsMatchIn(it.url)
+                    (containsMatchIn(it.label) || containsMatchIn(it.url))
+                        && it.isValid
+                        && !it.isThirdPartyGateway
                 }
             }
-
             else -> _uiState.value.currentServer
         }
 
@@ -556,7 +560,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         _uiState.update { it.copy(currentServer = currentServer) }
 
         prepare(
-            server = servers[currentServer],
+            server = servers[currentServer].toPlayerServer(),
             subtitles = subtitles,
             startPositionMs = startPositionMs,
         )
@@ -786,27 +790,35 @@ internal class PlayerScreenViewModel @Inject constructor(
                         ownerId = userId,
                         mediaId = navArgs.media.id,
                     ),
-                    streams = listOf(
-                        DBStream(
-                            parentId = KEY_LOCAL_CACHE,
-                            url = navArgs.initialStreamUrl,
-                            label = navArgs.initialStreamUrl,
-                            customHeaders = navArgs.initialHeaders?.headers
-                        )
-                    ),
+                    streams = buildList {
+                        if (navArgs.initialStreamUrl != null) {
+                            add(
+                                DBStream(
+                                    parentId = KEY_LOCAL_CACHE,
+                                    url = navArgs.initialStreamUrl,
+                                    label = navArgs.initialStreamUrl,
+                                    customHeaders = navArgs.initialHeaders?.headers
+                                )
+                            )
+                        }
+                    },
                 )
+
+                if (cache.streams.isEmpty()) {
+                    _playerErrors.emit(UiText.from(R.string.error_no_valid_servers_found))
+                    return@launch
+                }
 
                 _servers.update { Async.Success(cache.streams.toPlayerServers()) }
 
                 val nextEpisode = getNextEpisode(navArgs.episode)
-                _uiState.update {
-                    it.copy(nextEpisode = nextEpisode)
-                }
+                _uiState.update { it.copy(nextEpisode = nextEpisode) }
 
                 withContext(appDispatchers.main) {
                     player.prepare(
                         cache = cache,
                         startPositionMs = getSavedStartPositionMs(navArgs.episode),
+                        preferredServer = navArgs.initialStreamUrl
                     )
                 }
             }.invokeOnCompletion {

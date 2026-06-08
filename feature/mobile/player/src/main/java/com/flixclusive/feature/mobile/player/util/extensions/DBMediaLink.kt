@@ -26,6 +26,16 @@ internal fun List<DBStream>.toPlayerServers(): List<PlayerServer> {
     }
 }
 
+internal fun DBStream.toPlayerServer(): PlayerServer {
+    return PlayerServer(
+        label = label,
+        url = url,
+        isDead = isDead,
+        headers = customHeaders ?: emptyMap(),
+        source = TrackSource.REMOTE,
+    )
+}
+
 /** Deduplicates subtitle languages and maps to [PlayerSubtitle]. */
 internal fun List<DBSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
     val names = mutableMapOf<String, Int>()

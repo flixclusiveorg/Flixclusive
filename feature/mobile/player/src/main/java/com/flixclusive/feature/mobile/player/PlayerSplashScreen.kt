@@ -30,8 +30,8 @@ import kotlinx.coroutines.delay
 interface NavigatorPlayerSplashScreen {
     fun navigateToPlayerScreen(
         media: MediaMetadata,
-        initialStreamUrl: String,
         episode: Episode?,
+        initialStreamUrl: String?,
         initialCacheId: String?,
         initialHeaders: Map<String, String>?
     )

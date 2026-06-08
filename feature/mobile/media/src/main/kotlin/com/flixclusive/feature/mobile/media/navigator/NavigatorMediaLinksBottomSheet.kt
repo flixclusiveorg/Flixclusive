@@ -7,10 +7,10 @@ import com.flixclusive.model.media.common.tv.Episode
 interface NavigatorMediaLinksBottomSheet : NavigateBack {
     fun showPlayerSplashScreen(
         media: MediaMetadata,
-        initialStreamUrl: String,
         episode: Episode?,
-        initialCacheId: String?,
-        initialHeaders: Map<String, String>?
+        initialStreamUrl: String? = null,
+        initialCacheId: String? = null,
+        initialHeaders: Map<String, String>? = null
     )
 
     // TODO: Support this soon
