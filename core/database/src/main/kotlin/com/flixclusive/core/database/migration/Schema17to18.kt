@@ -14,7 +14,7 @@ internal object Schema17to18 : Migration(17, 18) {
         val now = Date().time
         db.execSQL(
             """
-                INSERT INTO `repositories` (
+                INSERT OR IGNORE INTO `repositories` (
                     url, userId, owner, name, rawLinkFormat, createdAt, updatedAt
                 ) SELECT
                     'https://github.com/flixclusiveorg/flx-providers',
@@ -30,7 +30,7 @@ internal object Schema17to18 : Migration(17, 18) {
 
         db.execSQL(
             """
-                INSERT INTO `repositories` (
+                INSERT OR IGNORE INTO `repositories` (
                     url, userId, owner, name, rawLinkFormat, createdAt, updatedAt
                 ) SELECT
                     'https://github.com/flixclusiveorg/provider-template',
