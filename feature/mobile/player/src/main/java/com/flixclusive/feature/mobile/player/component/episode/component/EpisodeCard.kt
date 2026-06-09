@@ -46,6 +46,7 @@ import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -247,7 +248,7 @@ internal fun EpisodeCardPlaceholder(
 private fun EpisodeCardPreview() {
     val sampleShow = remember { DummyDataForPreview.getShow() }
     val sampleEpisode = remember {
-        val season = sampleShow.seasons.first()
+        val season = sampleShow.seasons.first() as Season.Full
         val episode = season.episodes.first()
         EpisodeWithProgress(
             episode = episode,

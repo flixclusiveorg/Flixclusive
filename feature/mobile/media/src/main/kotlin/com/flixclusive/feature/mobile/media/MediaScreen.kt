@@ -562,7 +562,7 @@ private fun MediaScreenBasePreview() {
                 watchProgress = watchProgress,
                 seasonToDisplay = remember(uiState.selectedSeason) {
                     if (metadata is Show) {
-                        val season = metadata.seasons.first { it.number == (uiState.selectedSeason ?: 1) }
+                        val season = metadata.seasons.first { it.number == (uiState.selectedSeason ?: 1) } as Season.Full
                         Async.Success(
                             data = SeasonWithProgress(
                                 season = season,

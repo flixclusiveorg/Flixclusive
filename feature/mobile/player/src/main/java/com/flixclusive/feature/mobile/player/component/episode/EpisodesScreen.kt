@@ -129,7 +129,7 @@ internal fun EpisodesScreen(
 private fun EpisodesScreenPreview() {
     val sampleShow = remember { DummyDataForPreview.getShow() }
     val sampleEpisode = remember {
-        val season = sampleShow.seasons.first()
+        val season = sampleShow.seasons.first() as Season.Full
         val episode = season.episodes.first()
         EpisodeWithProgress(
             episode = episode,
@@ -146,7 +146,7 @@ private fun EpisodesScreenPreview() {
     }
 
     val seasonData = remember {
-        val season = sampleShow.seasons.first()
+        val season = sampleShow.seasons.first() as Season.Full
         SeasonWithProgress(
             season = season,
             episodes = List(20) {

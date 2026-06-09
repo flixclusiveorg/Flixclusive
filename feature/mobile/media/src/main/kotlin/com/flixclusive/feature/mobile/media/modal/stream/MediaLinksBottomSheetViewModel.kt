@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.media.modal.stream
 
+import android.content.Context
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.util.fastFlatMap
 import androidx.lifecycle.SavedStateHandle
@@ -14,8 +15,10 @@ import com.flixclusive.core.datastore.DataStoreManager.Companion.getUserPrefsAsF
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.provider.repository.MediaLinksRepository
+import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
@@ -25,8 +28,10 @@ import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.ramcosta.composedestinations.generated.media.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -44,6 +49,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
 internal class MediaLinksBottomSheetViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val getMediaMetadata: GetMediaMetadataUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
@@ -51,6 +57,7 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     private val testMediaLinksUseCase: TestMediaLinksUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
+    private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
     dataStoreManager: DataStoreManager,
     savedStateHandle: SavedStateHandle
@@ -125,11 +132,32 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             it.number.compareTo(seasonNumber)
         }
 
-        val season = tvShow.seasons.getOrNull(seasonIndex)
+        var season = tvShow.seasons.getOrNull(seasonIndex)
+        if (season is Season.Partial) {
+            val provider = providerRepository.getProvider(
+                id = tvShow.providerId,
+                ownerId = userId
+            )
 
-        val episode = season?.episodes?.binarySearch {
+            val api = provider?.plugin?.getMetadataApi(context)
+            if (api == null || provider.isMetadataEnabled) {
+                return null
+            }
+
+            season = api.getSeason(
+                show = tvShow,
+                season = season,
+            )
+        }
+
+        if (season !is Season.Full) {
+            warnLog("Season $seasonNumber not found for show ${tvShow.title} (${tvShow.id})")
+            return null
+        }
+
+        val episode = season.episodes.binarySearch {
             it.number.compareTo(episodeNumber)
-        }?.let { index -> season.episodes.getOrNull(index) }
+        }.let { index -> season.episodes.getOrNull(index) }
 
         return episode
     }

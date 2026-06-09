@@ -34,18 +34,8 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
         )
 
         if (progress == null) {
-            val season = tvShow.seasons
-                .lastOrNull()
-                ?.number
-                ?.takeIf { it == tvShow.totalSeasons }
-                ?: tvShow.totalSeasons
-
-            val episode = tvShow.seasons
-                .lastOrNull()
-                ?.episodes
-                ?.lastOrNull()
-                ?.number
-                ?: tvShow.totalEpisodes
+            val season = tvShow.totalSeasons
+            val episode = tvShow.totalEpisodes
 
             watchProgressRepository.insert(
                 media = tvShow,

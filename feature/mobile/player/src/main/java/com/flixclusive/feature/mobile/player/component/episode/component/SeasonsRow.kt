@@ -78,9 +78,8 @@ internal fun SeasonsRow(
 private fun SeasonsRowPreview() {
     val list = remember {
         List(5) {
-            Season(
+            Season.Full(
                 number = it + 1,
-                episodeCount = 10,
                 isReleased = true,
                 id = "season-${it + 1}",
                 episodes = emptyList(),

@@ -8,6 +8,7 @@ import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
 import com.flixclusive.core.database.entity.provider.CachedMediaLinks
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.coroutines.mapAsync
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.MediaLinksRepository
@@ -21,11 +22,13 @@ import com.flixclusive.domain.provider.util.extensions.sendExtractingLinksMessag
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.capability.CrossMatchProviderApi
 import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaLinkType
+import com.flixclusive.provider.capability.MediaMetadataProviderApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.channelFlow
@@ -134,12 +137,13 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         }
 
         send(LoadLinksState.Fetching(R.string.label_check_cross_match_providers))
-        val combinedApis = providers.mapNotNull {
-            if (it.id == provider.id) return@mapNotNull null
-            if (!it.isCrossMatchEnabled || !it.isMediaLinkEnabled) return@mapNotNull null
+        val providersMap = providers.associateBy { it.id }
+        val combinedApis = providersMap.mapNotNull { (_, value) ->
+            if (value.id == provider.id) return@mapNotNull null
+            if (!value.isCrossMatchEnabled || !value.isMediaLinkEnabled) return@mapNotNull null
 
-            val plugin = it.plugin
-            val metadata = it.metadata
+            val plugin = value.plugin
+            val metadata = value.metadata
             if (metadata == null || plugin == null) return@mapNotNull null
 
             val crossMatchApi = plugin.getCrossMatchApi(context) ?: return@mapNotNull null
@@ -164,12 +168,19 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
                 if (crossMatchedMedia == null) {
                     warnLog("Cross-matching failed for subtitle-only provider ${providerMeta.name} with media ${media.title} (${media.id})")
-                    return@mapAsync null
+                    return@mapAsync
                 }
 
                 val crossMatchedEpisode = if (crossMatchedMedia is Show && episode != null) {
-                    val season = crossMatchedMedia.getSeason(episode.season)
-                    season?.getEpisode(episode.number)
+                    val provider = providersMap[providerMeta.id] ?: return@mapAsync
+                    val plugin = provider.plugin ?: return@mapAsync
+                    val metadataApi = safeCall { plugin.getMetadataApi(context) } ?: return@mapAsync
+
+                    getCrossMatchedEpisode(
+                        crossMatchedShow = crossMatchedMedia,
+                        referenceEpisode = episode,
+                        metadataApi = metadataApi
+                    )
                 } else {
                     null
                 }
@@ -204,8 +215,15 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 sendCrossMatchingMessage(providerMeta)
 
                 val crossMatchedEpisode = if (crossMatchedMedia is Show && episode != null) {
-                    val season = crossMatchedMedia.getSeason(episode.season)
-                    season?.getEpisode(episode.number)
+                    val provider = providersMap[providerMeta.id] ?: return@forEach
+                    val plugin = provider.plugin ?: return@forEach
+                    val metadataApi = safeCall { plugin.getMetadataApi(context) } ?: return@forEach
+
+                    getCrossMatchedEpisode(
+                        crossMatchedShow = crossMatchedMedia,
+                        referenceEpisode = episode,
+                        metadataApi = metadataApi
+                    )
                 } else {
                     null
                 }
@@ -269,7 +287,11 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         crossMatcherApi: CrossMatchProviderApi,
     ): MediaMetadata? {
         try {
-            var crossMatchedMedia = crossMatcherApi.getById(media.externalIds)
+            var crossMatchedMedia = crossMatcherApi.getById(
+                mediaType = media.type,
+                sourceIds = media.externalIds
+            )
+
             if (crossMatchedMedia == null) {
                 crossMatchedMedia = crossMatcherApi.getByFuzzy(media)
             }
@@ -277,6 +299,35 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             return crossMatchedMedia
         } catch (e: Throwable) {
             errorLog("Cross-matching failed for media ${media.title} (${media.id})}")
+            errorLog(e)
+            return null
+        }
+    }
+
+    private suspend fun getCrossMatchedEpisode(
+        crossMatchedShow: Show,
+        referenceEpisode: Episode,
+        metadataApi: MediaMetadataProviderApi
+    ): Episode? {
+        try {
+            val season = crossMatchedShow.getSeason(referenceEpisode.season)
+            if (season == null) {
+                warnLog("Cross-matching failed to find season ${referenceEpisode.season} for show ${crossMatchedShow.title} (${crossMatchedShow.id})")
+                return null
+            }
+
+            if (season is Season.Full) {
+                return season.getEpisode(referenceEpisode.number)
+            }
+
+            val fullSeasonData = metadataApi.getSeason(
+                show = crossMatchedShow,
+                season = season as Season.Partial,
+            ) ?: return null
+
+            return fullSeasonData.getEpisode(referenceEpisode.number)
+        } catch (e: Throwable) {
+            errorLog("Cross-matching failed for episode S${referenceEpisode.season}E${referenceEpisode.number} of media ${referenceEpisode.title} (${referenceEpisode.id})}")
             errorLog(e)
             return null
         }

@@ -23,6 +23,7 @@ import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.provider.capability.TrackerFeature
 import com.flixclusive.provider.capability.TrackerProviderApi
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -237,10 +238,24 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
         return if (item.providerId != providerId) {
             val crossMatchedMedia = getCrossMatchedMediaMetadata(item, providerId)
 
-            val crossMatchedEpisode = if (crossMatchedMedia is Show && episode != null) {
-                val matchedSeason = crossMatchedMedia.getSeason(episode.season)
-                matchedSeason?.getEpisode(episode.number)
-            } else episode
+            var crossMatchedEpisode = episode
+            if (crossMatchedMedia is Show && episode != null) {
+                var season = crossMatchedMedia.getSeason(episode.season)
+                if (season is Season.Partial) {
+                    val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+                    val provider = providerRepository.getProvider(providerId, userId)
+                    val metadataApi = provider?.plugin?.getMetadataApi(context)
+                        ?: throw IllegalStateException("Metadata API not found for providerId: $providerId")
+
+                    season = metadataApi.getSeason(crossMatchedMedia, season)
+                }
+
+                if (season !is Season.Full) {
+                    throw IllegalStateException("Season data is not complete for season ${episode.season} of show ${crossMatchedMedia.title}")
+                }
+
+                crossMatchedEpisode = season.getEpisode(episode.number)
+            }
 
             crossMatchedMedia to crossMatchedEpisode
         } else item to episode

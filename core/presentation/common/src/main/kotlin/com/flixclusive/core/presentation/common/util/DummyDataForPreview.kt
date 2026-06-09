@@ -173,13 +173,12 @@ object DummyDataForPreview {
 
             val airDate = System.currentTimeMillis() + -season * 30L * 24 * 60 * 60 * 1000
 
-            Season(
+            Season.Full(
                 overview = "This is a sample overview for season ${it + 1}.",
                 releaseDate = airDate,
                 isReleased = airDate <= System.currentTimeMillis(),
                 image = "/wgfKiqzuMrFIkU1M68DDDY8kGC1.jpg",
                 episodes = episodes,
-                episodeCount = episodes.size,
                 rating = 6.0 + (it * 0.5),
                 number = season,
                 id = "$season",
@@ -200,7 +199,7 @@ object DummyDataForPreview {
         language = language,
         recommendations = List(20) { getMedia(id = "$it") },
         seasons = seasons,
-        totalEpisodes = seasons.sumOf { it.episodes.size },
+        totalEpisodes = seasons.sumOf { it.episodeCount },
         totalSeasons = seasons.size,
         externalIds = externalIds,
         networks = networks.map { Company(name = it) },

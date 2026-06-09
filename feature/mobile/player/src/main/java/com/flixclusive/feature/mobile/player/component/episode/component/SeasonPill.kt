@@ -38,16 +38,16 @@ internal fun SeasonPill(
 ) {
     val contentColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.surface else LocalContentColor.current.copy(0.6f))
     val containerColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.onSurface else Color.Transparent)
-    val scale = animateFloatAsState(targetValue = if (selected()) 1.1F else 1F)
-    val alpha = animateFloatAsState(targetValue = if (selected()) 1F else 0.8F)
+    val scale by animateFloatAsState(targetValue = if (selected()) 1.1F else 1F)
+    val alpha by animateFloatAsState(targetValue = if (selected()) 1F else 0.8F)
 
     Box(
         modifier = modifier
             .graphicsLayer {
-                this.scaleX = scale.value
-                this.scaleY = scale.value
+                this.scaleX = scale
+                this.scaleY = scale
 
-                this.alpha = alpha.value
+                this.alpha = alpha
             },
         contentAlignment = Alignment.Center
     ) {

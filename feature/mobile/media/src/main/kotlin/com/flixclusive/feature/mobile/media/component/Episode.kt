@@ -53,7 +53,6 @@ import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
-import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
@@ -64,6 +63,7 @@ import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenP
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.feature.mobile.media.R
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -423,55 +423,52 @@ private fun EpisodeCardBasePreview() {
         Surface(
             modifier = Modifier.fillMaxSize(),
         ) {
-            ProvideSharedTransitionScope {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(getAdaptiveDp(300.dp)),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = PaddingValues(
-                        horizontal = DefaultScreenPaddingHorizontal,
-                        vertical = 8.dp,
-                    ),
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(vertical = 8.dp),
-                ) {
-                    items(6) {
-                        val series = remember { DummyDataForPreview.getShow(id = "$it") }
-                        val episode = remember {
-                            series.seasons
-                                .first()
-                                .episodes
-                                .first()
-                                .copy(id = "$it", number = it + 1)
-                        }
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(getAdaptiveDp(300.dp)),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                contentPadding = PaddingValues(
+                    horizontal = DefaultScreenPaddingHorizontal,
+                    vertical = 8.dp,
+                ),
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(vertical = 8.dp),
+            ) {
+                items(6) {
+                    val series = remember { DummyDataForPreview.getShow(id = "$it") }
+                    val episode = remember {
+                        (series.seasons.first() as Season.Full)
+                            .episodes
+                            .first()
+                            .copy(id = "$it", number = it + 1)
+                    }
 
-                        val episodeWithProgress = remember {
-                            EpisodeWithProgress(
-                                episode = episode,
-                                watchProgress = EpisodeProgress(
-                                    mediaId = series.id,
-                                    ownerId = "preview-user",
-                                    progress = 50000L,
-                                    duration = 90000L,
-                                    seasonNumber = episode.season,
-                                    episodeNumber = episode.number,
-                                    status = WatchStatus.WATCHING,
-                                ),
-                            )
-                        }
-
-                        EpisodeCard(
-                            isDownloaded = true,
-                            episode = episodeWithProgress,
-                            onClick = {},
-                            onLongClick = {},
+                    val episodeWithProgress = remember {
+                        EpisodeWithProgress(
+                            episode = episode,
+                            watchProgress = EpisodeProgress(
+                                mediaId = series.id,
+                                ownerId = "preview-user",
+                                progress = 50000L,
+                                duration = 90000L,
+                                seasonNumber = episode.season,
+                                episodeNumber = episode.number,
+                                status = WatchStatus.WATCHING,
+                            ),
                         )
                     }
 
-                    items(3) {
-                        EpisodeCardPlaceholder()
-                    }
+                    EpisodeCard(
+                        isDownloaded = true,
+                        episode = episodeWithProgress,
+                        onClick = {},
+                        onLongClick = {},
+                    )
+                }
+
+                items(3) {
+                    EpisodeCardPlaceholder()
                 }
             }
         }

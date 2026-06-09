@@ -38,4 +38,5 @@
     <string name="error_cancelled_provider_download">Download has been cancelled by the user for provider: %1$s</string>
     <string name="error_provider_updated_but_failed_to_load">Provider %1$s updated but failed to load. The provider is still updated</string>
     <string name="label_check_cross_match_providers">Checking other providers…</string>
+    <string name="error_provider_no_get_season_method">Provider does not support fetching full season details</string>
 </resources>

@@ -93,7 +93,7 @@ private fun SeasonPillPreview() {
             ) {
                 items(20) {
                     SeasonPill(
-                        season = Season(
+                        season = Season.Full(
                             id = it.toString(),
                             number = it,
                             title = "Season ${it + 1}",

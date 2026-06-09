@@ -31,8 +31,11 @@ internal class GetCrossMatchedMediaMetadataUseCaseImpl @Inject constructor(
         val api = plugin.getCrossMatchApi(context)
             ?: error(context.getString(R.string.cross_match_not_allowed, providerId))
 
-        return api.getById(media.externalIds)
-            ?: api.getByFuzzy(media)
+        return api.getById(
+            mediaType = media.type,
+            sourceIds = media.externalIds,
+
+        ) ?: api.getByFuzzy(media)
             ?: error(context.getString(R.string.cross_match_no_item_found, media.title, providerId))
     }
 }

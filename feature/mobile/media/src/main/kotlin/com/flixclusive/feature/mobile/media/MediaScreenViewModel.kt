@@ -583,20 +583,20 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 
                     if (tvShow == null || seasonState !is Async.Success) return@collectLatest
 
-                    val (season) = seasonState.data // De-structure the season from SeasonWithProgress
-                    val seasonNumber = tvShow.getSeason(season.number)?.number ?: return@collectLatest
+                    val (season) = seasonState.data
+                    val seasonFromModel = tvShow.getSeason(season.number) ?: return@collectLatest
 
                     // If we have the season, but it has no episodes, update it.
                     // This can happen when the initial metadata has seasons without episodes.
                     // We only do this if we don't have any episodes for the season to avoid
                     // overwriting any existing data.
-                    val episodes = tvShow.seasons.getOrNull(seasonNumber)?.episodes
-                    if (episodes?.isEmpty() == true) {
-                        _metadata.update {
+                    if (seasonFromModel is Season.Partial) {
+                        _metadata.update { current ->
                             val mutableSeasons = tvShow.seasons.toMutableList()
-                            mutableSeasons[seasonNumber] = season
+                            val index = mutableSeasons.binarySearch { it.number.compareTo(season.number) }
+                            if (index !in mutableSeasons.indices) return@update current
 
-                            tvShow.copy(seasons = mutableSeasons.toList())
+                            (current as Show).copy(seasons = mutableSeasons.toList())
                         }
                     }
                 }

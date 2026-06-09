@@ -25,6 +25,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
+import com.flixclusive.model.media.common.tv.Season
 import kotlinx.coroutines.delay
 
 @Preview
@@ -47,9 +48,10 @@ private fun PlayerScreenBasePreview() {
         )
     }
     val currentSeason = remember {
+        val season = tvShow.seasons.first() as Season.Full
         SeasonWithProgress(
-            season = tvShow.seasons.first(),
-            episodes = tvShow.seasons.first().episodes.map {
+            season = season,
+            episodes = season.episodes.map {
                 EpisodeWithProgress(
                     episode = it,
                     watchProgress = null
