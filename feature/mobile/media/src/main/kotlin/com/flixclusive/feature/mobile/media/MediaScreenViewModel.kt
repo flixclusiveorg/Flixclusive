@@ -66,6 +66,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -542,7 +543,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 
     private suspend fun getNextEpisodeProgress(progress: EpisodeProgress): EpisodeProgress {
         val nextEpisode = getNextEpisode(
-            show = _metadata.filterNotNull().first() as Show,
+            show = _metadata.filterIsInstance<Show>().first(),
             season = progress.seasonNumber,
             episode = progress.episodeNumber,
         ) ?: return progress

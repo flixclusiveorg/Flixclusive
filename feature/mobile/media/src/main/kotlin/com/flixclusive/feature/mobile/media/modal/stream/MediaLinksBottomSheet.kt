@@ -162,7 +162,7 @@ internal fun MediaLinksBottomSheet(
             .distinctUntilChanged()
             .debounce(1000L) // Debounce to prevent rapid navigation if links change quickly
             .collectLatest {
-                val cacheId = links.first().parentId
+                val cacheId = links.firstOrNull()?.parentId ?: return@collectLatest
 
                 navigator.showPlayerSplashScreen(
                     media = uiState.metadata,
