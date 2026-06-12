@@ -661,9 +661,6 @@ internal class PlayerScreenViewModel @Inject constructor(
                 player.duration
             }
 
-            val canSaveProgress = currentPosition > 60_000L
-            if (!canSaveProgress) return@launch
-
             val progress = when (val progress = watchProgress.value) {
                 is EpisodeProgress -> progress.copy(
                     progress = currentPosition,
@@ -680,10 +677,12 @@ internal class PlayerScreenViewModel @Inject constructor(
                 )
             }
 
-            setWatchProgress(
-                media = media,
-                watchProgress = progress,
-            )
+            if (currentPosition > 60_000L) {
+                setWatchProgress(
+                    media = media,
+                    watchProgress = progress,
+                )
+            }
 
             delay(1500L)
 
