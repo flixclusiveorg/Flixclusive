@@ -5,6 +5,7 @@ import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
+import com.flixclusive.core.util.exception.safeCall
 import java.util.Locale
 
 internal object TracksUtil {
@@ -60,8 +61,14 @@ internal object TracksUtil {
 
             if (language != null && language != "und") {
                 append(": ")
-                val locale = Locale.Builder().setLanguage(language).build()
-                append(locale.displayLanguage)
+                val displayLanguage = safeCall {
+                    Locale.Builder()
+                        .setLanguage(language)
+                        .build()
+                        .displayLanguage
+                } ?: language
+
+                append(displayLanguage)
             }
         }
     }
