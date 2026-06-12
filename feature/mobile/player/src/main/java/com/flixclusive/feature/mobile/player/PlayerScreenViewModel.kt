@@ -285,7 +285,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 episodeNumber = episode?.number
             )
 
-            if (cache == null || !cache.hasValidLinks) {
+            if (cache == null) {
                 _playerErrors.emit(UiText.from(R.string.error_on_server_change_fail))
                 return@launch
             }
