@@ -690,15 +690,16 @@ internal class PlayerScreenViewModel @Inject constructor(
                 player.isPlaying
             }
 
-            try {
-                syncToScrobblers(
-                    action = if (isPlaying) ScrobbleAction.START else ScrobbleAction.STOP,
-                    media = media,
-                    episode = selectedEpisode.value,
-                    watchProgress = progress,
-                )
-            } catch (e: Throwable) {
-                _playerErrors.emit(UiText.from(e.message ?: "Unknown scrobbling error"))
+            syncToScrobblers(
+                action = if (isPlaying) ScrobbleAction.START else ScrobbleAction.STOP,
+                media = media,
+                episode = selectedEpisode.value,
+                watchProgress = progress,
+            ).collect { response ->
+                when (response) {
+                    is Async.Failure -> _playerErrors.emit(response.message)
+                    else -> Unit
+                }
             }
         }
     }
