@@ -4,6 +4,9 @@ import android.app.Application
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.util.network.okhttp.UserAgentManager
@@ -43,9 +46,21 @@ internal class FlixclusiveApplication :
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader
             .Builder(context)
+            .memoryCache {
+                MemoryCache.Builder()
+                    .maxSizePercent(context, 0.25) // 25% of available app memory
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(context.cacheDir.resolve("image_cache"))
+                    .maxSizePercent(0.02) // 2% of device storage
+                    .build()
+            }
             .components {
                 add(OkHttpNetworkFetcherFactory(callFactory = { client }))
-            }.build()
+            }
+            .build()
     }
 
     override fun onCreate() {
