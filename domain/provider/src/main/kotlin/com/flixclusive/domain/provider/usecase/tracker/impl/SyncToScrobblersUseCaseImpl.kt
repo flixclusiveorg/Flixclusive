@@ -36,7 +36,7 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
         media: MediaMetadata,
         episode: Episode?,
     ) {
-        scrobblers = scrobblers.takeIf { it.isEmpty() } ?: getScrobblers()
+        scrobblers = scrobblers.takeIf { it.isNotEmpty() } ?: getScrobblers()
 
         if (scrobblers.isEmpty()) {
             warnLog("No authenticated scrobble providers found, skipping scrobble sync")
