@@ -141,8 +141,13 @@ class TracksState(
             languageProvider = { it },
         )
 
-        onSubtitleSelect(subtitleIndex)
-        onAudioSelect(audioIndex)
+        if (subtitleIndex in subtitles.indices) {
+            onSubtitleSelect(subtitleIndex)
+        }
+
+        if (audioIndex in audios.indices) {
+            onAudioSelect(audioIndex)
+        }
     }
 
     fun resetTracks() {
