@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -92,6 +93,8 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
         userSessionDataStore.currentUserId.filterNotNull(),
         _uiState.map { it.episode }.distinctUntilChanged()
     ) { userId, episode -> userId to episode }
+        // If it's a show, wait until we have the episode to load the links
+        .dropWhile { args.media.isShow && it.second == null }
         .flatMapLatest { (userId, episode) ->
             mediaLinksRepository.observeLinks(
                 ownerId = userId,
