@@ -36,10 +36,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -85,14 +88,16 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
         )
 
 
-    val links = userSessionDataStore.currentUserId
-        .filterNotNull()
-        .flatMapLatest { ownerId ->
+    val links = combine(
+        userSessionDataStore.currentUserId.filterNotNull(),
+        _uiState.map { it.episode }.distinctUntilChanged()
+    ) { userId, episode -> userId to episode }
+        .flatMapLatest { (userId, episode) ->
             mediaLinksRepository.observeLinks(
-                ownerId = ownerId,
+                ownerId = userId,
                 mediaId = args.media.id,
-                episodeNumber = args.episode?.number,
-                seasonNumber = args.episode?.season,
+                episodeNumber = episode?.number,
+                seasonNumber = episode?.season,
             ).mapLatest { data ->
                 data.fastFlatMap { it.streams + it.subtitles }
             }
@@ -140,7 +145,7 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             )
 
             val api = provider?.plugin?.getMetadataApi(context)
-            if (api == null || provider.isMetadataEnabled) {
+            if (api == null || !provider.isMetadataEnabled) {
                 return null
             }
 
@@ -174,6 +179,10 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
                     .let {
                         when (it) {
                             is Async.Success -> it.data
+                            is Async.Failure -> {
+                                updateLoadLinksState(LoadLinksState.Error(it.message))
+                                return@launch
+                            }
                             else -> {
                                 updateLoadLinksState(LoadLinksState.Error(LocaleR.string.media_data_fetch_failed))
                                 return@launch

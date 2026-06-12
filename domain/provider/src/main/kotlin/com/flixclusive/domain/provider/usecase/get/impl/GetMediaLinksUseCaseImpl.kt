@@ -30,6 +30,8 @@ import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaLinkType
 import com.flixclusive.provider.capability.MediaMetadataProviderApi
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -163,7 +165,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 && mediaLinkApi.supportedLinkTypes.contains(MediaLinkType.SUBTITLES)
         }
 
-        launch {
+        val subtitlesFetchJob = async {
             subtitlesOnlyApi.mapAsync { (providerMeta, crossMatcherApi, mediaLinkApi) ->
                 val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
                 if (crossMatchedMedia == null) {
@@ -203,29 +205,28 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             }
         }
 
-        launch {
+        val streamsFetchJob = async {
             val streamProviders = combinedApis - subtitlesOnlyApi.toSet()
             streamProviders.forEach { (providerMeta, crossMatcherApi, mediaLinkApi) ->
+                sendCrossMatchingMessage(providerMeta)
+
                 val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
                 if (crossMatchedMedia == null) {
                     warnLog("Cross-matching failed for stream links provider ${providerMeta.name} with media ${media.title} (${media.id})")
                     return@forEach
                 }
 
-                sendCrossMatchingMessage(providerMeta)
-
-                val crossMatchedEpisode = if (crossMatchedMedia is Show && episode != null) {
+                var crossMatchedEpisode: Episode? = null
+                if (crossMatchedMedia is Show && episode != null) {
                     val provider = providersMap[providerMeta.id] ?: return@forEach
                     val plugin = provider.plugin ?: return@forEach
                     val metadataApi = safeCall { plugin.getMetadataApi(context) } ?: return@forEach
 
-                    getCrossMatchedEpisode(
+                    crossMatchedEpisode = getCrossMatchedEpisode(
                         crossMatchedShow = crossMatchedMedia,
                         referenceEpisode = episode,
                         metadataApi = metadataApi
                     )
-                } else {
-                    null
                 }
 
                 if (crossMatchedMedia is Show && crossMatchedEpisode == null) {
@@ -246,11 +247,17 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 }
 
                 if (success) {
-                    send(LoadLinksState.Success)
-                    return@launch
+                    return@async
                 }
             }
+        }
 
+        awaitAll(subtitlesFetchJob, streamsFetchJob)
+
+        val finalCache = mediaLinksRepository.getById(cache.id)
+        if (finalCache != null && finalCache.hasValidLinks) {
+            send(LoadLinksState.Success)
+        } else {
             send(LoadLinksState.Unavailable())
         }
     }.flowOn(appDispatchers.io)
