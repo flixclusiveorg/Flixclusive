@@ -3,6 +3,7 @@ package com.flixclusive.domain.provider.usecase.tracker.impl
 import android.content.Context
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.ProviderCapability
@@ -24,6 +25,10 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
 ) : SyncToScrobblersUseCase {
+    // Saving this one in-memory to avoid fetching the providers every time,
+    // since this can be called multiple times during a single media playback session
+    // and there's guaranteed to be no changes to the authenticated providers during that time
+    private var scrobblers: List<Pair<String?, TrackerProviderApi>> = emptyList()
 
     override suspend fun invoke(
         action: ScrobbleAction,
@@ -31,7 +36,7 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
         media: MediaMetadata,
         episode: Episode?,
     ) {
-        val scrobblers = getScrobblers()
+        scrobblers = scrobblers.takeIf { it.isEmpty() } ?: getScrobblers()
 
         if (scrobblers.isEmpty()) {
             warnLog("No authenticated scrobble providers found, skipping scrobble sync")
@@ -40,7 +45,7 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
 
         val percentage = (watchProgress.progress.toFloat() / watchProgress.duration.toFloat()) * 100f
 
-        scrobblers.forEach { (provider, api) ->
+        scrobblers.mapAsync { (provider, api) ->
             try {
                 api.scrobble(
                     action = action,
@@ -63,7 +68,7 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
 
         return providers.mapNotNull {
             if (!it.isTrackerEnabled) return@mapNotNull null
-            
+
             val api = try {
                 it.plugin?.getTrackerApi(context)
             } catch (e: Throwable) {
