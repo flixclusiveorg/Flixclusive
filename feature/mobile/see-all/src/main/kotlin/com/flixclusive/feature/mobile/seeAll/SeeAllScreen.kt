@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.PagingState
@@ -42,7 +44,6 @@ import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.provider.Catalog
-import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -72,14 +73,14 @@ internal fun InternalSeeAllScreen(
     SeeAllScreenContent(
         items = {
             if (searchQuery.isNotBlank() && uiState.isSearching) {
-                viewModel.items.filter {
+                viewModel.items.fastFilter {
                     it.title.contains(searchQuery, ignoreCase = true)
                 }
             } else {
                 viewModel.items
             }
         },
-        uiState = uiState,
+        uiState = { uiState },
         showMediaTitles = showMediaTitles,
         catalog = navArgs.catalog,
         searchQuery = { searchQuery },
@@ -94,8 +95,8 @@ internal fun InternalSeeAllScreen(
 
 @Composable
 private fun SeeAllScreenContent(
-    items: () -> Collection<MediaMetadata>,
-    uiState: SeeAllUiState,
+    items: () -> List<MediaMetadata>,
+    uiState: () -> SeeAllUiState,
     showMediaTitles: Boolean,
     catalog: Catalog,
     searchQuery: () -> String,
@@ -111,8 +112,8 @@ private fun SeeAllScreenContent(
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
 
     val updatedPaginateItems by rememberUpdatedState(paginate)
-    LaunchedEffect(listState, uiState.canPaginate) {
-        snapshotFlow { uiState.canPaginate && listState.shouldPaginate() }
+    LaunchedEffect(listState, uiState) {
+        snapshotFlow { uiState().canPaginate && listState.shouldPaginate() }
             .distinctUntilChanged()
             .collect { shouldPaginate ->
                 if (shouldPaginate) {
@@ -140,7 +141,7 @@ private fun SeeAllScreenContent(
                 title = catalog.name,
                 onNavigate = onGoBack,
                 scrollBehavior = scrollBehavior,
-                isSearching = uiState.isSearching,
+                isSearching = uiState().isSearching,
                 searchQuery = searchQuery,
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
@@ -157,16 +158,9 @@ private fun SeeAllScreenContent(
             modifier = Modifier.fillMaxSize(),
         ) {
             items(
-                items().size,
-                key = {
-                    val media = items().elementAt(it)
-                    media.id
-                },
-            ) {
-                val media by remember {
-                    derivedStateOf { items().elementAt(it) }
-                }
-
+                items = items(),
+                key = { media -> media.id },
+            ) { media ->
                 MediaCard(
                     isShowingTitle = showMediaTitles,
                     media = media,
@@ -178,7 +172,7 @@ private fun SeeAllScreenContent(
                 )
             }
 
-            if (uiState.pagingState.isLoading) {
+            if (uiState().pagingState.isLoading) {
                 items(20) {
                     MediaCardPlaceholder(
                         modifier = Modifier
@@ -188,10 +182,10 @@ private fun SeeAllScreenContent(
                 }
             }
 
-            if (uiState.pagingState is PagingState.Error) {
+            (uiState().pagingState as? PagingState.Error)?.let { errorState ->
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     RetryButton(
-                        error = uiState.pagingState.error.asString(),
+                        error = errorState.error.asString(),
                         onRetry = paginate,
                         modifier = Modifier.aspectRatio(MediaCover.Backdrop.ratio),
                     )
@@ -211,7 +205,7 @@ private fun SeeAllScreenBasePreview() {
                     id = it.toString(),
                     title = "MediaMetadata $it",
                 )
-            }.toImmutableSet()
+            }
     }
     var searchQuery by remember { mutableStateOf("") }
     var uiState by remember {
@@ -235,10 +229,10 @@ private fun SeeAllScreenBasePreview() {
                         medias
                             .filter {
                                 it.title.contains(searchQuery, ignoreCase = true)
-                            }.toImmutableSet()
+                            }
                     }
                 },
-                uiState = uiState,
+                uiState = { uiState },
                 showMediaTitles = true,
                 catalog = remember {
                     Catalog(

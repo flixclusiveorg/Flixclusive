@@ -1,13 +1,15 @@
 package com.flixclusive.feature.mobile.seeAll
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.mutableStateSetOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.PagingState
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.DataStoreManager.Companion.getUserPrefsAsFlow
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.domain.catalog.usecase.GetCatalogItemsUseCase
@@ -39,9 +41,10 @@ internal class SeeAllViewModel @AssistedInject constructor(
         fun create(navArgs: Catalog): SeeAllViewModel
     }
 
+    private val seenIds = hashSetOf<String>()
     private var paginatingJob: Job? = null
 
-    val items = mutableStateSetOf<MediaMetadata>()
+    val items = mutableStateListOf<MediaMetadata>()
 
     private val _uiState = MutableStateFlow(SeeAllUiState())
     val uiState = _uiState.asStateFlow()
@@ -50,7 +53,7 @@ internal class SeeAllViewModel @AssistedInject constructor(
     val searchQuery = _searchQuery.asStateFlow()
 
     val showMediaTitles = dataStoreManager
-        .getUserPrefsAsFlow(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
+        .getUserPrefsAsFlow<UiPreferences>(UserPreferences.UI_PREFS_KEY)
         .map { it.shouldShowTitleOnCards }
         .distinctUntilChanged()
         .stateIn(
@@ -103,7 +106,10 @@ internal class SeeAllViewModel @AssistedInject constructor(
                             items.clear()
                         }
 
-                        items.addAll(data.results)
+                        items.addAll(
+                            data.results
+                                .fastFilter { seenIds.add(it.id) }
+                        )
 
                         val pagingState = when {
                             canPaginate -> PagingState.Idle
