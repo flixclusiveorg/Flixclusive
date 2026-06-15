@@ -4,12 +4,14 @@ import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToChooseProfileScreen
 import com.flixclusive.core.navigation.navigator.NavigateToEditUserScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMediaPreviewBottomSheet
+import com.flixclusive.core.navigation.navigator.NavigateToSubSettingsScreen
 
 interface NavigatorSettingsScreen :
     NavigateBack,
     NavigateToChooseProfileScreen,
     NavigateToEditUserScreen,
-    NavigateToMediaPreviewBottomSheet {
+    NavigateToMediaPreviewBottomSheet,
+    NavigateToSubSettingsScreen {
     fun navigateToRepositoryManagerScreen()
 
     fun navigateToProviderManagerScreen()

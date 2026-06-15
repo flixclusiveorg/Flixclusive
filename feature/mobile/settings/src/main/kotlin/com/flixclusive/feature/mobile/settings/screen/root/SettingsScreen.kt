@@ -1,68 +1,18 @@
 package com.flixclusive.feature.mobile.settings.screen.root
 
 import android.annotation.SuppressLint
-import android.content.res.Configuration
-import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.layout.AnimatedPane
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
-import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
-import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationItem
-import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
-import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
-import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.util.fastFirstOrNull
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.palette.graphics.Palette
-import com.flixclusive.core.database.entity.user.User
-import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.presentation.mobile.extensions.getAvatarResource
+import com.flixclusive.core.navigation.settings.SubSettingsNavItem
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.feature.mobile.settings.R
-import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.github.ReportBugTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.links.ManageMediaLinksTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.links.MediaLinkCardsTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.links.MediaLinksShowDetailTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
-import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
-import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.media.MediaMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.coroutines.launch
-import com.flixclusive.core.strings.R as LocaleR
 
 @Suppress("ktlint:compose:vm-forwarding-check")
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
@@ -75,193 +25,11 @@ internal fun SettingsScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
-    val scope = rememberCoroutineScope()
-
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val initialNavigation = if (isLandscape) {
-        listOf(
-            ThreePaneScaffoldDestinationItem(
-                ListDetailPaneScaffoldRole.Detail,
-                UserPreferences.UI_PREFS_KEY.name,
-            ),
-        )
-    } else {
-        listOf(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List))
-    }
-
-    val scaffoldNavigator =
-        rememberListDetailPaneScaffoldNavigator<String>(initialDestinationHistory = initialNavigation)
-    val isListAndDetailVisible =
-        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded &&
-            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-
-    val backgroundAlpha = rememberSaveable { mutableFloatStateOf(1F) }
-    val backgroundBrush = getAdaptiveBackground(currentUser)
-
-    val items = remember {
-        persistentMapOf(
-            null to listOf(
-                SwitchProfileNavigation,
-            ),
-            LocaleR.string.application to
-                listOf(
-                    AppearanceTweakScreen(viewModel),
-                    PlayerTweakScreen(viewModel),
-                    DataTweakScreen(viewModel),
-                    MediaLinkCardsTweakScreen,
-                    MediaLinksShowDetailTweakScreen,
-                    ManageMediaLinksTweakScreen,
-                    ProvidersTweakScreen(viewModel),
-                    SubtitlesTweakScreen(viewModel),
-                    SystemTweakScreen(viewModel),
-                ),
-            R.string.github to
-                listOf(
-                    ReportBugTweakNavigation,
-                    FeatureRequestTweakNavigation,
-                    RepositoryTweakNavigation,
-                ),
-        )
-    }
-    val navigationItems = remember { items.values.flatten() }
-
-    if (currentUser != null) {
-        CompositionLocalProvider(
-            LocalScaffoldNavigator provides scaffoldNavigator,
-            LocalSettingsNavigator provides navigator,
-        ) {
-            NavigableListDetailPaneScaffold(
-                navigator = scaffoldNavigator,
-                modifier = Modifier
-                    .padding(LocalGlobalScaffoldPadding.current)
-                    .drawBehind {
-                        if (isListAndDetailVisible) {
-                            drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
-                        }
-                    },
-                listPane = {
-                    AnimatedPane {
-                        ListContent(
-                            buildConfig = viewModel.buildConfig,
-                            items = items,
-                            currentUser = { currentUser!! },
-                            navigator = navigator,
-                            onScroll = { backgroundAlpha.floatValue = it },
-                            onItemClick = { item ->
-                                scope.launch {
-                                    scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
-                                }
-                            },
-                            modifier = Modifier
-                                .drawBehind {
-                                    if (!isListAndDetailVisible) {
-                                        drawRect(backgroundBrush)
-                                    }
-                                },
-                        )
-                    }
-                },
-                detailPane = {
-                    AnimatedPane {
-                        val screen by remember {
-                            derivedStateOf {
-                                navigationItems.fastFirstOrNull {
-                                    if (it is BaseTweakNavigation) {
-                                        return@fastFirstOrNull false
-                                    }
-
-                                    it.key.name == scaffoldNavigator.currentDestination?.contentKey
-                                }
-                            }
-                        }
-
-                        if (screen != null) {
-                            val isListVisible =
-                                scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
-                                    PaneAdaptedValue.Expanded
-
-                            DetailsScaffold(
-                                isListAndDetailVisible = isListAndDetailVisible,
-                                isDetailsVisible = !isListVisible,
-                                content = { screen!!.Content() },
-                                navigateBack = {
-                                    scope.launch {
-                                        if (scaffoldNavigator.canNavigateBack()) {
-                                            scaffoldNavigator.navigateBack(
-                                                backNavigationBehavior = BackNavigationBehavior.PopLatest,
-                                            )
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.focusGroup(),
-                            )
-                        }
-                    }
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun getAdaptiveBackground(currentUser: User?): Brush {
-    val context = LocalContext.current
-
-    val surfaceColor = MaterialTheme.colorScheme.surface
-    val primaryColor = MaterialTheme.colorScheme.primary.copy(0.3F)
-
-    return remember(currentUser?.image) {
-        val colors =
-            if (currentUser != null) {
-                val avatarId = getAvatarResource(currentUser.image)
-                val drawable = ContextCompat.getDrawable(context, avatarId)!!
-
-                val palette =
-                    Palette
-                        .from(drawable.toBitmap())
-                        .generate()
-
-                val backgroundColor = Color(palette.dominantSwatch?.rgb ?: surfaceColor.toArgb())
-                val tubeLightColor = Color(palette.lightVibrantSwatch?.rgb ?: surfaceColor.toArgb())
-
-                listOf(
-                    tubeLightColor.copy(0.5F),
-                    backgroundColor.copy(0.2F),
-                    surfaceColor,
-                )
-            } else {
-                listOf(primaryColor, surfaceColor)
-            }
-
-        Brush.verticalGradient(colors)
-    }
-}
-
-@Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
-@Composable
-private fun TabletPreview() {
-    FlixclusiveTheme {
-        Surface {
-            SettingsScreen(
-                navigator = object : NavigatorSettingsScreen {
-                    override fun navigateToProviderManagerScreen() = Unit
-
-                    override fun navigateToRepositoryManagerScreen() = Unit
-
-                    override fun navigateToUrl(url: String) = Unit
-
-                    override fun navigateBack() = Unit
-
-                    override fun navigateToUserProfilesScreen(shouldPopBackStack: Boolean) = Unit
-
-                    override fun navigateToEditUserScreen(userId: String) = Unit
-
-                    override fun showMediaPreviewBottomSheet(media: MediaMetadata) = Unit
-                },
-            )
-        }
-    }
+    ListContent(
+        buildConfig = viewModel.buildConfig,
+        currentUser = { currentUser },
+        navigator = navigator,
+    )
 }
 
 @Preview(device = "spec:width=411dp,height=891dp")
@@ -284,6 +52,8 @@ private fun PhonePreview() {
                     override fun navigateToEditUserScreen(userId: String) = Unit
 
                     override fun showMediaPreviewBottomSheet(media: MediaMetadata) = Unit
+
+                    override fun navigateToSubSettingsScreen(route: SubSettingsNavItem) = Unit
                 },
             )
         }

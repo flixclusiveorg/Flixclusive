@@ -20,6 +20,7 @@ import com.flixclusive.core.navigation.navigator.NavigateToSeeAllScreen
 import com.flixclusive.core.navigation.navigator.NavigateToSelectAvatarScreen
 import com.flixclusive.core.navigation.navigator.NavigatorExitApp
 import com.flixclusive.core.navigation.navigator.PinAction
+import com.flixclusive.core.navigation.settings.SubSettingsNavItem
 import com.flixclusive.feature.mobile.app.updates.dialog.NavigatorAppUpdatesDialog
 import com.flixclusive.feature.mobile.app.updates.screen.NavigatorAppUpdatesScreen
 import com.flixclusive.feature.mobile.home.NavigatorHome
@@ -36,6 +37,9 @@ import com.flixclusive.feature.mobile.provider.details.NavigatorProviderDetailsB
 import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerScreen
 import com.flixclusive.feature.mobile.search.NavigatorSearchScreen
 import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
+import com.flixclusive.feature.mobile.settings.screen.data.NavigatorDataTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.player.NavigatorPlayerTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.providers.NavigatorProvidersTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
 import com.flixclusive.feature.mobile.user.add.NavigatorAddUserScreenNavigateTo
 import com.flixclusive.feature.mobile.user.edit.NavigatorUserEditScreen
@@ -72,6 +76,12 @@ import com.ramcosta.composedestinations.generated.providermanage.destinations.Pr
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
 import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.AppearanceTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.PlayerTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.ProvidersTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.SubtitlesTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.SystemTweakScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
@@ -119,7 +129,10 @@ internal class MobileAppNavigator(
     NavigatorSettingsScreen,
     NavigatorSplashScreen,
     NavigatorUserEditScreen,
-    NavigatorUserProfilesScreen {
+    NavigatorUserProfilesScreen,
+    NavigatorDataTweakScreen,
+    NavigatorProvidersTweakScreen,
+    NavigatorPlayerTweakScreen {
     private val currentNavGraph get() = destination.navGraph()
 
     private fun runOnResumed(
@@ -416,5 +429,37 @@ internal class MobileAppNavigator(
         runOnResumed {
             navigator.navigate(SearchScreenDestination)
         }
+    }
+
+    override fun navigateToSubSettingsScreen(route: SubSettingsNavItem) {
+        runOnResumed {
+            when (route) {
+                SubSettingsNavItem.APPEARANCE -> {
+                    navigator.navigate(AppearanceTweakScreenDestination)
+                }
+                SubSettingsNavItem.PLAYER -> {
+                    navigator.navigate(PlayerTweakScreenDestination)
+                }
+                SubSettingsNavItem.DATA -> {
+                    navigator.navigate(DataTweakScreenDestination)
+                }
+                SubSettingsNavItem.PROVIDERS -> {
+                    navigator.navigate(ProvidersTweakScreenDestination)
+                }
+                SubSettingsNavItem.SYSTEM -> {
+                    navigator.navigate(SystemTweakScreenDestination)
+                }
+            }
+        }
+    }
+
+    override fun openSubtitlesSettings() {
+        runOnResumed {
+            navigator.navigate(SubtitlesTweakScreenDestination)
+        }
+    }
+
+    override fun navigateToMediaLinkCardsTweakScreen() {
+        TODO("Not yet implemented")
     }
 }

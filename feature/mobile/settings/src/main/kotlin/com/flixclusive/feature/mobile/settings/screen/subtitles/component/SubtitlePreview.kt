@@ -68,10 +68,12 @@ internal fun SubtitlePreview(
                     width = 2.dp,
                     color = LocalContentColor.current.copy(0.6f),
                     shape = shape,
-                ).shadow(
+                )
+                .shadow(
                     elevation = 15.dp,
                     shape = shape,
-                ).graphicsLayer {
+                )
+                .graphicsLayer {
                     alpha = if (areSubtitlesAvailableProvider()) 1F else 0.4F
                 },
     ) {

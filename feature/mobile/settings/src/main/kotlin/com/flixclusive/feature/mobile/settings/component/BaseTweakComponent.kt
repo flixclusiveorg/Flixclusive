@@ -48,7 +48,8 @@ internal fun BaseTweakComponent(
                     indication = null,
                     onClick = { onClick?.invoke() },
                     enabled = enabledProvider(),
-                ).graphicsLayer {
+                )
+                .graphicsLayer {
                     alpha = if (enabledProvider()) 1F else 0.6F
                 },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -61,10 +62,12 @@ internal fun BaseTweakComponent(
                     .indication(
                         interactionSource = interactionSource,
                         indication = LocalIndication.current,
-                    ).padding(
+                    )
+                    .padding(
                         vertical = getAdaptiveDp(10.dp),
                         horizontal = defaultHorizontalPadding,
-                    ).fillMaxWidth()
+                    )
+                    .fillMaxWidth()
                     .heightIn(min = getAdaptiveDp(TweakTouchSize)),
         ) {
             if (startContent != null) {
