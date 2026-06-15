@@ -14,5 +14,5 @@ enum class DoHPreference {
     Mullvad,
     ControlD,
     Najalla,
-    SheCan;
+    SheCan
 }

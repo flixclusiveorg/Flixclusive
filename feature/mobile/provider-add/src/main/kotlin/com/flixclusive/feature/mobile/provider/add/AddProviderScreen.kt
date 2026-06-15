@@ -212,7 +212,7 @@ internal fun AddProviderScreenContent(
                         ) {
                             items(currentProviders, key = { it.id + it.name }) { item ->
                                 val interactionSource = remember { MutableInteractionSource() }
-                                val shape =  MaterialTheme.shapes.small
+                                val shape = MaterialTheme.shapes.small
 
                                 ProviderCard(
                                     provider = item.metadata,
@@ -229,13 +229,12 @@ internal fun AddProviderScreenContent(
                                         .indication(
                                             interactionSource = interactionSource,
                                             indication = ripple(),
-                                        )
-                                        .pointerInput(Unit) {
+                                        ).pointerInput(Unit) {
                                             detectTapGestures(
                                                 onLongPress = { _ ->
                                                     val canBeSelected =
-                                                        installStates[item.id] is ProviderInstallState.NotInstalled
-                                                            || installStates[item.id] is ProviderInstallState.Outdated
+                                                        installStates[item.id] is ProviderInstallState.NotInstalled ||
+                                                            installStates[item.id] is ProviderInstallState.Outdated
 
                                                     if (canBeSelected) {
                                                         onToggleSelect(item.metadata)
@@ -244,8 +243,8 @@ internal fun AddProviderScreenContent(
                                                 onTap = { _ ->
                                                     val isSelecting = selectedProviders().isNotEmpty()
                                                     val canBeSelected =
-                                                        installStates[item.id] is ProviderInstallState.NotInstalled
-                                                            || installStates[item.id] is ProviderInstallState.Outdated
+                                                        installStates[item.id] is ProviderInstallState.NotInstalled ||
+                                                            installStates[item.id] is ProviderInstallState.Outdated
 
                                                     if (isSelecting && !canBeSelected) {
                                                         scope.launch {
@@ -325,12 +324,18 @@ private fun AddProviderScreenBasePreview() {
     val filters = remember { mutableStateListOf<AddProviderFilterType<*>>() }
 
     val providersAsync = remember(providers.size) {
-        if (providers.isEmpty()) Async.Loading
-        else Async.Success(providers.toPersistentList())
+        if (providers.isEmpty()) {
+            Async.Loading
+        } else {
+            Async.Success(providers.toPersistentList())
+        }
     }
     val filtersAsync = remember(filters.size) {
-        if (filters.isEmpty()) Async.Loading
-        else Async.Success(filters.toPersistentList())
+        if (filters.isEmpty()) {
+            Async.Loading
+        } else {
+            Async.Success(filters.toPersistentList())
+        }
     }
 
     LaunchedEffect(true) {

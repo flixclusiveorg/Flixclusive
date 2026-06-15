@@ -1,4 +1,3 @@
-
 import com.android.build.api.dsl.CommonExtension
 import com.flixclusive.configureAndroidCompose
 import org.gradle.api.Plugin

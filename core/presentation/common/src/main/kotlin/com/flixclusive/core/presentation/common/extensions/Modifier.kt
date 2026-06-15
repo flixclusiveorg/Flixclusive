@@ -120,4 +120,4 @@ fun Modifier.noIndicationClickable(onClick: () -> Unit): Modifier {
     )
 }
 
-fun Modifier.noOpClickable() = noIndicationClickable {  }
+fun Modifier.noOpClickable() = noIndicationClickable { }

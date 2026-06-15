@@ -2,7 +2,6 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.file.rmrf
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.util.log.infoLog
@@ -65,7 +64,7 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
             val lastRemainingFile = parentDirectory.listFiles()!![0]
 
             if (lastRemainingFile.name.equals(ProviderConstants.UPDATER_JSON_FILE, true)) {
-                rmrf(parentDirectory)
+                parentDirectory.deleteRecursively()
             }
         }
     }

@@ -124,7 +124,7 @@ private fun ContinueWatchingCard(
     }
 
     val itemLabel = remember(item) {
-        if(item is EpisodeProgressWithMetadata) {
+        if (item is EpisodeProgressWithMetadata) {
             UiText.from("S${item.watchData.seasonNumber} E${item.watchData.episodeNumber}")
         } else {
             val watchTime = item.watchData.progress
@@ -146,8 +146,7 @@ private fun ContinueWatchingCard(
                 .background(
                     color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
                     shape = MaterialTheme.shapes.small,
-                )
-                .combinedClickable(
+                ).combinedClickable(
                     onClick = onClick,
                     onLongClick = {
                         feedbackOnLongPress()
@@ -172,8 +171,7 @@ private fun ContinueWatchingCard(
                         width = 1.dp,
                         color = Color.White,
                         shape = CircleShape
-                    )
-                    .background(
+                    ).background(
                         color = Color.Black.copy(0.6f),
                         shape = CircleShape
                     )
@@ -236,7 +234,7 @@ private fun ContinueWatchingCard(
             }
         }
 
-        if(showTitle) {
+        if (showTitle) {
             Text(
                 text = media.title,
                 style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
@@ -255,11 +253,12 @@ private fun ContinueWatchingCard(
 private fun ContinueWatchingRowBasePreview() {
     val items = remember {
         List(20) { index ->
-            val media = DummyDataForPreview.getMedia(
-                id = "media_$index",
-                title = "Sample MediaMetadata ${index + 1}",
-                mediaType = if (index % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
-            ).toDBMedia()
+            val media = DummyDataForPreview
+                .getMedia(
+                    id = "media_$index",
+                    title = "Sample MediaMetadata ${index + 1}",
+                    mediaType = if (index % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
+                ).toDBMedia()
 
             val ownerId = "preview-user-$index"
             val duration = Random.nextLong(2, 3) * 1000 * 60 * 60

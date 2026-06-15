@@ -90,7 +90,8 @@ internal class PlayerScreenViewModel
         override fun showErrorSnackbar(
             message: UiText,
             isInternalPlayerError: Boolean,
-        ) {}
+        ) {
+        }
 
         /**
          *

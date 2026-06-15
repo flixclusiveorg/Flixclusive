@@ -108,7 +108,9 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     val navController = rememberNavController()
     val destinationsNavigator = navController.rememberDestinationsNavigator()
-    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(initialValue = AppGraph.startRoute)
+    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(
+        initialValue = AppGraph.startRoute
+    )
     val currentNavGraph by navController.currentScreenAsState(AppmobileNavGraphs.home)
 
     val bottomSheetNavigator = rememberBottomSheetNavigator()

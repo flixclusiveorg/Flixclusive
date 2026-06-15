@@ -73,10 +73,13 @@ internal fun ResizeModeSheet(
                         modifier = Modifier
                             .defaultMinSize(minWidth = 1.dp, minHeight = 30.dp)
                             .weight(1f),
-                        border = if (mode == currentResizeMode)
+                        border = if (mode == currentResizeMode) {
                             ButtonDefaults.outlinedButtonBorder().copy(
                                 width = 0.5.dp
-                            ) else null,
+                            )
+                        } else {
+                            null
+                        },
                     ) {
                         Text(
                             text = stringResource(mode.getStringId()),
@@ -100,10 +103,13 @@ internal fun ResizeModeSheet(
                         modifier = Modifier
                             .defaultMinSize(minWidth = 1.dp, minHeight = 30.dp)
                             .weight(1f),
-                        border = if (mode == currentResizeMode)
+                        border = if (mode == currentResizeMode) {
                             ButtonDefaults.outlinedButtonBorder().copy(
                                 width = 0.5.dp
-                            ) else null,
+                            )
+                        } else {
+                            null
+                        },
                     ) {
                         Text(
                             text = stringResource(mode.getStringId()),

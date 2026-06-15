@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -60,19 +61,30 @@ private val ButtonSize = 46.dp
 
 private sealed class StableInstallState {
     data object NotInstalled : StableInstallState()
+
     data object Installing : StableInstallState()
+
     data object Installed : StableInstallState()
+
     data object Loading : StableInstallState()
+
     data object Uninstalling : StableInstallState()
-    data class Outdated(val version: String) : StableInstallState()
+
+    data class Outdated(
+        val version: String
+    ) : StableInstallState()
 }
 
 @Stable
 sealed class ProviderInstallState {
     data object Loading : ProviderInstallState()
+
     data object NotInstalled : ProviderInstallState()
+
     data object Installed : ProviderInstallState()
+
     data object Uninstalling : ProviderInstallState()
+
     data class Installing(
         val progress: Float,
         val downloadId: String
@@ -88,6 +100,7 @@ sealed class ProviderInstallState {
             return progress.hashCode()
         }
     }
+
     data class Outdated(
         val newVersion: String,
         val newChangelogs: String?,
@@ -162,7 +175,7 @@ fun ProviderInstallButton(
         animationSpec = tween(durationMillis = 300)
     )
 
-    LaunchedEffect(true) {
+    LaunchedEffect(state) {
         snapshotFlow {
             when (state()) {
                 is ProviderInstallState.Loading,
@@ -174,7 +187,7 @@ fun ProviderInstallButton(
             .collect { enabled ->
                 if (!isButtonEnabled && enabled) {
                     // Add small delay to prevent quick toggling of button state during transitions
-                    delay(300)
+                    delay(300.milliseconds)
                 }
 
                 isButtonEnabled = enabled
@@ -233,8 +246,8 @@ fun ProviderInstallButton(
                         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
                     ) {
                         if (
-                            state is StableInstallState.NotInstalled
-                            || state is StableInstallState.Outdated
+                            state is StableInstallState.NotInstalled ||
+                            state is StableInstallState.Outdated
                         ) {
                             Icon(
                                 painter = painterResource(UiCommonR.drawable.download),
@@ -255,11 +268,19 @@ fun ProviderInstallButton(
                             color = LocalContentColor.current,
                             text = when (state) {
                                 is StableInstallState.Loading -> stringResource(LocaleR.string.label_loading)
+
                                 is StableInstallState.NotInstalled -> stringResource(LocaleR.string.label_install)
+
                                 is StableInstallState.Installed -> stringResource(LocaleR.string.label_uninstall)
+
                                 is StableInstallState.Uninstalling -> stringResource(LocaleR.string.label_uninstalling)
+
                                 is StableInstallState.Installing -> stringResource(LocaleR.string.label_cancel)
-                                is StableInstallState.Outdated -> stringResource(LocaleR.string.label_update, state.version)
+
+                                is StableInstallState.Outdated -> stringResource(
+                                    LocaleR.string.label_update,
+                                    state.version
+                                )
                             },
                         )
                     }
@@ -329,7 +350,7 @@ private fun DownloadProgressIndicator(
         }
     }
 
-    LaunchedEffect(true) {
+    LaunchedEffect(providerInstallState) {
         snapshotFlow {
             when (val state = providerInstallState()) {
                 is ProviderInstallState.Installing -> state.progress
@@ -379,7 +400,14 @@ private fun DownloadProgressIndicator(
 @Composable
 private fun ProviderInstallButtonPreview() {
     val scope = rememberCoroutineScope()
-    var providerInstallState by remember { mutableStateOf<ProviderInstallState>(ProviderInstallState.Outdated("2.0.2", null)) }
+    var providerInstallState by remember {
+        mutableStateOf<ProviderInstallState>(
+            ProviderInstallState.Outdated(
+                "2.0.2",
+                null
+            )
+        )
+    }
 
 //    LaunchedEffect(true) {
 //        delay(800)
@@ -413,18 +441,18 @@ private fun ProviderInstallButtonPreview() {
                                 progress = 0f,
                                 downloadId = "dummy_download_id"
                             )
-                            delay(2000)
+                            delay(2000.milliseconds)
                             providerInstallState = ProviderInstallState.Installed
                         } else if (providerInstallState is ProviderInstallState.Installed) {
                             providerInstallState = ProviderInstallState.Uninstalling
-                            delay(2000)
+                            delay(2000.milliseconds)
                             providerInstallState = ProviderInstallState.NotInstalled
                         } else if (providerInstallState is ProviderInstallState.Outdated) {
                             providerInstallState = ProviderInstallState.Installing(
                                 progress = 0f,
                                 downloadId = "dummy_download_id"
                             )
-                            delay(2000)
+                            delay(2000.milliseconds)
                             providerInstallState = ProviderInstallState.Installed
                         } else {
                             // No-op for other states

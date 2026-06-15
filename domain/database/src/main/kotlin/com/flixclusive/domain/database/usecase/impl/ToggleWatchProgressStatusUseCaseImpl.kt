@@ -63,7 +63,6 @@ internal class ToggleWatchProgressStatusUseCaseImpl @Inject constructor(
                     )
                 }
             }
-
         }
     }
 

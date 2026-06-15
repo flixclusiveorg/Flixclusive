@@ -277,8 +277,7 @@ private fun UserAvatarWithEdit(
                     .background(
                         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8F),
                         shape = DefaultAvatarShape
-                    )
-                    .border(
+                    ).border(
                         width = 0.5.dp,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.4f),
                         shape = DefaultAvatarShape

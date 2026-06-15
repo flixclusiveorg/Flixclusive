@@ -25,7 +25,8 @@ internal class GetCatalogProvidersUseCaseImpl @Inject constructor(
     @OptIn(FlowPreview::class)
     override fun invoke(): Flow<Async<List<ProviderResponseWrapper>>> {
         return userSessionDataStore.currentUserId.filterNotNull().flatMapLatest { userId ->
-            providerRepository.getProvidersAsFlow(userId)
+            providerRepository
+                .getProvidersAsFlow(userId)
                 .mapLatest { providers ->
                     val metadata = providers
                         .filter { provider ->
@@ -33,8 +34,7 @@ internal class GetCatalogProvidersUseCaseImpl @Inject constructor(
                         }
 
                     Async.Success(metadata) as Async<List<ProviderResponseWrapper>>
-                }
-                .distinctUntilChanged()
+                }.distinctUntilChanged()
                 .onStart { emit(Async.Loading) }
                 .catch { emit(Async.Failure(it)) }
         }

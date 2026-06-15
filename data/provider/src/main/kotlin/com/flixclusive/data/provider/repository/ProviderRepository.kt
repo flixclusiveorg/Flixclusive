@@ -50,9 +50,15 @@ interface ProviderRepository {
 
     suspend fun getProvider(id: String, ownerId: String): ProviderResponseWrapper?
 
-    fun getProvidersWithCapabilityAsFlow(ownerId: String, capability: ProviderCapability): Flow<List<ProviderResponseWrapper>>
+    fun getProvidersWithCapabilityAsFlow(
+        ownerId: String,
+        capability: ProviderCapability
+    ): Flow<List<ProviderResponseWrapper>>
 
-    suspend fun getProvidersWithCapability(ownerId: String, capability: ProviderCapability): List<ProviderResponseWrapper>
+    suspend fun getProvidersWithCapability(
+        ownerId: String,
+        capability: ProviderCapability
+    ): List<ProviderResponseWrapper>
 
     suspend fun getProviders(ownerId: String): List<ProviderResponseWrapper>
 

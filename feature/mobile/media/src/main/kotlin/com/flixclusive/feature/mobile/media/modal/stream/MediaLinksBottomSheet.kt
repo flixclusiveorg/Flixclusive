@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.media.modal.stream
 
-
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
@@ -118,13 +117,15 @@ data class MediaLinksBottomSheetArgs(
     val episode: Episode? = null,
 )
 
-private val List<DBMediaLink>.hasPlayableLinks: Boolean get() {
-    return fastAny { it is DBStream && !it.isThirdPartyGateway }
-}
+private val List<DBMediaLink>.hasPlayableLinks: Boolean
+    get() {
+        return fastAny { it is DBStream && !it.isThirdPartyGateway }
+    }
 
-private val List<DBMediaLink>.hasValidLinks: Boolean get() {
-    return fastAny { it.isValid }
-}
+private val List<DBMediaLink>.hasValidLinks: Boolean
+    get() {
+        return fastAny { it.isValid }
+    }
 
 @OptIn(FlowPreview::class)
 @Destination<ExternalModuleGraph>(
@@ -157,8 +158,7 @@ internal fun MediaLinksBottomSheet(
             viewModel.links
         ) { state, links ->
             playerPrefs.isAutoSelectingServer && !state.isLoading && links.hasPlayableLinks
-        }
-            .filter { it }
+        }.filter { it }
             .distinctUntilChanged()
             .debounce(1000L) // Debounce to prevent rapid navigation if links change quickly
             .collectLatest {
@@ -176,9 +176,9 @@ internal fun MediaLinksBottomSheet(
         state = { uiState.loadLinksState },
         links = { links },
         canSkipLoading = {
-            playerPrefs.isAutoSelectingServer
-                && links.fastAny { it.isValid }
-                && uiState.loadLinksState.isLoading
+            playerPrefs.isAutoSelectingServer &&
+                links.fastAny { it.isValid } &&
+                uiState.loadLinksState.isLoading
         },
         canAutoSelectStream = { playerPrefs.isAutoSelectingServer },
         onResetAndRetry = viewModel::onResetAndRetry,
@@ -231,12 +231,12 @@ private fun MediaLinksBottomSheetContent(
 
     val isLoading by remember {
         derivedStateOf {
-            state().isLoading
-                || (
-                state().isSuccess
-                    && links().hasValidLinks
-                    && links().hasPlayableLinks
-                    && canAutoSelectStream()
+            state().isLoading ||
+                (
+                    state().isSuccess &&
+                        links().hasValidLinks &&
+                        links().hasPlayableLinks &&
+                        canAutoSelectStream()
                 )
         }
     }
@@ -623,8 +623,7 @@ private fun MediaLinkIndicatorChip(
             .background(
                 color = indicatorColor.copy(0.1f),
                 shape = MaterialTheme.shapes.extraSmall,
-            )
-            .padding(horizontal = 5.dp)
+            ).padding(horizontal = 5.dp)
     )
 }
 
@@ -644,8 +643,7 @@ private fun ErrorItem(
             .background(
                 color = MaterialTheme.colorScheme.error.copy(0.1f),
                 shape = MaterialTheme.shapes.small
-            )
-            .border(
+            ).border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.error.copy(0.6f),
                 shape = MaterialTheme.shapes.small

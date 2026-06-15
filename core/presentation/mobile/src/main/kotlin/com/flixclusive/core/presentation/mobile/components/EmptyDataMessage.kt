@@ -102,16 +102,18 @@ fun EmptyDataMessage(
 
 private val defaultTitleStyle
     @Composable get() =
-        MaterialTheme.typography.titleSmall.copy(
-            fontWeight = FontWeight.Black,
-        ).asAdaptiveTextStyle()
+        MaterialTheme.typography.titleSmall
+            .copy(
+                fontWeight = FontWeight.Black,
+            ).asAdaptiveTextStyle()
 
 private val defaultDescriptionStyle
     @Composable get() =
-        MaterialTheme.typography.bodySmall.copy(
-            fontWeight = FontWeight.Normal,
-            color = LocalContentColor.current.copy(0.8F),
-        ).asAdaptiveTextStyle()
+        MaterialTheme.typography.bodySmall
+            .copy(
+                fontWeight = FontWeight.Normal,
+                color = LocalContentColor.current.copy(0.8F),
+            ).asAdaptiveTextStyle()
 
 @Preview
 @Composable

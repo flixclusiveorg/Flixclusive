@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 
-
 @AndroidEntryPoint
 internal class MobileActivity : ComponentActivity() {
     private val viewModel: MobileAppViewModel by viewModels()
@@ -71,6 +70,7 @@ internal class MobileActivity : ComponentActivity() {
                                 R.string.outdated_providers,
                                 updateInfo.providerNames.joinToString(", ")
                             )
+
                             is ProviderUpdateInfo.Updated -> getString(
                                 R.string.updated_providers,
                                 updateInfo.providerNames.joinToString(", ")
@@ -101,4 +101,3 @@ internal class MobileActivity : ComponentActivity() {
         }
     }
 }
-

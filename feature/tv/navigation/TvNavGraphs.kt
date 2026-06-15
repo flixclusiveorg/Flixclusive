@@ -10,7 +10,6 @@ import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 
 internal object TvNavGraphs {
-
     val home = object : NavGraphSpec {
         override val route = "home"
 

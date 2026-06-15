@@ -62,10 +62,10 @@ internal fun HomeMediasRow(
     LaunchedEffect(listState.firstVisibleItemIndex) {
         safeCall {
             if (
-                medias.isNotEmpty()
-                && listState.firstVisibleItemIndex % medias.size == 1
-                && listState.firstVisibleItemIndex > medias.size
-                && !paginationState.canPaginate
+                medias.isNotEmpty() &&
+                listState.firstVisibleItemIndex % medias.size == 1 &&
+                listState.firstVisibleItemIndex > medias.size &&
+                !paginationState.canPaginate
             ) {
                 listState.scrollToItem(0)
             }
@@ -74,10 +74,12 @@ internal fun HomeMediasRow(
 
     LaunchedEffect(shouldStartPaginate) {
         if (
-            shouldStartPaginate && paginationState.canPaginate
-            && (paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE
-            || paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR
-            || medias.isEmpty())
+            shouldStartPaginate && paginationState.canPaginate &&
+            (
+                paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE ||
+                    paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR ||
+                    medias.isEmpty()
+            )
         ) {
             paginate(paginationState.currentPage)
         }
@@ -124,8 +126,7 @@ internal fun HomeMediasRow(
                         .ifElse(
                             condition = it == 0,
                             ifTrueModifier = focusRestorers.childModifier
-                        )
-                        .focusOnMount(
+                        ).focusOnMount(
                             itemKey = key,
                             onFocus = {
                                 onFocusedMediaChange(media)
@@ -136,6 +137,5 @@ internal fun HomeMediasRow(
                 )
             }
         }
-
     }
 }

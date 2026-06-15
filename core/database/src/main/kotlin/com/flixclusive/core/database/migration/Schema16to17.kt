@@ -61,8 +61,14 @@ internal object Schema16to17 : Migration(16, 17) {
 
         db.execSQL("DROP TABLE `installed_providers_old`")
 
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_repositoryUrl` ON `installed_providers` (`repositoryUrl`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_ownerId` ON `installed_providers` (`ownerId`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_repositoryUrl_ownerId` ON `installed_providers` (`repositoryUrl`, `ownerId`)")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_installed_providers_repositoryUrl` ON `installed_providers` (`repositoryUrl`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_installed_providers_ownerId` ON `installed_providers` (`ownerId`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_installed_providers_repositoryUrl_ownerId` ON `installed_providers` (`repositoryUrl`, `ownerId`)"
+        )
     }
 }

@@ -30,6 +30,7 @@ internal class DataTweakScreen(
 ) : BaseTweakScreen<DataPreferences> {
     override val key = UserPreferences.DATA_PREFS_KEY
     override val preferencesAsState: StateFlow<DataPreferences> = viewModel.getUserPrefsAsState<DataPreferences>(key)
+
     override fun onUpdatePreferences(transform: suspend (t: DataPreferences) -> DataPreferences) {
         viewModel.updateUserPrefs(key, transform)
     }

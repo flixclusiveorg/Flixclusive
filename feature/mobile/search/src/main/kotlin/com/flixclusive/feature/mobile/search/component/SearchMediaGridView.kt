@@ -70,7 +70,7 @@ internal fun SearchMediasGridView(
     Box(modifier = modifier) {
         AnimatedContent(
             targetState = currentState,
-            transitionSpec = { fadeIn() togetherWith  fadeOut() },
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
             modifier = Modifier.fillMaxSize()
         ) { state ->
             if (state.isError) {

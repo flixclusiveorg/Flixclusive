@@ -164,13 +164,11 @@ internal fun BottomControls(
                         if (it.isFocused) {
                             showControls()
                         }
-                    }
-                    .focusProperties {
+                    }.focusProperties {
                         up = if (isSeeking) FocusRequester.Cancel else topFocusRequester
                         left = FocusRequester.Cancel
                         right = FocusRequester.Cancel
-                    }
-                    .handleDPadKeyEvents(
+                    }.handleDPadKeyEvents(
                         onLeft = {
                             onSeekMultiplierChange(-1)
                         },
@@ -243,7 +241,6 @@ internal fun BottomControls(
             )
         }
 
-
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -263,8 +260,7 @@ internal fun BottomControls(
                             if (focusState.isFocused) {
                                 showControls()
                             }
-                        }
-                        .focusProperties {
+                        }.focusProperties {
                             up = bottomFocusRequester
                             left = bottomFocusRequester
                             down = FocusRequester.Cancel
@@ -281,8 +277,7 @@ internal fun BottomControls(
                             if (focusState.isFocused) {
                                 showControls()
                             }
-                        }
-                        .focusProperties {
+                        }.focusProperties {
                             up = bottomFocusRequester
                             down = FocusRequester.Cancel
                         }
@@ -298,8 +293,7 @@ internal fun BottomControls(
                             if (focusState.isFocused) {
                                 showControls()
                             }
-                        }
-                        .focusProperties {
+                        }.focusProperties {
                             up = bottomFocusRequester
                             down = FocusRequester.Cancel
                         }
@@ -315,8 +309,7 @@ internal fun BottomControls(
                             if (focusState.isFocused) {
                                 showControls()
                             }
-                        }
-                        .focusProperties {
+                        }.focusProperties {
                             up = bottomFocusRequester
                             right = speedometerFocusRequester
                             down = FocusRequester.Cancel

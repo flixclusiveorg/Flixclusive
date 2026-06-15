@@ -11,7 +11,9 @@ interface MediaLinksRepository {
         entry: CachedMediaLinks,
         media: DBMedia? = null
     )
+
     suspend fun upsertLink(link: DBMediaLink)
+
     suspend fun getLinks(
         ownerId: String,
         mediaId: String,
@@ -43,13 +45,20 @@ interface MediaLinksRepository {
     ): Flow<List<CachedMediaLinksWithData>>
 
     suspend fun getById(id: String): CachedMediaLinksWithData?
+
     fun observeById(id: String): Flow<CachedMediaLinksWithData?>
+
     fun observeAll(ownerId: String): Flow<List<CachedMediaLinksWithData>>
+
     fun getSize(ownerId: String): Flow<Int>
+
     fun observeAllByMedia(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>>
+
     suspend fun markLinkAsAlive(url: String, parentId: String)
+
     suspend fun markLinkAsDead(url: String, parentId: String)
+
     suspend fun deleteById(id: String)
+
     suspend fun deleteAll(ownerId: String)
 }
-

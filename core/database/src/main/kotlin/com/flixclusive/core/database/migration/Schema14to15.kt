@@ -47,7 +47,7 @@ internal object Schema14to15 : Migration(14, 15) {
                         INSERT INTO `library_list_items_new` (
                             `id`, `mediaId`, `listId`, `createdAt`, `updatedAt`
                         ) VALUES (?, ?, ?, ?, ?)
-                        """.trimIndent(),
+                    """.trimIndent(),
                     arrayOf(newId, mediaId, listId, createdAt, updatedAt),
                 )
             }

@@ -41,8 +41,7 @@ internal fun EmptyScreen(
                     width = 1.dp,
                     shape = MaterialTheme.shapes.small,
                     color = LocalContentColor.current.copy(0.6f)
-                )
-                .clickable(onClick = onAdd)
+                ).clickable(onClick = onAdd)
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.round_add_24),
@@ -53,6 +52,7 @@ internal fun EmptyScreen(
         }
     }
 }
+
 @Preview
 @Composable
 private fun EmptyScreenPreview() {

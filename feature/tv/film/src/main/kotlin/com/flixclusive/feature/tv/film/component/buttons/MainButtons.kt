@@ -58,7 +58,9 @@ internal fun MainButtons(
                     if (hasPressedLeft(it) && isPlayButtonFullyFocused) {
                         goBack()
                         return@onKeyEvent true
-                    } else isPlayButtonFullyFocused = true
+                    } else {
+                        isPlayButtonFullyFocused = true
+                    }
 
                     false
                 }
@@ -85,5 +87,4 @@ internal fun MainButtons(
 @Preview
 @Composable
 private fun MainButtonsPreview() {
-
 }

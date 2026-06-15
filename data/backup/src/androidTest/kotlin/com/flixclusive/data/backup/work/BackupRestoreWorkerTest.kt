@@ -117,7 +117,13 @@ class BackupRestoreWorkerTest {
                 expectThat(restoredLists.first().name).isEqualTo(listName)
                 expectThat(restoredLists.first().list.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(restoredLists.first().items).hasSize(1)
-                expectThat(restoredLists.first().items.first().mediaId).isEqualTo(mediaId)
+                expectThat(
+                    restoredLists
+                        .first()
+                        .items
+                        .first()
+                        .mediaId
+                ).isEqualTo(mediaId)
             } finally {
                 backupFile.delete()
             }

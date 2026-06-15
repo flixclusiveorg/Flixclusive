@@ -48,6 +48,7 @@ fun MarkdownScreen(
     navigator: NavigateBack,
     title: String,
     description: String,
+    modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
     var linkToOpen by rememberSaveable { mutableStateOf<String?>(null) }
@@ -55,7 +56,7 @@ fun MarkdownScreen(
     val enterAlwaysScrollBehavior = rememberEnterAlwaysScrollBehavior()
 
     Scaffold(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .nestedScroll(enterAlwaysScrollBehavior.nestedScrollConnection),
         topBar = {

@@ -23,7 +23,6 @@ import com.flixclusive.feature.mobile.provider.details.R
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.strings.R as LocaleR
 
-
 @Composable
 internal fun ProviderDetailsWhatsNew(
     changelogs: String,
@@ -45,7 +44,7 @@ internal fun ProviderDetailsWhatsNew(
             SectionLabel(text = stringResource(id = LocaleR.string.whats_new))
 
             Text(
-                text = "v${latestVersion}",
+                text = "v$latestVersion",
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = LocalContentColor.current.copy(0.5f)
                 ),
@@ -90,7 +89,7 @@ private fun ProviderDetailsWhatsNewPreview() {
                         - Added new feature X
                         - Improved performance of Y
                         - Fixed bug Z
-                        """.trimIndent(),
+                """.trimIndent(),
                 modifier = Modifier.fillMaxWidth()
             )
         }

@@ -36,8 +36,18 @@ internal fun SeasonPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val contentColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.surface else LocalContentColor.current.copy(0.6f))
-    val containerColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.onSurface else Color.Transparent)
+    val contentColor by animateColorAsState(
+        targetValue = if (selected()) {
+            MaterialTheme.colorScheme.surface
+        } else {
+            LocalContentColor.current.copy(
+                0.6f
+            )
+        }
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (selected()) MaterialTheme.colorScheme.onSurface else Color.Transparent
+    )
     val scale by animateFloatAsState(targetValue = if (selected()) 1.1F else 1F)
     val alpha by animateFloatAsState(targetValue = if (selected()) 1F else 0.8F)
 
@@ -91,8 +101,10 @@ private fun SeasonPillPreview() {
                 items(10) { index ->
                     SeasonPill(
                         season = remember {
-                            DummyDataForPreview.getShow()
-                                .seasons.first()
+                            DummyDataForPreview
+                                .getShow()
+                                .seasons
+                                .first()
                         },
                         selected = { index == 2 },
                         onClick = {}

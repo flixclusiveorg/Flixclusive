@@ -33,11 +33,13 @@ interface LibraryListItemDao {
     suspend fun getByListIdRaw(query: RoomRawQuery): List<LibraryListItemWithMetadata>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT * FROM library_list_item_with_metadata
         WHERE item_listId = :listId AND item_mediaId = :mediaId
         LIMIT 1
-    """)
+    """
+    )
     suspend fun getByListIdAndMediaId(listId: String, mediaId: String): LibraryListItemWithMetadata?
 
     @Transaction
@@ -117,7 +119,6 @@ interface LibraryListItemDao {
 
     @Query("DELETE FROM library_list_items WHERE listId = :listId AND mediaId = :mediaId")
     suspend fun deleteByListIdAndMediaId(listId: String, mediaId: String)
-
 
     @Upsert
     suspend fun upsertMedia(media: DBMedia)

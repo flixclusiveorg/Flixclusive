@@ -201,8 +201,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         .mapNotNull {
             if (media !is Show) return@mapNotNull null
             it.currentSeason
-        }
-        .filterNotNull()
+        }.filterNotNull()
         .distinctUntilChanged()
         .flatMapLatest { selectedSeason ->
             val metadata = media as Show
@@ -215,8 +214,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                         Async.Loading -> null
                     }
                 }
-        }
-        .stateIn(
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null,
@@ -540,16 +538,25 @@ internal class PlayerScreenViewModel @Inject constructor(
         val prefs = playerPreferences.value
 
         val currentServer = when {
-            preferredServer != null -> servers.indexOfFirst { it.url == preferredServer }
-            !prefs.isAutoSelectingServer -> 0
+            preferredServer != null -> {
+                servers.indexOfFirst { it.url == preferredServer }
+            }
+
+            !prefs.isAutoSelectingServer -> {
+                0
+            }
+
             prefs.isAutoSelectingServer && _uiState.value.currentServer !in servers.indices -> {
                 servers.getIndexOfPreferredQuality(prefs.quality) {
-                    (containsMatchIn(it.label) || containsMatchIn(it.url))
-                        && it.isValid
-                        && !it.isThirdPartyGateway
+                    (containsMatchIn(it.label) || containsMatchIn(it.url)) &&
+                        it.isValid &&
+                        !it.isThirdPartyGateway
                 }
             }
-            else -> _uiState.value.currentServer
+
+            else -> {
+                _uiState.value.currentServer
+            }
         }
 
         if (currentServer !in servers.indices) {
@@ -607,8 +614,9 @@ internal class PlayerScreenViewModel @Inject constructor(
         viewModelScope.launch(appDispatchers.main) {
             launch {
                 listenTo(Player.EVENT_PLAYBACK_STATE_CHANGED) { events ->
-                    if (!events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED))
+                    if (!events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED)) {
                         return@listenTo
+                    }
 
                     val isFinished = !isPlaying && currentPosition >= duration && duration > 0
                     val nextEpisode = _uiState.value.nextEpisode
@@ -624,8 +632,9 @@ internal class PlayerScreenViewModel @Inject constructor(
                     .getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
 
                 listenTo(Player.EVENT_IS_PLAYING_CHANGED) { events ->
-                    if (!events.contains(Player.EVENT_IS_PLAYING_CHANGED))
+                    if (!events.contains(Player.EVENT_IS_PLAYING_CHANGED)) {
                         return@listenTo
+                    }
 
                     updateWatchProgress()
 
@@ -707,11 +716,12 @@ internal class PlayerScreenViewModel @Inject constructor(
     private suspend fun getSavedStartPositionMs(episode: Episode? = null): Long {
         val userId = ownerId.filterNotNull().first()
         val watchProgress = if (episode == null) {
-            watchProgressRepository.get(
-                id = media.id,
-                type = media.type,
-                ownerId = userId,
-            )?.watchData
+            watchProgressRepository
+                .get(
+                    id = media.id,
+                    type = media.type,
+                    ownerId = userId,
+                )?.watchData
         } else {
             watchProgressRepository.getEpisodeProgress(
                 tvShowId = media.id,
@@ -734,32 +744,33 @@ internal class PlayerScreenViewModel @Inject constructor(
                 userSessionDataStore.currentUserId
                     .filterNotNull()
                     .flatMapLatest { userId ->
-                        providerRepository.getProvidersWithCapabilityAsFlow(
-                            ownerId = userId,
-                            capability = ProviderCapability.MEDIA_LINK
-                        ).mapLatest { list ->
-                            var foundMetadataProvider = false
-                            val mappedList = list.fastMapNotNull { provider ->
-                                if (provider.id == navArgs.media.providerId) {
-                                    foundMetadataProvider = true
-                                    return@fastMapNotNull provider.metadata
+                        providerRepository
+                            .getProvidersWithCapabilityAsFlow(
+                                ownerId = userId,
+                                capability = ProviderCapability.MEDIA_LINK
+                            ).mapLatest { list ->
+                                var foundMetadataProvider = false
+                                val mappedList = list.fastMapNotNull { provider ->
+                                    if (provider.id == navArgs.media.providerId) {
+                                        foundMetadataProvider = true
+                                        return@fastMapNotNull provider.metadata
+                                    }
+
+                                    if (!provider.isMediaLinkEnabled) return@fastMapNotNull null
+
+                                    provider.metadata
                                 }
 
-                                if (!provider.isMediaLinkEnabled) return@fastMapNotNull null
+                                if (!foundMetadataProvider) {
+                                    val metadata = getProviderMetadata(
+                                        id = navArgs.media.providerId
+                                    ) ?: return@mapLatest emptyList() // Fails player and navigate back
 
-                                provider.metadata
+                                    return@mapLatest mappedList + listOf(metadata)
+                                }
+
+                                mappedList
                             }
-
-                            if (!foundMetadataProvider) {
-                                val metadata = getProviderMetadata(
-                                    id = navArgs.media.providerId
-                                ) ?: return@mapLatest emptyList() // Fails player and navigate back
-
-                                return@mapLatest mappedList + listOf(metadata)
-                            }
-
-                            mappedList
-                        }
                     }.catch { error ->
                         errorLog(error)
                         _providers.emit(Async.Success(emptyList()))
@@ -830,18 +841,19 @@ internal class PlayerScreenViewModel @Inject constructor(
                     ) { userId, episode, providerId ->
                         Triple(userId, episode, providerId)
                     }.flatMapLatest { (userId, episode, providerId) ->
-                        mediaLinksRepository.observeProviderLinks(
-                            ownerId = userId,
-                            mediaId = media.id,
-                            providerId = providerId,
-                            episodeNumber = episode?.number,
-                            seasonNumber = episode?.season
-                        ).mapLatest {
-                            it?.streams?.toPlayerServers() ?: emptyList()
-                        }.catch { error ->
-                            errorLog(error)
-                            emit(emptyList())
-                        }
+                        mediaLinksRepository
+                            .observeProviderLinks(
+                                ownerId = userId,
+                                mediaId = media.id,
+                                providerId = providerId,
+                                episodeNumber = episode?.number,
+                                seasonNumber = episode?.season
+                            ).mapLatest {
+                                it?.streams?.toPlayerServers() ?: emptyList()
+                            }.catch { error ->
+                                errorLog(error)
+                                emit(emptyList())
+                            }
                     }.collectLatest {
                         _servers.emit(Async.Success(it))
                     }

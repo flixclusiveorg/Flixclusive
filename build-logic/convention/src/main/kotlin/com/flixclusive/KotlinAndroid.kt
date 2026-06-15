@@ -1,6 +1,5 @@
 package com.flixclusive
 
-
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.LibraryExtension
@@ -16,12 +15,20 @@ internal fun Project.configureKotlinAndroid(
     commonExtension: CommonExtension,
 ) {
     commonExtension.apply {
-        compileSdk = libs.findVersion("compileSdk").get().toString().toInt()
+        compileSdk = libs
+            .findVersion("compileSdk")
+            .get()
+            .toString()
+            .toInt()
 
         when (this) {
             is LibraryExtension -> {
                 defaultConfig {
-                    minSdk = libs.findVersion("minSdk").get().toString().toInt()
+                    minSdk = libs
+                        .findVersion("minSdk")
+                        .get()
+                        .toString()
+                        .toInt()
                     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 }
 
@@ -38,9 +45,14 @@ internal fun Project.configureKotlinAndroid(
                     }
                 }
             }
+
             is ApplicationExtension -> {
                 defaultConfig {
-                    minSdk = libs.findVersion("minSdk").get().toString().toInt()
+                    minSdk = libs
+                        .findVersion("minSdk")
+                        .get()
+                        .toString()
+                        .toInt()
                     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 }
 

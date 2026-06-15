@@ -6,7 +6,6 @@ import com.flixclusive.core.common.provider.ProviderConstants.PROVIDERS_SETTINGS
 import com.flixclusive.core.common.provider.ProviderConstants.PROVIDER_DEBUG
 
 object ProviderFile {
-
     /**
      * Returns the path prefix for the providers folder for a specific user.
      *

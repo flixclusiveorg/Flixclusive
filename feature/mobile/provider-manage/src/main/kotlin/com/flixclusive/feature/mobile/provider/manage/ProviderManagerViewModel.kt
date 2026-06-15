@@ -72,7 +72,8 @@ internal class ProviderManagerViewModel @Inject constructor(
         .currentUserId
         .filterNotNull()
         .flatMapLatest { userId ->
-            providerRepository.getProvidersAsFlow(ownerId = userId)
+            providerRepository
+                .getProvidersAsFlow(ownerId = userId)
                 .debounce(600)
         }
 
@@ -81,20 +82,21 @@ internal class ProviderManagerViewModel @Inject constructor(
         _searchQuery.debounce(800).distinctUntilChanged(),
         installedProviders,
     ) { isSearching, query, providers ->
-        providers.map { wrapper ->
-            ProviderWithCapabilities(
-                metadata = wrapper.metadata ?: getFallbackProviderMetadata(wrapper.provider),
-                capabilities = getCapabilities(wrapper)
-            )
-        }.let { metadataList ->
-            if (!isSearching) {
-                return@let metadataList
-            }
+        providers
+            .map { wrapper ->
+                ProviderWithCapabilities(
+                    metadata = wrapper.metadata ?: getFallbackProviderMetadata(wrapper.provider),
+                    capabilities = getCapabilities(wrapper)
+                )
+            }.let { metadataList ->
+                if (!isSearching) {
+                    return@let metadataList
+                }
 
-            metadataList.fastFilter { metadata ->
-                metadata.name.contains(query, ignoreCase = true)
+                metadataList.fastFilter { metadata ->
+                    metadata.name.contains(query, ignoreCase = true)
+                }
             }
-        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Lazily,
@@ -140,7 +142,9 @@ internal class ProviderManagerViewModel @Inject constructor(
                             errors = it.errors +
                                 ProviderWithThrowable(
                                     provider = metadata,
-                                    throwable = IllegalStateException(context.getString(R.string.error_missing_provider_plugin))
+                                    throwable = IllegalStateException(
+                                        context.getString(R.string.error_missing_provider_plugin)
+                                    )
                                 )
                         )
                     }
@@ -162,8 +166,15 @@ internal class ProviderManagerViewModel @Inject constructor(
 
                         val label = when {
                             hasStreamsAndSubs -> UiText.from(R.string.label_provider_capability_links)
-                            linksApi.supportedLinkTypes.contains(MediaLinkType.STREAMS) -> UiText.from(R.string.label_provider_capability_streams)
-                            linksApi.supportedLinkTypes.contains(MediaLinkType.SUBTITLES) -> UiText.from(R.string.label_provider_capability_subs)
+
+                            linksApi.supportedLinkTypes.contains(
+                                MediaLinkType.STREAMS
+                            ) -> UiText.from(R.string.label_provider_capability_streams)
+
+                            linksApi.supportedLinkTypes.contains(
+                                MediaLinkType.SUBTITLES
+                            ) -> UiText.from(R.string.label_provider_capability_subs)
+
                             else -> null
                         }
 
@@ -172,36 +183,46 @@ internal class ProviderManagerViewModel @Inject constructor(
                         }
                     }
 
-                    if (catalogApi != null) add(
-                        CapabilityUiItem(
-                            UiText.from(R.string.label_provider_capability_catalogs),
-                            wrapper.isCatalogEnabled
+                    if (catalogApi != null) {
+                        add(
+                            CapabilityUiItem(
+                                UiText.from(R.string.label_provider_capability_catalogs),
+                                wrapper.isCatalogEnabled
+                            )
                         )
-                    )
-                    if (trackerApi != null) add(
-                        CapabilityUiItem(
-                            UiText.from(R.string.label_provider_capability_tracking),
-                            wrapper.isTrackerEnabled
+                    }
+                    if (trackerApi != null) {
+                        add(
+                            CapabilityUiItem(
+                                UiText.from(R.string.label_provider_capability_tracking),
+                                wrapper.isTrackerEnabled
+                            )
                         )
-                    )
-                    if (searchApi != null) add(
-                        CapabilityUiItem(
-                            UiText.from(R.string.label_provider_capability_search),
-                            wrapper.isSearchEnabled
+                    }
+                    if (searchApi != null) {
+                        add(
+                            CapabilityUiItem(
+                                UiText.from(R.string.label_provider_capability_search),
+                                wrapper.isSearchEnabled
+                            )
                         )
-                    )
-                    if (metadataApi != null) add(
-                        CapabilityUiItem(
-                            UiText.from(R.string.label_provider_capability_metadata),
-                            wrapper.isMetadataEnabled
+                    }
+                    if (metadataApi != null) {
+                        add(
+                            CapabilityUiItem(
+                                UiText.from(R.string.label_provider_capability_metadata),
+                                wrapper.isMetadataEnabled
+                            )
                         )
-                    )
-                    if (crossMatchApi != null) add(
-                        CapabilityUiItem(
-                            UiText.from(R.string.label_provider_capability_cross_match),
-                            wrapper.isCrossMatchEnabled
+                    }
+                    if (crossMatchApi != null) {
+                        add(
+                            CapabilityUiItem(
+                                UiText.from(R.string.label_provider_capability_cross_match),
+                                wrapper.isCrossMatchEnabled
+                            )
                         )
-                    )
+                    }
                 }
             } catch (e: Throwable) {
                 _uiState.update {

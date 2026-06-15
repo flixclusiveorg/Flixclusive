@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.common.provider.extensions.asStatusColor
 import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -36,7 +36,10 @@ private sealed class InfoChipType {
     abstract val label: String
 
     @Stable
-    data class Default(override val label: String) : InfoChipType()
+    data class Default(
+        override val label: String
+    ) : InfoChipType()
+
     @Stable
     data class Elevated(
         override val label: String,
@@ -101,8 +104,7 @@ private fun InfoChip(
             .background(
                 color = containerColor,
                 shape = MaterialTheme.shapes.extraSmall,
-            )
-            .padding(
+            ).padding(
                 horizontal = 5.dp,
                 vertical = 1.dp
             )
@@ -115,7 +117,7 @@ private fun buildInfoChips(provider: ProviderMetadata): List<InfoChipType> {
 
     val adultContainerColor = Color(0xFF5B1212)
     val adultContentColor = Color(0xFFFF4141)
-    val providerTypeColor = getProviderStatusContainerColor(status = provider.status)
+    val providerTypeColor = provider.status.asStatusColor()
 
     return remember(provider) {
         buildList {
@@ -134,11 +136,13 @@ private fun buildInfoChips(provider: ProviderMetadata): List<InfoChipType> {
             add(InfoChipType.Default(provider.providerType.toString()))
 
             val flagEmoji = getFlagFromLanguageCode(provider.language.code)
-            val language = Locale.Builder()
+            val language = Locale
+                .Builder()
                 .setLanguageTag(provider.language.code)
                 .build()
 
-            val displayLanguage = language.getDisplayLanguage(Locale.getDefault())
+            val displayLanguage = language
+                .getDisplayLanguage(Locale.getDefault())
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
             add(InfoChipType.Default("$flagEmoji $displayLanguage"))

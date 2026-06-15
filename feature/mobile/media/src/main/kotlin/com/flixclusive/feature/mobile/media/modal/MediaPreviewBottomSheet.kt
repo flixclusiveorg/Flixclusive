@@ -85,7 +85,8 @@ private fun MediaPreviewBottomSheetContent(
     val surfaceColor = MaterialTheme.colorScheme.surface
 
     ConstraintLayout(
-        modifier = modifier.background(Color.Transparent)
+        modifier = modifier
+            .background(Color.Transparent)
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         val (background, image, textContent, divider, mainButtons, clickMoreButton) = createRefs()
@@ -121,8 +122,7 @@ private fun MediaPreviewBottomSheetContent(
                     top.linkTo(parent.top, margin = 10.dp)
                     start.linkTo(parent.start)
                     bottom.linkTo(mainButtons.top, margin = 16.dp)
-                }
-                .padding(horizontal = 15.dp),
+                }.padding(horizontal = 15.dp),
         )
 
         Column(
@@ -133,8 +133,7 @@ private fun MediaPreviewBottomSheetContent(
                     start.linkTo(image.end)
                     end.linkTo(parent.end, margin = 15.dp)
                     bottom.linkTo(mainButtons.top, margin = 12.dp)
-                }
-                .padding(end = 15.dp, top = 8.dp),
+                }.padding(end = 15.dp, top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
             horizontalAlignment = Alignment.Start,
         ) {
@@ -159,8 +158,7 @@ private fun MediaPreviewBottomSheetContent(
                                 .background(
                                     color = MaterialTheme.colorScheme.tertiary.copy(0.6f),
                                     shape = MaterialTheme.shapes.extraSmall,
-                                )
-                                .padding(horizontal = 3.dp, vertical = 1.dp),
+                                ).padding(horizontal = 3.dp, vertical = 1.dp),
                         )
                     }
 
@@ -313,7 +311,6 @@ internal fun IconButtonWithLabel(
         }
     }
 }
-
 
 @Preview
 @Composable

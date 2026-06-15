@@ -27,9 +27,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 import kotlin.math.max
@@ -93,14 +93,13 @@ internal fun <T> ListRadioComponent(
                     item {
                         Row(
                             modifier =
-                            Modifier
-                                .clip(MaterialTheme.shapes.small)
-                                .selectable(
-                                    selected = isSelected,
-                                    onClick = { selected = option },
-                                )
-                                .fillMaxWidth()
-                                .minimumInteractiveComponentSize(),
+                                Modifier
+                                    .clip(MaterialTheme.shapes.small)
+                                    .selectable(
+                                        selected = isSelected,
+                                        onClick = { selected = option },
+                                    ).fillMaxWidth()
+                                    .minimumInteractiveComponentSize(),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(

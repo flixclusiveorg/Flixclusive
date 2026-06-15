@@ -68,19 +68,29 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
         private val progressPercent: Float,
         val runtime: Int
     ) {
-        val absoluteProgress: Long? get() {
-            return if (progressPercent >= WatchProgress.WATCH_COMPLETED_THRESHOLD && runtime <= 0) Long.MAX_VALUE
-            else if (runtime <= 0) null
-            else (progressPercent / 100 * absoluteRuntime).toLong()
-        }
-
-        val absoluteRuntime: Long get() {
-            return when {
-                runtime < 100 -> runtime.toLong() * 60 * 1000 // minutes
-                runtime < 10000 -> runtime.toLong() * 1000 // seconds
-                else -> runtime.toLong() // milliseconds
+        val absoluteProgress: Long?
+            get() {
+                return if (progressPercent >= WatchProgress.WATCH_COMPLETED_THRESHOLD && runtime <= 0) {
+                    Long.MAX_VALUE
+                } else if (runtime <= 0) {
+                    null
+                } else {
+                    (progressPercent / 100 * absoluteRuntime).toLong()
+                }
             }
-        }
+
+        val absoluteRuntime: Long
+            get() {
+                return when {
+                    runtime < 100 -> runtime.toLong() * 60 * 1000
+
+                    // minutes
+                    runtime < 10000 -> runtime.toLong() * 1000
+
+                    // seconds
+                    else -> runtime.toLong() // milliseconds
+                }
+            }
     }
 
     override suspend fun invoke(
@@ -189,11 +199,12 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val absoluteProgress = progress.absoluteProgress ?: return
 
-        var existingProgress = watchProgressRepository.get(
-            id = item.id,
-            ownerId = userId,
-            type = MediaType.MOVIE
-        )?.watchData as? MovieProgress
+        var existingProgress = watchProgressRepository
+            .get(
+                id = item.id,
+                ownerId = userId,
+                type = MediaType.MOVIE
+            )?.watchData as? MovieProgress
 
         if (existingProgress != null && existingProgress.progress >= absoluteProgress) {
             return
@@ -251,14 +262,18 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
                 }
 
                 if (season !is Season.Full) {
-                    throw IllegalStateException("Season data is not complete for season ${episode.season} of show ${crossMatchedMedia.title}")
+                    throw IllegalStateException(
+                        "Season data is not complete for season ${episode.season} of show ${crossMatchedMedia.title}"
+                    )
                 }
 
                 crossMatchedEpisode = season.getEpisode(episode.number)
             }
 
             crossMatchedMedia to crossMatchedEpisode
-        } else item to episode
+        } else {
+            item to episode
+        }
     }
 
     private suspend fun getScrobblers(): List<Pair<String, TrackerProviderApi>> {

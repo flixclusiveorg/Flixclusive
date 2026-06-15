@@ -32,11 +32,15 @@ internal abstract class BackupCreateModule {
 
     @Binds
     @Singleton
-    abstract fun bindsWatchProgressBackupCreator(creator: WatchProgressBackupCreator): BackupCreator<BackupWatchProgress>
+    abstract fun bindsWatchProgressBackupCreator(
+        creator: WatchProgressBackupCreator
+    ): BackupCreator<BackupWatchProgress>
 
     @Binds
     @Singleton
-    abstract fun bindsSearchHistoryBackupCreator(creator: SearchHistoryBackupCreator): BackupCreator<BackupSearchHistory>
+    abstract fun bindsSearchHistoryBackupCreator(
+        creator: SearchHistoryBackupCreator
+    ): BackupCreator<BackupSearchHistory>
 
     @Binds
     @Singleton

@@ -56,17 +56,19 @@ internal fun ListItem(
     val interactionSource = remember { MutableInteractionSource() }
 
     val style = remember(selectedIndex) {
-        if (selectedIndex == index)
+        if (selectedIndex == index) {
             baseStyle.copy(
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 fontSize = 20.sp
             )
-        else baseStyle.copy(
-            fontWeight = FontWeight.Bold,
-            color = unselectedColor,
-            fontSize = 20.sp
-        )
+        } else {
+            baseStyle.copy(
+                fontWeight = FontWeight.Bold,
+                color = unselectedColor,
+                fontSize = 20.sp
+            )
+        }
     }
 
     Surface(
@@ -108,6 +110,7 @@ internal fun ListItem(
                             )
                         }
                     }
+
                     PlayerProviderState.SELECTED -> {
                         Icon(
                             imageVector = Icons.Rounded.Check,
@@ -116,7 +119,7 @@ internal fun ListItem(
                     }
                 }
             } else {
-                Spacer(Modifier.width(if(itemState == PlayerProviderState.LOADING) 35.dp else 20.dp))
+                Spacer(Modifier.width(if (itemState == PlayerProviderState.LOADING) 35.dp else 20.dp))
             }
 
             Text(
@@ -127,7 +130,6 @@ internal fun ListItem(
                 color = LocalContentColor.current
             )
         }
-
     }
 }
 

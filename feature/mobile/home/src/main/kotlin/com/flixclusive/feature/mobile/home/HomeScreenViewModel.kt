@@ -83,18 +83,18 @@ internal class HomeScreenViewModel @Inject constructor(
     val continueWatchingItems = userSessionDataStore.currentUserId
         .filterNotNull()
         .flatMapLatest { userId ->
-            watchProgressRepository.getAllAsFlow(
-                ownerId = userId,
-                sort = LibrarySort.Modified(ascending = false),
-            ).mapLatest { list ->
-                list.mapNotNull { item -> filterContinueWatching(item) }
-            }
+            watchProgressRepository
+                .getAllAsFlow(
+                    ownerId = userId,
+                    sort = LibrarySort.Modified(ascending = false),
+                ).mapLatest { list ->
+                    list.mapNotNull { item -> filterContinueWatching(item) }
+                }
         }.stateIn(
             scope = appDispatchers.ioScope,
             started = SharingStarted.Lazily,
             initialValue = emptyList(),
         )
-
 
     /** Displays the title of the media under the card */
     val showMediaTitles = dataStoreManager
@@ -123,8 +123,7 @@ internal class HomeScreenViewModel @Inject constructor(
             }
 
             Async.Success(providers) as Async<List<CatalogProvider>>
-        }
-        .stateIn(
+        }.stateIn(
             scope = appDispatchers.ioScope,
             started = SharingStarted.Lazily,
             initialValue = Async.Loading,
@@ -223,7 +222,8 @@ internal class HomeScreenViewModel @Inject constructor(
 
                         is Async.Success -> {
                             val catalogs = response.data
-                            val catalogMap = catalogs.associateBy { it.url + it.providerId }
+                            val catalogMap = catalogs
+                                .associateBy { it.url + it.providerId }
                                 .mapValues { entry ->
                                     CatalogWithPagingState(
                                         catalog = entry.value,
@@ -261,7 +261,8 @@ internal class HomeScreenViewModel @Inject constructor(
         }
 
         loadFetchHeaderJob = viewModelScope.launch {
-            val response = _uiState.map { it.catalogs }
+            val response = _uiState
+                .map { it.catalogs }
                 .distinctUntilChanged()
                 .first {
                     if (it.isFailure) return@first true
@@ -337,9 +338,9 @@ internal class HomeScreenViewModel @Inject constructor(
                     }
 
                     is Async.Success -> {
-                        val hasNext = page < MAX_PAGINATION_PAGES
-                            && response.data.hasNextPage
-                            && catalogWithState.canPaginate
+                        val hasNext = page < MAX_PAGINATION_PAGES &&
+                            response.data.hasNextPage &&
+                            catalogWithState.canPaginate
 
                         _uiState.update { state ->
                             state.updateCatalog(

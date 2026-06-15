@@ -127,8 +127,7 @@ fun ActionButton(
                         color = backgroundColor,
                         alpha = if (enabled) 1f else 0.6f,
                     )
-                }
-                .clickable(
+                }.clickable(
                     onClick = onClick,
                     enabled = enabled,
                     role = Role.Button,

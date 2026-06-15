@@ -298,7 +298,9 @@ class DownloadService : Service() {
                     .build()
             }
 
-            else -> return
+            else -> {
+                return
+            }
         }
 
         notificationManager.notify(notificationId, notification)

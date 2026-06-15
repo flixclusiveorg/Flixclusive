@@ -47,20 +47,19 @@ internal class FlixclusiveApplication :
         return ImageLoader
             .Builder(context)
             .memoryCache {
-                MemoryCache.Builder()
+                MemoryCache
+                    .Builder()
                     .maxSizePercent(context, 0.25) // 25% of available app memory
                     .build()
-            }
-            .diskCache {
-                DiskCache.Builder()
+            }.diskCache {
+                DiskCache
+                    .Builder()
                     .directory(context.cacheDir.resolve("image_cache"))
                     .maxSizePercent(0.02) // 2% of device storage
                     .build()
-            }
-            .components {
+            }.components {
                 add(OkHttpNetworkFetcherFactory(callFactory = { client }))
-            }
-            .build()
+            }.build()
     }
 
     override fun onCreate() {

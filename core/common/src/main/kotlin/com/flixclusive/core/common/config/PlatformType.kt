@@ -6,7 +6,7 @@ enum class PlatformType {
     ;
 
     override fun toString(): String {
-        return when(this) {
+        return when (this) {
             MOBILE -> "Mobile"
             TV -> "TV"
         }

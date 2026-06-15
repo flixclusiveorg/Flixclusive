@@ -405,7 +405,9 @@ private fun TopBar(
                                         }
                                     }
 
-                                    ScreenType.ContinueScreen -> Unit
+                                    ScreenType.ContinueScreen -> {
+                                        Unit
+                                    }
                                 }
                             }
                         }

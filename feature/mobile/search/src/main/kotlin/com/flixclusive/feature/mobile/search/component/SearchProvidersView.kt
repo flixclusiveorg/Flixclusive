@@ -62,7 +62,7 @@ internal fun SearchProvidersView(
 
     AsyncAnimatedContent(
         targetState = providers,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         loadingContent = { SearchProvidersLoading(modifier = Modifier.padding(scaffoldPadding)) },
         errorContent = { state ->
             SearchProvidersError(
@@ -77,7 +77,6 @@ internal fun SearchProvidersView(
             scaffoldPadding = scaffoldPadding,
             onChangeProvider = onChangeProvider,
             onToggleProvider = onToggleProvider,
-            modifier = modifier,
             listState = listState,
         )
     }
@@ -90,8 +89,8 @@ private fun SearchProvidersList(
     scaffoldPadding: PaddingValues,
     onChangeProvider: (String) -> Unit,
     onToggleProvider: (SearchProvider) -> Unit,
-    modifier: Modifier,
     listState: LazyGridState,
+    modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
         modifier = modifier,
@@ -116,7 +115,6 @@ private fun SearchProvidersList(
         }
     }
 }
-
 
 @Composable
 private fun SearchProvidersError(

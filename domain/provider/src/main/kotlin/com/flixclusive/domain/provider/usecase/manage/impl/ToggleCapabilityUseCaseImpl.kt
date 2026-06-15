@@ -28,7 +28,8 @@ internal class ToggleCapabilityUseCaseImpl @Inject constructor(
 
         toggleJobs[jobId] = appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val newToggleState = providerRepository.getProvider(id = id, ownerId = userId)
+            val newToggleState = providerRepository
+                .getProvider(id = id, ownerId = userId)
                 ?.let {
                     when (capability) {
                         ProviderCapability.CATALOG -> !it.isCatalogEnabled

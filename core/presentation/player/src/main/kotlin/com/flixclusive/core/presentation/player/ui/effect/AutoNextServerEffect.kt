@@ -31,7 +31,7 @@ fun AutoNextServerEffect(
     val resources = LocalResources.current
     val failedServers = remember { mutableSetOf<Int>() }
 
-    LaunchedEffect(player, key()) {
+    LaunchedEffect(player, key(), currentServer, availableServers, onServerChange, onServerFail) {
         failedServers.clear()
 
         player.listen { events ->

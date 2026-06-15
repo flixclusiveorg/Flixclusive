@@ -35,7 +35,7 @@ internal class WatchProgressBackupValidator @Inject constructor(
     }
 
     private fun BackupWatchEpisodeProgress.key(): String {
-        return "${mediaId}:${seasonNumber}:${episodeNumber}"
+        return "$mediaId:$seasonNumber:$episodeNumber"
     }
 
     private fun EpisodeProgressWithMetadata.key(): String {

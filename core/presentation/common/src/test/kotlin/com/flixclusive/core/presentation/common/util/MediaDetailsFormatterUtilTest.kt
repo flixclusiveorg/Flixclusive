@@ -13,7 +13,6 @@ import strikt.assertions.isEqualTo
 import java.util.Locale
 import com.flixclusive.core.strings.R as LocaleR
 
-
 class MediaDetailsFormatterUtilTest {
     private lateinit var context: Context
 

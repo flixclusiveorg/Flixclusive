@@ -15,6 +15,7 @@ import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Manages the visibility state of media controls for a [Player].
@@ -29,7 +30,7 @@ class ControlsVisibilityState(
         private set
 
     fun toggle() {
-        if(isVisible) {
+        if (isVisible) {
             hide()
         } else {
             show(indefinite = shouldShowIndefinitely())
@@ -95,12 +96,12 @@ class ControlsVisibilityState(
             val state = remember(player) { ControlsVisibilityState(player) }
 
             // Handle the countdown for hiding the controls
-            LaunchedEffect(state) {
+            LaunchedEffect(state, isScrubbing) {
                 snapshotFlow { state.controlTimeoutVisibility }
                     .collect {
                         if (it > 0) {
                             state.isVisible = true
-                            delay(1000L)
+                            delay(1000L.milliseconds)
                             state.controlTimeoutVisibility--
                         } else {
                             state.isVisible = false

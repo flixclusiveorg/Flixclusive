@@ -100,6 +100,7 @@ fun ComposePlayer(
                         player.releaseMediaSession()
                     }
                 }
+
                 Lifecycle.Event.ON_PAUSE -> {
                     if (Build.VERSION.SDK_INT <= 23) {
                         player.releaseMediaSession()
@@ -111,14 +112,17 @@ fun ComposePlayer(
                         player.release()
                     }
                 }
-                else -> Unit
+
+                else -> {
+                    Unit
+                }
             }
         }
 
         lifecycleOwner.lifecycle.addObserver(observer)
 
         onDispose {
-            if(!isInPipMode) {
+            if (!isInPipMode) {
                 player.release()
             }
             lifecycleOwner.lifecycle.removeObserver(observer)

@@ -59,6 +59,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
@@ -84,8 +85,11 @@ internal fun SubtitleSyncScreen(
             offset = tempOffset,
             lastIndex = -1
         )
-        if (exactIndex >= 0) exactIndex
-        else cuesWithTiming.findNearestCueIndex(scrubState.progress, tempOffset)
+        if (exactIndex >= 0) {
+            exactIndex
+        } else {
+            cuesWithTiming.findNearestCueIndex(scrubState.progress, tempOffset)
+        }
     }
 
     val activeIndex = remember {
@@ -221,9 +225,9 @@ private fun SubtitleCuesList(
     var hasScrolled by remember { mutableStateOf(false) }
     val isAutoScrolling = remember { mutableStateOf(false) }
 
-    LaunchedEffect(listState) {
+    LaunchedEffect(listState, activeIndex) {
         snapshotFlow { listState.isScrollInProgress }
-            .debounce(300) // Add a small debounce to avoid rapid state changes
+            .debounce(300.milliseconds) // Add a small debounce to avoid rapid state changes
             .collectLatest { scrolling ->
                 val isActiveIndexVisible = listState.layoutInfo.visibleItemsInfo.fastAny { it.index == activeIndex() }
                 if (hasScrolled && isActiveIndexVisible) {
@@ -267,8 +271,7 @@ private fun SubtitleCuesList(
                     orientation = Orientation.Vertical,
                     startEdge = 50.dp,
                     endEdge = 50.dp
-                )
-                .padding(15.dp),
+                ).padding(15.dp),
         ) {
             itemsIndexed(
                 items = cues,
@@ -292,11 +295,12 @@ private fun SubtitleCuesList(
         ) {
             OutlinedButton(
                 onClick = {
-                    scope.launch {
-                        listState.animateScrollToItem(index = activeIndex())
-                    }.invokeOnCompletion {
-                        hasScrolled = false
-                    }
+                    scope
+                        .launch {
+                            listState.animateScrollToItem(index = activeIndex())
+                        }.invokeOnCompletion {
+                            hasScrolled = false
+                        }
                 },
                 shape = MaterialTheme.shapes.small,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
@@ -373,7 +377,6 @@ private fun List<CueWithTiming>.findCueIndex(
     }
     return -1
 }
-
 
 /**
  * Finds the nearest cue index to [position], even if position is in a gap.

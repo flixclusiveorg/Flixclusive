@@ -32,8 +32,7 @@ fun GlassSurface(
                         Color.Black.copy(alpha = 0.9f),
                     ),
                 )
-            }
-            .border(
+            }.border(
                 width = 0.5.dp,
                 shape = shape,
                 brush = Brush.linearGradient(
@@ -46,8 +45,7 @@ fun GlassSurface(
                     start = Offset.Zero,
                     end = Offset.Infinite,
                 ),
-            )
-            .background(
+            ).background(
                 brush = Brush.linearGradient(
                     colors = listOf(
                         accentColor.copy(alpha = 0.1f),
@@ -58,8 +56,7 @@ fun GlassSurface(
                     end = Offset.Infinite,
                 ),
                 shape = shape,
-            )
-            .innerShadow(shape = shape) {
+            ).innerShadow(shape = shape) {
                 radius = 40f
                 brush = Brush.linearGradient(
                     colors = listOf(

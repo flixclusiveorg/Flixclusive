@@ -163,8 +163,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
     }.filterNotNull()
         .flatMapLatest { (tvShow, selectedSeason) ->
             getSeasonWithWatchProgress(tvShow, selectedSeason)
-        }
-        .stateIn(
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null,
@@ -176,19 +175,19 @@ internal class MediaScreenViewModel @AssistedInject constructor(
     val watchProgress = userSessionDataStore.currentUserId
         .filterNotNull()
         .flatMapLatest { userId ->
-            watchProgressRepository.getAsFlow(
-                ownerId = userId,
-                id = navArgMedia.id,
-                type = navArgMedia.type,
-            ).mapLatest {
-                val progress = it?.watchData
-                when (progress?.isCompleted) {
-                    true if progress is EpisodeProgress -> getNextEpisodeProgress(progress)
-                    else -> progress
+            watchProgressRepository
+                .getAsFlow(
+                    ownerId = userId,
+                    id = navArgMedia.id,
+                    type = navArgMedia.type,
+                ).mapLatest {
+                    val progress = it?.watchData
+                    when (progress?.isCompleted) {
+                        true if progress is EpisodeProgress -> getNextEpisodeProgress(progress)
+                        else -> progress
+                    }
                 }
-            }
-        }
-        .stateIn(
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(2_000),
             initialValue = null,
@@ -231,19 +230,22 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                         season.episodes
                             .chunked(10) // chunk to avoid syncing too many episodes at once, which can cause timeouts
                             .forEach { batch ->
-                                batch.map { episode ->
-                                    async {
-                                        try {
-                                            syncFromScrobblers(
-                                                item = media,
-                                                episode = episode
-                                            )
-                                        } catch (e: Exception) {
-                                            errorLog("Failed to sync scrobble data for ${media.title}'s S${episode.season}E${episode.number}: ${e.message}")
-                                            e.printStackTrace()
+                                batch
+                                    .map { episode ->
+                                        async {
+                                            try {
+                                                syncFromScrobblers(
+                                                    item = media,
+                                                    episode = episode
+                                                )
+                                            } catch (e: Exception) {
+                                                errorLog(
+                                                    "Failed to sync scrobble data for ${media.title}'s S${episode.season}E${episode.number}: ${e.message}"
+                                                )
+                                                e.printStackTrace()
+                                            }
                                         }
-                                    }
-                                }.awaitAll()
+                                    }.awaitAll()
                             }
                     }
             } else {
@@ -272,8 +274,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                         it.toLibraryState(mediaId = navArgMedia.id)
                     }
                     Async.Success(list) as Async<List<LibraryListAndState>>
-                }
-                .onStart { emit(Async.Loading) }
+                }.onStart { emit(Async.Loading) }
                 .catch {
                     errorLog("Failed to fetch library lists for user $userId")
                     errorLog(it)
@@ -295,12 +296,15 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                             val trackerApi = provider.getTrackerApi(context) ?: return@fastMapNotNull null
 
                             val media = getCrossMatchedMediaMetadata(
-                                media = navArgMedia, providerId = list.providerId,
+                                media = navArgMedia,
+                                providerId = list.providerId,
                             )
 
                             trackerApi.isInList(list, media)
                         }.onFailure { e ->
-                            errorLog("Failed to check if media is in list [${list.id}] for provider ${list.providerId}: ${e.message}")
+                            errorLog(
+                                "Failed to check if media is in list [${list.id}] for provider ${list.providerId}: ${e.message}"
+                            )
                             e.printStackTrace()
                             _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
                             return@mapLatest Async.Failure(UiText.from(e.message ?: "Unknown error"), e)
@@ -311,7 +315,8 @@ internal class MediaScreenViewModel @AssistedInject constructor(
                             containsMedia = isInList,
                             ownerId = userId,
                             provider = providers
-                                .fastFirstOrNull { it.id == list.providerId }?.metadata
+                                .fastFirstOrNull { it.id == list.providerId }
+                                ?.metadata
                                 ?: return@fastMapNotNull null,
                         )
                     }
@@ -326,8 +331,11 @@ internal class MediaScreenViewModel @AssistedInject constructor(
             ) { app, tracker ->
                 when {
                     app is Async.Loading || tracker is Async.Loading -> Async.Loading
+
                     app is Async.Failure -> Async.Failure(app.message, app.cause)
+
                     tracker is Async.Failure -> Async.Failure(tracker.message, tracker.cause)
+
                     app is Async.Success && tracker is Async.Success -> Async.Success(
                         (app.data + tracker.data).sortedByDescending { it.list.createdAt.time }
                     )
@@ -354,8 +362,14 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 
         getMediaMetadata(navArgMedia).collect { response ->
             when (response) {
-                is Async.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
-                is Async.Failure -> _uiState.update { it.copy(isLoading = false, error = response.message) }
+                is Async.Loading -> {
+                    _uiState.update { it.copy(isLoading = true, error = null) }
+                }
+
+                is Async.Failure -> {
+                    _uiState.update { it.copy(isLoading = false, error = response.message) }
+                }
+
                 is Async.Success -> {
                     _metadata.value = response.data
                     _uiState.update { it.copy(isLoading = false, error = null) }
@@ -468,7 +482,10 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 
                 _libraryLists.update { state ->
                     when (state) {
-                        is Async.Loading, is Async.Failure -> state
+                        is Async.Loading, is Async.Failure -> {
+                            state
+                        }
+
                         is Async.Success -> {
                             val updatedLists = state.data.toMutableList()
                             val index = updatedLists.indexOfFirst { it.id == list.id }

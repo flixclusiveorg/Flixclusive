@@ -88,7 +88,6 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             initialValue = PlayerPreferences(),
         )
 
-
     val links = combine(
         userSessionDataStore.currentUserId.filterNotNull(),
         _uiState.map { it.episode }.distinctUntilChanged()
@@ -96,16 +95,16 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
         // If it's a show, wait until we have the episode to load the links
         .dropWhile { args.media.isShow && it.second == null }
         .flatMapLatest { (userId, episode) ->
-            mediaLinksRepository.observeLinks(
-                ownerId = userId,
-                mediaId = args.media.id,
-                episodeNumber = episode?.number,
-                seasonNumber = episode?.season,
-            ).mapLatest { data ->
-                data.fastFlatMap { it.streams + it.subtitles }
-            }
-        }
-        .stateIn(
+            mediaLinksRepository
+                .observeLinks(
+                    ownerId = userId,
+                    mediaId = args.media.id,
+                    episodeNumber = episode?.number,
+                    seasonNumber = episode?.season,
+                ).mapLatest { data ->
+                    data.fastFlatMap { it.streams + it.subtitles }
+                }
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),
@@ -163,9 +162,10 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             return null
         }
 
-        val episode = season.episodes.binarySearch {
-            it.number.compareTo(episodeNumber)
-        }.let { index -> season.episodes.getOrNull(index) }
+        val episode = season.episodes
+            .binarySearch {
+                it.number.compareTo(episodeNumber)
+            }.let { index -> season.episodes.getOrNull(index) }
 
         return episode
     }
@@ -178,14 +178,19 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             var metadata = args.media
 
             if (metadata is PartialMedia) {
-                metadata = getMediaMetadata(media = metadata).last()
+                metadata = getMediaMetadata(media = metadata)
+                    .last()
                     .let {
                         when (it) {
-                            is Async.Success -> it.data
+                            is Async.Success -> {
+                                it.data
+                            }
+
                             is Async.Failure -> {
                                 updateLoadLinksState(LoadLinksState.Error(it.message))
                                 return@launch
                             }
+
                             else -> {
                                 updateLoadLinksState(LoadLinksState.Error(LocaleR.string.media_data_fetch_failed))
                                 return@launch
@@ -227,21 +232,22 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     fun onResetAndRetry() {
         if (onRefetchLinks?.isActive == true || onFetchMediaLinksJob?.isActive == true) return
 
-        onRefetchLinks = appDispatchers.ioScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val data = mediaLinksRepository.getLinks(
-                ownerId = userId,
-                mediaId = args.media.id,
-                episodeNumber = args.episode?.number,
-                seasonNumber = args.episode?.season,
-            )
+        onRefetchLinks = appDispatchers.ioScope
+            .launch {
+                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+                val data = mediaLinksRepository.getLinks(
+                    ownerId = userId,
+                    mediaId = args.media.id,
+                    episodeNumber = args.episode?.number,
+                    seasonNumber = args.episode?.season,
+                )
 
-            data.forEach {
-                mediaLinksRepository.deleteById(it.id)
+                data.forEach {
+                    mediaLinksRepository.deleteById(it.id)
+                }
+            }.also {
+                it.invokeOnCompletion { onFetchMediaLinks() }
             }
-        }.also {
-            it.invokeOnCompletion { onFetchMediaLinks() }
-        }
     }
 
     fun onTestLinks() {

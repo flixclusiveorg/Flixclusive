@@ -17,10 +17,11 @@ sealed interface WatchProgress {
     val createdAt: Date
     val updatedAt: Date
 
-    val isAboveThreshold: Boolean get() {
-        val percentage = (progress.toDouble() / duration.toDouble()) * 100
-        return percentage >= WATCH_COMPLETED_THRESHOLD
-    }
+    val isAboveThreshold: Boolean
+        get() {
+            val percentage = (progress.toDouble() / duration.toDouble()) * 100
+            return percentage >= WATCH_COMPLETED_THRESHOLD
+        }
     val isCompleted: Boolean get() = status == WatchStatus.COMPLETED
     val isWatching get() = status == WatchStatus.WATCHING
 

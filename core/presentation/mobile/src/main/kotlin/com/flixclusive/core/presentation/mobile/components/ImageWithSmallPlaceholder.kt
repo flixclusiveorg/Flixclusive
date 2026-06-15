@@ -41,7 +41,8 @@ fun ImageWithSmallPlaceholder(
     contentDescription: String? = null
 ) {
     ImageWithSmallPlaceholder(
-        model = ImageRequest.Builder(LocalContext.current)
+        model = ImageRequest
+            .Builder(LocalContext.current)
             .data(urlImage)
             .crossfade(true)
             .build(),
@@ -90,7 +91,9 @@ fun ImageWithSmallPlaceholder(
                     tint = LocalContentColor.current.copy(0.8F),
                     modifier = if (placeholderSize != Dp.Unspecified) {
                         Modifier.size(placeholderSize)
-                    } else Modifier
+                    } else {
+                        Modifier
+                    }
                 )
             }
 

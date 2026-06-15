@@ -19,7 +19,6 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
     private val dbMediaLinkDao: DBMediaLinkDao,
     private val appDispatchers: AppDispatchers
 ) : MediaLinksRepository {
-
     override suspend fun insertCache(entry: CachedMediaLinks, media: DBMedia?) =
         withContext(appDispatchers.io) {
             cachedMediaLinksDao.insertCache(entry, media)
@@ -34,12 +33,22 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLinks(ownerId: String, mediaId: String, episodeNumber: Int?, seasonNumber: Int?): List<CachedMediaLinksWithData> =
+    override suspend fun getLinks(
+        ownerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): List<CachedMediaLinksWithData> =
         withContext(appDispatchers.io) {
             cachedMediaLinksDao.getByKey(ownerId, mediaId, episodeNumber, seasonNumber)
         }
 
-    override fun observeLinks(ownerId: String, mediaId: String, episodeNumber: Int?, seasonNumber: Int?): Flow<List<CachedMediaLinksWithData>> =
+    override fun observeLinks(
+        ownerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): Flow<List<CachedMediaLinksWithData>> =
         cachedMediaLinksDao.getByKeyAsFlow(ownerId, mediaId, episodeNumber, seasonNumber)
 
     override suspend fun getById(id: String): CachedMediaLinksWithData? =
@@ -75,8 +84,7 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
     override fun observeAll(ownerId: String): Flow<List<CachedMediaLinksWithData>> =
         cachedMediaLinksDao.getAllAsFlow(ownerId)
 
-    override fun getSize(ownerId: String): Flow<Int>
-        = cachedMediaLinksDao.getCacheSize(ownerId)
+    override fun getSize(ownerId: String): Flow<Int> = cachedMediaLinksDao.getCacheSize(ownerId)
 
     override fun observeAllByMedia(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>> =
         cachedMediaLinksDao.getAllByMediaAsFlow(ownerId, mediaId)
@@ -102,4 +110,3 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
             cachedMediaLinksDao.deleteAll(ownerId)
         }
 }
-

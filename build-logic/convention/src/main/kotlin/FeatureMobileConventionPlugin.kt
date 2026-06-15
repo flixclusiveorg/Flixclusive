@@ -1,4 +1,3 @@
-
 import com.android.build.api.dsl.LibraryExtension
 import com.flixclusive.libs
 import org.gradle.api.Plugin
@@ -28,8 +27,6 @@ class FeatureMobileConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("lifecycle-runtimeCompose").get())
                 add("implementation", libs.findLibrary("lifecycle-viewModelCompose").get())
             }
-
         }
     }
-
 }

@@ -10,9 +10,8 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 internal abstract class DispatchersModule {
-
     @Binds
     internal abstract fun bindAppDispatchers(
-        appDispatchersImpl: AppDispatchersImpl
+        appDispatchersImpl: AppDispatchersImpl,
     ): AppDispatchers
 }

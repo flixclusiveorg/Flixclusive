@@ -42,7 +42,8 @@ class SeekPreviewState(
         get() {
             if (field == null || field?.released?.get() == true) {
                 val mediaItem = player.currentMediaItem ?: return null
-                field = FrameExtractor.Builder(context, mediaItem)
+                field = FrameExtractor
+                    .Builder(context, mediaItem)
                     .setDataSourceFactory(player.dataSourceFactory.remote)
                     .build()
             }
@@ -153,7 +154,7 @@ class SeekPreviewState(
 
             LaunchedEffect(player) { state.observe() }
 
-            LaunchedEffect(player) {
+            LaunchedEffect(player, key) {
                 var previousKey: String? = null
 
                 snapshotFlow(key)

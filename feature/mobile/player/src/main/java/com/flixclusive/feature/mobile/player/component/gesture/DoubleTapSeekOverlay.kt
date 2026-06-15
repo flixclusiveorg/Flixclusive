@@ -69,19 +69,19 @@ internal fun DoubleTapSeekOverlay(
                                     initialOffsetX = { it },
                                     animationSpec = tween(durationMillis = 300)
                                 ) + fadeIn(animationSpec = tween(durationMillis = 300)) togetherWith
-                                        slideOutHorizontally(
-                                            targetOffsetX = { -it },
-                                            animationSpec = tween(durationMillis = 300)
-                                        ) + fadeOut(animationSpec = tween(durationMillis = 300))
+                                    slideOutHorizontally(
+                                        targetOffsetX = { -it },
+                                        animationSpec = tween(durationMillis = 300)
+                                    ) + fadeOut(animationSpec = tween(durationMillis = 300))
                             } else {
                                 slideInHorizontally(
                                     initialOffsetX = { -it },
                                     animationSpec = tween(durationMillis = 300)
                                 ) + fadeIn(animationSpec = tween(durationMillis = 300)) togetherWith
-                                        slideOutHorizontally(
-                                            targetOffsetX = { it },
-                                            animationSpec = tween(durationMillis = 300)
-                                        ) + fadeOut(animationSpec = tween(durationMillis = 300))
+                                    slideOutHorizontally(
+                                        targetOffsetX = { it },
+                                        animationSpec = tween(durationMillis = 300)
+                                    ) + fadeOut(animationSpec = tween(durationMillis = 300))
                             }
                         },
                         label = "seek_seconds"

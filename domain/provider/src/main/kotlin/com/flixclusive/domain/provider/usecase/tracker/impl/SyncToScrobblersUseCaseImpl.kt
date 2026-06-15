@@ -62,7 +62,11 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
                 e.printStackTrace()
                 send(
                     Async.Failure(
-                        message = context.getString(R.string.failed_scrobbling_progress_to_provider, provider, e.message)
+                        message = context.getString(
+                            R.string.failed_scrobbling_progress_to_provider,
+                            provider,
+                            e.message
+                        )
                     )
                 )
             }

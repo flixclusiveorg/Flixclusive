@@ -51,7 +51,7 @@ internal fun SearchCustomKeyboard(
 ) {
     var areSymbolsShown by remember { mutableStateOf(false) }
     val symbolButtonText = remember(areSymbolsShown) {
-        if(!areSymbolsShown) {
+        if (!areSymbolsShown) {
             "&128"
         } else {
             "ABC"
@@ -59,10 +59,34 @@ internal fun SearchCustomKeyboard(
     }
 
     val symbolsAndNumbers = listOf(
-        '1', '2', '3', '&', '#', '(', ')',
-        '4', '5', '6', '@', '!', '?', ':',
-        '7', '8', '9', '.', '-', '_', '"',
-        '0', '/', '$', '%', '+', '[', ']'
+        '1',
+        '2',
+        '3',
+        '&',
+        '#',
+        '(',
+        ')',
+        '4',
+        '5',
+        '6',
+        '@',
+        '!',
+        '?',
+        ':',
+        '7',
+        '8',
+        '9',
+        '.',
+        '-',
+        '_',
+        '"',
+        '0',
+        '/',
+        '$',
+        '%',
+        '+',
+        '[',
+        ']'
     )
     val alphabets = ('a'..'z').toList() + listOf('-', '\'')
 
@@ -136,7 +160,7 @@ internal fun SearchCustomKeyboard(
                 }
             }
         }
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,

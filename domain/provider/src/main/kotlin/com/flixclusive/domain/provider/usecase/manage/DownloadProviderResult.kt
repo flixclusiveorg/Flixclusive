@@ -5,6 +5,10 @@ sealed class DownloadProviderResult {
         val progress: Float,
         val downloadId: String
     ) : DownloadProviderResult()
-    data class Failure(val error: Throwable) : DownloadProviderResult()
+
+    data class Failure(
+        val error: Throwable
+    ) : DownloadProviderResult()
+
     data object Success : DownloadProviderResult()
 }

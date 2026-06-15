@@ -46,7 +46,8 @@ internal fun SuggestionBlock(
         animationSpec = infiniteRepeatable(
             animation = tween(1500),
             repeatMode = RepeatMode.Reverse
-        ), label = ""
+        ),
+        label = ""
     )
 
     Surface(

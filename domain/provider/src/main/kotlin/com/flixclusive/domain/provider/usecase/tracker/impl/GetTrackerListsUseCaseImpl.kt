@@ -14,34 +14,41 @@ internal class GetTrackerListsUseCaseImpl @Inject constructor(
     override suspend fun invoke(
         providers: List<ProviderResponseWrapper>
     ): List<TrackerList> {
-        return providers.mapNotNull { provider ->
-            if (!provider.isTrackerEnabled) return@mapNotNull null
+        return providers
+            .mapNotNull { provider ->
+                if (!provider.isTrackerEnabled) return@mapNotNull null
 
-            val api = runCatching {
-                getTrackerApi(provider.id)
-            }.onFailure {
-                errorLog("An error occurred while getting tracker API for provider ${provider.metadata?.name}: ${it.message}")
-                it.printStackTrace()
-                return@mapNotNull null
-            }.getOrNull() ?: return@mapNotNull null
+                val api = runCatching {
+                    getTrackerApi(provider.id)
+                }.onFailure {
+                    errorLog(
+                        "An error occurred while getting tracker API for provider ${provider.metadata?.name}: ${it.message}"
+                    )
+                    it.printStackTrace()
+                    return@mapNotNull null
+                }.getOrNull() ?: return@mapNotNull null
 
-            runCatching {
-                if (!api.getFeatures().contains(TrackerFeature.LIST_MANAGEMENT)) return@mapNotNull null
-            }.onFailure {
-                errorLog("An error occurred while checking tracker provider ${provider.metadata?.name} capabilities: ${it.message}")
-                it.printStackTrace()
-                return@mapNotNull null
-            }
+                runCatching {
+                    if (!api.getFeatures().contains(TrackerFeature.LIST_MANAGEMENT)) return@mapNotNull null
+                }.onFailure {
+                    errorLog(
+                        "An error occurred while checking tracker provider ${provider.metadata?.name} capabilities: ${it.message}"
+                    )
+                    it.printStackTrace()
+                    return@mapNotNull null
+                }
 
-            runCatching {
-                if (!api.isAuthenticated()) return@mapNotNull null
-            }.onFailure {
-                errorLog("An error occurred while checking tracker provider ${provider.metadata?.name} authentication status: ${it.message}")
-                it.printStackTrace()
-                return@mapNotNull null
-            }
+                runCatching {
+                    if (!api.isAuthenticated()) return@mapNotNull null
+                }.onFailure {
+                    errorLog(
+                        "An error occurred while checking tracker provider ${provider.metadata?.name} authentication status: ${it.message}"
+                    )
+                    it.printStackTrace()
+                    return@mapNotNull null
+                }
 
-            api.getLists()
-        }.flatten()
+                api.getLists()
+            }.flatten()
     }
 }

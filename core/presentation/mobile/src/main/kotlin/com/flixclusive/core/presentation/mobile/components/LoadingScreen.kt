@@ -32,12 +32,11 @@ fun LoadingScreen(
 ) {
     AnimatedVisibility(
         visible = isLoadingWithDelay(delay),
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
         Column(
-            modifier = modifier,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.CenterVertically),
         ) {

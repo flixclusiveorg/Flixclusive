@@ -46,6 +46,7 @@ internal fun SeasonPill(
 
     val border = when {
         selected -> null
+
         else -> BorderStroke(
             width = 1.dp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),

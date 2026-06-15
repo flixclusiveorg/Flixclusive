@@ -32,7 +32,8 @@ object MobileColors {
         color: Color = onSurface,
     ): Color {
         if (elevation == 0f) return surface
-        return color.copy(alpha = elevation.coerceIn(0f, 1f))
+        return color
+            .copy(alpha = elevation.coerceIn(0f, 1f))
             .compositeOver(surface)
     }
 
@@ -56,5 +57,4 @@ object MobileColors {
 
         return surfaceColorAtElevation(elevation, color)
     }
-
 }

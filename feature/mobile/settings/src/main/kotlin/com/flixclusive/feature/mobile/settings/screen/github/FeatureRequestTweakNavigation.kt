@@ -15,8 +15,7 @@ internal object FeatureRequestTweakNavigation : BaseTweakNavigation {
     override fun getTitle(): String = stringResource(R.string.feature_request)
 
     @Composable
-    override fun getIconPainter(): Painter
-        = painterResource(UiCommonR.drawable.feature_request)
+    override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.feature_request)
 
     override fun onClick(navigator: NavigatorSettingsScreen) {
         navigator.navigateToUrl(

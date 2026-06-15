@@ -29,8 +29,7 @@ internal data class AuthorsFilters(
         fun List<ProviderItem>.toAuthorFilters(): AuthorsFilters {
             val options = fastFlatMap { option ->
                 option.metadata.authors.fastMap { it.name }
-            }
-                .fastDistinctBy { it }
+            }.fastDistinctBy { it }
                 .toImmutableList()
 
             return AuthorsFilters(

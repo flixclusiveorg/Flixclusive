@@ -13,8 +13,12 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 internal interface BackupWorkerEntryPoint {
     fun backupRepository(): BackupRepository
+
     fun appDispatchers(): AppDispatchers
+
     fun userSessionDataStore(): UserSessionDataStore
+
     fun dataStoreManager(): DataStoreManager
+
     fun userDao(): UserDao
 }

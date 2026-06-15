@@ -58,7 +58,8 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
     override fun invoke(installedProvider: InstalledProvider): Flow<ProviderResult> =
         flow {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val metadata = providerRepository.getProvider(installedProvider.id, userId)
+            val metadata = providerRepository
+                .getProvider(installedProvider.id, userId)
                 ?.metadata
                 ?: getMetadataFromFile(installedProvider)
 
@@ -106,8 +107,9 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 val manifest = withContext<ProviderManifest>(appDispatchers.io) {
                     loader.getFileFromPath(MANIFEST_FILE)
                 }.let {
-                    if (!metadata.id.endsWith(ProviderPreferences.DEBUG_SUFFIX))
+                    if (!metadata.id.endsWith(ProviderPreferences.DEBUG_SUFFIX)) {
                         return@let it
+                    }
 
                     it.copy(
                         id = "${it.id}${ProviderPreferences.DEBUG_SUFFIX}",
@@ -115,7 +117,8 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                     )
                 }
 
-                val providerClass: Class<out ProviderPlugin?> = loader.loadClass(manifest.providerClassName) as Class<out ProviderPlugin>
+                val providerClass: Class<out ProviderPlugin?> =
+                    loader.loadClass(manifest.providerClassName) as Class<out ProviderPlugin>
                 val provider = providerClass.getDeclaredConstructor().newInstance() as ProviderPlugin
 
                 val providerPrefs = dataStores.getOrPut(installedProvider.id) {
@@ -178,7 +181,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         }
 
         warnLog("Failed to set dex as read-only for provider: ${metadata.name}. Replacing with app-owned copy...")
-        val tmpFile = File(parentFile, "${nameWithoutExtension}.tmp")
+        val tmpFile = File(parentFile, "$nameWithoutExtension.tmp")
         try {
             copyTo(target = tmpFile, overwrite = true)
             delete()

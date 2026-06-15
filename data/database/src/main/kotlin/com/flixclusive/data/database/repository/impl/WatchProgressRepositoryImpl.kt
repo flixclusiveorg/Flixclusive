@@ -61,8 +61,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
                     }
                 }
             )
-        }
-        .distinctUntilChanged()
+        }.distinctUntilChanged()
     }
 
     override suspend fun get(id: Long, type: MediaType): WatchProgressWithMetadata? {
@@ -176,6 +175,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
                         media = dbMedia?.copy(updatedAt = Date())
                     )
                 }
+
                 is EpisodeProgress -> {
                     episodeProgressDao.insert(
                         item = item.copy(status = actualStatus),

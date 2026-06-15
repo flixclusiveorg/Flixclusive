@@ -64,16 +64,16 @@ class SeekButtonState private constructor(
     }
 
     private fun Player.getSeekBackEnabled(): Boolean {
-        return isCommandAvailable(Player.COMMAND_SEEK_BACK)
-            && seekBackIncrement > 0L
-            && duration > 0L
+        return isCommandAvailable(Player.COMMAND_SEEK_BACK) &&
+            seekBackIncrement > 0L &&
+            duration > 0L
     }
 
     private fun Player.getSeekForwardEnabled(): Boolean {
-        return isCommandAvailable(Player.COMMAND_SEEK_FORWARD)
-            && seekForwardIncrement > 0L
-            && duration > 0L
-            && currentPosition < player.duration
+        return isCommandAvailable(Player.COMMAND_SEEK_FORWARD) &&
+            seekForwardIncrement > 0L &&
+            duration > 0L &&
+            currentPosition < player.duration
     }
 
     companion object {

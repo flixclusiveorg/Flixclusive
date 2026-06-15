@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
-import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.common.provider.extensions.asStatusColor
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.common.theme.Elevations
@@ -219,7 +219,6 @@ private fun CatalogProvidersList(
     }
 }
 
-
 @Composable
 private fun CatalogProviderCard(
     provider: CatalogProvider,
@@ -269,13 +268,12 @@ private fun CatalogProviderCard(
                         color = LocalContentColor.current.copy(0.6F)
                     )
 
-
                     if (provider.status != ProviderStatus.Working) {
                         Text(
                             text = provider.status.name,
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
-                            color = getProviderStatusContainerColor(provider.status),
+                            color = provider.status.asStatusColor(),
                             modifier = Modifier
                                 .graphicsLayer { alpha = 0.6F }
                         )

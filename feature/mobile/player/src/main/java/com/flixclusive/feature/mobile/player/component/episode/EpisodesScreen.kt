@@ -43,13 +43,13 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun EpisodesScreen(
-    modifier: Modifier = Modifier,
     seasons: List<Season>,
     currentSeason: () -> SeasonWithProgress?,
     currentEpisode: Episode,
     onSeasonChange: (Season) -> Unit,
     onEpisodeClick: (Episode) -> Unit,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     BackHandler {
         onDismiss()
@@ -80,7 +80,10 @@ internal fun EpisodesScreen(
             ) {
                 currentSeason()?.let {
                     Text(
-                        text = it.title ?: stringResource(LocaleR.string.label_format_untitled_season, it.season.number),
+                        text = it.title ?: stringResource(
+                            LocaleR.string.label_format_untitled_season,
+                            it.season.number
+                        ),
                         style = MaterialTheme.typography.headlineSmall
                             .asAdaptiveTextStyle(size = 22.sp)
                             .copy(fontWeight = FontWeight.Bold),

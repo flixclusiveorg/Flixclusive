@@ -13,7 +13,8 @@ internal interface BaseTweakNavigation : BaseTweakScreen<FlixclusivePrefs> {
     override val preferencesAsState: StateFlow<FlixclusivePrefs>
         get() = throw NotImplementedError()
 
-    override fun onUpdatePreferences(transform: suspend (t: FlixclusivePrefs) -> FlixclusivePrefs) { /*No-op*/ }
+    override fun onUpdatePreferences(transform: suspend (t: FlixclusivePrefs) -> FlixclusivePrefs) { // No-op
+    }
 
     fun onClick(navigator: NavigatorSettingsScreen)
 

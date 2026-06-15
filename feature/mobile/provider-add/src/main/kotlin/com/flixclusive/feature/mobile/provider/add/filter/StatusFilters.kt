@@ -9,7 +9,6 @@ import com.flixclusive.feature.mobile.provider.add.ProviderItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-
 internal data class StatusFilters(
     override val options: ImmutableList<String>,
     override val title: UiText,

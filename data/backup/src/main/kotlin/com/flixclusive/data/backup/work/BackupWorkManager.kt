@@ -41,15 +41,13 @@ class BackupWorkManager @Inject constructor(
                 workDataOf(
                     BackupWorkConstants.INPUT_USER_ID to userId,
                 )
-            )
-            .addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
+            ).addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
             .addTag(BackupWorkConstants.TAG_BACKUP_CREATE_USER_PREFIX + userId)
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 WorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS,
-            )
-            .build()
+            ).build()
 
         workManager.enqueueUniqueWork(
             uniqueName,
@@ -79,15 +77,13 @@ class BackupWorkManager @Inject constructor(
                     BackupWorkConstants.INPUT_INCLUDE_PROVIDERS to options.includeProviders,
                     BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES to options.includeRepositories,
                 )
-            )
-            .addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
+            ).addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
             .addTag(BackupWorkConstants.TAG_BACKUP_CREATE_USER_PREFIX + userId)
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 WorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS,
-            )
-            .build()
+            ).build()
 
         workManager.enqueueUniqueWork(
             uniqueName,
@@ -117,15 +113,13 @@ class BackupWorkManager @Inject constructor(
                     BackupWorkConstants.INPUT_INCLUDE_PROVIDERS to options.includeProviders,
                     BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES to options.includeRepositories,
                 )
-            )
-            .addTag(BackupWorkConstants.TAG_BACKUP_RESTORE)
+            ).addTag(BackupWorkConstants.TAG_BACKUP_RESTORE)
             .addTag(BackupWorkConstants.TAG_BACKUP_RESTORE_USER_PREFIX + userId)
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 WorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS,
-            )
-            .build()
+            ).build()
 
         workManager.enqueueUniqueWork(
             uniqueName,
@@ -148,21 +142,18 @@ class BackupWorkManager @Inject constructor(
         val request = PeriodicWorkRequestBuilder<BackupCreateWorker>(
             clampedDays.toLong(),
             TimeUnit.DAYS,
-        )
-            .setInputData(
-                workDataOf(
-                    BackupWorkConstants.INPUT_USER_ID to userId,
-                )
+        ).setInputData(
+            workDataOf(
+                BackupWorkConstants.INPUT_USER_ID to userId,
             )
-            .addTag(BackupWorkConstants.TAG_AUTO_BACKUP_CREATE)
+        ).addTag(BackupWorkConstants.TAG_AUTO_BACKUP_CREATE)
             .addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
             .addTag(BackupWorkConstants.TAG_BACKUP_CREATE_USER_PREFIX + userId)
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 WorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS,
-            )
-            .build()
+            ).build()
 
         workManager.enqueueUniquePeriodicWork(
             uniqueName,
@@ -177,7 +168,8 @@ class BackupWorkManager @Inject constructor(
     }
 
     fun observeUniqueWork(uniqueWorkName: String): Flow<WorkInfo?> {
-        return workManager.getWorkInfosForUniqueWorkFlow(uniqueWorkName)
+        return workManager
+            .getWorkInfosForUniqueWorkFlow(uniqueWorkName)
             .map { infos -> infos.lastOrNull() }
     }
 

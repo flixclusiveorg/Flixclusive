@@ -32,8 +32,7 @@ internal fun ProviderCardPlaceholder(modifier: Modifier = Modifier) {
             .background(
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
                 shape = MaterialTheme.shapes.small,
-            )
-            .fillMaxWidth()
+            ).fillMaxWidth()
             .padding(
                 horizontal = 15.dp,
                 vertical = 10.dp,

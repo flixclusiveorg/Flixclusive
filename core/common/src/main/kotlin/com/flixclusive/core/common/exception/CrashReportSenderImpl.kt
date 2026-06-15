@@ -34,7 +34,7 @@ internal class CrashReportSenderImpl @Inject constructor(
                 (
                     responseString.contains("form_confirm", true) ||
                         responseString.contains("submit another response", true)
-                    )
+                )
 
             if (!isSent) {
                 withContext(dispatchers.main) {

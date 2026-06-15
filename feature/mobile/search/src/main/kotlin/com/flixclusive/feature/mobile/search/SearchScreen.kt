@@ -112,7 +112,7 @@ private fun SearchScreenContent(
     var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
 
     val updatedPaginateItems by rememberUpdatedState(paginateItems)
-    LaunchedEffect(listState) {
+    LaunchedEffect(listState, uiState) {
         snapshotFlow { listState.shouldPaginate() && uiState().pagingState.isIdle }
             .distinctUntilChanged()
             .filter { it }

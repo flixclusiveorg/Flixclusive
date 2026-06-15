@@ -73,13 +73,13 @@ internal class RepositoryManagerViewModel @Inject constructor(
         userId to query
     }.flatMapLatest { (userId, query) ->
         installedRepoRepository.getAllAsFlow(userId).map { list ->
-            list.fastFilter {
-                it.name.contains(query, true) ||
-                    it.owner.contains(query, true)
-            }.fastMap { it.toRepository() }
+            list
+                .fastFilter {
+                    it.name.contains(query, true) ||
+                        it.owner.contains(query, true)
+                }.fastMap { it.toRepository() }
         }
-    }
-    .stateIn(
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = emptyList(),

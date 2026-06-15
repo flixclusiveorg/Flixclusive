@@ -140,7 +140,9 @@ private fun UserAvatarSelectScreenBasePreview() {
                 resultNavigator =
                     object : ResultBackNavigator<Int> {
                         override fun navigateBack(result: Int) = Unit
+
                         override fun navigateBack() = Unit
+
                         override fun setResult(result: Int) = Unit
                     },
             )

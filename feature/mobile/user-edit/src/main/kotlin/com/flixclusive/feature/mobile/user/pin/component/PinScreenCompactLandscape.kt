@@ -28,6 +28,7 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiv
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PinSetupScreenCompactLandscape(

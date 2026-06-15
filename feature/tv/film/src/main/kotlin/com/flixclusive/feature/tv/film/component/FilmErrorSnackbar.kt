@@ -130,9 +130,13 @@ private fun MediaErrorSnackbarPreview() {
 
                 Button(
                     onClick = {
-                        errorMessage = if(errorMessage == null) {
-                            UiText.StringValue("ERR 404: Failed to fetch the media fetch the media fetch the media fetch the media")
-                        } else null
+                        errorMessage = if (errorMessage == null) {
+                            UiText.StringValue(
+                                "ERR 404: Failed to fetch the media fetch the media fetch the media fetch the media"
+                            )
+                        } else {
+                            null
+                        }
                     }
                 ) {
                     Text("Click me")

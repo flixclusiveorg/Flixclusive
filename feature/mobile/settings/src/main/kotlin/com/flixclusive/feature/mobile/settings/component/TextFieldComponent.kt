@@ -33,9 +33,9 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
 import com.flixclusive.core.presentation.common.extensions.showSoftKeyboard
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 

@@ -35,11 +35,14 @@ internal class GetCatalogItemsUseCaseImpl @Inject constructor(
         try {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val provider = providerRepository.getProvider(
-                id = catalog.providerId, ownerId = userId
+                id = catalog.providerId,
+                ownerId = userId
             )
 
             if (provider == null) {
-                warnLog("Failed to get catalog items: Provider with id ${catalog.providerId} not found for user $userId")
+                warnLog(
+                    "Failed to get catalog items: Provider with id ${catalog.providerId} not found for user $userId"
+                )
                 emit(
                     Async.Failure(
                         UiText.from(
@@ -53,7 +56,9 @@ internal class GetCatalogItemsUseCaseImpl @Inject constructor(
 
             val api = provider.plugin?.getCatalogApi(context)
             if (api == null) {
-                warnLog("Failed to get catalog items: Provider has catalogs but has no CatalogProviderApi implementation for provider ${provider.id}")
+                warnLog(
+                    "Failed to get catalog items: Provider has catalogs but has no CatalogProviderApi implementation for provider ${provider.id}"
+                )
                 emit(
                     Async.Failure(
                         UiText.from(

@@ -85,7 +85,10 @@ internal fun ProviderSettingsScreenContent(
             modifier = Modifier.padding(it)
         ) { state ->
             when (state) {
-                is Async.Loading -> LoadingScreen()
+                is Async.Loading -> {
+                    LoadingScreen()
+                }
+
                 is Async.Failure -> {
                     LaunchedEffect(true) {
                         context.showToast(state.message.asString(context))
@@ -93,10 +96,12 @@ internal fun ProviderSettingsScreenContent(
                     }
                 }
 
-                is Async.Success -> ProviderSettingsContent(
-                    provider = state.data,
-                    onGoBack = navigator::navigateBack,
-                )
+                is Async.Success -> {
+                    ProviderSettingsContent(
+                        provider = state.data,
+                        onGoBack = navigator::navigateBack,
+                    )
+                }
             }
         }
     }
@@ -132,7 +137,7 @@ private fun ProviderSettingsContent(
                 if (method != null) {
                     method.invoke(currentComposer, provider)
                 } else {
-                    LaunchedEffect(true) {
+                    LaunchedEffect(onGoBack) {
                         context.showToast(appResources.getString(R.string.provider_setting_not_found))
                         onGoBack()
                     }
@@ -141,7 +146,6 @@ private fun ProviderSettingsContent(
         }
     }
 }
-
 
 @Preview
 @Composable

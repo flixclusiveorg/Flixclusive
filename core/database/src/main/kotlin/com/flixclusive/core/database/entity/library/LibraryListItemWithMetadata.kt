@@ -13,6 +13,7 @@ import com.flixclusive.model.media.MediaMetadata
 /**
  * Convenience view for library list items with their associated media metadata.
  * */
+@Suppress("ktlint:standard:max-line-length")
 @DatabaseView(
     viewName = "library_list_item_with_metadata",
     value = "SELECT library_list_items.id AS item_id, library_list_items.mediaId AS item_mediaId, library_list_items.listId AS item_listId, library_list_items.createdAt AS item_createdAt, library_list_items.updatedAt AS item_updatedAt, media.id AS media_id, media.title AS media_title, media.providerId AS media_providerId, media.type AS media_type, media.overview AS media_overview, media.posterImage AS media_posterImage, media.adult AS media_adult, media.language AS media_language, media.rating AS media_rating, media.backdropImage AS media_backdropImage, media.releaseDate AS media_releaseDate, media.createdAt AS media_createdAt, media.updatedAt AS media_updatedAt FROM library_list_items INNER JOIN media ON library_list_items.mediaId = media.id"

@@ -62,7 +62,9 @@ class TracksState(
 
     internal suspend fun observe() {
         player.listen { events ->
-            if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) && currentMediaItem?.mediaId != lastInitializedMediaItem) {
+            if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) &&
+                currentMediaItem?.mediaId != lastInitializedMediaItem
+            ) {
                 lastInitializedMediaItem = null
                 audios.clear()
                 subtitles.clear()
@@ -207,9 +209,10 @@ class TracksState(
     }
 
     private fun getTrackFormats(type: Int): List<Format> {
-        return player.currentTracks.groups.fastFilter {
-            it.type == type && it.isSupported
-        }.getFormats()
+        return player.currentTracks.groups
+            .fastFilter {
+                it.type == type && it.isSupported
+            }.getFormats()
     }
 
     companion object {

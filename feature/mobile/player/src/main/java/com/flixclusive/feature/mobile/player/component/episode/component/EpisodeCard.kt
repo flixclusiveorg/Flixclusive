@@ -53,10 +53,10 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun EpisodeCard(
-    modifier: Modifier = Modifier,
     data: EpisodeWithProgress,
     currentEpisodeSelected: Episode,
     onEpisodeClick: (Episode) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val title = remember(data) { "${data.number}. ${data.title}" }
 
@@ -69,7 +69,14 @@ internal fun EpisodeCard(
     val overlayColor = Brush.verticalGradient(
         0F to Color.Transparent,
         0.6F to Color.Transparent,
-        0.95F to if (isSelected) MaterialTheme.colorScheme.primary.copy(0.8F) else MaterialTheme.colorScheme.surface.copy(0.8F)
+        0.95F to
+            if (isSelected) {
+                MaterialTheme.colorScheme.primary.copy(0.8F)
+            } else {
+                MaterialTheme.colorScheme.surface.copy(
+                    0.8F
+                )
+            }
     )
     val progressColor = remember {
         when (isSelected) {
@@ -111,8 +118,7 @@ internal fun EpisodeCard(
                             width = 1.dp,
                             color = Color.White,
                             shape = CircleShape
-                        )
-                        .background(
+                        ).background(
                             color = Color.Black.copy(0.6f),
                             shape = CircleShape
                         )
@@ -191,7 +197,6 @@ internal fun EpisodeCard(
         }
     }
 }
-
 
 @Composable
 internal fun EpisodeCardPlaceholder(

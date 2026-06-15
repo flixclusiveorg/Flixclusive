@@ -59,7 +59,6 @@ import com.flixclusive.model.datastore.user.player.CaptionSizePreference.Compani
 import com.flixclusive.model.datastore.user.player.CaptionStylePreference
 import com.flixclusive.core.strings.R as LocaleR
 
-
 private val styleItemSize = 20.dp
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -72,7 +71,7 @@ internal fun SubtitleStylePanel(
 ) {
     var currentPreferences by remember { mutableStateOf(subtitlesPreferences) }
 
-    val updateToSavePreferences = fun (newPreferences: SubtitlesPreferences) {
+    val updateToSavePreferences = fun(newPreferences: SubtitlesPreferences) {
         currentPreferences = newPreferences
     }
 
@@ -157,6 +156,7 @@ internal fun SubtitleStylePanel(
                                         .align(Alignment.Center)
                                 )
                             }
+
                             CaptionEdgeTypePreference.Outline -> {
                                 BorderedText(
                                     text = stringResource(R.string.abc),

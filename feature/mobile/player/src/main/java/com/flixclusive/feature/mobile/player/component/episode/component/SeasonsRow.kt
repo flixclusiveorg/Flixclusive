@@ -35,7 +35,7 @@ internal fun SeasonsRow(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentSeason) {
         currentSeason()?.number?.let {
             safeCall { listState.animateScrollToItem(max(0, it - 1)) }
         }

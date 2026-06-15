@@ -163,7 +163,6 @@ private fun MediaScreenContent(
     uiState: MediaUiState,
     metadata: MediaMetadata,
     watchProgress: WatchProgress?,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     seasonToDisplay: Async<SeasonWithProgress>?,
     query: () -> String,
     libraryListStates: () -> Async<List<LibraryListAndState>>,
@@ -175,6 +174,8 @@ private fun MediaScreenContent(
     onRetry: () -> Unit,
     onRetryFetchSeason: () -> Unit,
     onRetryFetchLists: () -> Unit,
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -245,7 +246,7 @@ private fun MediaScreenContent(
     }
 
     Scaffold(
-        modifier = Modifier
+        modifier = modifier
             .padding(LocalGlobalScaffoldPadding.current),
         topBar = {
             MediaScreenTopBar(
@@ -458,10 +459,15 @@ internal fun getBackdropAspectRatio(usePortraitView: Boolean) =
 private fun MediaScreenBasePreview() {
     val navigator = object : NavigatorMediaScreen {
         override fun navigateToMediaScreen(media: MediaMetadata, isTogglingLibrary: Boolean) {}
+
         override fun showMediaPreviewBottomSheet(media: MediaMetadata) {}
+
         override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {}
+
         override fun showProviderDetailsSheet(provider: ProviderMetadata) {}
+
         override fun navigateBack() {}
+
         override fun navigateToSeeAllScreen(item: Catalog) {}
     }
     var uiState by remember {
@@ -562,7 +568,8 @@ private fun MediaScreenBasePreview() {
                 watchProgress = watchProgress,
                 seasonToDisplay = remember(uiState.selectedSeason) {
                     if (metadata is Show) {
-                        val season = metadata.seasons.first { it.number == (uiState.selectedSeason ?: 1) } as Season.Full
+                        val season =
+                            metadata.seasons.first { it.number == (uiState.selectedSeason ?: 1) } as Season.Full
                         Async.Success(
                             data = SeasonWithProgress(
                                 season = season,

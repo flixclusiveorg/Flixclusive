@@ -91,7 +91,8 @@ internal class GetProviderFromRemoteUseCaseImpl @Inject constructor(
 
                 when (response.code) {
                     200 -> {
-                        response.fromJson<List<ProviderMetadata>>()
+                        response
+                            .fromJson<List<ProviderMetadata>>()
                             .also {
                                 cachedProviders[updaterJsonUrl] = CachedUpdaterJsonFile(it)
                             }

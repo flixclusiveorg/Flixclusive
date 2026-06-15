@@ -86,7 +86,6 @@ internal fun MediaScreenPlaceholder() {
             }
         }
     }
-
 }
 
 @Composable
@@ -171,10 +170,12 @@ private fun DescriptionPlaceholder() {
             Placeholder(
                 modifier = Modifier
                     .fillMaxWidth(
-                        if (it == 2) 0.7f
-                        else 1f
-                    )
-                    .padding(vertical = 4.dp)
+                        if (it == 2) {
+                            0.7f
+                        } else {
+                            1f
+                        }
+                    ).padding(vertical = 4.dp)
                     .height(10.dp),
             )
         }

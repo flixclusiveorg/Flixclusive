@@ -38,7 +38,7 @@ internal class GetNextEpisodeUseCaseImpl @Inject constructor(
             return invoke(show = show, season = season + 1, episode = 0)
         }
 
-        val episodeIndex =  seasonData.episodes.binarySearch {
+        val episodeIndex = seasonData.episodes.binarySearch {
             it.number.compareTo(nextEpisode)
         }
 

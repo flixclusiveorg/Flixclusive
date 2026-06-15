@@ -66,7 +66,8 @@ private val Float.toPlayerSpeed: String
     get() = String.format(Locale.ROOT, "%.1fx", this)
 
 private fun Float.toTickIndex(): Int =
-    ((this - SpeedRange.start) / TICK_STEP).roundToInt()
+    ((this - SpeedRange.start) / TICK_STEP)
+        .roundToInt()
         .coerceIn(0, ((SpeedRange.endInclusive - SpeedRange.start) / TICK_STEP).roundToInt())
 
 @Composable
@@ -176,19 +177,18 @@ private fun ScrollableTickRuler(
     val tickColor = Color.White.copy(alpha = 0.25f)
     val indicatorColor = Color.White
 
-    LaunchedEffect(listState) {
+    LaunchedEffect(listState, onValueChange, onValueChangeFinished) {
         snapshotFlow {
             val index = listState.firstVisibleItemIndex
             val offset = listState.firstVisibleItemScrollOffset
             val raw = index + offset / tickWidthPx
             val tick = raw.roundToInt().coerceIn(0, totalTicks)
             valueRange.start + tick * TICK_STEP
-        }
-            .distinctUntilChanged()
+        }.distinctUntilChanged()
             .collect { onValueChange(it) }
     }
 
-    LaunchedEffect(listState) {
+    LaunchedEffect(listState, onValueChangeFinished) {
         var wasScrolling = false
         snapshotFlow { listState.isScrollInProgress }
             .debounce(800)

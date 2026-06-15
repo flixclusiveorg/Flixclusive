@@ -160,7 +160,8 @@ internal fun PlayerScreen(
         }
 
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .background(Color.Black)
         )
         return

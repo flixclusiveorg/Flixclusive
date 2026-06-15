@@ -16,7 +16,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object RetrofitModule {
-
     @Provides
     @Singleton
     fun provideGithubApiService(
@@ -26,7 +25,8 @@ internal object RetrofitModule {
             ignoreUnknownKeys = true
             isLenient = true
         }
-        return Retrofit.Builder()
+        return Retrofit
+            .Builder()
             .client(client)
             .baseUrl(GITHUB_API_BASE_URL)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))

@@ -35,6 +35,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.SnackbarCountdown
 import com.flixclusive.core.presentation.player.ui.state.SnackbarMessage
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val EXIT_ANIMATION_MS = 250L
 
@@ -98,13 +99,13 @@ private fun CountdownSnackbarItem(
         if (countdown != null) {
             if (isVisible) {
                 isVisible = false
-                delay(EXIT_ANIMATION_MS)
+                delay(EXIT_ANIMATION_MS.milliseconds)
             }
             displayedCountdown = countdown
             isVisible = true
         } else if (displayedCountdown != null) {
             isVisible = false
-            delay(EXIT_ANIMATION_MS)
+            delay(EXIT_ANIMATION_MS.milliseconds)
             displayedCountdown = null
         }
     }
@@ -129,10 +130,10 @@ private fun MessageSnackbarItem(
         isVisible = true
     }
 
-    LaunchedEffect(message.key) {
-        delay(message.durationMs)
+    LaunchedEffect(message.key, onDismiss) {
+        delay(message.durationMs.milliseconds)
         isVisible = false
-        delay(EXIT_ANIMATION_MS)
+        delay(EXIT_ANIMATION_MS.milliseconds)
         onDismiss()
     }
 

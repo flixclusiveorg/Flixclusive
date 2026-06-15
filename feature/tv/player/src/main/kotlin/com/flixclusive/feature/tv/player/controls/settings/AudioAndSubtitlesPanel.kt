@@ -32,7 +32,6 @@ internal fun AudioAndSubtitlesPanel(
 ) {
     val player by rememberLocalPlayerManager()
 
-
     var isFirstItemFullyFocused by remember { mutableStateOf(true) }
 
     val blackBackgroundGradient = Brush.horizontalGradient(
@@ -63,7 +62,9 @@ internal fun AudioAndSubtitlesPanel(
                         if (hasPressedLeft(it) && isFirstItemFullyFocused) {
                             hidePanel()
                             return@onKeyEvent true
-                        } else isFirstItemFullyFocused = true
+                        } else {
+                            isFirstItemFullyFocused = true
+                        }
 
                         false
                     },
@@ -91,4 +92,3 @@ internal fun AudioAndSubtitlesPanel(
         }
     }
 }
-

@@ -19,17 +19,17 @@ internal object FilterBottomSheetStyle {
     val TextButtonMinHeight = 35.dp
 
     @Composable
-    fun emphasizedPrimaryContainer()
-        = MaterialTheme.colorScheme.primary.copy(0.05F)
+    fun emphasizedPrimaryContainer() = MaterialTheme.colorScheme.primary.copy(0.05F)
 
     @Composable
     fun getLabelStyle(isSelected: Boolean): TextStyle {
-        return MaterialTheme.typography.labelLarge.copy(
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface.copy(
-                alpha = if (isSelected) 1F else MEDIUM_EMPHASIS,
-            ),
-        ).asAdaptiveTextStyle(FilterItemLabelSize)
+        return MaterialTheme.typography.labelLarge
+            .copy(
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = if (isSelected) 1F else MEDIUM_EMPHASIS,
+                ),
+            ).asAdaptiveTextStyle(FilterItemLabelSize)
     }
 
     @Composable

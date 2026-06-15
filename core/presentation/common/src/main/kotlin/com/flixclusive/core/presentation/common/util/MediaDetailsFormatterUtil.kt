@@ -22,8 +22,9 @@ object MediaDetailsFormatterUtil {
      * - 135 minutes -> "2h 15m"
      * */
     fun Int.formatAsRuntime(): UiText {
-        if (this <= 0)
+        if (this <= 0) {
             return UiText.from(R.string.no_runtime)
+        }
 
         val hours = this / 60
         val minutes = this % 60
@@ -51,6 +52,7 @@ object MediaDetailsFormatterUtil {
 
         return when (ratings) {
             "0.0" -> UiText.from(R.string.no_ratings)
+
             else -> UiText.StringValue(
                 // Remove trailing 0 if present (e.g., 3.20 -> 3.2, but 3.0 stays 3.0)
                 when {
@@ -78,7 +80,9 @@ object MediaDetailsFormatterUtil {
 
                 calendar.get(Calendar.YEAR).toString()
             }
-        } else null
+        } else {
+            null
+        }
 
         return when {
             year != null && lastAirDate != null -> "$year - $lastAirDate"

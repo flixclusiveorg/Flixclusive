@@ -101,8 +101,7 @@ private fun ScrollableStackTrace(
                 width = 0.5.dp,
                 color = LocalContentColor.current.copy(0.6f),
                 shape = MaterialTheme.shapes.extraSmall,
-            )
-            .background(
+            ).background(
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(1),
                 shape = MaterialTheme.shapes.extraSmall,
             ),

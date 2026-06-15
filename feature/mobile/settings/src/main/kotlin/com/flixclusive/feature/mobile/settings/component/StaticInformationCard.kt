@@ -15,7 +15,6 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiv
 import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
 import com.flixclusive.core.drawables.R as UiCommonR
 
-
 @Composable
 internal fun StaticInformationCard(
     title: String,

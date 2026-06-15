@@ -101,8 +101,7 @@ internal class SubtitlesTweakScreen(
                             subtitlePreferences.subtitleLanguage
                                 .takeIf { it.isNotEmpty() }
                                 ?: "en",
-                        )
-                        .build()
+                        ).build()
                         .displayLanguage
                 },
                 enabledProvider = { subtitlePreferences.isSubtitleEnabled },
@@ -207,25 +206,29 @@ internal class SubtitlesTweakScreen(
                             style =
                                 MaterialTheme.typography.labelLarge.run {
                                     when (fontStyle.value) {
-                                        CaptionStylePreference.Normal ->
+                                        CaptionStylePreference.Normal -> {
                                             copy(
                                                 fontWeight = FontWeight.Normal,
                                             )
+                                        }
 
-                                        CaptionStylePreference.Bold ->
+                                        CaptionStylePreference.Bold -> {
                                             copy(
                                                 fontWeight = FontWeight.Bold,
                                             )
+                                        }
 
-                                        CaptionStylePreference.Italic ->
+                                        CaptionStylePreference.Italic -> {
                                             copy(
                                                 fontStyle = FontStyle.Italic,
                                             )
+                                        }
 
-                                        CaptionStylePreference.Monospace ->
+                                        CaptionStylePreference.Monospace -> {
                                             copy(
                                                 fontFamily = FontFamily.Monospace,
                                             )
+                                        }
                                     }
                                 },
                         )

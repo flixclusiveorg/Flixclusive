@@ -13,8 +13,12 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 internal interface CacheCleanupWorkerEntryPoint {
     fun appDispatchers(): AppDispatchers
+
     fun userSessionDataStore(): UserSessionDataStore
+
     fun dataStoreManager(): DataStoreManager
+
     fun cachedMediaLinksDao(): CachedMediaLinksDao
+
     fun dbMediaLinkDao(): DBMediaLinkDao
 }

@@ -4,7 +4,6 @@ import com.flixclusive.domain.provider.usecase.manage.DownloadProviderResult
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.flow.Flow
 
-
 /**
  * A use case for making providers up to date.
  * */

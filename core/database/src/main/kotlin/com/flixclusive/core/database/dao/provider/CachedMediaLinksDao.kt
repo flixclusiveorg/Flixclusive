@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CachedMediaLinksDao {
-
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entry: CachedMediaLinks): Long
 
@@ -74,7 +73,7 @@ interface CachedMediaLinksDao {
 
     @Transaction
     @Query(
-"""
+        """
         SELECT * FROM cached_media_links
         WHERE ownerId       = :ownerId
           AND providerId    = :providerId

@@ -9,7 +9,6 @@ import com.flixclusive.core.database.entity.provider.DBSubtitle
 
 @Dao
 interface DBMediaLinkDao {
-
     @Upsert
     suspend fun upsertStream(stream: DBStream)
 

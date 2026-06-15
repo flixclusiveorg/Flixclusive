@@ -50,9 +50,11 @@ internal fun ManageLibraryTopBar(
     content: @Composable () -> Unit,
 ) {
     val hideSearchButton = remember(topBarState, isListEmpty) {
-        (topBarState != LibraryTopBarState.DefaultSubScreen &&
-            topBarState != LibraryTopBarState.DefaultMainScreen
-            ) || isListEmpty
+        (
+            topBarState != LibraryTopBarState.DefaultSubScreen &&
+                topBarState != LibraryTopBarState.DefaultMainScreen
+        ) ||
+            isListEmpty
     }
 
     BackHandler(enabled = topBarState == LibraryTopBarState.Selecting) {

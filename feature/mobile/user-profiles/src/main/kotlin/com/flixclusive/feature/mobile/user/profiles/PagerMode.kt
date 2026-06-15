@@ -186,7 +186,7 @@ internal fun PagerMode(
                                             val pageOffset = (
                                                 (pagerState.currentPage - page) +
                                                     pagerState.currentPageOffsetFraction
-                                                ).absoluteValue
+                                            ).absoluteValue
 
                                             this.clip = true
                                             this.shape = blurShape

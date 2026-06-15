@@ -33,7 +33,8 @@ internal class GetMediaMetadataUseCaseImpl @Inject constructor(
         try {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val provider = providerRepository.getProvider(
-                id = media.providerId, ownerId = userId
+                id = media.providerId,
+                ownerId = userId
             )
 
             if (provider == null) {
@@ -55,7 +56,8 @@ internal class GetMediaMetadataUseCaseImpl @Inject constructor(
                 providers.forEach {
                     val crossMatchedMedia = safeCall {
                         getCrossMatchedMediaMetadata(
-                            media = media, providerId = it.id
+                            media = media,
+                            providerId = it.id
                         )
                     }
 

@@ -42,8 +42,8 @@ internal class ProviderRepositoryImpl @Inject constructor(
         }
     }
 
-    private val _pluginsMap = MutableStateFlow<Map<String, ProviderPlugin>>(emptyMap())
-    private val _metadataMap = MutableStateFlow<Map<String, ProviderMetadata>>(emptyMap())
+    private val pluginsMap = MutableStateFlow<Map<String, ProviderPlugin>>(emptyMap())
+    private val metadataMap = MutableStateFlow<Map<String, ProviderMetadata>>(emptyMap())
 
     // TODO: Make this public for crash log purposes
     private val classLoadersMap: MutableMap<String, PathClassLoader> =
@@ -55,8 +55,8 @@ internal class ProviderRepositoryImpl @Inject constructor(
         metadata: ProviderMetadata,
     ) {
         classLoadersMap[metadata.id] = classLoader
-        _pluginsMap[metadata.id] = provider
-        _metadataMap[metadata.id] = metadata
+        pluginsMap[metadata.id] = provider
+        metadataMap[metadata.id] = metadata
     }
 
     override suspend fun install(
@@ -64,16 +64,16 @@ internal class ProviderRepositoryImpl @Inject constructor(
         metadata: ProviderMetadata
     ) = withContext(appDispatchers.io) {
         installedProviderDao.insert(provider)
-        _metadataMap[provider.id] = metadata
+        metadataMap[provider.id] = metadata
     }
 
     override suspend fun uninstall(provider: InstalledProvider) = withContext(appDispatchers.io) {
         withContext(appDispatchers.io) {
-            _pluginsMap[provider.id]?.onUnload(context)
+            pluginsMap[provider.id]?.onUnload(context)
         }
 
-        _pluginsMap.remove(provider.id)
-        _metadataMap.remove(provider.id)
+        pluginsMap.remove(provider.id)
+        metadataMap.remove(provider.id)
         classLoadersMap.remove(provider.id)
 
         installedProviderDao.delete(provider)
@@ -85,8 +85,8 @@ internal class ProviderRepositoryImpl @Inject constructor(
     ): ProviderResponseWrapper? {
         return withContext(appDispatchers.io) {
             val installedProvider = installedProviderDao.get(id, ownerId)
-            val plugin = _pluginsMap[id]
-            val metadata = _metadataMap[id]
+            val plugin = pluginsMap[id]
+            val metadata = metadataMap[id]
 
             if (installedProvider == null) {
                 return@withContext null
@@ -102,8 +102,8 @@ internal class ProviderRepositoryImpl @Inject constructor(
 
     override suspend fun getProviders(ownerId: String) = withContext(appDispatchers.io) {
         installedProviderDao.getAll(ownerId).map {
-            val plugin = _pluginsMap[it.id]
-            val metadata = _metadataMap[it.id]
+            val plugin = pluginsMap[it.id]
+            val metadata = metadataMap[it.id]
 
             ProviderResponseWrapper(
                 provider = it,
@@ -115,8 +115,8 @@ internal class ProviderRepositoryImpl @Inject constructor(
 
     override fun getProvidersAsFlow(ownerId: String) = combine(
         installedProviderDao.getAllAsFlow(ownerId),
-        _pluginsMap,
-        _metadataMap
+        pluginsMap,
+        metadataMap
     ) { providers, plugins, metadata ->
         providers.map { provider ->
             ProviderResponseWrapper(
@@ -162,8 +162,8 @@ internal class ProviderRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearAll() {
-        _pluginsMap.clear()
-        _metadataMap.clear()
+        pluginsMap.clear()
+        metadataMap.clear()
         classLoadersMap.clear()
     }
 
@@ -186,8 +186,8 @@ internal class ProviderRepositoryImpl @Inject constructor(
     override fun getProviderAsFlow(id: String, ownerId: String): Flow<ProviderResponseWrapper?> {
         return combine(
             installedProviderDao.getAsFlow(id, ownerId),
-            _pluginsMap.mapLatest { it[id] }.distinctUntilChanged(),
-            _metadataMap.mapLatest { it[id] }.distinctUntilChanged()
+            pluginsMap.mapLatest { it[id] }.distinctUntilChanged(),
+            metadataMap.mapLatest { it[id] }.distinctUntilChanged()
         ) { provider, plugin, metadata ->
             if (provider == null) {
                 return@combine null

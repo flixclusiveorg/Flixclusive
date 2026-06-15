@@ -33,7 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.common.provider.extensions.asStatusColor
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
@@ -59,7 +59,7 @@ internal fun ProviderCard(
     onUninstall: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val statusColor = getProviderStatusContainerColor(provider.metadata.status)
+    val statusColor = provider.metadata.status.asStatusColor()
 
     Card(
         onClick = onClick,
@@ -86,14 +86,12 @@ internal fun ProviderCard(
                 modifier = Modifier
                     .padding(
                         top = (ProviderCardMinHeight / 2) - (ProviderCardIconSize / 2)
-                    )
-                    .size(ProviderCardIconSize),
+                    ).size(ProviderCardIconSize),
             )
-
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(3.dp),
-                modifier = modifier
+                modifier = Modifier
                     .weight(1F)
                     .padding(start = 5.dp, end = 10.dp)
                     .padding(vertical = 10.dp),
@@ -196,8 +194,7 @@ private fun TextChip(
             .background(
                 color = color.copy(alpha = 0.15f),
                 shape = MaterialTheme.shapes.extraSmall,
-            )
-            .padding(horizontal = 5.dp)
+            ).padding(horizontal = 5.dp)
     )
 }
 
@@ -215,8 +212,7 @@ private fun ActionButton(
             modifier = modifier
                 .padding(
                     top = (ProviderCardMinHeight / 2) - (ProviderCardActionButtonSize / 2)
-                )
-                .size(ProviderCardActionButtonSize),
+                ).size(ProviderCardActionButtonSize),
         ) {
             Icon(
                 painter = icon,

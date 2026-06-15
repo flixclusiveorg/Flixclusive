@@ -104,7 +104,11 @@ class BackupRepositoryImplTest {
                 expectThat(backedUpList.name).isEqualTo(listName)
                 expectThat(backedUpList.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(backedUpList.items).hasSize(1)
-                expectThat(backedUpList.items.first().media.id).isEqualTo(mediaId)
+                expectThat(
+                    backedUpList.items
+                        .first()
+                        .media.id
+                ).isEqualTo(mediaId)
 
                 expectThat(backup.preferences).isEmpty()
                 expectThat(backup.watchProgressList).isEmpty()
@@ -166,7 +170,8 @@ class BackupRepositoryImplTest {
                 val repositoryDir = File(providersDir, "test-repo").apply { mkdirs() }
 
                 val providerFileContent = "dummy content"
-                val providerFile = File(repositoryDir, "BasicDummyProvider.flx").apply { writeText(providerFileContent) }
+                val providerFile =
+                    File(repositoryDir, "BasicDummyProvider.flx").apply { writeText(providerFileContent) }
 
                 val settingsRepositoryDir = File(providersSettingsDir, "test-repo").apply { mkdirs() }
                 val settingsFileContent = "provider settings"
@@ -174,7 +179,8 @@ class BackupRepositoryImplTest {
                     .apply { writeText(settingsFileContent) }
 
                 File(repositoryDir, ProviderConstants.UPDATER_JSON_FILE).apply {
-                    writeText("""
+                    writeText(
+                        """
                         [{
                             "repositoryUrl": "https://github.com/flixclusiveorg/providers-template",
                             "adult": false,
@@ -200,7 +206,8 @@ class BackupRepositoryImplTest {
                             "versionName": "1.0.0",
                             "name": "Test Provider"
                         }]
-                    """.trimIndent())
+                        """.trimIndent()
+                    )
                 }
 
                 val repositoryUrl = "https://example.com/repo"
@@ -270,7 +277,13 @@ class BackupRepositoryImplTest {
                 expectThat(restoredLists.first().name).isEqualTo("Test List")
                 expectThat(restoredLists.first().list.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(restoredLists.first().items).hasSize(1)
-                expectThat(restoredLists.first().items.first().mediaId).isEqualTo("media-1")
+                expectThat(
+                    restoredLists
+                        .first()
+                        .items
+                        .first()
+                        .mediaId
+                ).isEqualTo("media-1")
             } finally {
                 targetDb.close()
                 backupFile.delete()
@@ -525,11 +538,14 @@ class BackupRepositoryImplTest {
         }
     }
 
-    private class TestUserSessionDataStore(initialUserId: String) : UserSessionDataStore {
+    private class TestUserSessionDataStore(
+        initialUserId: String
+    ) : UserSessionDataStore {
         private val currentUserIdState = MutableStateFlow<String?>(initialUserId)
         private val sessionTimeoutState = MutableStateFlow(0L)
 
         override val currentUserId: Flow<String?> = currentUserIdState.asStateFlow()
+
         @Deprecated("This field is only used for migration purposes and will be removed in future versions")
         override val legacyCurrentUserId: Flow<Int?> = emptyFlow()
         override val sessionTimeout: Flow<Long> = sessionTimeoutState.asStateFlow()

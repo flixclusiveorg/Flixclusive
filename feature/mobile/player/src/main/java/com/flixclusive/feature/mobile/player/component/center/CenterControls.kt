@@ -41,7 +41,7 @@ internal fun CenterControls(
     val iconBgColor = Color.Black.copy(alpha = 0.3f)
 
     val (replaySeekIcon, forwardSeekIcon) = remember {
-        when(seekButtonState.seekBackAmountMs) {
+        when (seekButtonState.seekBackAmountMs) {
             5000L -> PlayerR.drawable.round_replay_5_24 to PlayerR.drawable.forward_5_black_24dp
             10000L -> PlayerR.drawable.replay_10_black_24dp to PlayerR.drawable.round_forward_10_24
             else -> PlayerR.drawable.replay_30_black_24dp to PlayerR.drawable.forward_30_black_24dp
@@ -92,8 +92,7 @@ internal fun CenterControls(
                         .background(
                             iconBgColor,
                             shape = CircleShape
-                        )
-                        .padding(5.dp)
+                        ).padding(5.dp)
                 )
             } else {
                 PlainTooltipBox(
@@ -106,8 +105,7 @@ internal fun CenterControls(
                             .background(
                                 iconBgColor,
                                 shape = CircleShape
-                            )
-                            .padding(5.dp)
+                            ).padding(5.dp)
                     ) {
                         AnimatedContent(
                             targetState = playPauseButtonState.showPlay,
@@ -134,7 +132,6 @@ internal fun CenterControls(
                 }
             }
         }
-
 
         PlainTooltipBox(
             description = stringResource(PlayerR.string.seek_forward),

@@ -12,10 +12,11 @@ sealed interface DBMediaLink {
     val createdAt: Date
     val updatedAt: Date
 
-    val isValid: Boolean get() {
-        return when (this) {
-            is DBStream -> !isDead && (expiresOn == null || expiresOn > System.currentTimeMillis())
-            is DBSubtitle -> !isDead
+    val isValid: Boolean
+        get() {
+            return when (this) {
+                is DBStream -> !isDead && (expiresOn == null || expiresOn > System.currentTimeMillis())
+                is DBSubtitle -> !isDead
+            }
         }
-    }
 }

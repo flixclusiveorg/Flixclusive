@@ -58,22 +58,23 @@ internal class GetSeasonWithWatchProgressUseCaseImpl @Inject constructor(
                 return@channelFlow
             }
 
-            watchProgressRepository.getSeasonProgressAsFlow(
-                tvShowId = show.id,
-                seasonNumber = number,
-                ownerId = userId,
-            ).collectLatest { list ->
-                val episodes = (season as Season.Full).episodes.map { episode ->
-                    val episodeIndex = list.binarySearchBy(episode.number) { it.episodeNumber }
+            watchProgressRepository
+                .getSeasonProgressAsFlow(
+                    tvShowId = show.id,
+                    seasonNumber = number,
+                    ownerId = userId,
+                ).collectLatest { list ->
+                    val episodes = (season as Season.Full).episodes.map { episode ->
+                        val episodeIndex = list.binarySearchBy(episode.number) { it.episodeNumber }
 
-                    EpisodeWithProgress(
-                        episode = episode,
-                        watchProgress = list.getOrNull(episodeIndex),
-                    )
+                        EpisodeWithProgress(
+                            episode = episode,
+                            watchProgress = list.getOrNull(episodeIndex),
+                        )
+                    }
+
+                    send(Async.Success(SeasonWithProgress(season = season, episodes = episodes)))
                 }
-
-                send(Async.Success(SeasonWithProgress(season = season, episodes = episodes)))
-            }
         }
 
     private suspend fun getFullSeasonData(

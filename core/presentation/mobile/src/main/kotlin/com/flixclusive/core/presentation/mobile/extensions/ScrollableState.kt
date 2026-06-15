@@ -34,4 +34,3 @@ fun ScrollableState.shouldPaginate(buffer: Int = 6): Boolean {
     // Paginate if near the end OR if the list doesn't fill the screen yet
     return allItemsVisible || lastVisibleItemIndex >= (totalItemsCount - buffer)
 }
-

@@ -74,8 +74,7 @@ internal fun LibraryCard(
                     }
                 },
                 onClick = onClick,
-            )
-            .padding(10.dp),
+            ).padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(25.dp),
     ) {

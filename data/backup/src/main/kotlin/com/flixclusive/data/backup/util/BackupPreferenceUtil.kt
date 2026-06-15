@@ -42,6 +42,7 @@ object BackupPreferenceUtil {
         preferences.asMap().forEach { (key, value) ->
             when (value) {
                 is String -> result[key.name] = value
+
                 else -> throw IllegalArgumentException(
                     "Unsupported preference type for key: ${key.name}, value: $value"
                 )

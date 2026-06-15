@@ -19,7 +19,10 @@ internal class AppTvNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : ViewMediaAction, SplashScreenNavigator, MediaScreenTvNavigator, HomeScreenTvNavigator {
+) : ViewMediaAction,
+    SplashScreenNavigator,
+    MediaScreenTvNavigator,
+    HomeScreenTvNavigator {
     override fun goBack() {
         navController.navigateUp()
     }
@@ -33,7 +36,8 @@ internal class AppTvNavigator(
             MediaScreenDestination(
                 media = media,
                 startPlayerAutomatically = false
-            ) within destination.navGraph())
+            ) within destination.navGraph()
+        )
     }
 
     override fun openMediaScreenSeamlessly(media: MediaMetadata) {
@@ -48,10 +52,12 @@ internal class AppTvNavigator(
     }
 
     override fun openPlayerScreen(media: MediaMetadata) {
-        navController.navigateIfResumed(MediaScreenDestination(
-            media = media,
-            startPlayerAutomatically = true
-        ) within destination.navGraph())
+        navController.navigateIfResumed(
+            MediaScreenDestination(
+                media = media,
+                startPlayerAutomatically = true
+            ) within destination.navGraph()
+        )
     }
 
     //    override fun openSearchExpandedScreen() {

@@ -43,7 +43,9 @@ internal object Schema12to13 : Migration(12, 13) {
         )
 
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_lists_ownerId` ON `library_lists` (`ownerId`)")
-        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_library_lists_ownerId_name` ON `library_lists` (`ownerId`, `name`)")
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_lists_ownerId_name` ON `library_lists` (`ownerId`, `name`)"
+        )
 
         val mapping = mutableMapOf<Int, String>()
 

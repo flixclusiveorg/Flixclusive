@@ -16,7 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.flixclusive.core.strings.R as LocaleR
 
-
 class CustomClipboardManager(
     private val clipboard: Clipboard,
     private val context: Context,
@@ -30,14 +29,22 @@ class CustomClipboardManager(
         scope.launch {
             clipboard.setClipEntry(clipEntry = ClipEntry(clipData))
 
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
-                context.showToast(toastMessage ?: context.getString(LocaleR.string.copied_to_clipboard), Toast.LENGTH_SHORT)
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                context.showToast(
+                    toastMessage ?: context.getString(LocaleR.string.copied_to_clipboard),
+                    Toast.LENGTH_SHORT
+                )
+            }
         }
-
     }
 
     suspend fun getText(): String? {
-        return clipboard.getClipEntry()?.clipData?.getItemAt(0)?.text?.toString()
+        return clipboard
+            .getClipEntry()
+            ?.clipData
+            ?.getItemAt(0)
+            ?.text
+            ?.toString()
     }
 
     companion object {

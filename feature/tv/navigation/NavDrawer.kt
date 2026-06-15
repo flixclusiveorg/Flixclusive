@@ -90,13 +90,15 @@ internal fun NavDrawer(
     val focusManager = LocalFocusManager.current
 
     val drawerPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp)
-    val expandedDrawerWidth = LocalConfiguration.current.screenWidthDp.times(0.85F).dp
+    val expandedDrawerWidth = LocalConfiguration.current.screenWidthDp
+        .times(0.85F)
+        .dp
 
     val drawerWidth by animateDpAsState(
         animationSpec = keyframes {
             delayMillis = 100
         },
-        targetValue = if(isDrawerOpen) expandedDrawerWidth else InitialDrawerWidth,
+        targetValue = if (isDrawerOpen) expandedDrawerWidth else InitialDrawerWidth,
         label = ""
     )
     val drawerColor = MaterialTheme.colorScheme.surface
@@ -137,8 +139,7 @@ internal fun NavDrawer(
                                     startX = size.width.times(0.15F)
                                 )
                             )
-                        }
-                        .padding(drawerPadding)
+                        }.padding(drawerPadding)
                         .onFocusChanged {
                             onDrawerStateChange(it.isFocused)
                         },
@@ -158,8 +159,7 @@ internal fun NavDrawer(
                                 .ifElse(
                                     condition = i == 0 && isDrawerOpen,
                                     ifTrueModifier = Modifier.focusOnInitialVisibility(isNavItemFocusedAlready)
-                                )
-                                .focusProperties {
+                                ).focusProperties {
                                     right = lastItemFocusedFocusRequester.value
                                 }
                         )
@@ -180,16 +180,18 @@ private fun NavDrawerItem(
     onClick: () -> Unit,
 ) {
     val isDestinationSelected = remember(currentScreen) {
-        currentScreen == appDestination.screen
-        || appDestination.screen.route.contains(
-            other = currentScreen.route,
-            ignoreCase = true
-        )
+        currentScreen == appDestination.screen ||
+            appDestination.screen.route.contains(
+                other = currentScreen.route,
+                ignoreCase = true
+            )
     }
     val icon = remember(isDestinationSelected) {
-        if(isDestinationSelected) {
+        if (isDestinationSelected) {
             appDestination.iconSelected
-        } else appDestination.iconUnselected
+        } else {
+            appDestination.iconUnselected
+        }
     }
 
     val horizontalPadding by animateDpAsState(

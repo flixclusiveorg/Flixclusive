@@ -71,7 +71,9 @@ private fun PlayerLabel(
     episode: Episode?,
     modifier: Modifier = Modifier
 ) {
-    val titleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp).asAdaptiveTextStyle()
+    val titleStyle = MaterialTheme.typography.titleMedium
+        .copy(fontSize = 14.sp)
+        .asAdaptiveTextStyle()
 
     Box(
         modifier = modifier,
@@ -85,10 +87,11 @@ private fun PlayerLabel(
                     }
 
                     withStyle(
-                        style = titleStyle.copy(
-                            fontWeight = FontWeight.Light,
-                            color = Color.White.copy(alpha = 0.8F),
-                        ).toSpanStyle()
+                        style = titleStyle
+                            .copy(
+                                fontWeight = FontWeight.Light,
+                                color = Color.White.copy(alpha = 0.8F),
+                            ).toSpanStyle()
                     ) {
                         append(episode.title)
                     }
@@ -105,7 +108,6 @@ private fun PlayerLabel(
             )
         }
     }
-
 }
 
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")

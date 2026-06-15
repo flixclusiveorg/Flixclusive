@@ -21,7 +21,6 @@ object BackupUtil {
     private const val GZIP_MAGIC_1 = 0x1F
     private const val GZIP_MAGIC_2 = 0x8B
 
-
     internal const val ZIP_ENTRY_BACKUP = "backup.pb"
     internal const val ZIP_ENTRY_PROVIDERS_PREFIX = "providers/"
     internal const val ZIP_ENTRY_PROVIDERS_SETTINGS_PREFIX = "provider-settings/"
@@ -66,8 +65,13 @@ object BackupUtil {
                     ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
                 }
 
-                isGzip -> decodeFromGzip(input = buffered)
-                else -> decodeFromRaw(input = buffered)
+                isGzip -> {
+                    decodeFromGzip(input = buffered)
+                }
+
+                else -> {
+                    decodeFromRaw(input = buffered)
+                }
             }
         }
     }
@@ -102,6 +106,7 @@ object BackupUtil {
                 )
 
                 isGzip -> decodeFromGzip(input = buffered)
+
                 else -> decodeFromRaw(input = buffered)
             }
         }
@@ -131,7 +136,8 @@ object BackupUtil {
                                 if (relativePath.isBlank()) return@forEach
 
                                 val providersFolder = userProvidersFolder ?: run {
-                                    File(getProvidersPath(userId)).apply { mkdirs() }
+                                    File(getProvidersPath(userId))
+                                        .apply { mkdirs() }
                                         .also { userProvidersFolder = it }
                                 }
 
@@ -147,7 +153,8 @@ object BackupUtil {
                                 if (relativePath.isBlank()) return@forEach
 
                                 val settingsFolder = userProvidersSettingsFolder ?: run {
-                                    File(getProvidersSettingsPath(userId)).apply { mkdirs() }
+                                    File(getProvidersSettingsPath(userId))
+                                        .apply { mkdirs() }
                                         .also { userProvidersSettingsFolder = it }
                                 }
 

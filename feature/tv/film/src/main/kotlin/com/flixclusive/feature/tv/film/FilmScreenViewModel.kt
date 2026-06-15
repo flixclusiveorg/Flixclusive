@@ -31,21 +31,22 @@ internal class MediaScreenViewModel @Inject constructor(
     dataStoreManager: DataStoreManager,
     userSessionManager: UserSessionManager,
 ) : BaseMediaScreenViewModel(
-    partiallyDetailedMedia = savedStateHandle.navArgs<MediaScreenNavArgs>().media,
-    watchHistoryRepository = watchHistoryRepository,
-    seasonProvider = seasonProvider,
-    mediaProvider = mediaProvider,
-    toggleWatchlistStatusUseCase = toggleWatchlistStatusUseCase,
-    dataStoreManager = dataStoreManager,
-    userSessionManager = userSessionManager
-) {
+        partiallyDetailedMedia = savedStateHandle.navArgs<MediaScreenNavArgs>().media,
+        watchHistoryRepository = watchHistoryRepository,
+        seasonProvider = seasonProvider,
+        mediaProvider = mediaProvider,
+        toggleWatchlistStatusUseCase = toggleWatchlistStatusUseCase,
+        dataStoreManager = dataStoreManager,
+        userSessionManager = userSessionManager
+    ) {
     var errorSnackBarMessage by mutableStateOf<UiText?>(UiText.StringValue("ERR:: 404 ASDkasdmlaskdmasl"))
         private set
 
     init {
-        val errors = uiState.map {
-            it.errorMessage
-        }.distinctUntilChanged()
+        val errors = uiState
+            .map {
+                it.errorMessage
+            }.distinctUntilChanged()
 
         viewModelScope.launch {
             errors.collect(::triggerSnackbar)
@@ -53,8 +54,9 @@ internal class MediaScreenViewModel @Inject constructor(
     }
 
     private suspend fun triggerSnackbar(error: UiText?) {
-        if(errorSnackBarMessage != null)
+        if (errorSnackBarMessage != null) {
             errorSnackBarMessage = null
+        }
 
         errorSnackBarMessage = error
         delay(5000)

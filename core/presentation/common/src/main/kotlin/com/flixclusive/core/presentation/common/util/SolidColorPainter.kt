@@ -12,7 +12,9 @@ import androidx.compose.ui.graphics.painter.Painter
  * A custom painter for displaying [Color]s.
  * */
 @Immutable
-class SolidColorPainter internal constructor(private val color: Color) : Painter() {
+class SolidColorPainter internal constructor(
+    private val color: Color
+) : Painter() {
     override val intrinsicSize: Size = Size.Unspecified
 
     override fun DrawScope.onDraw() {
@@ -21,7 +23,6 @@ class SolidColorPainter internal constructor(private val color: Color) : Painter
 
     companion object {
         @Composable
-        fun from(color: Color)
-            = remember(color) { SolidColorPainter(color) }
+        fun from(color: Color) = remember(color) { SolidColorPainter(color) }
     }
 }

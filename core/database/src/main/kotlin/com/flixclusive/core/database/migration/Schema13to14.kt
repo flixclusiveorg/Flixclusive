@@ -50,11 +50,13 @@ internal object Schema13to14 : Migration(13, 14) {
         )
 
         db.execSQL("DROP TABLE `films`")
-        db.execSQL("""
+        db.execSQL(
+            """
             UPDATE media
             SET type = 'SHOW'
             WHERE type = 'TV_SHOW'
-        """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     private fun renameExternalIdsTable(db: SupportSQLiteDatabase) {
@@ -120,7 +122,6 @@ internal object Schema13to14 : Migration(13, 14) {
 
         db.execSQL("DROP TABLE `films_fts`")
     }
-
 
     private fun renameColumnForLibraryListItems(db: SupportSQLiteDatabase) {
         db.execSQL(

@@ -95,8 +95,7 @@ internal fun SeekPreview(
                     scaleY = scale.value
                     alpha = scale.value
                     transformOrigin = TransformOrigin(0.5f, 1f)
-                }
-                .clip(CircularRevealShape(reveal.value)),
+                }.clip(CircularRevealShape(reveal.value)),
         ) {
             SeekPreviewContent(
                 bitmap = bitmap,

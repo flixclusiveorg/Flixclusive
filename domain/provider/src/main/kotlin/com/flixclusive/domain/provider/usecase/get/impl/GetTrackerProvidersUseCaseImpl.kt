@@ -24,7 +24,8 @@ internal class GetTrackerProvidersUseCaseImpl @Inject constructor(
     @OptIn(FlowPreview::class)
     override fun invoke(): Flow<Async<List<ProviderResponseWrapper>>> {
         return userSessionDataStore.currentUserId.filterNotNull().flatMapLatest { userId ->
-            providerRepository.getProvidersAsFlow(userId)
+            providerRepository
+                .getProvidersAsFlow(userId)
                 .distinctUntilChanged()
                 .transformLatest { providers ->
                     if (providers.isEmpty()) {
@@ -39,8 +40,7 @@ internal class GetTrackerProvidersUseCaseImpl @Inject constructor(
                         }
 
                     emit(Async.Success(metadata))
-                }
-                .catch { emit(Async.Failure(it)) }
+                }.catch { emit(Async.Failure(it)) }
         }
     }
 }

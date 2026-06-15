@@ -128,7 +128,6 @@ private fun Date.toRelativeTimeString(resources: Resources): String {
     val hours = minutes / 60
     val days = hours / 24
 
-
     fun format(count: Long, pluralRes: Int): String {
         val unit = resources.getQuantityString(pluralRes, count.toInt())
         return resources.getString(R.string.time_ago, count, unit)

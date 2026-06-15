@@ -88,7 +88,9 @@ internal fun ListContent(
                         1f - (coercedOffset / headerHeight)
                     }
 
-                    else -> 0F
+                    else -> {
+                        0F
+                    }
                 }
 
             onScrollCallback(scrollOffset)

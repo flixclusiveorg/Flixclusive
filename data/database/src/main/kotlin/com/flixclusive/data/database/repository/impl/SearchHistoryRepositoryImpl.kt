@@ -30,7 +30,7 @@ internal class SearchHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun clearAll(ownerId: String) {
         return withContext(appDispatchers.io) {
-                searchHistoryDao.deleteAll(ownerId)
+            searchHistoryDao.deleteAll(ownerId)
         }
     }
 }

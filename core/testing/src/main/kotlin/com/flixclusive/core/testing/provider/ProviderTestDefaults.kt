@@ -37,6 +37,7 @@ object ProviderTestDefaults {
      *
      * Default values represent a working test provider with multiple language support.
      */
+    @Suppress("ktlint:standard:max-line-length")
     fun getProviderMetadata(
         id: String = "14a5037ac9553dd",
         name: String = "Test Provider",

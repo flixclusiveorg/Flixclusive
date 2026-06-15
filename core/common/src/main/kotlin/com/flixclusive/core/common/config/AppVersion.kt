@@ -65,10 +65,13 @@ class AppVersion private constructor(
             version: String,
         ): AppVersion {
             return when (buildType) {
-                BuildType.STABLE -> AppVersion(
-                    buildType = buildType,
-                    version = SemVer.from(version),
-                )
+                BuildType.STABLE -> {
+                    AppVersion(
+                        buildType = buildType,
+                        version = SemVer.from(version),
+                    )
+                }
+
                 else -> {
                     val commitCount = version.trimStart {
                         it == 'p' || it == 'd' || it == 'b'

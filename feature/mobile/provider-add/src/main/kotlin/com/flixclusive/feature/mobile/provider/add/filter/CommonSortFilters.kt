@@ -25,8 +25,8 @@ internal data class CommonSortFilters(
     override val title: UiText,
     override val selectedValue: SortSelection,
 ) : AddProviderFilterType.Sort<SortableProperty>(
-    options = SortableProperty.entries.toImmutableList(),
-) {
+        options = SortableProperty.entries.toImmutableList(),
+    ) {
     companion object {
         private inline fun <T : Comparable<T>> getSortComparator(
             ascending: Boolean,

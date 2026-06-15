@@ -47,7 +47,8 @@ internal fun LibraryDetailsTopBar(
         (
             topBarState != LibraryTopBarState.DefaultSubScreen &&
                 topBarState != LibraryTopBarState.DefaultMainScreen
-        ) || isListEmpty
+        ) ||
+            isListEmpty
 
     BackHandler(enabled = topBarState == LibraryTopBarState.Selecting) {
         onUnselectAll()

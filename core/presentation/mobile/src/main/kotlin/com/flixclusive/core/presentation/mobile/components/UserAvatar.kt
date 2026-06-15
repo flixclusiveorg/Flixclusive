@@ -82,8 +82,7 @@ fun UserAvatar(
                 width = borderWidth,
                 color = borderColor,
                 shape = shape,
-            )
-            .dropShadow(
+            ).dropShadow(
                 shape = shape,
                 shadow = Shadow(
                     radius = shadowBlur,

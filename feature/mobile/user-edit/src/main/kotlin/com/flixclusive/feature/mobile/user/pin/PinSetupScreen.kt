@@ -417,7 +417,9 @@ private fun PinSetupScreenBasePreview() {
                 resultNavigator =
                     object : ResultBackNavigator<PinWithHintResult> {
                         override fun navigateBack(result: PinWithHintResult) = Unit
+
                         override fun navigateBack() = Unit
+
                         override fun setResult(result: PinWithHintResult) = Unit
                     },
             )

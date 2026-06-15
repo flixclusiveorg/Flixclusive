@@ -302,7 +302,6 @@ private fun ManageLibraryScreenContent(
         }
     }
 
-
     if (uiState.isShowingOptionsSheet) {
         LibraryOptionsBottomSheet(
             onEdit = { onToggleEditDialog(true) },

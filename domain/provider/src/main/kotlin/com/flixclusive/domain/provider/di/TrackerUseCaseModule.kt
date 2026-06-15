@@ -27,7 +27,9 @@ internal abstract class TrackerUseCaseModule {
     abstract fun bindGetTrackerListItemsUseCase(impl: GetTrackerListItemsUseCaseImpl): GetTrackerListItemsUseCase
 
     @Binds
-    abstract fun bindToggleListItemOnTrackerListUseCase(impl: ToggleListItemOnTrackerListUseCaseImpl): ToggleListItemOnTrackerListUseCase
+    abstract fun bindToggleListItemOnTrackerListUseCase(
+        impl: ToggleListItemOnTrackerListUseCaseImpl
+    ): ToggleListItemOnTrackerListUseCase
 
     @Binds
     abstract fun bindGetTrackerApiUseCase(impl: GetTrackerApiUseCaseImpl): GetTrackerApiUseCase

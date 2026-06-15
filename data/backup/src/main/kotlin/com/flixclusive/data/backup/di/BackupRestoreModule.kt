@@ -32,11 +32,15 @@ internal abstract class BackupRestoreModule {
 
     @Binds
     @Singleton
-    abstract fun bindsWatchProgressBackupRestorer(restorer: WatchProgressBackupRestorer): BackupRestorer<BackupWatchProgress>
+    abstract fun bindsWatchProgressBackupRestorer(
+        restorer: WatchProgressBackupRestorer
+    ): BackupRestorer<BackupWatchProgress>
 
     @Binds
     @Singleton
-    abstract fun bindsSearchHistoryBackupRestorer(restorer: SearchHistoryBackupRestorer): BackupRestorer<BackupSearchHistory>
+    abstract fun bindsSearchHistoryBackupRestorer(
+        restorer: SearchHistoryBackupRestorer
+    ): BackupRestorer<BackupSearchHistory>
 
     @Binds
     @Singleton
@@ -44,5 +48,7 @@ internal abstract class BackupRestoreModule {
 
     @Binds
     @Singleton
-    abstract fun bindsRepositoryBackupRestorer(restorer: RepositoryBackupRestorer): BackupRestorer<BackupProviderRepository>
+    abstract fun bindsRepositoryBackupRestorer(
+        restorer: RepositoryBackupRestorer
+    ): BackupRestorer<BackupProviderRepository>
 }

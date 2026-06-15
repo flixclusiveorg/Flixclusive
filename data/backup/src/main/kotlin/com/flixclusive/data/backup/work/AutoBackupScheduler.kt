@@ -23,7 +23,6 @@ class AutoBackupScheduler @Inject constructor(
     private val backupWorkManager: BackupWorkManager,
     private val appDispatchers: AppDispatchers,
 ) {
-
     private var job: Job? = null
 
     @OptIn(FlowPreview::class)

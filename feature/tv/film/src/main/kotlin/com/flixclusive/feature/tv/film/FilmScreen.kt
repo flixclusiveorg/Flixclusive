@@ -90,8 +90,7 @@ interface MediaScreenTvNavigator : GoBackAction {
 internal fun MediaScreen(
     navigator: MediaScreenTvNavigator,
     args: MediaScreenNavArgs
-) {
-    val viewModel = hiltViewModel<MediaScreenViewModel>()
+,viewModel: MediaScreenViewModel = hiltViewModel()) {
     val context = LocalContext.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -146,7 +145,6 @@ internal fun MediaScreen(
 
     val lastItemFocusedMap = useLocalLastFocusedItemPerDestination()
     val currentRoute = useLocalCurrentRoute()
-
 
     Box(
         modifier = Modifier
@@ -275,12 +273,10 @@ internal fun MediaScreen(
                                     .padding(
                                         start = LabelStartPadding.start + getLocalDrawerWidth(),
                                         bottom = 55.dp
-                                    )
-                                    .animateEnterExit(
+                                    ).animateEnterExit(
                                         enter = slideInHorizontally(),
                                         exit = slideOutHorizontally()
-                                    )
-                                    .onFocusChanged { buttonsHasFocus = it.hasFocus }
+                                    ).onFocusChanged { buttonsHasFocus = it.hasFocus }
                             ) {
                                 AnimatedContent(
                                     targetState = media!!,
@@ -391,7 +387,6 @@ internal fun MediaScreen(
             )
         }
     }
-
 
     if (media is Show) {
         AnimatedVisibility(

@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 @Destination<Nothing>(
     visibility = CodeGenVisibility.INTERNAL
 )
-annotation class InternalDestination<T: Annotation>(
+annotation class InternalDestination<T : Annotation>(
     val route: String = Destination.COMPOSABLE_NAME,
     val start: Boolean = false,
     val navArgs: KClass<*> = Nothing::class,

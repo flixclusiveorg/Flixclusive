@@ -42,8 +42,8 @@ internal object Schema3to4 : Migration(startVersion = 3, endVersion = 4) {
                     addedOn INTEGER NOT NULL,
                     film TEXT NOT NULL
                 );
-             """.trimIndent())
-
+            """.trimIndent()
+        )
 
         execSQL("INSERT INTO ${tableName}_new SELECT CAST(id AS TEXT), ownerId, addedOn, film FROM $tableName;")
 
@@ -64,9 +64,12 @@ internal object Schema3to4 : Migration(startVersion = 3, endVersion = 4) {
                     dateWatched INTEGER NOT NULL,
                     film TEXT NOT NULL
                 );
-             """.trimIndent())
+            """.trimIndent()
+        )
 
-        execSQL("INSERT INTO ${tableName}_new SELECT CAST(id AS TEXT), ownerId, seasons, episodes, episodesWatched, dateWatched, film FROM $tableName;")
+        execSQL(
+            "INSERT INTO ${tableName}_new SELECT CAST(id AS TEXT), ownerId, seasons, episodes, episodesWatched, dateWatched, film FROM $tableName;"
+        )
 
         execSQL("DROP TABLE $tableName;")
         execSQL("ALTER TABLE ${tableName}_new RENAME TO $tableName;")

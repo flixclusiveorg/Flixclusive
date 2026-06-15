@@ -88,7 +88,13 @@ class LoadProviderUseCaseImplTest {
     @Test
     fun shouldLoadProvider() =
         runTest(testDispatcher) {
-            coEvery { mockProviderRepository.getProvider(testProviderMetadata.id, testUserId)?.metadata } returns testProviderMetadata
+            coEvery {
+                mockProviderRepository
+                    .getProvider(
+                        testProviderMetadata.id,
+                        testUserId
+                    )?.metadata
+            } returns testProviderMetadata
             loadProviderUseCase(testInstalledProvider).test {
                 val result = awaitItem()
                 expectThat(result).isA<ProviderResult.Success>().and {
@@ -106,7 +112,13 @@ class LoadProviderUseCaseImplTest {
                 filePath = nonExistentFilePath,
             )
 
-            coEvery { mockProviderRepository.getProvider(testProviderMetadata.id, testUserId)?.metadata } returns testProviderMetadata
+            coEvery {
+                mockProviderRepository
+                    .getProvider(
+                        testProviderMetadata.id,
+                        testUserId
+                    )?.metadata
+            } returns testProviderMetadata
             loadProviderUseCase(tempProvider).test {
                 expectThat(awaitItem()).isA<ProviderResult.Failure>().and {
                     get { provider.id }.isEqualTo(testProviderMetadata.id)

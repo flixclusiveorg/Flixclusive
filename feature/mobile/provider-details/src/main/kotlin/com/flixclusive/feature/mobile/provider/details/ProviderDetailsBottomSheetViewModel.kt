@@ -88,8 +88,7 @@ internal class ProviderDetailsBottomSheetViewModel @Inject constructor(
         .filterNotNull()
         .flatMapLatest { userId ->
             providerRepository.getProviderAsFlow(navArgs.metadata.id, userId)
-        }
-        .mapLatest { wrapper ->
+        }.mapLatest { wrapper ->
             if (wrapper == null || wrapper.plugin == null) return@mapLatest emptyList()
             val plugin = wrapper.plugin!!
             buildList {
@@ -173,8 +172,7 @@ internal class ProviderDetailsBottomSheetViewModel @Inject constructor(
                     )
                 }
             }
-        }
-        .stateIn(
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),

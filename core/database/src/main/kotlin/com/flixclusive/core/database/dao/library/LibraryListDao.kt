@@ -30,25 +30,28 @@ interface LibraryListDao {
     fun getByTypeAsFlow(ownerId: String, listType: String): Flow<List<LibraryList>>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT list.*
         FROM library_lists list
         INNER JOIN library_list_items listItem ON list.id = listItem.listId
         WHERE listItem.mediaId = :mediaId AND list.ownerId = :ownerId
         ORDER BY list.createdAt DESC
-    """)
+    """
+    )
     fun getListsContainingMediaAsFlow(mediaId: String, ownerId: String): Flow<List<LibraryList>>
 
-
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT EXISTS(
             SELECT 1
             FROM library_lists list
             INNER JOIN library_list_items listItem ON list.id = listItem.listId
             WHERE listItem.mediaId = :mediaId AND list.ownerId = :ownerId
         )
-    """)
+    """
+    )
     suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean
 
     @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")

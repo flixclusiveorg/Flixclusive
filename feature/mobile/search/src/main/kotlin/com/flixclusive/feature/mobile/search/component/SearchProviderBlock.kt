@@ -39,7 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.common.provider.extensions.asStatusColor
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
@@ -63,8 +63,7 @@ internal fun SearchProviderBlock(
         modifier = modifier
             .graphicsLayer {
                 alpha = if (provider.isSearchEnabled) 1F else 0.5F
-            }
-            .minimumInteractiveComponentSize()
+            }.minimumInteractiveComponentSize()
             .clickable(enabled = !isSelected && provider.isSearchEnabled) {
                 onClick()
             },
@@ -101,13 +100,12 @@ internal fun SearchProviderBlock(
                         color = LocalContentColor.current.copy(0.6F)
                     )
 
-
                     if (provider.status != ProviderStatus.Working) {
                         Text(
                             text = provider.status.name,
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
-                            color = getProviderStatusContainerColor(provider.status),
+                            color = provider.status.asStatusColor(),
                             modifier = Modifier
                                 .graphicsLayer { alpha = 0.6F }
                         )
@@ -120,7 +118,7 @@ internal fun SearchProviderBlock(
                 contentAlignment = Alignment.Center,
                 transitionSpec = {
                     slideInHorizontally { -it / 4 } + fadeIn() togetherWith
-                            slideOutHorizontally { it / 4 } + fadeOut()
+                        slideOutHorizontally { it / 4 } + fadeOut()
                 },
             ) { selected ->
                 if (selected) {
@@ -133,9 +131,11 @@ internal fun SearchProviderBlock(
                         checked = provider.isSearchEnabled,
                         enabled = provider.status.isWorking,
                         colors = SwitchDefaults.colors(
-                            disabledCheckedThumbColor = MaterialTheme.colorScheme.surface.copy(1F)
+                            disabledCheckedThumbColor = MaterialTheme.colorScheme.surface
+                                .copy(1F)
                                 .compositeOver(MaterialTheme.colorScheme.surface),
-                            disabledCheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(0.12F)
+                            disabledCheckedTrackColor = MaterialTheme.colorScheme.onSurface
+                                .copy(0.12F)
                                 .compositeOver(MaterialTheme.colorScheme.surface),
                         ),
                         onCheckedChange = { onToggle() },

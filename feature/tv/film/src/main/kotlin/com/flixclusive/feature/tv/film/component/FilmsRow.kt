@@ -81,7 +81,7 @@ internal fun MediasRow(
         shape = RectangleShape,
         colors = NonInteractiveSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = if(hasFocus) Color.White else LocalContentColor.current.copy(0.6f)
+            contentColor = if (hasFocus) Color.White else LocalContentColor.current.copy(0.6f)
         ),
     ) {
         Column(
@@ -132,14 +132,15 @@ internal fun MediasRow(
                                     .ifElse(
                                         condition = columnIndex == firstInitialIndex,
                                         ifTrueModifier = focusRestorers.childModifier
-                                    )
-                                    .ifElse(
+                                    ).ifElse(
                                         condition = columnIndex == firstInitialIndex,
                                         ifTrueModifier = Modifier.onKeyEvent {
                                             if (hasPressedLeft(it) && isFirstItemFullyFocused) {
                                                 goBack()
                                                 return@onKeyEvent true
-                                            } else isFirstItemFullyFocused = true
+                                            } else {
+                                                isFirstItemFullyFocused = true
+                                            }
 
                                             false
                                         },
@@ -147,8 +148,7 @@ internal fun MediasRow(
                                             isFirstItemFullyFocused = false
                                             false
                                         }
-                                    )
-                                    .focusProperties {
+                                    ).focusProperties {
                                         if (columnIndex == medias.lastIndex) {
                                             right = FocusRequester.Cancel
                                         }
@@ -167,7 +167,9 @@ internal fun MediasRow(
                                     .background(
                                         color = if (!hasFocus) {
                                             MaterialTheme.colorScheme.surface.copy(0.6f)
-                                        } else Color.Transparent,
+                                        } else {
+                                            Color.Transparent
+                                        },
                                         shape = MediaCardShape
                                     )
                             )

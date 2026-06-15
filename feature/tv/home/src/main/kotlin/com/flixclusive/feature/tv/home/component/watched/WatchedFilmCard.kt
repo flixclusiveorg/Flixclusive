@@ -91,7 +91,8 @@ internal fun WatchedMediaCard(
                 .from(drawable!!.toBitmap())
                 .generate()
                 .vibrantSwatch
-                ?.rgb?.let {
+                ?.rgb
+                ?.let {
                     immersiveBackgroundColor.value = Color(it)
                 }
         }
@@ -190,10 +191,11 @@ private fun CardImage(
             }
     ) {
         val painter = remember(backdropImage) {
-            context.buildTMDBImageUrl(
-                imagePath = backdropImage,
-                imageSize = "w780"
-            )?.newBuilder(context)
+            context
+                .buildTMDBImageUrl(
+                    imagePath = backdropImage,
+                    imageSize = "w780"
+                )?.newBuilder(context)
                 ?.allowHardware(false)
                 ?.build()
         }
@@ -221,7 +223,7 @@ private fun CardProgress(
 ) {
     val lastWatchedEpisode = watchHistoryItem.episodesWatched.last()
     var progress by remember(watchHistoryItem) {
-        val percentage = if(lastWatchedEpisode.durationTime == 0L) {
+        val percentage = if (lastWatchedEpisode.durationTime == 0L) {
             0F
         } else {
             lastWatchedEpisode.watchTime.toFloat() / lastWatchedEpisode.durationTime.toFloat()
@@ -231,17 +233,18 @@ private fun CardProgress(
     }
 
     val itemLabel = remember(watchHistoryItem) {
-        if(isShow) {
+        if (isShow) {
             val nextEpisodeWatched = getNextEpisodeToWatch(watchHistoryItem)
             val season = nextEpisodeWatched.first
             val episode = nextEpisodeWatched.second
 
             val lastEpisodeIsNotSameWithNextEpisodeToWatch = lastWatchedEpisode.episodeNumber != episode
 
-            if(lastEpisodeIsNotSameWithNextEpisodeToWatch)
+            if (lastEpisodeIsNotSameWithNextEpisodeToWatch) {
                 progress = 0F
+            }
 
-            UiText.StringValue("S${season} E${episode}")
+            UiText.StringValue("S$season E$episode")
         } else {
             val watchTime = watchHistoryItem.episodesWatched.last().watchTime
             val watchTimeInSeconds = (watchTime / 1000).toInt()
@@ -285,41 +288,59 @@ private fun CardOverview(
 
     val mediaInfo = remember {
         val infoList = mutableListOf<String>()
-        infoList.apply {
-            with(item) {
-                if (media.type ==  MediaType.MOVIE) {
-                    add(formatMinutes(episodesWatched.firstOrNull()?.durationTime?.toInt()?.div(1000)?.div(60)).asString(context))
-                } else {
-                    val averageRuntime = (episodesWatched.map { it.durationTime }.average().toInt() / 1000) / 60
-                    if (averageRuntime > 0) {
-                        add(formatMinutes(averageRuntime).asString(context))
+        infoList
+            .apply {
+                with(item) {
+                    if (media.type == MediaType.MOVIE) {
+                        add(
+                            formatMinutes(
+                                episodesWatched
+                                    .firstOrNull()
+                                    ?.durationTime
+                                    ?.toInt()
+                                    ?.div(1000)
+                                    ?.div(60)
+                            ).asString(context)
+                        )
+                    } else {
+                        val averageRuntime = (episodesWatched.map { it.durationTime }.average().toInt() / 1000) / 60
+                        if (averageRuntime > 0) {
+                            add(formatMinutes(averageRuntime).asString(context))
+                        }
+
+                        if (seasons != null) {
+                            var seasonsRuntime =
+                                UiText
+                                    .StringResource(
+                                        LocaleR.string.season_runtime_formatter,
+                                        seasons!!
+                                    ).asString(context)
+
+                            if (seasons!! > 1) {
+                                seasonsRuntime += 's'
+                            }
+
+                            add(seasonsRuntime)
+                        }
+
+                        val totalEpisodes = episodes.values.sum()
+                        if (totalEpisodes > 0) {
+                            var episodesRuntime =
+                                UiText
+                                    .StringResource(LocaleR.string.episode_runtime_formatter, totalEpisodes)
+                                    .asString(context)
+
+                            if (totalEpisodes > 1) {
+                                episodesRuntime += 's'
+                            }
+
+                            add(episodesRuntime)
+                        }
                     }
 
-                    if(seasons != null) {
-                        var seasonsRuntime = UiText.StringResource(LocaleR.string.season_runtime_formatter, seasons!!).asString(context)
-
-                        if(seasons!! > 1)
-                            seasonsRuntime += 's'
-
-                        add(seasonsRuntime)
-                    }
-
-
-                    val totalEpisodes = episodes.values.sum()
-                    if (totalEpisodes > 0) {
-                        var episodesRuntime = UiText.StringResource(LocaleR.string.episode_runtime_formatter, totalEpisodes).asString(context)
-
-                        if(totalEpisodes > 1)
-                            episodesRuntime += 's'
-
-                        add(episodesRuntime)
-                    }
+                    media.parsedReleaseDate?.let(::add)
                 }
-
-                media.parsedReleaseDate?.let(::add)
-            }
-        }
-            .toList()
+            }.toList()
             .filterNot { it.isEmpty() }
     }
 

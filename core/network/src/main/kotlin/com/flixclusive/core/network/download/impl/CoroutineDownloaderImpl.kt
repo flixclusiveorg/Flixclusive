@@ -23,7 +23,6 @@ internal class CoroutineDownloaderImpl @Inject constructor(
     client: OkHttpClient,
     private val appDispatchers: AppDispatchers,
 ) : CoroutineDownloader {
-
     private val client by lazy {
         client
             .newBuilder()
@@ -39,7 +38,8 @@ internal class CoroutineDownloaderImpl @Inject constructor(
         destinationFile: File,
     ): Flow<DownloadProgress> =
         callbackFlow {
-            val request = Request.Builder()
+            val request = Request
+                .Builder()
                 .url(url)
                 .tag<ProgressListener>(
                     tag = object : ProgressListener {
@@ -76,8 +76,7 @@ internal class CoroutineDownloaderImpl @Inject constructor(
                             }
                         }
                     }
-                )
-                .build()
+                ).build()
 
             val response = client
                 .newCall(request)

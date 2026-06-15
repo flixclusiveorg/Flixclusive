@@ -169,7 +169,10 @@ internal class AddProviderViewModel @Inject constructor(
         try {
             updateProvider(provider).collect { result ->
                 when (result) {
-                    is DownloadProviderResult.Failure -> throw result.error
+                    is DownloadProviderResult.Failure -> {
+                        throw result.error
+                    }
+
                     is DownloadProviderResult.Downloading -> {
                         providerInstallStates[provider.id] = ProviderInstallState.Installing(
                             progress = result.progress,
@@ -194,28 +197,34 @@ internal class AddProviderViewModel @Inject constructor(
         val initialState = providerInstallStates[provider.id] ?: ProviderInstallState.NotInstalled
         try {
             infoLog("Downloading and installing provider: ${provider.name}")
-            installProvider(provider).onEach { result ->
-                when (result) {
-                    is DownloadProviderResult.Failure -> throw result.error
-                    is DownloadProviderResult.Downloading -> {
-                        providerInstallStates[provider.id] = ProviderInstallState.Installing(
-                            progress = result.progress,
-                            downloadId = result.downloadId,
-                        )
-                    }
+            installProvider(provider)
+                .onEach { result ->
+                    when (result) {
+                        is DownloadProviderResult.Failure -> {
+                            throw result.error
+                        }
 
-                    is DownloadProviderResult.Success -> Unit
-                }
-            }
-                .catch { throw it }
+                        is DownloadProviderResult.Downloading -> {
+                            providerInstallStates[provider.id] = ProviderInstallState.Installing(
+                                progress = result.progress,
+                                downloadId = result.downloadId,
+                            )
+                        }
+
+                        is DownloadProviderResult.Success -> {
+                            Unit
+                        }
+                    }
+                }.catch { throw it }
                 .collect()
 
             val installedProvider = getInstalledProvider(provider.id)
                 ?: error("Provider ${provider.name} not found after installation")
 
-            loadProvider(installedProvider).onEach { result ->
-                if (result is ProviderResult.Failure) throw result.error
-            }.catch { throw it }
+            loadProvider(installedProvider)
+                .onEach { result ->
+                    if (result is ProviderResult.Failure) throw result.error
+                }.catch { throw it }
                 .collect()
 
             providerInstallStates[provider.id] = ProviderInstallState.Installed
@@ -258,7 +267,7 @@ internal class AddProviderViewModel @Inject constructor(
             providerInstallStates[provider.id] = getInstallState(provider)
         } catch (_: CancellationException) {
             // No-op
-        }  catch (e: Throwable) {
+        } catch (e: Throwable) {
             _uiState.update {
                 it.copy(providerExceptions = it.providerExceptions + ProviderWithThrowable(provider, e))
             }
@@ -284,7 +293,9 @@ internal class AddProviderViewModel @Inject constructor(
 
         if (providerList.isEmpty() && _uiState.value.repositoryExceptions.isNotEmpty()) {
             _availableProviders.value = Async.Failure(
-                message = _uiState.value.repositoryExceptions.first().second,
+                message = _uiState.value.repositoryExceptions
+                    .first()
+                    .second,
             )
         } else {
             _availableProviders.value = Async.Success(providerList.toPersistentList())
@@ -399,7 +410,9 @@ internal class AddProviderViewModel @Inject constructor(
         if (
             (job?.isActive == true || installSelectionJob?.isActive == true) &&
             providerInstallStates[provider.id] !is ProviderInstallState.Installing
-        ) return
+        ) {
+            return
+        }
 
         providerJobs[provider.id] = appDispatchers.ioScope.launch {
             when (val state = providerInstallStates[provider.id] ?: ProviderInstallState.NotInstalled) {

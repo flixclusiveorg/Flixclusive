@@ -100,10 +100,16 @@ private fun PlayerScreenBasePreview() {
         loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id)
         delay(1500)
         canSkipLoading = true
-        loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id, message = "Extracting from ${currentProvider.name}...")
+        loadLinksState = LoadLinksState.Extracting(
+            providerId = currentProvider.id,
+            message = "Extracting from ${currentProvider.name}..."
+        )
         delay(1500)
         canSkipLoading = false
-        loadLinksState = LoadLinksState.Error(UiText.from("Connection timed out. The remote server did not respond within the expected timeframe."))
+        loadLinksState =
+            LoadLinksState.Error(
+                UiText.from("Connection timed out. The remote server did not respond within the expected timeframe.")
+            )
         delay(3000)
         loadLinksState = LoadLinksState.Unavailable()
         delay(3000)

@@ -13,5 +13,5 @@ interface SyncToScrobblersUseCase {
         watchProgress: WatchProgress,
         media: MediaMetadata,
         episode: Episode? = null,
-    ) : Flow<Async<Unit>>
+    ): Flow<Async<Unit>>
 }

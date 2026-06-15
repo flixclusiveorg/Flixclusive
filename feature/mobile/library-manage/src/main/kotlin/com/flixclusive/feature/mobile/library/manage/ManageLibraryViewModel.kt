@@ -109,8 +109,7 @@ internal class ManageLibraryViewModel @Inject constructor(
                     .mapLatest { data ->
                         val list = data.fastMap { it.toPreview() }
                         Async.Success(list) as Async<List<LibraryListWithPreview>>
-                    }
-                    .onStart { emit(Async.Loading) }
+                    }.onStart { emit(Async.Loading) }
                     .catch {
                         errorLog("Failed to fetch library lists for user $userId with filter $filter")
                         errorLog(it)
@@ -152,11 +151,15 @@ internal class ManageLibraryViewModel @Inject constructor(
                     }
 
                     when (app) {
-                        is Async.Loading -> Async.Loading
+                        is Async.Loading -> {
+                            Async.Loading
+                        }
+
                         is Async.Failure -> {
                             _uiState.update { it.copy(isLoadingTrackers = false) }
                             Async.Failure(app.message, app.cause)
                         }
+
                         else -> {
                             val comparator = when (filter) {
                                 is LibrarySort.Added -> compareBy<LibraryListWithPreview> { it.list.id }
@@ -172,10 +175,11 @@ internal class ManageLibraryViewModel @Inject constructor(
                                 Async.Success(all)
                             } else {
                                 Async.Success(
-                                    all.fastFilter { library ->
-                                        library.name.contains(query, ignoreCase = true) ||
-                                            library.description?.contains(query, ignoreCase = true) == true
-                                    }.sortedWith(comparator)
+                                    all
+                                        .fastFilter { library ->
+                                            library.name.contains(query, ignoreCase = true) ||
+                                                library.description?.contains(query, ignoreCase = true) == true
+                                        }.sortedWith(comparator)
                                 )
                             }
 
@@ -206,7 +210,9 @@ internal class ManageLibraryViewModel @Inject constructor(
                 .mapLatest {
                     when (it) {
                         is Async.Loading -> Async.Loading
+
                         is Async.Failure -> Async.Failure(it.message, it.cause)
+
                         is Async.Success -> Async.Success(
                             it.data.mapNotNull { provider ->
                                 val isAuthenticated = try {

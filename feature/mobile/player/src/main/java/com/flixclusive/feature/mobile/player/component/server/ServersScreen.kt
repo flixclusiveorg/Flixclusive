@@ -182,5 +182,3 @@ internal fun ServersScreen(
         }
     }
 }
-
-

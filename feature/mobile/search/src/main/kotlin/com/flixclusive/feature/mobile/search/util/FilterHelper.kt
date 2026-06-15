@@ -13,7 +13,6 @@ import com.flixclusive.provider.filter.Filter
 import com.flixclusive.provider.filter.FilterGroup
 
 internal object FilterHelper {
-
     private const val SELECTED_FILTER_BUTTON_ALPHA = 0.05F
 
     @Stable
@@ -23,8 +22,9 @@ internal object FilterHelper {
                 return true
             }
 
-            if (filter.state != null)
+            if (filter.state != null) {
                 return true
+            }
         }
 
         return false
@@ -32,13 +32,15 @@ internal object FilterHelper {
 
     @Stable
     fun FilterGroup.getFormattedName(context: Context): String {
-        if (isEmpty() || !hasOneTypeOnly())
+        if (isEmpty() || !hasOneTypeOnly()) {
             return name
+        }
 
         val firstFilter = first()
 
-        if (firstFilter.state == null)
+        if (firstFilter.state == null) {
             return name
+        }
 
         return when (firstFilter) {
             is Filter.CheckBox -> {
@@ -53,17 +55,22 @@ internal object FilterHelper {
 
                 return groupName
             }
+
             is Filter.Select<*>, is Filter.Sort<*> -> {
                 return firstFilter.getFilterDisplayValue(context)
             }
-            else -> name
+
+            else -> {
+                name
+            }
         }
     }
 
     @Stable
     private fun FilterGroup.hasOneTypeOnly(): Boolean {
-        if (isEmpty())
+        if (isEmpty()) {
             return true
+        }
 
         val firstType = first()::class
         return fastAll { it::class == firstType }
@@ -77,9 +84,11 @@ internal object FilterHelper {
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.primary.copy(SELECTED_FILTER_BUTTON_ALPHA)
             )
-        } else ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F),
-        )
+        } else {
+            ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F),
+            )
+        }
     }
 
     @Stable

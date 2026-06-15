@@ -52,8 +52,7 @@ internal fun HomeScreenTopBar(
                     color = appBarContainerColor,
                     alpha = containerAlpha(),
                 )
-            }
-            .windowInsetsPadding(WindowInsets.statusBars),
+            }.windowInsetsPadding(WindowInsets.statusBars),
         color = Color.Transparent
     ) {
         TopAppBarLayout(
@@ -106,7 +105,6 @@ internal fun HomeScreenTopBar(
                             )
                         }
                     }
-
                 }
             },
         )

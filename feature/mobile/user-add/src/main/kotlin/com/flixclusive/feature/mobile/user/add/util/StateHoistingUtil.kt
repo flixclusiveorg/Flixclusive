@@ -7,6 +7,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateOf
 import com.flixclusive.core.database.entity.user.User
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 internal object StateHoistingUtil {
     val LocalUserToAdd = compositionLocalOf { mutableStateOf(User(id = "", name = "", image = 1)) }
 

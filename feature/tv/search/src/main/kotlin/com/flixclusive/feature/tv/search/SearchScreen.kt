@@ -65,17 +65,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface SearchScreenNavigator : GoBackAction, ViewMediaAction
+interface SearchScreenNavigator :
+    GoBackAction,
+    ViewMediaAction
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun SearchScreen(
     navigator: SearchScreenNavigator
-) {
-    val viewModel: SearchScreenViewModel = hiltViewModel()
+,viewModel: SearchScreenViewModel = hiltViewModel()) {
     val categories by viewModel.catalogs.collectAsStateWithLifecycle()
-
 
     var lastSearchedQuery by remember { mutableStateOf(viewModel.searchQuery) }
 
@@ -88,16 +88,21 @@ internal fun SearchScreen(
     }
 
     LaunchedEffect(shouldStartPaginate) {
-        if(shouldStartPaginate && (viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE || viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR))
+        if (shouldStartPaginate &&
+            (
+                viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE ||
+                    viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR
+            )
+        ) {
             viewModel.paginate()
+        }
     }
-
 
     LaunchedEffect(viewModel.searchQuery, lastSearchedQuery) {
         val queryIsNotEmpty = viewModel.searchQuery.isNotEmpty()
         val userIsTypingNewQuery = viewModel.searchQuery != lastSearchedQuery
 
-        if(queryIsNotEmpty && userIsTypingNewQuery) {
+        if (queryIsNotEmpty && userIsTypingNewQuery) {
             delay(1500L)
             safeCall { listState.scrollToItem(0) }
             viewModel.onSearch()
@@ -170,15 +175,13 @@ internal fun SearchScreen(
                                         .ifElse(
                                             condition = i == 0,
                                             ifTrueModifier = focusRestorersModifiers.childModifier
-                                        )
-                                        .focusOnMount(itemKey = "category=${item.url}")
+                                        ).focusOnMount(itemKey = "category=${item.url}")
                                         .focusProperties {
                                             right = filtersGroupFocusRequester
                                         }
                                 )
                             }
-                        }
-                        else if (viewModel.searchSuggestions.isNotEmpty()) {
+                        } else if (viewModel.searchSuggestions.isNotEmpty()) {
                             itemsIndexed(viewModel.searchSuggestions) { i, suggestion ->
                                 SuggestionBlock(
                                     suggestion = suggestion,
@@ -187,9 +190,9 @@ internal fun SearchScreen(
                                         .ifElse(
                                             condition = i == 0,
                                             ifTrueModifier = focusRestorersModifiers.childModifier
-                                        )
-                                        .focusOnMount(itemKey = "suggestion=${suggestion}, query=${viewModel.searchQuery}")
-                                        .focusProperties {
+                                        ).focusOnMount(
+                                            itemKey = "suggestion=$suggestion, query=${viewModel.searchQuery}"
+                                        ).focusProperties {
                                             right = filtersGroupFocusRequester
                                         }
                                 )

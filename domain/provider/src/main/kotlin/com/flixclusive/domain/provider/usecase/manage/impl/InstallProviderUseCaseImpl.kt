@@ -85,7 +85,9 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                             is CancellationException -> CancellationException(
                                 context.getString(R.string.error_cancelled_provider_download, metadata.name)
                             )
+
                             is ExceptionWithUiText -> e.cause ?: e
+
                             else -> e
                         },
                     ),
@@ -94,7 +96,8 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
             }
 
             val existingRepo = installedRepositoryDao.get(
-                url = metadata.repositoryUrl, userId = userId
+                url = metadata.repositoryUrl,
+                userId = userId
             )
             if (existingRepo == null) {
                 infoLog("Repository not found for provider: ${metadata.name}, creating new repository entry")

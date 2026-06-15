@@ -54,4 +54,3 @@ internal fun AnimatedContentTransitionScope<*>.defaultPopEnterTransition(): Ente
 internal fun AnimatedContentTransitionScope<*>.defaultPopExitTransition(): ExitTransition {
     return fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
 }
-

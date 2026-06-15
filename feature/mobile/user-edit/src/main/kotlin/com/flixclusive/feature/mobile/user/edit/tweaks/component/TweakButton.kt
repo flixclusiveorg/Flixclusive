@@ -40,7 +40,7 @@ internal fun TweakButton(
     var showDialog by remember { mutableStateOf(false) }
 
     if (needsDialog && showDialog) {
-        if(tweak is ProfileTweakUI.Dialog) {
+        if (tweak is ProfileTweakUI.Dialog) {
             tweak.content { showDialog = false }
         } else {
             TextAlertDialog(
@@ -59,13 +59,14 @@ internal fun TweakButton(
             .background(
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
                 shape = DefaultShape
-            )
-            .clickable(
+            ).clickable(
                 onClick = if (needsDialog) {
                     fun() {
                         showDialog = true
                     }
-                } else tweak.onClick
+                } else {
+                    tweak.onClick
+                }
             )
     ) {
         val spacing = getAdaptiveDp(16.dp)

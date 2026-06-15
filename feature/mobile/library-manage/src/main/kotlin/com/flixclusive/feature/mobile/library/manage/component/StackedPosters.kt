@@ -332,10 +332,11 @@ private fun StackedPostersBasePreview() {
                         StackedPosters(
                             previews =
                                 List(3) {
-                                    DummyDataForPreview.getMedia(
-                                        id = "$it",
-                                        title = "MediaMetadata #$it",
-                                    ).toPreviewPoster()
+                                    DummyDataForPreview
+                                        .getMedia(
+                                            id = "$it",
+                                            title = "MediaMetadata #$it",
+                                        ).toPreviewPoster()
                                 },
                         )
                     }

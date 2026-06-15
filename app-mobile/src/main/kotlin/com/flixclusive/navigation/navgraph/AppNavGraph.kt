@@ -31,7 +31,6 @@ import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserSc
 import com.ramcosta.composedestinations.generated.useredit.UsereditModuleDestinations
 import com.ramcosta.composedestinations.generated.userprofiles.destinations.UserProfilesScreenDestination
 
-
 @NavHostGraph(defaultTransitions = AppDefaultTransition::class)
 internal annotation class AppNavGraph {
     @ExternalDestination<AddProviderScreenDestination>
@@ -80,7 +79,6 @@ internal fun AppLevelMediaPreviewBottomSheet(
         args = navArgs
     )
 }
-
 
 @InternalDestination<HomeNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @InternalDestination<LibraryNavGraph>(navArgs = SeeAllScreenNavArgs::class)

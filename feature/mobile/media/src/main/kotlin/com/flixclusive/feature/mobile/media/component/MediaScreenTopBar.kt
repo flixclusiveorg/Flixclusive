@@ -46,8 +46,7 @@ internal fun MediaScreenTopBar(
                     color = appBarContainerColor,
                     alpha = containerAlpha()
                 )
-            }
-            .windowInsetsPadding(WindowInsets.statusBars),
+            }.windowInsetsPadding(WindowInsets.statusBars),
         color = Color.Transparent
     ) {
         TopAppBarLayout(

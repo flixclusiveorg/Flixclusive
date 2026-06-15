@@ -25,7 +25,9 @@ interface InstalledProviderDao {
     @Query("SELECT * FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
     fun getAsFlow(id: String, ownerId: String): Flow<InstalledProvider?>
 
-    @Query("SELECT * FROM installed_providers WHERE repositoryUrl = :repositoryUrl AND ownerId = :ownerId ORDER BY createdAt ASC")
+    @Query(
+        "SELECT * FROM installed_providers WHERE repositoryUrl = :repositoryUrl AND ownerId = :ownerId ORDER BY createdAt ASC"
+    )
     fun getByRepositoryUrl(repositoryUrl: String, ownerId: String): Flow<List<InstalledProvider>>
 
     @Upsert
@@ -46,7 +48,9 @@ interface InstalledProviderDao {
     @Query("DELETE FROM installed_providers WHERE ownerId = :ownerId")
     suspend fun deleteAll(ownerId: String)
 
-    @Query("UPDATE installed_providers SET isCatalogEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    @Query(
+        "UPDATE installed_providers SET isCatalogEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
     suspend fun setCatalogEnabled(
         id: String,
         ownerId: String,
@@ -54,7 +58,9 @@ interface InstalledProviderDao {
         updatedAt: Long = System.currentTimeMillis(),
     )
 
-    @Query("UPDATE installed_providers SET isCrossMatchEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    @Query(
+        "UPDATE installed_providers SET isCrossMatchEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
     suspend fun setCrossMatchEnabled(
         id: String,
         ownerId: String,
@@ -62,7 +68,9 @@ interface InstalledProviderDao {
         updatedAt: Long = System.currentTimeMillis(),
     )
 
-    @Query("UPDATE installed_providers SET isMediaLinkEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    @Query(
+        "UPDATE installed_providers SET isMediaLinkEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
     suspend fun setMediaLinkEnabled(
         id: String,
         ownerId: String,
@@ -70,7 +78,9 @@ interface InstalledProviderDao {
         updatedAt: Long = System.currentTimeMillis(),
     )
 
-    @Query("UPDATE installed_providers SET isMetadataEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    @Query(
+        "UPDATE installed_providers SET isMetadataEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
     suspend fun setMetadataEnabled(
         id: String,
         ownerId: String,
@@ -78,7 +88,9 @@ interface InstalledProviderDao {
         updatedAt: Long = System.currentTimeMillis(),
     )
 
-    @Query("UPDATE installed_providers SET isSearchEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    @Query(
+        "UPDATE installed_providers SET isSearchEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
     suspend fun setSearchEnabled(
         id: String,
         ownerId: String,
@@ -86,7 +98,9 @@ interface InstalledProviderDao {
         updatedAt: Long = System.currentTimeMillis(),
     )
 
-    @Query("UPDATE installed_providers SET isTrackerEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
+    @Query(
+        "UPDATE installed_providers SET isTrackerEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
     suspend fun setTrackerEnabled(
         id: String,
         ownerId: String,

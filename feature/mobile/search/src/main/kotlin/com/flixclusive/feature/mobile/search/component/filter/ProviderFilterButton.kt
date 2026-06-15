@@ -49,7 +49,10 @@ internal fun ProviderFilterButton(
     OutlinedButton(
         onClick = {
             val viewType = when (currentViewType) {
-                SearchViewType.Providers -> SearchViewType.entries[lastViewTypeSelected]
+                SearchViewType.Providers -> {
+                    SearchViewType.entries[lastViewTypeSelected]
+                }
+
                 else -> {
                     lastViewTypeSelected = currentViewType.ordinal
                     SearchViewType.Providers

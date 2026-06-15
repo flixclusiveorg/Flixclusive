@@ -125,12 +125,19 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                         .let { list ->
                             when (mediaSort) {
                                 is MediaSortType.LinksCount -> {
-                                    if (mediaSort.asc) list.sortedBy { it.size }
-                                    else list.sortedByDescending { it.size }
+                                    if (mediaSort.asc) {
+                                        list.sortedBy { it.size }
+                                    } else {
+                                        list.sortedByDescending { it.size }
+                                    }
                                 }
+
                                 is MediaSortType.Title -> {
-                                    if (mediaSort.asc) list.sortedBy { it.media.title }
-                                    else list.sortedByDescending { it.media.title }
+                                    if (mediaSort.asc) {
+                                        list.sortedBy { it.media.title }
+                                    } else {
+                                        list.sortedByDescending { it.media.title }
+                                    }
                                 }
                             }
                         }
@@ -170,8 +177,11 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                                 selected = isSelected,
                                 onClick = {
                                     viewModel.onMediaSortChange(
-                                        if (isSelected) mediaSort.toggle()
-                                        else mediaSort.changeType()
+                                        if (isSelected) {
+                                            mediaSort.toggle()
+                                        } else {
+                                            mediaSort.changeType()
+                                        }
                                     )
                                 },
                                 leadingIcon = {
@@ -189,7 +199,9 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
 
                                             AdaptiveIcon(
                                                 painter = painterResource(iconId),
-                                                contentDescription = stringResource(LocaleR.string.sort_icon_content_desc),
+                                                contentDescription = stringResource(
+                                                    LocaleR.string.sort_icon_content_desc
+                                                ),
                                                 tint = MaterialTheme.colorScheme.onSurface,
                                                 dp = 14.dp,
                                             )
@@ -199,8 +211,14 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                                 label = {
                                     Text(
                                         when (it) {
-                                            MediaSortType.LinksCount::class -> stringResource(R.string.label_links_filter_count)
-                                            MediaSortType.Title::class -> stringResource(R.string.label_links_filter_title)
+                                            MediaSortType.LinksCount::class -> stringResource(
+                                                R.string.label_links_filter_count
+                                            )
+
+                                            MediaSortType.Title::class -> stringResource(
+                                                R.string.label_links_filter_title
+                                            )
+
                                             else -> "Unknown filter"
                                         }
                                     )
@@ -226,7 +244,9 @@ internal object MediaLinkCardsTweakScreen : BaseTweakScreen<FlixclusivePrefs> {
                         onClick = {
                             val providerCache = group.cache.firstOrNull()
                             if (providerCache == null) {
-                                context.showToast(resources.getString(R.string.error_selected_media_has_no_cached_links))
+                                context.showToast(
+                                    resources.getString(R.string.error_selected_media_has_no_cached_links)
+                                )
                                 return@PosterCard
                             }
 
@@ -324,8 +344,7 @@ private fun PosterCard(
 @Composable
 private fun PosterCardPreview() {
     FlixclusiveTheme {
-        Surface(
-        ) {
+        Surface {
             PosterCard(
                 media = DummyDataForPreview.getMedia().toDBMedia(),
                 cacheSize = 1,

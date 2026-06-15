@@ -11,7 +11,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.spec.DestinationStyle
 
-
 @Destination<ExternalModuleGraph>(
     style = DestinationStyle.Dialog::class
 )

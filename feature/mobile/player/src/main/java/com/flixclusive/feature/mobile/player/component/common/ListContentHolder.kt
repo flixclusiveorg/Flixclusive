@@ -114,9 +114,10 @@ internal fun <Type> ListContentHolder(
 
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ).asAdaptiveTextStyle(size = 22.sp),
+                    style = MaterialTheme.typography.headlineSmall
+                        .copy(
+                            fontWeight = FontWeight.Bold
+                        ).asAdaptiveTextStyle(size = 22.sp),
                     modifier = Modifier.weight(1f)
                 )
 

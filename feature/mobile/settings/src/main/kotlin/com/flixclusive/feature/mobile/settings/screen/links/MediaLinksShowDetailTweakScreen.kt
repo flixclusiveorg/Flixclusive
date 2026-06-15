@@ -114,7 +114,9 @@ internal object MediaLinksShowDetailTweakScreen : BaseTweakScreen<FlixclusivePre
 
                 val seasons by remember(episodes) {
                     derivedStateOf {
-                        cacheGroup?.cache?.fastMapNotNull { it.seasonNumber }
+                        cacheGroup
+                            ?.cache
+                            ?.fastMapNotNull { it.seasonNumber }
                             ?.fastDistinctBy { it }
                             ?.sorted()
                             ?: emptyList()

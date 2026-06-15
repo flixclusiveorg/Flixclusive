@@ -67,8 +67,7 @@ internal fun SubtitleCueItem(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
-            )
-            .padding(vertical = 10.dp),
+            ).padding(vertical = 10.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Column(
@@ -93,11 +92,12 @@ internal fun SubtitleCueItem(
                 text = remember { cue.cue.joinToString("\n") },
                 color = textColor,
                 style = if (isActive()) {
-                    baseStyle.copy(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 24.sp
-                    ).dropShadow()
+                    baseStyle
+                        .copy(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 24.sp
+                        ).dropShadow()
                 } else {
                     baseStyle.copy(
                         fontSize = 18.sp,

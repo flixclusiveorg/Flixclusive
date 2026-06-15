@@ -10,10 +10,8 @@ import androidx.compose.runtime.compositionLocalOf
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 object SharedTransitionUtil {
-    @Suppress("ktlint:compose:compositionlocal-allowlist")
     val LocalAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
 
-    @Suppress("ktlint:compose:compositionlocal-allowlist")
     val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
 
     @Composable

@@ -12,7 +12,7 @@ enum class ResizeMode {
     FillWidth;
 
     fun getStringId(): Int {
-        return when(this) {
+        return when (this) {
             Fit -> R.string.resize_mode_fit
             Crop -> R.string.resize_mode_crop
             None -> R.string.resize_mode_none

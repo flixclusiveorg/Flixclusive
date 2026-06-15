@@ -72,7 +72,8 @@ class AppPlayer(
     private val playerPrefs: PlayerPreferences,
     private val subtitlePrefs: SubtitlesPreferences,
     internal val dataSourceFactory: AppDataSourceFactory,
-) : CuesProvider, Player {
+) : CuesProvider,
+    Player {
     private val mediaSourceManager: MediaSourceManager by lazy {
         MediaSourceManager(dataSourceFactory)
     }
@@ -88,6 +89,7 @@ class AppPlayer(
     /** Only internally visible so ComposePlayer component can access it */
     internal var exoPlayer: ExoPlayer? = null
 
+    @Suppress("ktlint:standard:backing-property-naming")
     internal val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
     val errors = _errors.asSharedFlow()
 
@@ -268,8 +270,13 @@ class AppPlayer(
                 _playWhenReady = false
             }
 
-            PiPEvent.FORWARD.ordinal -> seekForward()
-            PiPEvent.BACKWARD.ordinal -> seekBack()
+            PiPEvent.FORWARD.ordinal -> {
+                seekForward()
+            }
+
+            PiPEvent.BACKWARD.ordinal -> {
+                seekBack()
+            }
         }
     }
 

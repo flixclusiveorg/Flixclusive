@@ -10,14 +10,12 @@ import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScre
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-
 internal object RepositoryTweakNavigation : BaseTweakNavigation {
     @Composable
     override fun getTitle(): String = stringResource(LocaleR.string.repository)
 
     @Composable
-    override fun getIconPainter(): Painter
-        = painterResource(UiCommonR.drawable.github_outline)
+    override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.github_outline)
 
     override fun onClick(navigator: NavigatorSettingsScreen) {
         navigator.navigateToUrl(GITHUB_REPOSITORY_URL)

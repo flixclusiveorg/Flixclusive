@@ -77,8 +77,7 @@ private fun RefreshIndicator(
                     val tensionPercent = linearTension - linearTension.pow(2) / 4
 
                     alpha = if (isRefreshing) 1f else (-0.25f + 0.4f * adjustedPercent + tensionPercent) * 0.5f
-                }
-                .size(16.dp),
+                }.size(16.dp),
         )
     }
 }

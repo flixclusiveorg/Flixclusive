@@ -9,7 +9,6 @@ import kotlinx.serialization.encoding.Encoder
 import java.util.Date
 
 internal object DateAsLongSerializer : KSerializer<Date> {
-
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("DateAsLong", PrimitiveKind.LONG)
 

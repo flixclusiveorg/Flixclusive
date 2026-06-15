@@ -38,10 +38,12 @@ import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativePaint
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A composable that displays a circular progress indicator with a gradient colors.
@@ -72,8 +74,7 @@ fun GradientCircularProgressIndicator(
             .size(size)
             .graphicsLayer {
                 rotationZ = angle
-            }
-            .border(
+            }.border(
                 thickness,
                 brush = Brush.sweepGradient(colors = gradientColors),
                 shape = CircleShape,
@@ -172,7 +173,7 @@ fun GradientLinearProgressIndicator(
 
         // Handle optional glow effect
         glowRadius?.let { radius ->
-            paint.asFrameworkPaint().apply {
+            paint.nativePaint.apply {
                 setShadowLayer(radius.toPx(), 0f, 0f, android.graphics.Color.WHITE)
             }
         }
@@ -195,7 +196,7 @@ fun isLoadingWithDelay(delayMs: Long = 600L): Boolean {
     var delayLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(true) {
-        delay(delayMs)
+        delay(delayMs.milliseconds)
         delayLoading = true
     }
 

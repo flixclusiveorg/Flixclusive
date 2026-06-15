@@ -70,7 +70,9 @@ import com.flixclusive.core.presentation.mobile.R as UiMobileR
 import com.flixclusive.core.strings.R as LocaleR
 
 private enum class CatalogRowState {
-    CONTENT, EMPTY, ERROR
+    CONTENT,
+    EMPTY,
+    ERROR
 }
 
 @Composable
@@ -97,7 +99,7 @@ internal fun CatalogRow(
         }
     }
 
-    LaunchedEffect(listState, paginate, pagingState) {
+    LaunchedEffect(listState, paginate, pagingState, items) {
         snapshotFlow {
             pagingState.isIdle && (listState.shouldPaginate() || items().isEmpty())
         }.distinctUntilChanged()
@@ -162,9 +164,11 @@ internal fun CatalogRow(
                         error = (pagingState as? PagingState.Error)?.error,
                     )
                 }
+
                 CatalogRowState.EMPTY -> {
                     EmptyCatalogRow()
                 }
+
                 else -> {
                     LazyRow(state = listState) {
                         items(
@@ -210,7 +214,6 @@ internal fun CatalogRow(
                 }
             }
         }
-
     }
 }
 
@@ -231,8 +234,7 @@ private fun ErrorCatalogRow(
             .background(
                 color = MaterialTheme.colorScheme.error.copy(0.1f),
                 shape = MaterialTheme.shapes.small
-            )
-            .border(
+            ).border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.error.copy(0.6f),
                 shape = MaterialTheme.shapes.small
@@ -289,7 +291,6 @@ private fun EmptyCatalogRow(modifier: Modifier = Modifier) {
                         phase = 0f
                     )
                 )
-
 
                 drawRoundRect(
                     color = borderColor,

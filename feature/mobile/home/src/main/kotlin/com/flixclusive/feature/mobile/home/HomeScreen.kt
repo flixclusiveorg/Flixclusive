@@ -215,7 +215,6 @@ private fun HomeScreenContent(
         }
     }
 
-
     if (isSheetOpen) {
         CatalogProvidersBottomSheet(
             onDismiss = { isSheetOpen = false },
@@ -242,10 +241,11 @@ private fun EmptyScreenContent(
             Text(
                 text = "🤔",
                 modifier = Modifier.padding(bottom = 6.dp),
-                style = MaterialTheme.typography.displayMedium.copy(
-                    shadow = Shadow(offset = Offset(4F, 5F)),
-                    color = MaterialTheme.colorScheme.primary
-                ).asAdaptiveTextStyle(),
+                style = MaterialTheme.typography.displayMedium
+                    .copy(
+                        shadow = Shadow(offset = Offset(4F, 5F)),
+                        color = MaterialTheme.colorScheme.primary
+                    ).asAdaptiveTextStyle(),
             )
 
             OutlinedButton(
@@ -342,7 +342,7 @@ private fun LoadingScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         Column(
-            modifier = modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         ) {
@@ -391,11 +391,17 @@ private fun HomeScreenBasePreview() {
 
             val dummyNavigator = object : NavigatorHome {
                 override fun navigateToMediaScreen(media: MediaMetadata, isTogglingLibrary: Boolean) {}
+
                 override fun navigateToSeeAllScreen(item: Catalog) {}
+
                 override fun navigateBack() {}
+
                 override fun showMediaPreviewBottomSheet(media: MediaMetadata) {}
+
                 override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {}
+
                 override fun navigateToAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {}
+
                 override fun navigateToSearchScreen() {}
             }
 

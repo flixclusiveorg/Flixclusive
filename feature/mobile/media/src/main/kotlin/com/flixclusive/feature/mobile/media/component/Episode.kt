@@ -100,8 +100,7 @@ internal fun EpisodeCard(
                         doHapticFeedback()
                         onLongClick(episode)
                     },
-                )
-                .padding(vertical = 4.dp),
+                ).padding(vertical = 4.dp),
         ) {
             EpisodeThumbnail(
                 episode = episode,
@@ -125,11 +124,12 @@ internal fun EpisodeCard(
 
         ExpandableText(
             text = description,
-            style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(
-                size = 11.sp,
-            ).let {
-                it.copy(lineHeight = it.lineHeight * 0.85f)
-            },
+            style = MaterialTheme.typography.bodySmall
+                .asAdaptiveTextStyle(
+                    size = 11.sp,
+                ).let {
+                    it.copy(lineHeight = it.lineHeight * 0.85f)
+                },
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             collapsedMaxLines = 3,
             modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
@@ -169,8 +169,7 @@ private fun EpisodeThumbnail(
                                 bottomEnd = CornerSize(0.dp),
                             )
                         }
-                    )
-                    .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)),
+                    ).background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)),
             )
 
             if (showPlaceholder) {
@@ -225,9 +224,12 @@ private fun EpisodeDetails(
     val title = episode.title
         ?: stringResource(LocaleR.string.untitled_episode, episode.number)
 
-    val duration = (episode.watchProgress?.duration?.takeIf { it > 0L }
-        ?: episode.episode.runtime?.toLong()?.takeIf { it > 0L })
-        ?.toInt()
+    val duration = (
+        episode.watchProgress?.duration?.takeIf { it > 0L }
+            ?: episode.episode.runtime
+                ?.toLong()
+                ?.takeIf { it > 0L }
+    )?.toInt()
         ?.let { (it / 1000) / 60 }
         ?.formatAsRuntime()
 

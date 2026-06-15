@@ -22,28 +22,29 @@ internal class GetHomeCatalogsUseCaseImpl @Inject constructor(
 ) : GetHomeCatalogsUseCase {
     override operator fun invoke(): Flow<Async<List<Catalog>>> {
         return userSessionDataStore.currentUserId.filterNotNull().flatMapLatest { userId ->
-            providerRepository.getProvidersWithCapabilityAsFlow(
-                ownerId = userId,
-                capability = ProviderCapability.CATALOG
-            ).transformLatest { providers ->
-                if (providers.isEmpty()) {
-                    emit(Async.Success(emptyList()))
-                    return@transformLatest
-                }
-
-                emit(Async.Loading)
-
-                val apis = providers
-                    .mapNotNull { provider ->
-                        if (!provider.isCatalogEnabled) return@mapNotNull null
-                        provider.plugin?.getCatalogApi(context)
+            providerRepository
+                .getProvidersWithCapabilityAsFlow(
+                    ownerId = userId,
+                    capability = ProviderCapability.CATALOG
+                ).transformLatest { providers ->
+                    if (providers.isEmpty()) {
+                        emit(Async.Success(emptyList()))
+                        return@transformLatest
                     }
 
-                val catalogs = apis.flatMap { it.getCatalogs() }
-                emit(Async.Success(catalogs.shuffled()))
-            }.catch { e ->
-                emit(Async.Failure(e))
-            }
+                    emit(Async.Loading)
+
+                    val apis = providers
+                        .mapNotNull { provider ->
+                            if (!provider.isCatalogEnabled) return@mapNotNull null
+                            provider.plugin?.getCatalogApi(context)
+                        }
+
+                    val catalogs = apis.flatMap { it.getCatalogs() }
+                    emit(Async.Success(catalogs.shuffled()))
+                }.catch { e ->
+                    emit(Async.Failure(e))
+                }
         }
     }
 }

@@ -52,7 +52,8 @@ internal fun FilterBlock(
         animationSpec = infiniteRepeatable(
             animation = tween(1500),
             repeatMode = RepeatMode.Reverse
-        ), label = ""
+        ),
+        label = ""
     )
 
     Surface(
@@ -88,8 +89,7 @@ internal fun FilterBlock(
                 .padding(
                     vertical = 5.dp,
                     horizontal = 16.dp
-                )
-                .align(Alignment.Center),
+                ).align(Alignment.Center),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
         ) {

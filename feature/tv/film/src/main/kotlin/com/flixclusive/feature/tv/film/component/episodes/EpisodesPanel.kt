@@ -93,7 +93,9 @@ internal fun EpisodesPanel(
                 seasonName = currentSelectedSeason.data?.name ?: return@LaunchedEffect
             }
 
-            else -> return@LaunchedEffect
+            else -> {
+                return@LaunchedEffect
+            }
         }
     }
 
@@ -108,7 +110,9 @@ internal fun EpisodesPanel(
         // Initialize the focus on episode 1.
         val episodeToMount = 1
         lastFocusedItemMap[currentRoute] = String.format(
-            EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episodeToMount
+            EPISODES_PANEL_FOCUS_KEY_FORMAT,
+            1,
+            episodeToMount
         )
     }
 
@@ -130,7 +134,9 @@ internal fun EpisodesPanel(
                     if (hasPressedLeft(it) && isEpisodesTabFullyFocused) {
                         onHidePanel()
                         return@onKeyEvent true
-                    } else isEpisodesTabFullyFocused = true
+                    } else {
+                        isEpisodesTabFullyFocused = true
+                    }
 
                     false
                 }
@@ -214,7 +220,8 @@ internal fun EpisodesPanel(
 
             if (currentSelectedSeason is Resource.Success) {
                 itemsIndexed(currentSelectedSeason.data!!.episodes) { i, episode ->
-                    val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episode.number) }
+                    val currentFocusPosition =
+                        remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episode.number) }
 
                     EpisodeCard(
                         episode = episode,
@@ -277,7 +284,10 @@ private fun createEpisodesPanelFocusRestorers(
 
                     when (isRestored) {
                         true -> FocusRequester.Cancel
-                        null -> FocusRequester.Default // Fail-safe if compose tv acts up
+
+                        null -> FocusRequester.Default
+
+                        // Fail-safe if compose tv acts up
                         else -> childFocusRequester
                     }
                 }

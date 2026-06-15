@@ -96,14 +96,17 @@ internal fun HomeMediaHeader(
                     ScrimOverlay(usePortraitView = usePortraitView)
                 }
 
-                is Async.Success -> MediaContent(
-                    media = media.data,
-                    onMediaClick = onMediaClick,
-                    onMediaLongClick = onMediaLongClick,
-                    modifier = Modifier.matchParentSize(),
-                )
+                is Async.Success -> {
+                    MediaContent(
+                        media = media.data,
+                        onMediaClick = onMediaClick,
+                        onMediaLongClick = onMediaLongClick,
+                        modifier = Modifier.matchParentSize(),
+                    )
+                }
 
-                is Async.Failure -> { /*No-op*/ }
+                is Async.Failure -> { // No-op
+                }
             }
         }
     }
@@ -289,8 +292,7 @@ private fun BoxScope.ScrimOverlay(usePortraitView: Boolean) {
                         )
                     }
                 }
-            }
-            .statusBarsPadding(),
+            }.statusBarsPadding(),
     )
 }
 

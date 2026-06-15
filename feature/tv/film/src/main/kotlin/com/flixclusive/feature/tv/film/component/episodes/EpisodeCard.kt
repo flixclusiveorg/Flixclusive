@@ -61,7 +61,9 @@ internal fun EpisodeCard(
     val borderFocused = remember(isFocused) {
         if (isFocused) {
             BorderStroke(width = 2.dp, color = Color.White)
-        } else BorderStroke(width = 0.dp, color = Color.Transparent)
+        } else {
+            BorderStroke(width = 0.dp, color = Color.Transparent)
+        }
     }
 
     Surface(
@@ -95,8 +97,7 @@ internal fun EpisodeCard(
                     .graphicsLayer {
                         this.shape = shape
                         clip = true
-                    }
-                    .border(borderFocused)
+                    }.border(borderFocused)
             ) {
                 AsyncImage(
                     model = context.buildTMDBImageUrl(
@@ -191,7 +192,7 @@ internal fun EpisodeCard(
                         }
                     }
 
-                    //progress?.let {
+                    // progress?.let {
                     //    LinearProgressIndicator(
                     //        progress = it,
                     //        color = MaterialTheme.colorScheme.tertiary,
@@ -203,7 +204,7 @@ internal fun EpisodeCard(
                     //                clip = true
                     //            }
                     //    )
-                    //}
+                    // }
                 }
             }
         }

@@ -58,14 +58,17 @@ internal fun SubtitleAndAudioScreen(
     val subtitleLabel = stringResource(id = LocaleR.string.subtitle)
     val subtitleFileSelector =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri == null)
+            if (uri == null) {
                 return@rememberLauncherForActivityResult
+            }
 
             val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
             context.contentResolver.takePersistableUriPermission(
-                /* uri = */ uri,
-                /* modeFlags = */ flags
+                // uri =
+                uri,
+                // modeFlags =
+                flags
             )
 
             val file = UniFile.fromUri(context, uri)

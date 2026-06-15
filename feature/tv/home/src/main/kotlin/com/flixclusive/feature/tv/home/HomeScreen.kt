@@ -53,7 +53,9 @@ import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
 import java.util.Locale
 
-interface HomeScreenTvNavigator : ViewMediaAction, GoBackAction {
+interface HomeScreenTvNavigator :
+    ViewMediaAction,
+    GoBackAction {
     fun openPlayerScreen(media: MediaMetadata)
 }
 
@@ -62,9 +64,7 @@ interface HomeScreenTvNavigator : ViewMediaAction, GoBackAction {
 @Composable
 internal fun HomeScreen(
     navigator: HomeScreenTvNavigator
-) {
-    val viewModel: HomeScreenViewModel = hiltViewModel()
-
+,viewModel: HomeScreenViewModel = hiltViewModel()) {
     val currentRoute = useLocalCurrentRoute()
     val lastItemFocused = useLocalLastFocusedItemPerDestination()
 
@@ -96,7 +96,8 @@ internal fun HomeScreen(
 
         lastItemFocused.getOrPut(currentRoute) {
             // Pre-load the focused media if there's no watched medias.
-            homeRowItems.getOrNull(0)
+            homeRowItems
+                .getOrNull(0)
                 ?.getOrNull(0)
                 ?.let {
                     viewModel.loadFocusedMedia(it)
@@ -122,8 +123,8 @@ internal fun HomeScreen(
                 // Focused item before the screen got unfocused.
                 // If true, then don't show the immersive background yet.
                 // See [HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT]
-                focusedOnWatchedMedias = focusedOnWatchedMedias
-                        || lastItemFocused[currentRoute]?.contains("watched", true) == true
+                focusedOnWatchedMedias = focusedOnWatchedMedias ||
+                    lastItemFocused[currentRoute]?.contains("watched", true) == true
 
                 // Remove the custom color if watched medias aren't focused anymore
                 if (!focusedOnWatchedMedias) {
@@ -178,7 +179,7 @@ internal fun HomeScreen(
                             )
                         )
                 ) {
-                    if(!uiState.status.isLoading) {
+                    if (!uiState.status.isLoading) {
                         val shouldStartPaginate by remember {
                             derivedStateOf {
                                 listState.shouldPaginate()
@@ -186,7 +187,7 @@ internal fun HomeScreen(
                         }
 
                         LaunchedEffect(shouldStartPaginate) {
-                            if(shouldStartPaginate) {
+                            if (shouldStartPaginate) {
                                 viewModel.onPaginateCatalogs()
                             }
                         }

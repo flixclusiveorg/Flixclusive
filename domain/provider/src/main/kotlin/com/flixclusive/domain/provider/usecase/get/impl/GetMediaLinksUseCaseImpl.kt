@@ -161,15 +161,17 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         }
 
         val subtitlesOnlyApi = combinedApis.filter { (_, _, mediaLinkApi) ->
-            mediaLinkApi.supportedLinkTypes.size == 1
-                && mediaLinkApi.supportedLinkTypes.contains(MediaLinkType.SUBTITLES)
+            mediaLinkApi.supportedLinkTypes.size == 1 &&
+                mediaLinkApi.supportedLinkTypes.contains(MediaLinkType.SUBTITLES)
         }
 
         val subtitlesFetchJob = async {
             subtitlesOnlyApi.mapAsync { (providerMeta, crossMatcherApi, mediaLinkApi) ->
                 val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
                 if (crossMatchedMedia == null) {
-                    warnLog("Cross-matching failed for subtitle-only provider ${providerMeta.name} with media ${media.title} (${media.id})")
+                    warnLog(
+                        "Cross-matching failed for subtitle-only provider ${providerMeta.name} with media ${media.title} (${media.id})"
+                    )
                     return@mapAsync
                 }
 
@@ -200,7 +202,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 }
 
                 if (!success) {
-                    warnLog("Failed to fetch subtitles from provider ${providerMeta.name} for media ${media.title} (${media.id})")
+                    warnLog(
+                        "Failed to fetch subtitles from provider ${providerMeta.name} for media ${media.title} (${media.id})"
+                    )
                 }
             }
         }
@@ -212,7 +216,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
                 val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
                 if (crossMatchedMedia == null) {
-                    warnLog("Cross-matching failed for stream links provider ${providerMeta.name} with media ${media.title} (${media.id})")
+                    warnLog(
+                        "Cross-matching failed for stream links provider ${providerMeta.name} with media ${media.title} (${media.id})"
+                    )
                     return@forEach
                 }
 
@@ -319,7 +325,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         try {
             val season = crossMatchedShow.getSeason(referenceEpisode.season)
             if (season == null) {
-                warnLog("Cross-matching failed to find season ${referenceEpisode.season} for show ${crossMatchedShow.title} (${crossMatchedShow.id})")
+                warnLog(
+                    "Cross-matching failed to find season ${referenceEpisode.season} for show ${crossMatchedShow.title} (${crossMatchedShow.id})"
+                )
                 return null
             }
 
@@ -334,7 +342,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
             return fullSeasonData.getEpisode(referenceEpisode.number)
         } catch (e: Throwable) {
-            errorLog("Cross-matching failed for episode S${referenceEpisode.season}E${referenceEpisode.number} of media ${referenceEpisode.title} (${referenceEpisode.id})}")
+            errorLog(
+                "Cross-matching failed for episode S${referenceEpisode.season}E${referenceEpisode.number} of media ${referenceEpisode.title} (${referenceEpisode.id})}"
+            )
             errorLog(e)
             return null
         }

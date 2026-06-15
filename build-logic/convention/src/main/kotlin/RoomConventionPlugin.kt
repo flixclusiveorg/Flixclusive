@@ -1,4 +1,3 @@
-
 import androidx.room.gradle.RoomExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.flixclusive.libs
@@ -37,5 +36,4 @@ class RoomConventionPlugin : Plugin<Project> {
             }
         }
     }
-
 }

@@ -92,10 +92,11 @@ internal fun <T> SelectDropdownMenu(
             singleLine = true,
             maxLines = 1,
             modifier = Modifier.fillMaxWidth(),
-            textStyle = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-            ).asAdaptiveTextStyle(16.sp),
+            textStyle = MaterialTheme.typography.labelLarge
+                .copy(
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                ).asAdaptiveTextStyle(16.sp),
             trailingIcon = {
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.down_arrow),

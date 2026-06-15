@@ -62,9 +62,9 @@ internal class MediaLinksTweakViewModel @Inject constructor(
     private val _linksSortType = MutableStateFlow<LinksSortType>(LinksSortType.GeneratedAt(asc = true))
     val linksSortType = _linksSortType.asStateFlow()
 
-    private val _selectedEntryId = MutableStateFlow<String?>(null)
+    private val selectedEntryId = MutableStateFlow<String?>(null)
 
-    val selectedEntry: StateFlow<CachedMediaLinksWithData?> = _selectedEntryId
+    val selectedEntry: StateFlow<CachedMediaLinksWithData?> = selectedEntryId
         .filterNotNull()
         .flatMapLatest { id ->
             mediaLinksRepository.observeById(id)
@@ -95,9 +95,11 @@ internal class MediaLinksTweakViewModel @Inject constructor(
         if (initJob?.isActive == true) return
 
         initJob = viewModelScope.launch {
-            userSessionDataStore.currentUserId.filterNotNull()
+            userSessionDataStore.currentUserId
+                .filterNotNull()
                 .flatMapLatest { id ->
-                    mediaLinksRepository.observeAll(id)
+                    mediaLinksRepository
+                        .observeAll(id)
                         .mapLatest { links ->
                             val groupedLinksByMedia = links.groupBy { it.cache.mediaId }
 
@@ -126,8 +128,7 @@ internal class MediaLinksTweakViewModel @Inject constructor(
                                 )
                             }
                         }
-                }
-                .onStart { _media.value = Async.Loading }
+                }.onStart { _media.value = Async.Loading }
                 .onEach { _media.value = Async.Success(it) }
                 .catch { _media.value = Async.Failure(it) }
                 .collect()
@@ -149,7 +150,7 @@ internal class MediaLinksTweakViewModel @Inject constructor(
     }
 
     fun onTestLinks() {
-        val id = _selectedEntryId.value ?: return
+        val id = selectedEntryId.value ?: return
         viewModelScope.launch {
             _testState.value = Async.Loading
 
@@ -193,9 +194,16 @@ internal data class ProviderWithCachedLinks(
 }
 
 @Stable
-internal sealed class MediaSortType(val asc: Boolean) {
-    class LinksCount(asc: Boolean) : MediaSortType(asc)
-    class Title(asc: Boolean) : MediaSortType(asc)
+internal sealed class MediaSortType(
+    val asc: Boolean
+) {
+    class LinksCount(
+        asc: Boolean
+    ) : MediaSortType(asc)
+
+    class Title(
+        asc: Boolean
+    ) : MediaSortType(asc)
 
     fun toggle(): MediaSortType {
         return when (this) {
@@ -214,8 +222,18 @@ internal sealed class MediaSortType(val asc: Boolean) {
 }
 
 @Stable
-internal sealed class LinksSortType(val asc: Boolean) {
-    class Url(asc: Boolean): LinksSortType(asc)
-    class Dead(asc: Boolean): LinksSortType(asc)
-    class GeneratedAt(asc: Boolean): LinksSortType(asc)
+internal sealed class LinksSortType(
+    val asc: Boolean
+) {
+    class Url(
+        asc: Boolean
+    ) : LinksSortType(asc)
+
+    class Dead(
+        asc: Boolean
+    ) : LinksSortType(asc)
+
+    class GeneratedAt(
+        asc: Boolean
+    ) : LinksSortType(asc)
 }

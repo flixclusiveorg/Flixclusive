@@ -42,8 +42,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal sealed class ProviderUpdateInfo {
-    data class Updated(val providerNames: List<String>) : ProviderUpdateInfo()
-    data class Outdated(val providerNames: List<String>) : ProviderUpdateInfo()
+    data class Updated(
+        val providerNames: List<String>
+    ) : ProviderUpdateInfo()
+
+    data class Outdated(
+        val providerNames: List<String>
+    ) : ProviderUpdateInfo()
 }
 
 @HiltViewModel
@@ -57,7 +62,6 @@ internal class MobileAppViewModel @Inject constructor(
     private val updateProvider: UpdateProviderUseCase,
     networkMonitor: NetworkMonitor,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(MobileAppUiState())
     val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
 
@@ -114,8 +118,7 @@ internal class MobileAppViewModel @Inject constructor(
         initializeProviders()
             .onStart {
                 _uiState.update { it.copy(isLoadingProviders = true) }
-            }
-            .onEach { result ->
+            }.onEach { result ->
                 if (result !is ProviderResult.Failure) return@onEach
 
                 _uiState.update { state ->
@@ -126,17 +129,17 @@ internal class MobileAppViewModel @Inject constructor(
 
                     state.copy(providerErrors = state.providerErrors + pair)
                 }
-            }
-            .onCompletion {
+            }.onCompletion {
                 _uiState.update { it.copy(isLoadingProviders = false) }
             }.collect()
     }
 
     private suspend fun updateProviders() {
-        val providerPrefs = dataStoreManager.getUserPrefsAsFlow(
-            key = UserPreferences.PROVIDER_PREFS_KEY,
-            type = ProviderPreferences::class
-        ).first()
+        val providerPrefs = dataStoreManager
+            .getUserPrefsAsFlow(
+                key = UserPreferences.PROVIDER_PREFS_KEY,
+                type = ProviderPreferences::class
+            ).first()
 
         val outdatedProviders = checkOutdatedProviders()
             .fastFilteredMap(

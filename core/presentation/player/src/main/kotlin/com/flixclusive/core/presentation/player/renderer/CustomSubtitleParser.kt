@@ -32,6 +32,7 @@ import org.mozilla.universalchardet.UniversalDetector
  * enough to identify the subtitle format.
  **/
 @OptIn(UnstableApi::class)
+@Suppress("ktlint:standard:max-line-length")
 internal class CustomSubtitleParser(
     private val fallbackFormat: Format?,
     private val cuesProvider: CuesProvider,
@@ -84,20 +85,40 @@ internal class CustomSubtitleParser(
 
         val subtitleParser =
             when {
-                trimmedText.isWebVtt() -> WebvttParser()
-                trimmedText.isTtml() -> TtmlParser()
-                trimmedText.isSsa() -> SsaParser(fallbackFormat?.initializationData)
-                trimmedText.isSrt() -> SubripParser()
+                trimmedText.isWebVtt() -> {
+                    WebvttParser()
+                }
+
+                trimmedText.isTtml() -> {
+                    TtmlParser()
+                }
+
+                trimmedText.isSsa() -> {
+                    SsaParser(fallbackFormat?.initializationData)
+                }
+
+                trimmedText.isSrt() -> {
+                    SubripParser()
+                }
+
                 fallbackFormat != null -> {
                     when (fallbackFormat.sampleMimeType) {
                         MimeTypes.TEXT_VTT -> WebvttParser()
+
                         MimeTypes.TEXT_SSA -> SsaParser(fallbackFormat.initializationData)
+
                         MimeTypes.APPLICATION_MP4VTT -> Mp4WebvttParser()
+
                         MimeTypes.APPLICATION_TTML -> TtmlParser()
+
                         MimeTypes.APPLICATION_SUBRIP -> SubripParser()
+
                         MimeTypes.APPLICATION_TX3G -> Tx3gParser(fallbackFormat.initializationData)
+
                         MimeTypes.APPLICATION_DVBSUBS -> DvbParser(fallbackFormat.initializationData)
+
                         MimeTypes.APPLICATION_PGS -> PgsParser()
+
                         // TODO: These decoders are not converted to parsers yet
 //                            MimeTypes.APPLICATION_CEA608, MimeTypes.APPLICATION_MP4CEA608 -> Cea608Decoder(
 //                                mimeType,
@@ -112,7 +133,9 @@ internal class CustomSubtitleParser(
                     }
                 }
 
-                else -> null
+                else -> {
+                    null
+                }
             }
 
         return subtitleParser
@@ -137,13 +160,13 @@ internal class CustomSubtitleParser(
                     // In order to make it even more consistent, all cues could
                     // Be set to DIMEN_UNSET instead and use bottomPaddingFraction()
                     // to mutate the bottom padding of the cues
-                    cue.buildUpon()
+                    cue
+                        .buildUpon()
                         .apply {
                             if (cue.line == -1f) {
                                 setLine(Cue.DIMEN_UNSET, Cue.LINE_TYPE_NUMBER)
                             }
-                        }
-                        .setSize(Cue.DIMEN_UNSET)
+                        }.setSize(Cue.DIMEN_UNSET)
                         .build()
                 }
 
@@ -151,9 +174,12 @@ internal class CustomSubtitleParser(
 
                 output.accept(
                     CuesWithTiming(
-                        /* cues = */ updatedCues,
-                        /* startTimeUs = */ data.startTimeUs + currentOffset.times(1000),
-                        /* durationUs = */ data.durationUs,
+                        // cues =
+                        updatedCues,
+                        // startTimeUs =
+                        data.startTimeUs + currentOffset.times(1000),
+                        // durationUs =
+                        data.durationUs,
                     )
                 )
             }

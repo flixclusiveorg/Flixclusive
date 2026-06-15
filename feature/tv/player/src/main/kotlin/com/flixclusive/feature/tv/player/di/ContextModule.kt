@@ -19,5 +19,7 @@ import javax.inject.Singleton
 internal object ContextModule {
     @Singleton
     @Provides
-    fun provideContext(@ApplicationContext context: Context) = context
+    fun provideContext(
+        @ApplicationContext context: Context
+    ) = context
 }

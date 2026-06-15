@@ -62,7 +62,8 @@ internal object TracksUtil {
             if (language != null && language != "und") {
                 append(": ")
                 val displayLanguage = safeCall {
-                    Locale.Builder()
+                    Locale
+                        .Builder()
                         .setLanguage(language)
                         .build()
                         .displayLanguage
@@ -101,10 +102,13 @@ internal object TracksUtil {
                 normalizedExtractedLanguage == normalizedPreferredLanguage ||
                     (
                         extractedLanguageDisplayName != null &&
-                        preferredLanguageDisplayName != null &&
-                        (
-                            extractedLanguageDisplayName.contains(preferredLanguageDisplayName, ignoreCase = true) ||
-                            extractedLanguageDisplayName.equals(preferredLanguageDisplayName, ignoreCase = true)
+                            preferredLanguageDisplayName != null &&
+                            (
+                                extractedLanguageDisplayName.contains(
+                                    preferredLanguageDisplayName,
+                                    ignoreCase = true
+                                ) ||
+                                    extractedLanguageDisplayName.equals(preferredLanguageDisplayName, ignoreCase = true)
                             )
                     )
             }

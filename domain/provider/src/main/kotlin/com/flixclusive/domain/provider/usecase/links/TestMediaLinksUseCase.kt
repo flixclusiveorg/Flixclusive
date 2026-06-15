@@ -4,9 +4,20 @@ import com.flixclusive.core.database.entity.provider.DBMediaLink
 import kotlinx.coroutines.flow.Flow
 
 sealed class TestLinksProgress {
-    data class Testing(val url: String, val index: Int, val total: Int) : TestLinksProgress()
-    data class Done(val aliveCount: Int, val deadCount: Int) : TestLinksProgress()
-    data class Error(val cause: Throwable) : TestLinksProgress()
+    data class Testing(
+        val url: String,
+        val index: Int,
+        val total: Int
+    ) : TestLinksProgress()
+
+    data class Done(
+        val aliveCount: Int,
+        val deadCount: Int
+    ) : TestLinksProgress()
+
+    data class Error(
+        val cause: Throwable
+    ) : TestLinksProgress()
 }
 
 interface TestMediaLinksUseCase {

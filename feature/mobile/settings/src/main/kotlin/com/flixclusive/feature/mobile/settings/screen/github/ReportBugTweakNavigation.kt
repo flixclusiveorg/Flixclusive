@@ -17,8 +17,7 @@ internal object ReportBugTweakNavigation : BaseTweakNavigation {
     override fun getTitle(): String = stringResource(R.string.report_a_bug)
 
     @Composable
-    override fun getIconPainter(): Painter
-        = painterResource(UiCommonR.drawable.bug_thin)
+    override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.bug_thin)
 
     override fun onClick(navigator: NavigatorSettingsScreen) {
         navigator.navigateToUrl(

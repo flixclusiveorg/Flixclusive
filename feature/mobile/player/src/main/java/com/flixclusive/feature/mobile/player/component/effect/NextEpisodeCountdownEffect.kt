@@ -20,7 +20,7 @@ internal fun NextEpisodeCountdownEffect(
 ) {
     val resources = LocalResources.current
 
-    LaunchedEffect(scrubState, snackbarState) {
+    LaunchedEffect(scrubState, snackbarState, isPlaying) {
         snapshotFlow {
             val remaining = scrubState.duration - scrubState.progress
             remaining in 0..TEN_SECONDS_MS && isPlaying() && scrubState.duration > 0 && !scrubState.isScrubbing

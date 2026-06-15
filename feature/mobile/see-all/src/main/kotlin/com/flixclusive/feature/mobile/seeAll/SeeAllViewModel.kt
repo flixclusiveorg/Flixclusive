@@ -80,14 +80,19 @@ internal class SeeAllViewModel @AssistedInject constructor(
             val page = _uiState.value.page
             getCatalogItems(catalog = navArgs, page = page).collect { response ->
                 when (response) {
-                    Async.Loading -> _uiState.update { it.copy(pagingState = PagingState.Loading) }
-                    is Async.Failure -> _uiState.update {
-                        it.copy(
-                            pagingState = when (page) {
-                                1 -> PagingState.Error(UiText.from(LocaleR.string.failed_to_paginate_items))
-                                else -> PagingState.Exhausted
-                            },
-                        )
+                    Async.Loading -> {
+                        _uiState.update { it.copy(pagingState = PagingState.Loading) }
+                    }
+
+                    is Async.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                pagingState = when (page) {
+                                    1 -> PagingState.Error(UiText.from(LocaleR.string.failed_to_paginate_items))
+                                    else -> PagingState.Exhausted
+                                },
+                            )
+                        }
                     }
 
                     is Async.Success -> {

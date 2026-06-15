@@ -70,28 +70,29 @@ internal class SearchViewModel @Inject constructor(
     private var searchingJob: Job? = null
     private var paginatingJob: Job? = null
 
-    val providers = getSearchProviders().mapLatest { state ->
-        if (state is Async.Loading) {
-            return@mapLatest Async.Loading
-        } else if (state is Async.Failure) {
-            return@mapLatest Async.Failure(state.message, state.cause)
-        }
-
-        val data = (state as Async.Success).data
-            .mapNotNull { provider ->
-                SearchProvider(
-                    metadata = provider.metadata ?: return@mapNotNull null,
-                    isSearchEnabled = provider.isSearchEnabled,
-                )
+    val providers = getSearchProviders()
+        .mapLatest { state ->
+            if (state is Async.Loading) {
+                return@mapLatest Async.Loading
+            } else if (state is Async.Failure) {
+                return@mapLatest Async.Failure(state.message, state.cause)
             }
-            .sortedBy { it.name }
 
-        Async.Success(data)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = Async.Loading,
-    )
+            val data = (state as Async.Success)
+                .data
+                .mapNotNull { provider ->
+                    SearchProvider(
+                        metadata = provider.metadata ?: return@mapNotNull null,
+                        isSearchEnabled = provider.isSearchEnabled,
+                    )
+                }.sortedBy { it.name }
+
+            Async.Success(data)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = Async.Loading,
+        )
 
     val searchHistory = userSessionDataStore.currentUserId
         .filterNotNull()
@@ -188,11 +189,13 @@ internal class SearchViewModel @Inject constructor(
                         it.copy(pagingState = PagingState.Loading)
                     }
                 }
+
                 is Async.Failure -> {
                     _uiState.update {
                         it.copy(pagingState = PagingState.Error(result.message))
                     }
                 }
+
                 is Async.Success -> {
                     val data = result.data
 
@@ -238,8 +241,8 @@ internal class SearchViewModel @Inject constructor(
      * */
     private fun isDonePaginating(): Boolean =
         _uiState.value.let {
-            (it.page != 1 && it.pagingState.isExhausted)
-                || _searchQuery.value.isEmpty()
+            (it.page != 1 && it.pagingState.isExhausted) ||
+                _searchQuery.value.isEmpty()
         }
 
     private fun FilterList.removeUiComponentsFromFilterList(): FilterList =
@@ -278,10 +281,21 @@ internal class SearchViewModel @Inject constructor(
             Async.Success(result)
         } catch (e: Exception) {
             errorLog(e)
-            val metadata = (providers.value as? Async.Success)?.data
-                ?.firstOrNull { it.id == providerId }?.metadata
+            val metadata = (providers.value as? Async.Success)
+                ?.data
+                ?.firstOrNull { it.id == providerId }
+                ?.metadata
             if (metadata != null) {
-                _uiState.update { it.copy(searchApiErrors = listOf(ProviderWithThrowable(provider = metadata, throwable = e))) }
+                _uiState.update {
+                    it.copy(
+                        searchApiErrors = listOf(
+                            ProviderWithThrowable(
+                                provider = metadata,
+                                throwable = e
+                            )
+                        )
+                    )
+                }
             }
             Async.Failure(e)
         }

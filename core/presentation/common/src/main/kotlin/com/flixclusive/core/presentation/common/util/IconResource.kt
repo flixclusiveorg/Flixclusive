@@ -38,7 +38,9 @@ class IconResource private constructor(
          * @param drawableId The drawable resource ID.
          * @return The created IconResource.
          */
-        fun from(@DrawableRes drawableId: Int): IconResource {
+        fun from(
+            @DrawableRes drawableId: Int
+        ): IconResource {
             return IconResource(drawableId = drawableId)
         }
 

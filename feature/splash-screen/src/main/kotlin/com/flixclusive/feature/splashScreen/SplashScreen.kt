@@ -23,7 +23,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.strings.R as LocaleR
 
-
 internal val PaddingHorizontal = 8.dp
 internal val TagSize = 300.dp
 
@@ -46,14 +45,18 @@ internal fun SplashScreen(
         viewModel.navigationEvents.collect { event ->
             when (event) {
                 SplashNavigationEvent.Onboarding -> navigator.navigateToOnboardingScreen()
+
                 is SplashNavigationEvent.AppUpdate -> navigator.navigateToAppUpdateScreen(
                     newVersion = event.info.versionName,
                     updateInfo = event.info.changelogs,
                     updateUrl = event.info.updateUrl,
                     isComingFromSplashScreen = true,
                 )
+
                 SplashNavigationEvent.AddProfile -> navigator.navigateToAddProfileScreen(true)
+
                 SplashNavigationEvent.ChooseProfile -> navigator.navigateToUserProfilesScreen(true)
+
                 SplashNavigationEvent.Home -> navigator.navigateToHomeScreen()
             }
         }

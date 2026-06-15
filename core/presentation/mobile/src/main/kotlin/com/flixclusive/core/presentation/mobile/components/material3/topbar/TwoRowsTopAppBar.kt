@@ -149,9 +149,13 @@ fun TwoRowsTopAppBar(
                 scrolledOffset = {
                     val bottom = bottomContentHeightPx.floatValue
                     val offset = scrollBehavior?.state?.heightOffset ?: 0f
-                    if (bottom == 0f) 0f
-                    else if (offset >= -bottom) 0f
-                    else offset + bottom
+                    if (bottom == 0f) {
+                        0f
+                    } else if (offset >= -bottom) {
+                        0f
+                    } else {
+                        offset + bottom
+                    }
                 },
                 navigationIconContentColor = colors.navigationIconContentColor,
                 titleContentColor = colors.titleContentColor,

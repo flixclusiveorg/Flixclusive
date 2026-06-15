@@ -93,7 +93,9 @@ internal fun ServersPanel(
                         if (hasPressedRight(it) && isFirstItemFullyFocused) {
                             hidePanel()
                             return@onKeyEvent true
-                        } else isFirstItemFullyFocused = true
+                        } else {
+                            isFirstItemFullyFocused = true
+                        }
 
                         false
                     },
@@ -107,4 +109,3 @@ internal fun ServersPanel(
         }
     }
 }
-

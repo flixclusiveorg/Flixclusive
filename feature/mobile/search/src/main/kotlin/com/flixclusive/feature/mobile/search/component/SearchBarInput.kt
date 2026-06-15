@@ -135,8 +135,7 @@ internal fun SearchBarInput(
                         1f to Color.Transparent,
                     )
                 )
-            }
-            .padding(horizontal = 10.dp),
+            }.padding(horizontal = 10.dp),
     ) {
         OutlinedTextField(
             modifier = Modifier

@@ -137,6 +137,7 @@ internal fun HeaderButtons(
                             .padding(horizontal = 13.dp)
                     )
                 }
+
                 is Async.Success -> {
                     ExtraButton(
                         inactiveDrawable = if (isCompactOrMedium) R.drawable.add else UiCommonR.drawable.round_add_24,
@@ -147,6 +148,7 @@ internal fun HeaderButtons(
                         onClick = onAddToLibrary,
                     )
                 }
+
                 is Async.Failure -> {
                     ExtraButton(
                         inactiveLabel = R.string.failed_to_load_library_status,
@@ -289,8 +291,7 @@ private fun PlayButton(
                     radius = width / 1.6f,
                     center = pos2,
                 )
-            }
-            .focusable()
+            }.focusable()
             .clickable { onClick() },
         propagateMinConstraints = true
     ) {
@@ -316,8 +317,7 @@ private fun PlayButton(
                     .padding(
                         vertical = 10.dp,
                         horizontal = 16.dp
-                    )
-                    .animateContentSize()
+                    ).animateContentSize()
                     .align(Alignment.Center),
             ) {
                 AdaptiveIcon(
@@ -442,7 +442,6 @@ private fun ExtraButton(
                 )
             }
         }
-
     }
 }
 

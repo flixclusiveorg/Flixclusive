@@ -50,19 +50,15 @@ fun LibraryFilterPill(
     OutlinedButton(
         onClick = onToggleDirection,
         enabled = enabled,
-        modifier =
-            modifier
-                .height(getAdaptiveDp(29.dp))
-                .widthIn(min = getAdaptiveDp(55.dp))
-                .graphicsLayer {
-                    val isSelected = when (filter) {
-                        is LibrarySort.Name -> selected() is LibrarySort.Name
-                        is LibrarySort.Modified -> selected() is LibrarySort.Modified
-                        is LibrarySort.Added -> selected() is LibrarySort.Added
-                    }
+        modifier = modifier.height(getAdaptiveDp(29.dp)).widthIn(min = getAdaptiveDp(55.dp)).graphicsLayer {
+            val isSelected = when (filter) {
+                is LibrarySort.Name -> selected() is LibrarySort.Name
+                is LibrarySort.Modified -> selected() is LibrarySort.Modified
+                is LibrarySort.Added -> selected() is LibrarySort.Added
+            }
 
-                    alpha = if (isSelected && enabled) 1f else 0.6f
-                },
+            alpha = if (isSelected && enabled) 1f else 0.6f
+        },
         contentPadding = PaddingValues(
             horizontal = 8.dp,
             vertical = 3.dp,
@@ -75,10 +71,10 @@ fun LibraryFilterPill(
         ) {
             AnimatedVisibility(
                 when (filter) {
-                    is LibrarySort.Name -> selected() is LibrarySort.Name
-                    is LibrarySort.Modified -> selected() is LibrarySort.Modified
-                    is LibrarySort.Added -> selected() is LibrarySort.Added
-                } && enabled
+                    is LibrarySort.Name -> selected() is LibrarySort.Name && enabled
+                    is LibrarySort.Modified -> selected() is LibrarySort.Modified && enabled
+                    is LibrarySort.Added -> selected() is LibrarySort.Added && enabled
+                }
             ) {
                 AnimatedContent(
                     targetState = selected().ascending,

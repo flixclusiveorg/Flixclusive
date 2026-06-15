@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.player.component
 
-
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -65,9 +64,12 @@ internal fun AutoPipModeObserverForAndroidOToR(
         if (isInPipMode) {
             ContextCompat.registerReceiver(
                 activity,
-                /* receiver = */ broadcastReceiver,
-                /* filter = */ IntentFilter(ACTION_PIP_CONTROL),
-                /* flags = */ ContextCompat.RECEIVER_NOT_EXPORTED
+                // receiver =
+                broadcastReceiver,
+                // filter =
+                IntentFilter(ACTION_PIP_CONTROL),
+                // flags =
+                ContextCompat.RECEIVER_NOT_EXPORTED
             )
 
             activity.updatePiPParams(
@@ -79,7 +81,7 @@ internal fun AutoPipModeObserverForAndroidOToR(
         }
     }
 
-    DisposableEffect(activity) {
+    DisposableEffect(activity, onPipInvoke) {
         val params = activity.createPiPParams(
             playPauseState = playPauseState,
             seekAmount = seekAmount

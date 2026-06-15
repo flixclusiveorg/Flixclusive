@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
-internal sealed class AddUserState {
+sealed class AddUserState {
     data object Added : AddUserState()
 
     data object NotAdded : AddUserState()
@@ -46,7 +46,7 @@ class AddUserViewModel @Inject constructor(
     }
 
     private val _state = MutableStateFlow<AddUserState>(AddUserState.NotAdded)
-    internal val state = _state.asStateFlow()
+    val state = _state.asStateFlow()
 
     val user = mutableStateOf(User.Empty)
 

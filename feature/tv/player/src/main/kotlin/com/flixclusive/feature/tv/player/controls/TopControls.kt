@@ -72,7 +72,6 @@ internal fun TopControls(
     var isEpisodeIconFocused by remember { mutableStateOf(false) }
     var isServersIconFocused by remember { mutableStateOf(false) }
 
-
     val titleStyle = MaterialTheme.typography.titleMedium
 
     Row(
@@ -103,8 +102,7 @@ internal fun TopControls(
                         if (it.isFocused) {
                             showControls()
                         }
-                    }
-                    .focusProperties {
+                    }.focusProperties {
                         down = bottomFocusRequester
                         left = FocusRequester.Cancel
                     }
@@ -148,8 +146,7 @@ internal fun TopControls(
                                 if (it.isFocused) {
                                     showControls()
                                 }
-                            }
-                            .focusProperties {
+                            }.focusProperties {
                                 down = bottomFocusRequester
                             }
                     ) {
@@ -193,10 +190,12 @@ internal fun TopControls(
                             if (it.isFocused) {
                                 showControls()
                             }
-                        }
-                        .focusProperties {
-                            right = if (!isServersIconFocused) FocusRequester.Cancel
-                            else FocusRequester.Default
+                        }.focusProperties {
+                            right = if (!isServersIconFocused) {
+                                FocusRequester.Cancel
+                            } else {
+                                FocusRequester.Default
+                            }
 
                             down = bottomFocusRequester
                         }
@@ -233,10 +232,11 @@ internal fun TopControls(
                             append("S${currentEpisodeSelected.season} E${currentEpisodeSelected.number}:\n")
                         }
                         withStyle(
-                            style = titleStyle.copy(
-                                fontWeight = FontWeight.Light,
-                                color = Color.White.copy(alpha = 0.8F),
-                            ).toSpanStyle()
+                            style = titleStyle
+                                .copy(
+                                    fontWeight = FontWeight.Light,
+                                    color = Color.White.copy(alpha = 0.8F),
+                                ).toSpanStyle()
                         ) {
                             append(currentEpisodeSelected.title)
                         }

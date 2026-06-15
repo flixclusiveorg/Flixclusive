@@ -105,8 +105,7 @@ internal fun ClickedProfileScreen(
                     if (!isLoading) {
                         onBack()
                     }
-                }
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                }.background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
         )
 
         Box(
@@ -124,12 +123,10 @@ internal fun ClickedProfileScreen(
                         .sharedElement(
                             sharedContentState = rememberSharedContentState(key = "${user.id}-pager"),
                             animatedVisibilityScope = animatedVisibilityScope
-                        )
-                        .sharedElement(
+                        ).sharedElement(
                             sharedContentState = rememberSharedContentState(key = "${user.id}-grid"),
                             animatedVisibilityScope = animatedVisibilityScope
-                        )
-                        .noIndicationClickable {  }
+                        ).noIndicationClickable { }
                 )
             }
         }
@@ -203,17 +200,14 @@ private fun ContinueButton(
             .graphicsLayer {
                 scaleX = buttonScale
                 scaleY = buttonScale
-            }
-            .background(
+            }.background(
                 shape = buttonShape,
                 brush = buttonContainerGradient
-            )
-            .border(
+            ).border(
                 width = 0.5.dp,
                 brush = buttonBorderGradient,
                 shape = buttonShape
-            )
-            .pointerInput(Unit) {
+            ).pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
                         isPressed.value = true

@@ -147,7 +147,6 @@ internal fun LibraryDetailsScreen(
 private fun LibraryDetailsScreenContent(
     library: LibraryList,
     tracker: ProviderMetadata?,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     uiState: () -> LibraryDetailsUiState,
     paginate: () -> Unit,
     searchQuery: () -> String,
@@ -163,6 +162,8 @@ private fun LibraryDetailsScreenContent(
     onToggleSelect: (LibraryListItemWithMetadata) -> Unit,
     onLongClickItem: (LibraryListItemWithMetadata) -> Unit,
     onUpdateFilter: (LibrarySort) -> Unit,
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = rememberEnterOnlyNearTopScrollBehavior()
 
@@ -180,9 +181,17 @@ private fun LibraryDetailsScreenContent(
         derivedStateOf {
             val state = uiState()
             when {
-                state.pagingState.isLoading && items().isEmpty() && state.currentPage == 1 -> LibraryDetailsScreenState.Loading
-                state.pagingState.isError && items().isEmpty() -> LibraryDetailsScreenState.Error
-                else -> LibraryDetailsScreenState.Success
+                state.pagingState.isLoading && items().isEmpty() && state.currentPage == 1 -> {
+                    LibraryDetailsScreenState.Loading
+                }
+
+                state.pagingState.isError && items().isEmpty() -> {
+                    LibraryDetailsScreenState.Error
+                }
+
+                else -> {
+                    LibraryDetailsScreenState.Success
+                }
             }
         }
     }
@@ -190,7 +199,7 @@ private fun LibraryDetailsScreenContent(
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier
+        modifier = modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -348,7 +357,7 @@ private fun NonEmptyScreen(
         }
     }
 
-    LaunchedEffect(listState) {
+    LaunchedEffect(listState, uiState, paginate) {
         snapshotFlow {
             listState.shouldPaginate() && uiState().pagingState.isIdle
         }.collect { canPaginate ->
@@ -441,8 +450,7 @@ private fun NonEmptyScreen(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.error,
                             shape = MaterialTheme.shapes.small
-                        )
-                        .background(
+                        ).background(
                             color = MaterialTheme.colorScheme.error.copy(0.1f),
                             shape = MaterialTheme.shapes.small
                         )
@@ -488,8 +496,8 @@ private fun LibraryDetailsScreenBasePreview() {
             val list =
                 if (searchQuery.isNotEmpty()) {
                     medias.filter {
-                        it.metadata.title.contains(searchQuery, true)
-                            || it.metadata.overview?.contains(searchQuery, true) == true
+                        it.metadata.title.contains(searchQuery, true) ||
+                            it.metadata.overview?.contains(searchQuery, true) == true
                     }
                 } else {
                     medias

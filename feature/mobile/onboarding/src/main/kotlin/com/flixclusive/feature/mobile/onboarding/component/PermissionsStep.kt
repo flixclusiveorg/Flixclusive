@@ -224,7 +224,8 @@ private fun GrantedPermissionsBottomSheet(
             itemsIndexed(permissions) { i, permission ->
                 Column(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
                         .padding(vertical = 8.dp)
                 ) {
                     Text(

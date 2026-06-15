@@ -159,12 +159,10 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                             .animateItem()
                             .graphicsLayer {
                                 alpha = if (tweak.enabledProvider()) 1F else 0.6F
-                            }
-                            .padding(
+                            }.padding(
                                 bottom = getAdaptiveDp(10.dp),
                                 top = TweakGroupSpacing,
-                            )
-                            .padding(horizontal = TweakPaddingHorizontal),
+                            ).padding(horizontal = TweakPaddingHorizontal),
                     )
                 }
 
@@ -304,8 +302,8 @@ private fun RenderTweakUi(
 @Composable
 private fun <S> RenderMultiSelectTweak(
     tweak: TweakUI.MultiSelectListTweak<S>,
-    modifier: Modifier,
     icon: Painter?,
+    modifier: Modifier = Modifier,
 ) {
     ListSelectComponent(
         modifier = modifier,
@@ -326,8 +324,8 @@ private fun <S> RenderMultiSelectTweak(
 @Composable
 private fun <S> RenderListTweak(
     tweak: TweakUI.ListTweak<S>,
-    modifier: Modifier,
     icon: Painter?,
+    modifier: Modifier = Modifier,
 ) {
     ListRadioComponent(
         modifier = modifier,

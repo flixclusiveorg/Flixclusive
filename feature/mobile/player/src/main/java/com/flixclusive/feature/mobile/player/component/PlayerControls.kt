@@ -160,13 +160,13 @@ internal fun PlayerControls(
 
     val areCenterControlsVisible by remember {
         derivedStateOf {
-            controlsVisibilityState.isVisible
-                && !uiMode.isPlaybackSpeed
-                && !uiMode.isResize
-                && !gestureState.isDoubleTapping
-                && !gestureState.isSliding
-                && !gestureState.isSpeedBoosting
-                && !scrubState.isScrubbing
+            controlsVisibilityState.isVisible &&
+                !uiMode.isPlaybackSpeed &&
+                !uiMode.isResize &&
+                !gestureState.isDoubleTapping &&
+                !gestureState.isSliding &&
+                !gestureState.isSpeedBoosting &&
+                !scrubState.isScrubbing
         }
     }
 
@@ -181,10 +181,11 @@ internal fun PlayerControls(
     )
 
     SideEffect {
-        if (!scrubState.isScrubbing
-            && !gestureState.isSliding
-            && !gestureState.isDoubleTapping
-            && !gestureState.isSpeedBoosting) {
+        if (!scrubState.isScrubbing &&
+            !gestureState.isSliding &&
+            !gestureState.isDoubleTapping &&
+            !gestureState.isSpeedBoosting
+        ) {
             onUpdateWatchProgress()
         }
     }
@@ -307,9 +308,19 @@ internal fun PlayerControls(
             .onPreviewKeyEvent { keyEvent ->
                 if (keyEvent.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 val handled = when (keyEvent.key) {
-                    Key.VolumeUp -> { volumeManager.increaseVolume(); true }
-                    Key.VolumeDown -> { volumeManager.decreaseVolume(); true }
-                    else -> false
+                    Key.VolumeUp -> {
+                        volumeManager.increaseVolume()
+                        true
+                    }
+
+                    Key.VolumeDown -> {
+                        volumeManager.decreaseVolume()
+                        true
+                    }
+
+                    else -> {
+                        false
+                    }
                 }
                 if (handled) {
                     gestureState.showVolumeSlider()
@@ -485,15 +496,16 @@ internal fun PlayerControls(
                     }
 
                     AnimatedPanel(
-                        visible = uiMode.isEpisodes
-                            && media is Show
-                            && currentEpisode != null
-                            && onEpisodeChange != null
-                            && onSeasonChange != null
+                        visible = uiMode.isEpisodes &&
+                            media is Show &&
+                            currentEpisode != null &&
+                            onEpisodeChange != null &&
+                            onSeasonChange != null
                     ) {
                         val filteredSeasons by remember(media) {
                             derivedStateOf {
-                                (media as Show).seasons
+                                (media as Show)
+                                    .seasons
                                     .fastFilter { it.isReleased }
                             }
                         }
@@ -540,7 +552,8 @@ internal fun PlayerControls(
                                 // Force seek to update subtitle timings immediately after changing the offset
                                 val isMediaSeekable = player.isCommandAvailable(
                                     command = Player.COMMAND_GET_CURRENT_MEDIA_ITEM
-                                ) && player.isCurrentMediaItemSeekable
+                                ) &&
+                                    player.isCurrentMediaItemSeekable
 
                                 if (isMediaSeekable) {
                                     player.seekTo(scrubState.progress + 1L)
@@ -699,7 +712,7 @@ private fun VerticalSlideAnimation(
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn() + slideInVertically { (it / 4) * (if (slideDown) 1 else -1) },
-        exit = fadeOut() + slideOutVertically { (it / 6) * (if (slideDown) 1 else -1)},
+        exit = fadeOut() + slideOutVertically { (it / 6) * (if (slideDown) 1 else -1) },
         content = content,
         modifier = modifier,
     )

@@ -101,6 +101,7 @@ fun AddUserScreen(
     )
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 internal fun AddUserScreenContent(
     isInitializing: Boolean,

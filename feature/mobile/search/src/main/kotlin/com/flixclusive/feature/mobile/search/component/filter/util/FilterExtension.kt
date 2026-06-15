@@ -7,17 +7,17 @@ import com.flixclusive.provider.filter.Filter.Select.Companion.getOptionName
 
 @Composable
 internal fun <T> T.toOptionString(): String {
-   return when (this) {
-       is UiText -> asString()
-       is String -> this
-       else -> getOptionName(this)
-   }
+    return when (this) {
+        is UiText -> asString()
+        is String -> this
+        else -> getOptionName(this)
+    }
 }
 
 internal fun <T> T.toOptionString(context: Context): String {
-   return when (this) {
-       is UiText -> asString(context)
-       is String -> this
-       else -> getOptionName(this)
-   }
+    return when (this) {
+        is UiText -> asString(context)
+        is String -> this
+        else -> getOptionName(this)
+    }
 }

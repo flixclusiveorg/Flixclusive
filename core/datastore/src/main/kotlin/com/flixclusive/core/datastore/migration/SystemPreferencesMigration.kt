@@ -8,11 +8,11 @@ import com.flixclusive.core.datastore.migration.model.OldAppSettings
 import com.flixclusive.core.datastore.model.system.SystemPreferences
 import kotlinx.coroutines.flow.first
 
-internal class SystemPreferencesMigration(private val context: Context) : DataMigration<SystemPreferences> {
-    private val oldDataStoreFile
-        = context.dataStoreFile(OLD_APP_SETTINGS_FILENAME)
-    private val newDataStoreFile
-        = context.dataStoreFile(SYSTEM_PREFS_FILENAME)
+internal class SystemPreferencesMigration(
+    private val context: Context
+) : DataMigration<SystemPreferences> {
+    private val oldDataStoreFile = context.dataStoreFile(OLD_APP_SETTINGS_FILENAME)
+    private val newDataStoreFile = context.dataStoreFile(SYSTEM_PREFS_FILENAME)
 
     override suspend fun cleanUp() = Unit
 
@@ -20,7 +20,8 @@ internal class SystemPreferencesMigration(private val context: Context) : DataMi
         val oldData = context.oldAppSettings.data.first()
         val oldOnBoardingPreferences = context.oldOnBoardingPreferences.data.first()
 
-        return oldData.toSystemPreferences()
+        return oldData
+            .toSystemPreferences()
             .copy(lastSeenChangelogs = oldOnBoardingPreferences.lastSeenChangelogsVersion)
     }
 

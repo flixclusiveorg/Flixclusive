@@ -34,9 +34,7 @@ internal class GetCrossMatchedMediaMetadataUseCaseImpl @Inject constructor(
         return api.getById(
             mediaType = media.type,
             sourceIds = media.externalIds,
-
         ) ?: api.getByFuzzy(media)
             ?: error(context.getString(R.string.cross_match_no_item_found, media.title, providerId))
     }
 }
-

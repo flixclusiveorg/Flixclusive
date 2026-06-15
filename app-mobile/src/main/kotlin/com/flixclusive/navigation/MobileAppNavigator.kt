@@ -311,9 +311,17 @@ internal class MobileAppNavigator(
     override fun showMediaPreviewBottomSheet(media: MediaMetadata) {
         runOnResumed {
             when (currentNavGraph) {
-                is HomeGraph -> navigator.navigate(HomeAppLevelMediaPreviewBottomSheetDestination(media = media))
-                is LibraryGraph -> navigator.navigate(LibraryAppLevelMediaPreviewBottomSheetDestination(media = media))
-                else -> throw IllegalStateException("Media preview bottom sheet can only be opened from Home or Library graph")
+                is HomeGraph -> navigator.navigate(
+                    HomeAppLevelMediaPreviewBottomSheetDestination(media = media)
+                )
+
+                is LibraryGraph -> navigator.navigate(
+                    LibraryAppLevelMediaPreviewBottomSheetDestination(media = media)
+                )
+
+                else -> throw IllegalStateException(
+                    "Media preview bottom sheet can only be opened from Home or Library graph"
+                )
             }
         }
     }

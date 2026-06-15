@@ -50,12 +50,18 @@ internal class PreferenceBackupRestorer @Inject constructor(
 
         map[UserPreferences.PROVIDER_PREFS_KEY.name].asStringOrNull()?.let { json ->
             val restored = Json.decodeFromString<ProviderPreferences>(json)
-            dataStoreManager.updateUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class) { restored }
+            dataStoreManager.updateUserPrefs(
+                UserPreferences.PROVIDER_PREFS_KEY,
+                ProviderPreferences::class
+            ) { restored }
         }
 
         map[UserPreferences.SUBTITLES_PREFS_KEY.name].asStringOrNull()?.let { json ->
             val restored = Json.decodeFromString<SubtitlesPreferences>(json)
-            dataStoreManager.updateUserPrefs(UserPreferences.SUBTITLES_PREFS_KEY, SubtitlesPreferences::class) { restored }
+            dataStoreManager.updateUserPrefs(
+                UserPreferences.SUBTITLES_PREFS_KEY,
+                SubtitlesPreferences::class
+            ) { restored }
         }
 
         map[UserPreferences.UI_PREFS_KEY.name].asStringOrNull()?.let { json ->
@@ -65,12 +71,14 @@ internal class PreferenceBackupRestorer @Inject constructor(
 
         map[UserPreferences.USER_ON_BOARDING_PREFS_KEY.name].asStringOrNull()?.let { json ->
             val restored = Json.decodeFromString<UserOnBoarding>(json)
-            dataStoreManager.updateUserPrefs(UserPreferences.USER_ON_BOARDING_PREFS_KEY, UserOnBoarding::class) { restored }
+            dataStoreManager.updateUserPrefs(
+                UserPreferences.USER_ON_BOARDING_PREFS_KEY,
+                UserOnBoarding::class
+            ) { restored }
         }
     }
 
     private fun BackupPreference?.asStringOrNull(): String? {
         return (this?.value as? StringPreferenceValue)?.value
     }
-
 }

@@ -17,7 +17,9 @@ import androidx.compose.ui.window.PopupPositionProvider
 fun PlainTooltipBox(
     description: String,
     modifier: Modifier = Modifier,
-    positionProvider: PopupPositionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+    positionProvider: PopupPositionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+        TooltipAnchorPosition.Below
+    ),
     state: TooltipState = rememberTooltipState(isPersistent = true),
     focusable: Boolean = true,
     enableUserInput: Boolean = true,

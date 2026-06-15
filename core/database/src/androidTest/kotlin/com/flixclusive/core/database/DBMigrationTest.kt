@@ -331,8 +331,6 @@ class DBMigrationTest {
         )
     }
 
-
-
     @Test
     @Throws(IOException::class)
     fun migrate17To18() {

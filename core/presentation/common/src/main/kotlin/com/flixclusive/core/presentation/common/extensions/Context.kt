@@ -56,7 +56,10 @@ fun Context.buildImageRequest(
  */
 inline fun <reified Activity : android.app.Activity> Context.getActivity(): Activity {
     val activity = when (this) {
-        is Activity -> this
+        is Activity -> {
+            this
+        }
+
         else -> {
             var context = this
             while (context is ContextWrapper) {

@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
-import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.common.provider.extensions.asStatusColor
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.common.theme.Elevations
@@ -61,7 +61,6 @@ import com.flixclusive.feature.mobile.library.common.model.TrackerProvider
 import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-
 
 @Composable
 internal fun BaseLibraryModificationDialog(
@@ -146,7 +145,6 @@ internal fun BaseLibraryModificationDialog(
                     modifier = Modifier.padding(bottom = 10.dp),
                 )
 
-
                 if (!isEditing && !hideTrackerSheetToggleButton) {
                     Text(
                         text = stringResource(R.string.tracker_to_sync_with),
@@ -204,7 +202,7 @@ internal fun BaseLibraryModificationDialog(
         TrackerSelectionSheet(
             trackers = availableTrackers(),
             onDismiss = { showTrackerOptionDialog = false },
-            onTrackerSelected = {
+            onTrackerSelect = {
                 onTrackerChange(it)
                 showTrackerOptionDialog = false
             }
@@ -215,7 +213,7 @@ internal fun BaseLibraryModificationDialog(
 @Composable
 private fun TrackerSelectionSheet(
     trackers: Async<List<TrackerProvider>>,
-    onTrackerSelected: (TrackerProvider?) -> Unit,
+    onTrackerSelect: (TrackerProvider?) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -262,7 +260,7 @@ private fun TrackerSelectionSheet(
         ) { data ->
             TrackerProvidersList(
                 trackers = data(),
-                onSelect = onTrackerSelected,
+                onSelect = onTrackerSelect,
             )
         }
     }
@@ -319,7 +317,8 @@ private fun TrackerSheetToggle(
             painter = painterResource(UiCommonR.drawable.arrow_right_thin),
             contentDescription = stringResource(R.string.select_tracker),
             tint = LocalContentColor.current.copy(0.6f),
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier
+                .size(20.dp)
                 .align(Alignment.CenterVertically)
         )
     }
@@ -368,13 +367,12 @@ private fun TrackerSheetItem(
                     color = LocalContentColor.current.copy(0.6F)
                 )
 
-
                 if (tracker.status != ProviderStatus.Working) {
                     Text(
                         text = tracker.status.name,
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 11.sp,
-                        color = getProviderStatusContainerColor(tracker.status),
+                        color = tracker.status.asStatusColor(),
                         modifier = Modifier
                             .graphicsLayer { alpha = 0.6F }
                     )
@@ -478,7 +476,7 @@ private fun TrackerSheetBottomPreview() {
                     }
                 ),
                 onDismiss = {},
-                onTrackerSelected = {},
+                onTrackerSelect = {},
             )
         }
     }

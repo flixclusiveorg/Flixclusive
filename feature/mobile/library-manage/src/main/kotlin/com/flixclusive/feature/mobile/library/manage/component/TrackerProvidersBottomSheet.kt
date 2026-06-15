@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
-import com.flixclusive.core.common.provider.getProviderStatusContainerColor
+import com.flixclusive.core.common.provider.extensions.asStatusColor
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
@@ -75,7 +75,7 @@ import com.flixclusive.core.strings.R as LocaleR
 private enum class TrackerAuthState {
     Unauthenticated,
     Authenticated,
-    Authenticating;
+    Authenticating
 }
 
 @Composable
@@ -232,7 +232,6 @@ private fun TrackerProvidersList(
     }
 }
 
-
 @Composable
 private fun TrackerCard(
     tracker: TrackerProvider,
@@ -292,13 +291,12 @@ private fun TrackerCard(
                         color = LocalContentColor.current.copy(0.6F)
                     )
 
-
                     if (tracker.status != ProviderStatus.Working) {
                         Text(
                             text = tracker.status.name,
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
-                            color = getProviderStatusContainerColor(tracker.status),
+                            color = tracker.status.asStatusColor(),
                             modifier = Modifier
                                 .graphicsLayer { alpha = 0.6F }
                         )
@@ -320,6 +318,7 @@ private fun TrackerCard(
                             )
                         )
                     }
+
                     TrackerAuthState.Unauthenticated -> {
                         Button(
                             onClick = {
@@ -337,6 +336,7 @@ private fun TrackerCard(
                             )
                         }
                     }
+
                     TrackerAuthState.Authenticated -> {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

@@ -53,6 +53,7 @@ internal class WatchProgressBackupRestorer @Inject constructor(
                     is BackupWatchMovieProgress -> movieProgressDao.insertProgress(
                         progress.toMovieProgress(ownerId)
                     )
+
                     is BackupWatchEpisodeProgress -> episodeProgressDao.insertProgress(
                         progress.toEpisodeProgress(ownerId)
                     )

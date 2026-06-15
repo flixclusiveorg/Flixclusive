@@ -596,9 +596,10 @@ internal object CustomSliderDefaults {
         val inactiveTickColor = colors.tickColor(enabled, active = false)
         val activeTickColor = colors.tickColor(enabled, active = true)
         Canvas(
-            modifier
+            modifier = modifier
                 .fillMaxWidth()
-                .height(getAdaptiveDp(30.dp)), // Modified so it has BIGGER touch surface!!!! screw the original slider!!
+                // Modified so it has BIGGER touch surface!!!! screw the original slider!!
+                .height(getAdaptiveDp(30.dp)),
         ) {
             val isRtl = layoutDirection == LayoutDirection.Rtl
             val sliderLeft = Offset(0f, center.y)

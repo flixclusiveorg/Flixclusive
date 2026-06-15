@@ -35,7 +35,9 @@ internal sealed interface SplashNavigationEvent {
     ) : SplashNavigationEvent
 
     data object AddProfile : SplashNavigationEvent
+
     data object ChooseProfile : SplashNavigationEvent
+
     data object Home : SplashNavigationEvent
 }
 

@@ -14,9 +14,9 @@ internal class CacheCleanupWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
-
     override suspend fun doWork(): Result {
-        val userId = inputData.getString(INPUT_USER_ID)
+        val userId = inputData
+            .getString(INPUT_USER_ID)
             ?.takeIf { it.isNotBlank() }
             ?: return Result.failure(
                 workDataOf(OUTPUT_ERROR_MESSAGE to "Missing '$INPUT_USER_ID'")

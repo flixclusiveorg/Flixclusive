@@ -201,7 +201,6 @@ internal fun LibraryListSheet(
                         EmptyDataMessage()
                     } else {
                         LazyColumn(
-                            modifier = modifier,
                             contentPadding = PaddingValues(vertical = 10.dp)
                         ) {
                             items(
@@ -210,7 +209,11 @@ internal fun LibraryListSheet(
                             ) { listAndState ->
                                 var buttonState by remember(listAndState.containsMedia) {
                                     mutableStateOf(
-                                        if (listAndState.containsMedia) ItemToggleState.Added else ItemToggleState.NotAdded
+                                        if (listAndState.containsMedia) {
+                                            ItemToggleState.Added
+                                        } else {
+                                            ItemToggleState.NotAdded
+                                        }
                                     )
                                 }
 
@@ -238,7 +241,6 @@ internal fun LibraryListSheet(
                 }
             }
         }
-
     }
 }
 
@@ -444,7 +446,6 @@ private fun LibraryItemIcon(
         )
     }
 }
-
 
 @Preview
 @Composable

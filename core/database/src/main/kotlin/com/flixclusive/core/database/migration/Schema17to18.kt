@@ -74,8 +74,12 @@ internal object Schema17to18 : Migration(17, 18) {
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_media_links_ownerId` ON `cached_media_links` (`ownerId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_media_links_mediaId` ON `cached_media_links` (`mediaId`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_media_links_providerId_ownerId` ON `cached_media_links` (`providerId`, `ownerId`)")
-        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_cached_media_links_composite` ON `cached_media_links` (`ownerId`, `mediaId`, `episodeNumber`, `seasonNumber`)")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_cached_media_links_providerId_ownerId` ON `cached_media_links` (`providerId`, `ownerId`)"
+        )
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_cached_media_links_composite` ON `cached_media_links` (`ownerId`, `mediaId`, `episodeNumber`, `seasonNumber`)"
+        )
 
         db.execSQL(
             """

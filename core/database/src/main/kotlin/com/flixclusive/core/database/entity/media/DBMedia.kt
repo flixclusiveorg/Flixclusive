@@ -80,7 +80,10 @@ internal data class DBFilmV213(
     @PrimaryKey
     val id: String,
     val providerId: String = "",
-    @Deprecated("Use sourceIds[MediaIdSource.IMDB] instead.", replaceWith = ReplaceWith("sourceIds[MediaIdSource.IMDB]"))
+    @Deprecated(
+        "Use sourceIds[MediaIdSource.IMDB] instead.",
+        replaceWith = ReplaceWith("sourceIds[MediaIdSource.IMDB]")
+    )
     val imdbId: String? = null,
     @Deprecated(
         "Use sourceIds[MediaIdSource.TMDB]?.toIntOrNull() instead.",

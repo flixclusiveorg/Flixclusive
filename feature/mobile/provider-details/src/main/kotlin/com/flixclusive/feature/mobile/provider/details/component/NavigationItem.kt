@@ -28,7 +28,6 @@ import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.mobile.R as UiMobileR
 import com.flixclusive.core.strings.R as LocaleR
 
-
 @Composable
 internal fun NavigationItem(
     icon: Painter,

@@ -89,11 +89,12 @@ internal class LibraryDetailsViewModel @Inject constructor(
 
                 flowOf(list.toSet())
             } else {
-                libraryListRepository.searchItems(
-                    query = query,
-                    listId = navArgs.library.id,
-                    sort = uiState.value.selectedFilter,
-                ).mapLatest { it.toSet() }
+                libraryListRepository
+                    .searchItems(
+                        query = query,
+                        listId = navArgs.library.id,
+                        sort = uiState.value.selectedFilter,
+                    ).mapLatest { it.toSet() }
             }
         }.stateIn(
             scope = viewModelScope,

@@ -46,7 +46,8 @@ internal class UserEditViewModel @Inject constructor(
 ) : ViewModel() {
     private val navArgs = savedStateHandle.navArgs<UserEditScreenNavArgs>()
 
-    val user = userRepository.observeUser(navArgs.userId)
+    val user = userRepository
+        .observeUser(navArgs.userId)
         .filterNotNull()
         .stateIn(
             scope = viewModelScope,

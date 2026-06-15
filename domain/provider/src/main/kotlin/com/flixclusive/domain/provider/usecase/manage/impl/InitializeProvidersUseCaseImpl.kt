@@ -47,6 +47,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
 ) : InitializeProvidersUseCase {
     private val mutex = Mutex()
     private var isInitialized = false
+
     override fun invoke() = channelFlow {
         if (isInitialized) {
             warnLog("Providers have already been initialized. Skipping initialization...")
@@ -128,28 +129,30 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     return@subDirectory
                 }
 
-                val metadata = updaterJson.find {
-                    it.buildUrl.endsWith(providerFile.name)
-                }?.let {
-                    if (!addDebugSuffix) {
-                        return@let it
-                    }
+                val metadata = updaterJson
+                    .find {
+                        it.buildUrl.endsWith(providerFile.name)
+                    }?.let {
+                        if (!addDebugSuffix) {
+                            return@let it
+                        }
 
-                    it.copy(
-                        id = "${it.id}${ProviderPreferences.DEBUG_SUFFIX}",
-                        name = "${it.name}${ProviderPreferences.DEBUG_SUFFIX}",
-                    )
-                }
+                        it.copy(
+                            id = "${it.id}${ProviderPreferences.DEBUG_SUFFIX}",
+                            name = "${it.name}${ProviderPreferences.DEBUG_SUFFIX}",
+                        )
+                    }
 
                 if (metadata == null) {
                     warnLog("No metadata found for provider file: ${providerFile.name}")
                     return@subDirectory
                 }
 
-                val installedProvider = providerRepository.getProvider(
-                    ownerId = userId,
-                    id = metadata.id,
-                )?.provider
+                val installedProvider = providerRepository
+                    .getProvider(
+                        ownerId = userId,
+                        id = metadata.id,
+                    )?.provider
 
                 infoLog("New debug provider found: ${metadata.name}. Installing...")
                 providerRepository.install(

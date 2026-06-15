@@ -88,6 +88,5 @@ internal fun HomeContinueWatchingRow(
                 )
             }
         }
-
     }
 }

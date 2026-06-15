@@ -20,10 +20,10 @@ internal object UxUtil {
 
         return if (isSlidingRight) {
             fadeIn(tweenFloat) + slideInHorizontally(animationSpec = tweenInt) { it } togetherWith
-                    fadeOut() + slideOutHorizontally { -it / 2 }
+                fadeOut() + slideOutHorizontally { -it / 2 }
         } else {
             fadeIn(tweenFloat) + slideInHorizontally(tweenInt) { -it } + fadeIn() togetherWith
-                    fadeOut() + slideOutHorizontally { it / 2 }
+                fadeOut() + slideOutHorizontally { it / 2 }
         }.using(
             SizeTransform(clip = false)
         )

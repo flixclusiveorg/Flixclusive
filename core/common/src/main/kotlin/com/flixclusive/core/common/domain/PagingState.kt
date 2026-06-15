@@ -24,7 +24,9 @@ sealed class PagingState {
     data class Error(
         val error: UiText,
     ) : PagingState() {
-        constructor(@StringRes errorId: Int) : this(UiText.from(errorId))
+        constructor(
+            @StringRes errorId: Int
+        ) : this(UiText.from(errorId))
         constructor(error: String) : this(UiText.from(error))
         constructor(exception: Throwable? = null) :
             this(

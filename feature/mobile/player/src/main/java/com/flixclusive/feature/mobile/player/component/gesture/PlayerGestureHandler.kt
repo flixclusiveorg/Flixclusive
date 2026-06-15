@@ -116,8 +116,7 @@ internal fun PlayerGestureHandler(
                         gestureState.stopSpeedBoost()
                     }
                 }
-            }
-            .noIndicationClickable { onSingleTap() }
+            }.noIndicationClickable { onSingleTap() }
             .onSizeChanged { size ->
                 screenHeight = size.height
             }
@@ -285,7 +284,9 @@ internal fun PlayerGestureHandler(
                         )
                     )
                 }
-            } else null
+            } else {
+                null
+            }
         )
     }
 }
@@ -308,14 +309,12 @@ private fun GestureBox(
             .indication(
                 interactionSource,
                 ripple(bounded = false, radius = screenWidth.div(2f))
-            )
-            .pointerInput(Unit) {
+            ).pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { onSingleTap() },
                     onDoubleTap = { offset -> onDoubleTap(offset) }
                 )
-            }
-            .pointerInput(Unit) {
+            }.pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragStart = { onDragStart() },
                     onDragEnd = { onDragEnd() },

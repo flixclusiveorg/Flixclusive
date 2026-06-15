@@ -14,12 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.flixclusive.core.common.locale.UiText
 
-
 sealed class Async<out T> {
     data object Loading : Async<Nothing>()
 
     @Stable
-    data class Success<T>(val data: T) : Async<T>() {
+    data class Success<T>(
+        val data: T
+    ) : Async<T>() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Success<*>) return false
@@ -67,13 +68,17 @@ sealed class Async<out T> {
         // Sealed class that carries NO data — pure discriminator
         sealed interface AsyncType {
             data object Loading : AsyncType
+
             data object Failure : AsyncType
+
             data object Success : AsyncType
         }
 
         @Composable
         fun <S> AsyncAnimatedContent(
             targetState: Async<S>,
+            loadingContent: @Composable AnimatedContentScope.() -> Unit,
+            errorContent: @Composable AnimatedContentScope.(targetState: Failure) -> Unit,
             modifier: Modifier = Modifier,
             transitionSpec: AnimatedContentTransitionScope<AsyncType>.() -> ContentTransform = {
                 (fadeIn(animationSpec = tween(220, delayMillis = 90)))
@@ -81,8 +86,6 @@ sealed class Async<out T> {
             },
             contentAlignment: Alignment = Alignment.TopStart,
             label: String = "AsyncAnimatedContent",
-            loadingContent: @Composable AnimatedContentScope.() -> Unit,
-            errorContent: @Composable AnimatedContentScope.(targetState: Failure) -> Unit,
             content: @Composable AnimatedContentScope.(targetState: () -> S) -> Unit,
         ) {
             val targetType = when (targetState) {
@@ -99,11 +102,15 @@ sealed class Async<out T> {
                 modifier = modifier
             ) { type ->
                 when (type) {
-                    is AsyncType.Loading -> loadingContent()
+                    is AsyncType.Loading -> {
+                        loadingContent()
+                    }
+
                     is AsyncType.Failure -> {
                         val failureState = (targetState as? Failure) ?: return@AnimatedContent
                         errorContent(failureState)
                     }
+
                     is AsyncType.Success -> {
                         val successState = (targetState as? Success<S>)?.data ?: return@AnimatedContent
                         content { successState }

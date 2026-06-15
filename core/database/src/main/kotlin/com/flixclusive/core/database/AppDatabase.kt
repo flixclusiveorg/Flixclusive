@@ -100,6 +100,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dbMediaLinkDao(): DBMediaLinkDao
 
     companion object {
+        @Suppress("ktlint:standard:property-naming")
         @Volatile
         private var INSTANCE: AppDatabase? = null
 

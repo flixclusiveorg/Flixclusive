@@ -20,11 +20,12 @@ internal class BackupRestoreWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
-
     override suspend fun doWork(): Result {
-        val userId = inputData.getString(BackupWorkConstants.INPUT_USER_ID)
+        val userId = inputData
+            .getString(BackupWorkConstants.INPUT_USER_ID)
             ?.takeIf { it.isNotBlank() }
-            ?: inputData.getInt(BackupWorkConstants.INPUT_USER_ID, -1)
+            ?: inputData
+                .getInt(BackupWorkConstants.INPUT_USER_ID, -1)
                 .takeIf { it > 0 }
                 ?.toString()
 
@@ -90,7 +91,8 @@ internal class BackupRestoreWorker(
             if (currentUserId != userId) {
                 return@withContext Result.failure(
                     workDataOf(
-                        BackupWorkConstants.OUTPUT_ERROR_MESSAGE to "User session changed (expected user-$userId, current user-$currentUserId)",
+                        BackupWorkConstants.OUTPUT_ERROR_MESSAGE to
+                            "User session changed (expected user-$userId, current user-$currentUserId)",
                     )
                 )
             }

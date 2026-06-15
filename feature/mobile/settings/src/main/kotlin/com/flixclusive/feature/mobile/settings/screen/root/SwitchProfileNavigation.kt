@@ -10,12 +10,10 @@ import com.flixclusive.core.strings.R as LocaleR
 
 internal object SwitchProfileNavigation : BaseTweakNavigation {
     @Composable
-    override fun getTitle(): String
-        = stringResource(LocaleR.string.switch_profile)
+    override fun getTitle(): String = stringResource(LocaleR.string.switch_profile)
 
     @Composable
-    override fun getIconPainter(): Painter
-        = painterResource(UiCommonR.drawable.profile_placeholder)
+    override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.profile_placeholder)
 
     override fun onClick(navigator: NavigatorSettingsScreen) {
         navigator.navigateToUserProfilesScreen()
