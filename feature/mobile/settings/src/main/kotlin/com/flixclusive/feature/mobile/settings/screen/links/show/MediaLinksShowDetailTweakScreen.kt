@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings.screen.links
+package com.flixclusive.feature.mobile.settings.screen.links.show
 
 //import androidx.compose.foundation.clickable
 //import androidx.compose.foundation.layout.Arrangement

@@ -38,6 +38,7 @@ import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerSc
 import com.flixclusive.feature.mobile.search.NavigatorSearchScreen
 import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
 import com.flixclusive.feature.mobile.settings.screen.data.NavigatorDataTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.links.root.NavigatorMediaLinkCardsTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.player.NavigatorPlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.providers.NavigatorProvidersTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
@@ -51,20 +52,21 @@ import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.navigation.extensions.navGraph
-import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaPreviewBottomSheetDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelSeeAllScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaPreviewBottomSheetDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelSeeAllScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMediaPreviewBottomSheetDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.HomeGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.LibraryGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
+import com.ramcosta.composedestinations.generated.markdown.destinations.MarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.media.destinations.MediaImagePreviewDialogDestination
 import com.ramcosta.composedestinations.generated.media.destinations.MediaLinksBottomSheetDestination
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
@@ -78,6 +80,7 @@ import com.ramcosta.composedestinations.generated.repositorymanage.destinations.
 import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.AppearanceTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinkCardsTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.PlayerTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ProvidersTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.SubtitlesTweakScreenDestination
@@ -132,7 +135,8 @@ internal class MobileAppNavigator(
     NavigatorUserProfilesScreen,
     NavigatorDataTweakScreen,
     NavigatorProvidersTweakScreen,
-    NavigatorPlayerTweakScreen {
+    NavigatorPlayerTweakScreen,
+    NavigatorMediaLinkCardsTweakScreen {
     private val currentNavGraph get() = destination.navGraph()
 
     private fun runOnResumed(
@@ -165,6 +169,10 @@ internal class MobileAppNavigator(
 
                 is LibraryGraph -> navigator.navigate(
                     LibraryAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
+                )
+
+                is SettingsGraph -> navigator.navigate(
+                    SettingsAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
                 )
             }
         }
@@ -295,13 +303,8 @@ internal class MobileAppNavigator(
         title: String,
         description: String,
     ) {
-        val direction = when (currentNavGraph) {
-            is SettingsGraph -> SettingsAppLevelMarkdownScreenDestination(title = title, description = description)
-            else -> AppAppLevelMarkdownScreenDestination(title = title, description = description)
-        }
-
         runOnResumed {
-            navigator.navigate(direction)
+            navigator.navigate(MarkdownScreenDestination(title = title, description = description))
         }
     }
 
@@ -332,8 +335,8 @@ internal class MobileAppNavigator(
                     LibraryAppLevelMediaPreviewBottomSheetDestination(media = media)
                 )
 
-                else -> throw IllegalStateException(
-                    "Media preview bottom sheet can only be opened from Home or Library graph"
+                is SettingsGraph -> navigator.navigate(
+                    SettingsAppLevelMediaPreviewBottomSheetDestination(media = media)
                 )
             }
         }
@@ -460,6 +463,19 @@ internal class MobileAppNavigator(
     }
 
     override fun navigateToMediaLinkCardsTweakScreen() {
-        TODO("Not yet implemented")
+        runOnResumed {
+            navigator.navigate(MediaLinkCardsTweakScreenDestination)
+        }
+    }
+
+    override fun navigateToManageMediaLinksScreen(
+        media: MediaMetadata,
+        episode: Episode?
+    ) {
+        // TODO("Not yet implemented")
+    }
+
+    override fun navigateToManageShowLinksScreen(media: MediaMetadata) {
+        // TODO("Not yet implemented")
     }
 }

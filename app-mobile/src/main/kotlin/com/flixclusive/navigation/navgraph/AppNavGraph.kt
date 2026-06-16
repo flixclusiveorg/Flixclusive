@@ -2,8 +2,6 @@ package com.flixclusive.navigation.navgraph
 
 import androidx.compose.runtime.Composable
 import com.flixclusive.core.navigation.navargs.MediaScreenNavArgs
-import com.flixclusive.core.navigation.navigator.NavigateBack
-import com.flixclusive.feature.mobile.markdown.MarkdownScreen
 import com.flixclusive.feature.mobile.media.MediaScreen
 import com.flixclusive.feature.mobile.media.modal.MediaPreviewBottomSheet
 import com.flixclusive.feature.mobile.media.modal.MediaPreviewNavArgs
@@ -19,6 +17,7 @@ import com.ramcosta.composedestinations.annotation.ExternalModuleDestinations
 import com.ramcosta.composedestinations.annotation.NavHostGraph
 import com.ramcosta.composedestinations.bottomsheet.spec.DestinationStyleBottomSheet
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
+import com.ramcosta.composedestinations.generated.markdown.destinations.MarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.media.destinations.MediaImagePreviewDialogDestination
 import com.ramcosta.composedestinations.generated.media.destinations.MediaLinksBottomSheetDestination
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
@@ -44,12 +43,14 @@ internal annotation class AppNavGraph {
     @ExternalDestination<MediaLinksBottomSheetDestination>
     @ExternalDestination<PlayerSplashScreenDestination>
     @ExternalDestination<ProviderDetailsBottomSheetDestination>
+    @ExternalDestination<MarkdownScreenDestination>
     @ExternalModuleDestinations<UsereditModuleDestinations>
     companion object Includes
 }
 
 @InternalDestination<HomeNavGraph>(navArgs = MediaScreenNavArgs::class)
 @InternalDestination<LibraryNavGraph>(navArgs = MediaScreenNavArgs::class)
+@InternalDestination<SettingsNavGraph>(navArgs = MediaScreenNavArgs::class)
 @Composable
 internal fun AppLevelMediaScreen(
     navigator: NavigatorMediaScreen,
@@ -69,6 +70,10 @@ internal fun AppLevelMediaScreen(
     navArgs = MediaPreviewNavArgs::class,
     style = DestinationStyleBottomSheet::class
 )
+@InternalDestination<SettingsNavGraph>(
+    navArgs = MediaPreviewNavArgs::class,
+    style = DestinationStyleBottomSheet::class
+)
 @Composable
 internal fun AppLevelMediaPreviewBottomSheet(
     navigator: NavigatorMediaPreviewBottomSheet,
@@ -82,6 +87,7 @@ internal fun AppLevelMediaPreviewBottomSheet(
 
 @InternalDestination<HomeNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @InternalDestination<LibraryNavGraph>(navArgs = SeeAllScreenNavArgs::class)
+@InternalDestination<SettingsNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @Composable
 internal fun AppLevelSeeAllScreen(
     navigator: NavigatorSeeAllScreen,
@@ -90,20 +96,5 @@ internal fun AppLevelSeeAllScreen(
     SeeAllScreen(
         navigator = navigator,
         navArgs = navArgs
-    )
-}
-
-@InternalDestination<AppNavGraph>
-@InternalDestination<SettingsNavGraph>
-@Composable
-internal fun AppLevelMarkdownScreen(
-    navigator: NavigateBack,
-    title: String,
-    description: String,
-) {
-    MarkdownScreen(
-        navigator = navigator,
-        title = title,
-        description = description
     )
 }

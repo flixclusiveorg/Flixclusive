@@ -16,6 +16,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
+import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toDBMediaExternalIds
 import com.flixclusive.core.database.entity.provider.CachedMediaLinks
 import com.flixclusive.core.database.entity.provider.CachedMediaLinksWithData
 import com.flixclusive.core.database.entity.provider.DBStream
@@ -84,6 +85,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @kotlin.OptIn(FlowPreview::class)
@@ -693,7 +695,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 )
             }
 
-            delay(1500L)
+            delay(1500L.milliseconds)
 
             val isPlaying = withContext(appDispatchers.main) {
                 player.isPlaying
@@ -795,6 +797,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 ) ?: CachedMediaLinksWithData(
                     subtitles = emptyList(),
                     media = navArgs.media.toDBMedia(),
+                    externalIds = navArgs.media.toDBMediaExternalIds(),
                     cache = CachedMediaLinks(
                         providerId = KEY_LOCAL_PROVIDER,
                         id = KEY_LOCAL_CACHE,
@@ -836,7 +839,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 launch {
                     combine(
                         userSessionDataStore.currentUserId.filterNotNull(),
-                        selectedEpisode.debounce(600),
+                        selectedEpisode.debounce(600.milliseconds),
                         _uiState.map { it.currentProvider }.filterNotNull().distinctUntilChanged()
                     ) { userId, episode, providerId ->
                         Triple(userId, episode, providerId)

@@ -64,10 +64,9 @@ import com.flixclusive.navigation.AppNavHost
 import com.flixclusive.navigation.extensions.bottomBarNavigate
 import com.flixclusive.navigation.extensions.currentScreenAsState
 import com.ramcosta.composedestinations.generated.appmobile.AppmobileNavGraphs
-import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
+import com.ramcosta.composedestinations.generated.markdown.destinations.MarkdownScreenDestination
 import com.ramcosta.composedestinations.generated.onboarding.destinations.OnboardingScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
@@ -242,7 +241,7 @@ private fun shouldHideBottomBar(route: Route): Boolean {
         listOf(
             AddProviderScreenDestination,
             AddUserScreenDestination,
-            AppAppLevelMarkdownScreenDestination,
+            MarkdownScreenDestination,
             AppUpdatesScreenDestination,
             OnboardingScreenDestination,
             PinSetupScreenDestination,
@@ -250,7 +249,6 @@ private fun shouldHideBottomBar(route: Route): Boolean {
             PlayerScreenDestination,
             PlayerSplashScreenDestination,
             ProviderSettingsScreenDestination,
-            SettingsAppLevelMarkdownScreenDestination,
             SplashScreenDestination,
             UserAvatarSelectScreenDestination,
             UserEditScreenDestination,

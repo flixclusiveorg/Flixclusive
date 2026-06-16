@@ -4,7 +4,6 @@
     <string name="github">GITHUB</string>
     <string name="feature_request">Request a feature!</string>
     <string name="label_links_size">%1$d links</string>
-    <string name="error_selected_media_has_no_cached_links">Selected media has no cached links</string>
     <string name="label_links_filter_count">Count</string>
     <string name="label_links_filter_title">Title</string>
     <string name="desc_prefs_auto_select_server">Allows the app to automatically select a server from available streams based on your preferred quality. Uses descending fallback if the selected quality is unavailable.</string>
