@@ -77,6 +77,7 @@ import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.provider.DBMediaLink
 import com.flixclusive.core.database.entity.provider.DBStream
 import com.flixclusive.core.database.entity.provider.DBSubtitle
+import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.common.components.GradientLinearProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
@@ -85,7 +86,6 @@ import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceho
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.feature.mobile.media.R
-import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaLinksBottomSheet
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.link.Flag
@@ -134,7 +134,7 @@ private val List<DBMediaLink>.hasValidLinks: Boolean
 )
 @Composable
 internal fun MediaLinksBottomSheet(
-    navigator: NavigatorMediaLinksBottomSheet,
+    navigator: NavigateToMediaLinksBottomSheet,
     viewModel: MediaLinksBottomSheetViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

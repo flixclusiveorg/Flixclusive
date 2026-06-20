@@ -39,6 +39,18 @@ interface DBMediaLinkDao {
         markSubtitleAsDead(url, parentId)
     }
 
+    @Query("DELETE FROM cached_streams WHERE url = :url AND parentId = :parentId")
+    suspend fun deleteStream(url: String, parentId: String)
+
+    @Query("DELETE FROM cached_subtitles WHERE url = :url AND parentId = :parentId")
+    suspend fun deleteSubtitle(url: String, parentId: String)
+
+    @Transaction
+    suspend fun deleteLink(url: String, parentId: String) {
+        deleteStream(url, parentId)
+        deleteSubtitle(url, parentId)
+    }
+
     @Query("DELETE FROM cached_streams WHERE isDead = 1 AND parentId = :parentId")
     suspend fun deleteDeadStreams(parentId: String)
 

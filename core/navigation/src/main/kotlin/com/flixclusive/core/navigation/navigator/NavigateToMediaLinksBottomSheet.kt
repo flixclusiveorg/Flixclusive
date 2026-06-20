@@ -1,10 +1,9 @@
-package com.flixclusive.feature.mobile.media.navigator
+package com.flixclusive.core.navigation.navigator
 
-import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.tv.Episode
 
-interface NavigatorMediaLinksBottomSheet : NavigateBack {
+interface NavigateToMediaLinksBottomSheet : NavigateBack {
     fun showPlayerSplashScreen(
         media: MediaMetadata,
         episode: Episode?,
@@ -12,11 +11,4 @@ interface NavigatorMediaLinksBottomSheet : NavigateBack {
         initialCacheId: String? = null,
         initialHeaders: Map<String, String>? = null
     )
-
-    // TODO: Support this soon
-//    fun playMediaWithLink(
-//        media: MediaMetadata,
-//        episode: Episode?,
-//        link: Stream
-//    )
 }

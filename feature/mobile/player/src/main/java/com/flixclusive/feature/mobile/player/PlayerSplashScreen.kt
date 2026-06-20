@@ -26,6 +26,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.spec.DestinationStyle
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 interface NavigatorPlayerSplashScreen {
     fun navigateToPlayerScreen(
@@ -53,11 +54,11 @@ internal fun PlayerSplashScreen(
     }
 
     LaunchedEffect(Unit) {
-        delay(700L)
+        delay(700L.milliseconds)
         activity.toggleSystemBars(isVisible = false)
-        delay(600L)
+        delay(600L.milliseconds)
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        delay(600L)
+        delay(600L.milliseconds)
         navigator.navigateToPlayerScreen(
             media = args.media,
             episode = args.episode,

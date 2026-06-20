@@ -218,6 +218,19 @@
         <item quantity="one">%1$d backup</item>
         <item quantity="other">%1$d backups</item>
     </plurals>
+    <string name="time_just_now">just now</string>
+    <plurals name="minutes_ago">
+        <item quantity="one">%1$d min ago</item>
+        <item quantity="other">%1$d mins ago</item>
+    </plurals>
+    <plurals name="hours_ago">
+        <item quantity="one">%1$d hr ago</item>
+        <item quantity="other">%1$d hrs ago</item>
+    </plurals>
+    <plurals name="days_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
     <string name="avatar_number">Avatar %1$d</string>
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
     <string name="count_selection_format">%1$d selected</string>

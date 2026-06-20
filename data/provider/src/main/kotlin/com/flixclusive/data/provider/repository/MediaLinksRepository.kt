@@ -58,6 +58,10 @@ interface MediaLinksRepository {
 
     suspend fun markLinkAsDead(url: String, parentId: String)
 
+    suspend fun deleteLink(link: DBMediaLink)
+
+    suspend fun deleteLinks(links: List<DBMediaLink>)
+
     suspend fun deleteById(id: String)
 
     suspend fun deleteAll(ownerId: String)

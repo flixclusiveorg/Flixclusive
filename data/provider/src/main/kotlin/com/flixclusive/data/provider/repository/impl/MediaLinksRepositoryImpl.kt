@@ -100,6 +100,20 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteLink(link: DBMediaLink) {
+        withContext(appDispatchers.io) {
+            dbMediaLinkDao.deleteLink(url = link.url, parentId = link.parentId)
+        }
+    }
+
+    override suspend fun deleteLinks(links: List<DBMediaLink>) {
+        withContext(appDispatchers.io) {
+            links.forEach { link ->
+                dbMediaLinkDao.deleteLink(url = link.url, parentId = link.parentId)
+            }
+        }
+    }
+
     override suspend fun deleteById(id: String) =
         withContext(appDispatchers.io) {
             cachedMediaLinksDao.delete(id)

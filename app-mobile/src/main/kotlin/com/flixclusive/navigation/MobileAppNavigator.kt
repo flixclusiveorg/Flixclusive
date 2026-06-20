@@ -12,6 +12,7 @@ import com.flixclusive.core.navigation.navigator.NavigateToChooseProfileScreen
 import com.flixclusive.core.navigation.navigator.NavigateToEditUserScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMarkdownScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMediaImageDialog
+import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.navigation.navigator.NavigateToMediaPreviewBottomSheet
 import com.flixclusive.core.navigation.navigator.NavigateToMediaScreen
 import com.flixclusive.core.navigation.navigator.NavigateToOpenPinScreen
@@ -26,7 +27,6 @@ import com.flixclusive.feature.mobile.app.updates.screen.NavigatorAppUpdatesScre
 import com.flixclusive.feature.mobile.home.NavigatorHome
 import com.flixclusive.feature.mobile.library.details.NavigatorLibraryDetailsScreen
 import com.flixclusive.feature.mobile.library.manage.NavigatorManageLibraryScreen
-import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaLinksBottomSheet
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaPreviewBottomSheet
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaScreen
 import com.flixclusive.feature.mobile.onboarding.NavigatorOnboardingScreen
@@ -38,6 +38,7 @@ import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerSc
 import com.flixclusive.feature.mobile.search.NavigatorSearchScreen
 import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
 import com.flixclusive.feature.mobile.settings.screen.data.NavigatorDataTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.links.manage.NavigatorManageMediaLinksTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.root.NavigatorMediaLinkCardsTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.player.NavigatorPlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.providers.NavigatorProvidersTweakScreen
@@ -80,6 +81,7 @@ import com.ramcosta.composedestinations.generated.repositorymanage.destinations.
 import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.AppearanceTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.ManageMediaLinksTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinkCardsTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.PlayerTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ProvidersTweakScreenDestination
@@ -106,6 +108,7 @@ internal class MobileAppNavigator(
     NavigateToEditUserScreen,
     NavigateToMarkdownScreen,
     NavigateToMediaImageDialog,
+    NavigateToMediaLinksBottomSheet,
     NavigateToMediaPreviewBottomSheet,
     NavigateToMediaScreen,
     NavigateToOpenPinScreen,
@@ -117,26 +120,26 @@ internal class MobileAppNavigator(
     NavigatorAppUpdatesDialog,
     NavigatorAppUpdatesScreen,
     NavigatorExitApp,
+    NavigatorDataTweakScreen,
     NavigatorHome,
     NavigatorLibraryDetailsScreen,
     NavigatorManageLibraryScreen,
-    NavigatorMediaLinksBottomSheet,
+    NavigatorManageMediaLinksTweakScreen,
+    NavigatorMediaLinkCardsTweakScreen,
     NavigatorMediaPreviewBottomSheet,
     NavigatorMediaScreen,
     NavigatorOnboardingScreen,
     NavigatorPlayerSplashScreen,
+    NavigatorPlayerTweakScreen,
     NavigatorProviderDetailsBottomSheet,
     NavigatorProviderManagerScreen,
+    NavigatorProvidersTweakScreen,
     NavigatorSearchScreen,
     NavigatorSeeAllScreen,
     NavigatorSettingsScreen,
     NavigatorSplashScreen,
     NavigatorUserEditScreen,
-    NavigatorUserProfilesScreen,
-    NavigatorDataTweakScreen,
-    NavigatorProvidersTweakScreen,
-    NavigatorPlayerTweakScreen,
-    NavigatorMediaLinkCardsTweakScreen {
+    NavigatorUserProfilesScreen {
     private val currentNavGraph get() = destination.navGraph()
 
     private fun runOnResumed(
@@ -472,7 +475,14 @@ internal class MobileAppNavigator(
         media: MediaMetadata,
         episode: Episode?
     ) {
-        // TODO("Not yet implemented")
+        runOnResumed {
+            navigator.navigate(
+                ManageMediaLinksTweakScreenDestination(
+                    media = media,
+                    episode = episode
+                )
+            )
+        }
     }
 
     override fun navigateToManageShowLinksScreen(media: MediaMetadata) {

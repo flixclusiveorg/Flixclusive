@@ -36,6 +36,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.kotlinx.immutables)
     implementation(libs.stubs.model.provider)
+    implementation(libs.stubs.provider)
     implementation(libs.stubs.model.media)
     implementation(libs.stubs.util)
 
