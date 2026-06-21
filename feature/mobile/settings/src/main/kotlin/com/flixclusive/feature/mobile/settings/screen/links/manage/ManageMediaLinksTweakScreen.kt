@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Checkbox
@@ -47,7 +47,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -165,6 +164,17 @@ private fun ManageMediaLinksTweakScreenContent(
                 title = stringResource(LocaleR.string.label_cached_links),
                 onNavigate = onNavigateBack
             )
+        },
+        bottomBar = {
+            SelectionBottomBar(
+                isVisible = selectedLinks().isNotEmpty(),
+                totalCount = totalCount,
+                selectedCount = selectedLinks().size,
+                onSelectAll = onSelectAll,
+                onClearSelection = onClearSelection,
+                onTestLinks = { onTestLinks(emptyList()) },
+                onResetLinks = { onResetLinks(emptyList()) }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -173,14 +183,14 @@ private fun ManageMediaLinksTweakScreenContent(
                 .padding(innerPadding)
         ) {
             // Filter Bar
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 if (links is Async.Loading) {
-                    repeat(4) {
+                    items(4) {
                         Placeholder(
                             modifier = Modifier
                                 .size(width = 80.dp, height = 32.dp)
@@ -188,7 +198,7 @@ private fun ManageMediaLinksTweakScreenContent(
                         )
                     }
                 } else {
-                    LinkType.entries.forEach { type ->
+                    items(LinkType.entries) { type ->
                         val isSelected = typeFilter == type
                         FilterChip(
                             selected = isSelected,
@@ -210,7 +220,7 @@ private fun ManageMediaLinksTweakScreenContent(
                         )
                     }
 
-                    providerFilters.forEach { filter ->
+                    items(providerFilters) { filter ->
                         FilterChip(
                             selected = filter.selected,
                             onClick = { onProviderFilterChange(filter) },
@@ -221,82 +231,7 @@ private fun ManageMediaLinksTweakScreenContent(
                 }
             }
 
-            // Selection & Mass Actions
-            AnimatedVisibility(
-                visible = totalCount > 0,
-                enter = fadeIn() + slideInVertically { -it },
-                exit = fadeOut() + slideOutVertically { -it }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    AnimatedVisibility(
-                        visible = selectedLinks().isNotEmpty(),
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Checkbox(
-                            checked = selectedLinks().size == totalCount,
-                            onCheckedChange = { if (it) onSelectAll() else onClearSelection() },
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .size(24.dp)
-                        )
-                    }
-
-                    AnimatedContent(
-                        targetState = selectedLinks().size,
-                        transitionSpec = {
-                            if (targetState > initialState) {
-                                (slideInVertically { height -> height } + fadeIn()) togetherWith
-                                        slideOutVertically { height -> -height } + fadeOut()
-                            } else {
-                                (slideInVertically { height -> -height } + fadeIn()) togetherWith
-                                        slideOutVertically { height -> height } + fadeOut()
-                            }.using(SizeTransform(clip = false))
-                        },
-                        label = "SelectionCount"
-                    ) { count ->
-                        Text(
-                            text = if (count > 0) {
-                                stringResource(R.string.count_selection_format, count)
-                            } else {
-                                pluralStringResource(
-                                    LocaleR.plurals.number_of_items_format,
-                                    totalCount,
-                                    totalCount
-                                )
-                            },
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    AnimatedVisibility(
-                        visible = selectedLinks().isNotEmpty(),
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            MassActionButton(
-                                text = stringResource(LocaleR.string.test_links_label),
-                                painter = painterResource(UiCommonR.drawable.round_refresh_24),
-                                onClick = { onTestLinks(emptyList()) }
-                            )
-                            MassActionButton(
-                                text = stringResource(LocaleR.string.reset),
-                                painter = painterResource(UiCommonR.drawable.round_close_24),
-                                onClick = { onResetLinks(emptyList()) },
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
+            // Selection & Mass Actions (Removed from body, moved to bottomBar)
 
             // Test Progress
             if (testProgress != null && testProgress !is TestLinksProgress.Done) {
@@ -315,6 +250,7 @@ private fun ManageMediaLinksTweakScreenContent(
                                         testProgress.total
                                     ),
                                     style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
@@ -376,6 +312,78 @@ private fun ManageMediaLinksTweakScreenContent(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectionBottomBar(
+    isVisible: Boolean,
+    totalCount: Int,
+    selectedCount: Int,
+    onSelectAll: () -> Unit,
+    onClearSelection: () -> Unit,
+    onTestLinks: () -> Unit,
+    onResetLinks: () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn() + slideInVertically { it },
+        exit = fadeOut() + slideOutVertically { it }
+    ) {
+        Surface(
+            tonalElevation = 3.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = selectedCount == totalCount,
+                    onCheckedChange = { if (it) onSelectAll() else onClearSelection() },
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(24.dp)
+                )
+
+                AnimatedContent(
+                    targetState = selectedCount,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            (slideInVertically { height -> height } + fadeIn()) togetherWith
+                                    slideOutVertically { height -> -height } + fadeOut()
+                        } else {
+                            (slideInVertically { height -> -height } + fadeIn()) togetherWith
+                                    slideOutVertically { height -> height } + fadeOut()
+                        }.using(SizeTransform(clip = false))
+                    },
+                    label = "SelectionCount"
+                ) { count ->
+                    Text(
+                        text = stringResource(R.string.count_selection_format, count),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MassActionButton(
+                        text = stringResource(LocaleR.string.test_links_label),
+                        painter = painterResource(UiCommonR.drawable.round_refresh_24),
+                        onClick = onTestLinks
+                    )
+                    MassActionButton(
+                        text = stringResource(LocaleR.string.reset),
+                        painter = painterResource(UiCommonR.drawable.round_close_24),
+                        onClick = onResetLinks,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 }
             }
         }
