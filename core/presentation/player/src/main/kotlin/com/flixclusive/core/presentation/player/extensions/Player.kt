@@ -30,7 +30,7 @@ internal fun AppPlayer.switchTrack(
 
             if (tracks.isEmpty() || trackIndex !in tracks.indices) {
                 errorLog("Invalid track index ($trackIndex) for track type $trackTypeText")
-                _errors.tryEmit(UiText.from(R.string.invalid_track_index_for_track_type, trackIndex, trackTypeText))
+                emitError(UiText.from(R.string.invalid_track_index_for_track_type, trackIndex, trackTypeText))
                 return
             }
 

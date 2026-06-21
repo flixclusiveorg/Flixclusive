@@ -10,6 +10,7 @@ import com.flixclusive.core.navigation.navigator.NavigateToAddProfileScreen
 import com.flixclusive.core.navigation.navigator.NavigateToAppUpdatesScreen
 import com.flixclusive.core.navigation.navigator.NavigateToChooseProfileScreen
 import com.flixclusive.core.navigation.navigator.NavigateToEditUserScreen
+import com.flixclusive.core.navigation.navigator.NavigateToManageMediaLinksScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMarkdownScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMediaImageDialog
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
@@ -40,6 +41,7 @@ import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
 import com.flixclusive.feature.mobile.settings.screen.data.NavigatorDataTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.manage.NavigatorManageMediaLinksTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.root.NavigatorMediaLinkCardsTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.links.show.NavigatorMediaLinksShowDetailTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.player.NavigatorPlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.providers.NavigatorProvidersTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
@@ -83,6 +85,7 @@ import com.ramcosta.composedestinations.generated.settings.destinations.Appearan
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ManageMediaLinksTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinkCardsTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinksShowDetailTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.PlayerTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ProvidersTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.SubtitlesTweakScreenDestination
@@ -106,6 +109,7 @@ internal class MobileAppNavigator(
     NavigateToAppUpdatesScreen,
     NavigateToChooseProfileScreen,
     NavigateToEditUserScreen,
+    NavigateToManageMediaLinksScreen,
     NavigateToMarkdownScreen,
     NavigateToMediaImageDialog,
     NavigateToMediaLinksBottomSheet,
@@ -119,13 +123,14 @@ internal class MobileAppNavigator(
     NavigatorAddUserScreenNavigateTo,
     NavigatorAppUpdatesDialog,
     NavigatorAppUpdatesScreen,
-    NavigatorExitApp,
     NavigatorDataTweakScreen,
+    NavigatorExitApp,
     NavigatorHome,
     NavigatorLibraryDetailsScreen,
     NavigatorManageLibraryScreen,
     NavigatorManageMediaLinksTweakScreen,
     NavigatorMediaLinkCardsTweakScreen,
+    NavigatorMediaLinksShowDetailTweakScreen,
     NavigatorMediaPreviewBottomSheet,
     NavigatorMediaScreen,
     NavigatorOnboardingScreen,
@@ -486,6 +491,12 @@ internal class MobileAppNavigator(
     }
 
     override fun navigateToManageShowLinksScreen(media: MediaMetadata) {
-        // TODO("Not yet implemented")
+        runOnResumed {
+            navigator.navigate(
+                MediaLinksShowDetailTweakScreenDestination(
+                    media = media
+                )
+            )
+        }
     }
 }

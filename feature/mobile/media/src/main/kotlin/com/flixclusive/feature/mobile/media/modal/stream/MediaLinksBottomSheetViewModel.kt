@@ -22,8 +22,6 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
-import com.flixclusive.domain.provider.usecase.links.TestLinksProgress
-import com.flixclusive.domain.provider.usecase.links.TestMediaLinksUseCase
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
@@ -58,7 +56,6 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     private val getMediaMetadata: GetMediaMetadataUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val mediaLinksRepository: MediaLinksRepository,
-    private val testMediaLinksUseCase: TestMediaLinksUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
     private val providerRepository: ProviderRepository,
@@ -70,7 +67,6 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
 
     private var onFetchMediaLinksJob: Job? = null
     private var onRefetchLinks: Job? = null
-    private var onTestLinksJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         MediaLinksBottomSheetUiState(
@@ -109,8 +105,6 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),
         )
-
-    val testProgress: MutableStateFlow<TestLinksProgress?> = MutableStateFlow(null)
 
     init {
         onFetchMediaLinks()
@@ -235,44 +229,15 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
         onRefetchLinks = appDispatchers.ioScope
             .launch {
                 val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-                val data = mediaLinksRepository.getLinks(
+                mediaLinksRepository.deleteLinks(
                     ownerId = userId,
                     mediaId = args.media.id,
                     episodeNumber = args.episode?.number,
                     seasonNumber = args.episode?.season,
                 )
-
-                data.forEach {
-                    mediaLinksRepository.deleteById(it.id)
-                }
             }.also {
                 it.invokeOnCompletion { onFetchMediaLinks() }
             }
-    }
-
-    fun onTestLinks() {
-        if (onTestLinksJob?.isActive == true) return
-
-        onTestLinksJob = viewModelScope.launch {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val links = mediaLinksRepository.getLinks(
-                ownerId = userId,
-                mediaId = args.media.id,
-                episodeNumber = args.episode?.number,
-                seasonNumber = args.episode?.season,
-            )
-
-            if (links.isEmpty()) {
-                return@launch
-            }
-
-            val streams = links.fastFlatMap { it.streams }
-            val subtitles = links.fastFlatMap { it.subtitles }
-
-            testMediaLinksUseCase(streams + subtitles).collect { progress ->
-                testProgress.value = progress
-            }
-        }
     }
 
     fun updateLoadLinksState(state: LoadLinksState) {

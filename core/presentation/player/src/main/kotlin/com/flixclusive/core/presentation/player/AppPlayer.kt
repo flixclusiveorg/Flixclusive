@@ -47,7 +47,6 @@ import com.flixclusive.core.presentation.player.model.CueWithTiming
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.ui.PiPEvent
-import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.disableSSLVerification
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getLoadControl
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getRenderers
 import com.flixclusive.core.util.exception.safeCall
@@ -90,7 +89,7 @@ class AppPlayer(
     internal var exoPlayer: ExoPlayer? = null
 
     @Suppress("ktlint:standard:backing-property-naming")
-    internal val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
+    private val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
     val errors = _errors.asSharedFlow()
 
     override var offset by mutableLongStateOf(0L)
@@ -105,7 +104,6 @@ class AppPlayer(
 
         if (exoPlayer == null) {
             infoLog("Initializing the player...")
-            disableSSLVerification()
 
             val trackSelector = DefaultTrackSelector(context)
             val loadControl = getLoadControl(
@@ -321,6 +319,10 @@ class AppPlayer(
 
     override fun clearCues() {
         currentCuesWithTiming.clear()
+    }
+
+    internal fun emitError(msg: UiText) {
+        _errors.tryEmit(msg)
     }
 
     private inner class InternalPlayerListener : Player.Listener {

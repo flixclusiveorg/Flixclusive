@@ -163,7 +163,7 @@ class TracksState(
         val success = player.addSubtitle(subtitle)
         if (!success) {
             warnLog("Failed to add subtitle: ${subtitle.label}")
-            player._errors.tryEmit(UiText.from(R.string.failed_to_add_subtitle))
+            player.emitError(UiText.from(R.string.failed_to_add_subtitle))
             return
         }
 

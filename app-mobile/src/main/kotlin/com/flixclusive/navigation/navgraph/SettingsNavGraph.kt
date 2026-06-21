@@ -10,6 +10,7 @@ import com.ramcosta.composedestinations.generated.settings.destinations.Appearan
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ManageMediaLinksTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinkCardsTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinksShowDetailTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.PlayerTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ProvidersTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.SettingsScreenDestination
@@ -30,5 +31,6 @@ internal annotation class SettingsNavGraph {
     @ExternalDestination<SubtitlesTweakScreenDestination>
     @ExternalDestination<MediaLinkCardsTweakScreenDestination>
     @ExternalDestination<ManageMediaLinksTweakScreenDestination>
+    @ExternalDestination<MediaLinksShowDetailTweakScreenDestination>
     companion object Includes
 }

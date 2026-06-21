@@ -61,7 +61,6 @@
     <string name="label_manage_cached_links">Manage cached links</string>
     <string name="label_cached_links">Cached links</string>
     <string name="reset_and_retry">Reset &amp; Retry</string>
-    <string name="test_links_label">Test links</string>
     <string name="my_library">My Library</string>
     <string name="library">Library</string>
     <string name="clear_library">Clear library</string>

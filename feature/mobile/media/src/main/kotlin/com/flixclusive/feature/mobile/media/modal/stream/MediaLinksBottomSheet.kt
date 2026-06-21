@@ -44,7 +44,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
@@ -74,9 +73,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
-import com.flixclusive.core.database.entity.provider.DBMediaLink
-import com.flixclusive.core.database.entity.provider.DBStream
-import com.flixclusive.core.database.entity.provider.DBSubtitle
+import com.flixclusive.core.database.entity.provider.CachedMediaLink
+import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.CachedSubtitle
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.common.components.GradientLinearProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.getActivity
@@ -104,6 +103,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.mobile.R as UiMobileR
 import com.flixclusive.core.strings.R as LocaleR
@@ -117,12 +117,12 @@ data class MediaLinksBottomSheetArgs(
     val episode: Episode? = null,
 )
 
-private val List<DBMediaLink>.hasPlayableLinks: Boolean
+private val List<CachedMediaLink>.hasPlayableLinks: Boolean
     get() {
-        return fastAny { it is DBStream && !it.isThirdPartyGateway }
+        return fastAny { it is CachedStream && !it.isThirdPartyGateway }
     }
 
-private val List<DBMediaLink>.hasValidLinks: Boolean
+private val List<CachedMediaLink>.hasValidLinks: Boolean
     get() {
         return fastAny { it.isValid }
     }
@@ -160,14 +160,11 @@ internal fun MediaLinksBottomSheet(
             playerPrefs.isAutoSelectingServer && !state.isLoading && links.hasPlayableLinks
         }.filter { it }
             .distinctUntilChanged()
-            .debounce(1000L) // Debounce to prevent rapid navigation if links change quickly
+            .debounce(1000L.milliseconds) // Debounce to prevent rapid navigation if links change quickly
             .collectLatest {
-                val cacheId = links.firstOrNull()?.parentId ?: return@collectLatest
-
                 navigator.showPlayerSplashScreen(
                     media = uiState.metadata,
                     episode = uiState.episode,
-                    initialCacheId = cacheId,
                 )
             }
     }
@@ -182,24 +179,16 @@ internal fun MediaLinksBottomSheet(
         },
         canAutoSelectStream = { playerPrefs.isAutoSelectingServer },
         onResetAndRetry = viewModel::onResetAndRetry,
-        onTestLinks = viewModel::onTestLinks,
         onSkipLoading = {
-            val cacheId = links
-                .filterIsInstance<DBStream>()
-                .first { !it.isThirdPartyGateway }
-                .parentId
-
             navigator.showPlayerSplashScreen(
                 media = uiState.metadata,
                 episode = uiState.episode,
-                initialCacheId = cacheId,
             )
         },
         onPlayLink = {
             navigator.showPlayerSplashScreen(
                 media = uiState.metadata,
                 episode = uiState.episode,
-                initialCacheId = it.parentId,
                 initialStreamUrl = it.url,
                 initialHeaders = it.customHeaders
             )
@@ -211,17 +200,16 @@ internal fun MediaLinksBottomSheet(
 @Composable
 private fun MediaLinksBottomSheetContent(
     state: () -> LoadLinksState,
-    links: () -> List<DBMediaLink>,
+    links: () -> List<CachedMediaLink>,
     canSkipLoading: () -> Boolean,
     canAutoSelectStream: () -> Boolean,
-    onPlayLink: (DBStream) -> Unit,
+    onPlayLink: (CachedStream) -> Unit,
     onResetAndRetry: () -> Unit,
-    onTestLinks: () -> Unit,
     onSkipLoading: () -> Unit,
 ) {
     val combinedLinks by remember {
         derivedStateOf {
-            links().sortedByDescending { it is DBStream }
+            links().sortedByDescending { it is CachedStream }
         }
     }
 
@@ -290,13 +278,6 @@ private fun MediaLinksBottomSheetContent(
                             .padding(top = 4.dp)
                             .animateItem(),
                     ) {
-                        OutlinedButton(
-                            onClick = onTestLinks,
-                            shape = MaterialTheme.shapes.small
-                        ) {
-                            Text(text = stringResource(LocaleR.string.test_links_label))
-                        }
-
                         Button(
                             onClick = onResetAndRetry,
                             shape = MaterialTheme.shapes.small
@@ -351,7 +332,7 @@ private fun MediaLinksBottomSheetContent(
                         link = it,
                         modifier = Modifier.animateItem(),
                         onClick = {
-                            if (it is DBStream) {
+                            if (it is CachedStream) {
                                 onPlayLink(it)
                             }
                         },
@@ -454,7 +435,7 @@ private fun ErrorMessage(
     var description by remember { mutableStateOf(getDescription()) }
 
     LaunchedEffect(state) {
-        delay(800L) // Small delay to ensure the error message doesn't flash too quickly for fast operations
+        delay(800L.milliseconds) // Small delay to ensure the error message doesn't flash too quickly for fast operations
 
         title = getTitle()
         description = getDescription()
@@ -483,14 +464,14 @@ private fun ErrorMessage(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MediaLinkItem(
-    link: DBMediaLink,
+    link: CachedMediaLink,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val clipboardManager = rememberClipboardManager()
     val thirdPartyFlag = remember {
-        if (link is DBStream && link.isThirdPartyGateway) {
+        if (link is CachedStream && link.isThirdPartyGateway) {
             Flag.ThirdPartyGateway(
                 name = link.thirdPartyGatewayName ?: return@remember null,
                 logo = link.thirdPartyGatewayLogo ?: return@remember null,
@@ -504,7 +485,7 @@ private fun MediaLinkItem(
     val clickLink = {
         when {
             requiresUriHandling -> uriHandler.openUri(uri = link.url)
-            link is DBSubtitle -> Unit
+            link is CachedSubtitle -> Unit
             else -> onClick.invoke()
         }
     }
@@ -579,7 +560,7 @@ private fun MediaLinkItem(
                 }
             }
 
-            if (link is DBStream && requiresUriHandling) {
+            if (link is CachedStream && requiresUriHandling) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -602,17 +583,17 @@ private fun MediaLinkItem(
 
 @Composable
 private fun MediaLinkIndicatorChip(
-    link: DBMediaLink,
+    link: CachedMediaLink,
     modifier: Modifier = Modifier
 ) {
     val indicatorColor = when (link) {
-        is DBStream -> MaterialTheme.colorScheme.tertiary
-        is DBSubtitle -> MaterialTheme.colorScheme.onSurface
+        is CachedStream -> MaterialTheme.colorScheme.tertiary
+        is CachedSubtitle -> MaterialTheme.colorScheme.onSurface
     }
 
     Text(
         text = when (link) {
-            is DBSubtitle -> stringResource(id = LocaleR.string.subtitle)
+            is CachedSubtitle -> stringResource(id = LocaleR.string.subtitle)
             else -> stringResource(id = LocaleR.string.stream)
         },
         style = MaterialTheme.typography.labelSmall,
@@ -669,7 +650,7 @@ private fun MediaLinksBottomSheetContentPreview() {
 
     LaunchedEffect(true) {
         var itemCount = 0
-        val delayTime = 400L
+        val delayTime = 400L.milliseconds
 
         delay(delayTime)
         state = LoadLinksState.Fetching()
@@ -712,7 +693,7 @@ private fun MediaLinksBottomSheetContentPreview() {
         state = LoadLinksState.Success
         delay(delayTime)
         state = LoadLinksState.Unavailable()
-        delay(delayTime * 3L)
+        delay(delayTime * 3)
         state = LoadLinksState.Error()
     }
 
@@ -727,7 +708,6 @@ private fun MediaLinksBottomSheetContentPreview() {
                 canAutoSelectStream = { true },
                 onPlayLink = {},
                 onResetAndRetry = {},
-                onTestLinks = {},
                 onSkipLoading = {}
             )
         }

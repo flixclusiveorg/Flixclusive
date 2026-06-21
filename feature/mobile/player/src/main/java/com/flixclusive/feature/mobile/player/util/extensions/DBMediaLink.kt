@@ -1,14 +1,14 @@
 package com.flixclusive.feature.mobile.player.util.extensions
 
 import androidx.compose.ui.util.fastMapNotNull
-import com.flixclusive.core.database.entity.provider.DBStream
-import com.flixclusive.core.database.entity.provider.DBSubtitle
+import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.CachedSubtitle
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 
 /** Filters alive+non-expired streams, deduplicates names, and maps to [PlayerServer]. */
-internal fun List<DBStream>.toPlayerServers(): List<PlayerServer> {
+internal fun List<CachedStream>.toPlayerServers(): List<PlayerServer> {
     val names = mutableMapOf<String, Int>()
     return fastMapNotNull { stream ->
         if (stream.isThirdPartyGateway) return@fastMapNotNull null
@@ -26,7 +26,7 @@ internal fun List<DBStream>.toPlayerServers(): List<PlayerServer> {
     }
 }
 
-internal fun DBStream.toPlayerServer(): PlayerServer {
+internal fun CachedStream.toPlayerServer(): PlayerServer {
     return PlayerServer(
         label = label,
         url = url,
@@ -37,7 +37,7 @@ internal fun DBStream.toPlayerServer(): PlayerServer {
 }
 
 /** Deduplicates subtitle languages and maps to [PlayerSubtitle]. */
-internal fun List<DBSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
+internal fun List<CachedSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
     val names = mutableMapOf<String, Int>()
     return fastMapNotNull { subtitle ->
         val count = names[subtitle.label] ?: 0

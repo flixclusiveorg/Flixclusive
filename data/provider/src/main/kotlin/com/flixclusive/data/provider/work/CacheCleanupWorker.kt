@@ -38,13 +38,12 @@ internal class CacheCleanupWorker(
             val retentionMs = dataPrefs.deadLinkRetentionDays.toLong() * 24L * 60L * 60L * 1000L
             val cutoffTimestamp = System.currentTimeMillis() - retentionMs
 
-            entryPoint.dbMediaLinkDao().deleteExpiredDeadLinks(
+            entryPoint.cachedMediaLinkDao().deleteExpiredDeadLinks(
                 ownerId = userId,
                 cutoffTimestamp = cutoffTimestamp,
             )
 
-            entryPoint.cachedMediaLinksDao().deleteOrphaned(userId)
-            // TODO: Remove also cache that only have third party gateway links
+            entryPoint.cachedMediaLinkDao().deleteThirdPartyOnlyLinks(userId)
 
             Result.success()
         }

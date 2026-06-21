@@ -70,7 +70,7 @@ internal class MediaLinkCardsTweakViewModel @Inject constructor(
                     mediaLinksRepository
                         .observeAll(id)
                         .mapLatest { links ->
-                            val groupedLinksByMedia = links.groupBy { it.cache.mediaId }
+                            val groupedLinksByMedia = links.groupBy { it.media.id }
 
                             groupedLinksByMedia.mapNotNull { (_, caches) ->
                                 if (caches.isEmpty()) return@mapNotNull null

@@ -90,6 +90,7 @@ fun CommonTopBar(
     navigationIconColor: Color = LocalContentColor.current,
     titleColor: Color = LocalContentColor.current,
     actionsColor: Color = LocalContentColor.current,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     TopAppBar(
@@ -103,6 +104,7 @@ fun CommonTopBar(
             navigationIconColor = navigationIconColor,
             titleColor = titleColor,
             actionsColor = actionsColor,
+            containerColor = containerColor,
         ),
     )
 }
@@ -186,8 +188,9 @@ object CommonTopBarDefaults {
         navigationIconColor: Color = LocalContentColor.current,
         titleColor: Color = LocalContentColor.current,
         actionsColor: Color = LocalContentColor.current,
+        containerColor: Color = MaterialTheme.colorScheme.surface,
     ) = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = containerColor,
         scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
         navigationIconContentColor = navigationIconColor,
         titleContentColor = titleColor,

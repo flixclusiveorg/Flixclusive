@@ -3,14 +3,11 @@ package com.flixclusive.feature.mobile.settings.screen.links.manage
 import android.content.Context
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.util.fastFilter
-import androidx.compose.ui.util.fastFlatMap
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.domain.Async
-import com.flixclusive.core.database.entity.provider.DBMediaLink
+import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.log.warnLog
@@ -19,8 +16,6 @@ import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
-import com.flixclusive.domain.provider.usecase.links.TestLinksProgress
-import com.flixclusive.domain.provider.usecase.links.TestMediaLinksUseCase
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
@@ -31,7 +26,6 @@ import com.ramcosta.composedestinations.generated.settings.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -57,7 +51,6 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val mediaLinksRepository: MediaLinksRepository,
     private val providerRepository: ProviderRepository,
-    private val testMediaLinksUseCase: TestMediaLinksUseCase,
     private val getMediaMetadata: GetMediaMetadataUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val watchProgressRepository: WatchProgressRepository,
@@ -71,16 +64,11 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
 
     private val selectedProviders = mutableStateSetOf<String>()
 
-    private val _selectedLinks = MutableStateFlow(setOf<DBMediaLink>())
+    private val _selectedLinks = MutableStateFlow(setOf<CachedMediaLink>())
     val selectedLinks = _selectedLinks.asStateFlow()
-
-    private val _testProgress = MutableStateFlow<TestLinksProgress?>(null)
-    val testProgress = _testProgress.asStateFlow()
 
     private val _event = MutableSharedFlow<ManageMediaLinksTweakEvent>()
     val event = _event.asSharedFlow()
-
-    private var testJob: Job? = null
 
     val providerFilters = combine(
         userSessionDataStore.currentUserId.filterNotNull(),
@@ -89,13 +77,15 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
         userId
     }.flatMapLatest { userId ->
         mediaLinksRepository
-            .observeAllByMedia(
+            .observeLinks(
                 ownerId = userId,
                 mediaId = args.media.id,
+                episodeNumber = args.episode?.number,
+                seasonNumber = args.episode?.season
             ).distinctUntilChanged()
             .flatMapLatest { cache ->
-                val providers = cache.fastMap { it.providerId }.distinct()
-                val flows = providers.fastMap { providerId ->
+                val providers = cache.map { it.providerId }.distinct()
+                val flows = providers.map { providerId ->
                     providerRepository
                         .getProviderAsFlow(
                             id = providerId,
@@ -110,7 +100,7 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
                 }
 
                 if (flows.isEmpty()) {
-                    MutableStateFlow(emptyList<ProviderFilterState>())
+                    MutableStateFlow(emptyList())
                 } else {
                     combine(flows) { it.toList() }
                 }
@@ -129,20 +119,22 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
         userId to type
     }.flatMapLatest { (userId, typeFilter) ->
         mediaLinksRepository
-            .observeAllByMedia(
+            .observeLinks(
                 ownerId = userId,
                 mediaId = args.media.id,
+                episodeNumber = args.episode?.number,
+                seasonNumber = args.episode?.season
             ).mapLatest { cache ->
                 var filteredCache = cache
                 if (selectedProviders.isNotEmpty()) {
                     filteredCache = cache
-                        .fastFilter { link ->
+                        .filter { link ->
                             link.providerId in selectedProviders
                         }
                 }
 
-                val streams = filteredCache.fastFlatMap { it.streams }
-                val subtitles = filteredCache.fastFlatMap { it.subtitles }
+                val streams = filteredCache.flatMap { it.streams }
+                val subtitles = filteredCache.flatMap { it.subtitles }
 
                 val filteredLinks = when (typeFilter) {
                     LinkType.All -> streams + subtitles
@@ -174,7 +166,7 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
         }
     }
 
-    fun onToggleSelect(link: DBMediaLink) {
+    fun onToggleSelect(link: CachedMediaLink) {
         _selectedLinks.value = if (link in _selectedLinks.value) {
             _selectedLinks.value - link
         } else {
@@ -186,48 +178,29 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
         _selectedLinks.value = emptySet()
     }
 
-    fun onSelectAll() {
-        val currentLinks = (links.value as? Async.Success)?.data ?: return
-        _selectedLinks.value = currentLinks.toSet()
-    }
-
-    fun onTestLinks(linksToTest: List<DBMediaLink> = emptyList()) {
-        if (testJob?.isActive == true) return
-
-        val targetLinks = linksToTest.ifEmpty {
-            if (_selectedLinks.value.isNotEmpty()) _selectedLinks.value.toList()
-            else (links.value as? Async.Success)?.data ?: emptyList()
-        }
-
-        if (targetLinks.isEmpty()) return
-
-        testJob = viewModelScope.launch {
-            testMediaLinksUseCase(targetLinks).collect { progress ->
-                _testProgress.value = progress
-                if (progress is TestLinksProgress.Done) {
-                    onClearSelection()
-                }
-            }
-        }
-    }
-
-    fun onDeleteLinks(linksToDelete: List<DBMediaLink> = emptyList()) {
+    fun onDeleteLinks(linksToDelete: List<CachedMediaLink> = emptyList()) {
         val targetLinks = linksToDelete.ifEmpty { _selectedLinks.value.toList() }
         if (targetLinks.isEmpty()) return
 
         viewModelScope.launch {
-            mediaLinksRepository.deleteLinks(targetLinks)
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            mediaLinksRepository.deleteLinks(targetLinks.map { it.url }, userId)
             onClearSelection()
         }
     }
 
-    fun onResetLinks(linksToReset: List<DBMediaLink> = emptyList()) {
+    fun onResetLinks(linksToReset: List<CachedMediaLink> = emptyList()) {
         val targetLinks = linksToReset.ifEmpty { _selectedLinks.value.toList() }
         if (targetLinks.isEmpty()) return
 
         viewModelScope.launch {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             targetLinks.forEach { link ->
-                mediaLinksRepository.markLinkAsAlive(link.url, link.parentId)
+                mediaLinksRepository.setLinkStatus(
+                    url = link.url,
+                    ownerId = userId,
+                    isDead = false
+                )
             }
             onClearSelection()
         }
@@ -287,7 +260,7 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
         return episode
     }
 
-    fun onPlayLink(link: DBMediaLink) {
+    fun onPlayLink(link: CachedMediaLink) {
         if (_selectedLinks.value.isNotEmpty()) {
             onToggleSelect(link)
             return
@@ -320,7 +293,7 @@ internal class ManageMediaLinksTweakViewModel @Inject constructor(
 
 internal sealed class ManageMediaLinksTweakEvent {
     data class PlayLink(
-        val link: DBMediaLink,
+        val link: CachedMediaLink,
         val media: MediaMetadata,
         val episode: Episode?
     ) : ManageMediaLinksTweakEvent()

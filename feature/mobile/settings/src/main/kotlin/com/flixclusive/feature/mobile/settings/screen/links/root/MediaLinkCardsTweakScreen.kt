@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,7 +33,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.navigation.navigator.NavigateBack
+import com.flixclusive.core.navigation.navigator.NavigateToManageMediaLinksScreen
 import com.flixclusive.core.navigation.navigator.NavigateToMediaPreviewBottomSheet
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -45,18 +47,13 @@ import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMed
 import com.flixclusive.feature.mobile.settings.R
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.MediaType
-import com.flixclusive.model.media.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import com.flixclusive.core.strings.R as LocaleR
 
-interface NavigatorMediaLinkCardsTweakScreen : NavigateBack, NavigateToMediaPreviewBottomSheet {
-    fun navigateToManageMediaLinksScreen(
-        media: MediaMetadata,
-        episode: Episode? = null
-    )
-
+interface NavigatorMediaLinkCardsTweakScreen : NavigateBack, NavigateToMediaPreviewBottomSheet,
+    NavigateToManageMediaLinksScreen {
     fun navigateToManageShowLinksScreen(media: MediaMetadata)
 }
 
@@ -210,9 +207,12 @@ private fun PosterCard(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(
+        Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxWidth()
+                .aspectRatio(MediaCover.Poster.ratio)
+                .padding(3.dp)
+                .clip(MaterialTheme.shapes.small)
                 .background(
                     Brush.verticalGradient(
                         0f to Color.Transparent,
@@ -220,18 +220,18 @@ private fun PosterCard(
                         1f to Color.Black
                     )
                 )
-        )
-
-        Text(
-            stringResource(R.string.label_links_size, cacheSize),
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.White,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(6.dp)
-        )
+        ) {
+            Text(
+                stringResource(R.string.label_links_size, cacheSize),
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(6.dp)
+            )
+        }
     }
 }
 

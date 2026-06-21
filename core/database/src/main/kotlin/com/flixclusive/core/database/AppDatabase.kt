@@ -11,8 +11,7 @@ import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
-import com.flixclusive.core.database.dao.provider.CachedMediaLinksDao
-import com.flixclusive.core.database.dao.provider.DBMediaLinkDao
+import com.flixclusive.core.database.dao.provider.CachedMediaLinkDao
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
@@ -23,9 +22,8 @@ import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.media.DBMediaExternalId
 import com.flixclusive.core.database.entity.media.DBMediaFts
-import com.flixclusive.core.database.entity.provider.CachedMediaLinks
-import com.flixclusive.core.database.entity.provider.DBStream
-import com.flixclusive.core.database.entity.provider.DBSubtitle
+import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.CachedSubtitle
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.database.entity.provider.InstalledRepository
 import com.flixclusive.core.database.entity.search.SearchHistory
@@ -40,6 +38,7 @@ import com.flixclusive.core.database.migration.Schema14to15
 import com.flixclusive.core.database.migration.Schema15to16
 import com.flixclusive.core.database.migration.Schema16to17
 import com.flixclusive.core.database.migration.Schema17to18
+import com.flixclusive.core.database.migration.Schema18to19
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -66,12 +65,11 @@ internal const val APP_DATABASE = "app_database"
         EpisodeProgress::class,
         InstalledRepository::class,
         InstalledProvider::class,
-        CachedMediaLinks::class,
-        DBStream::class,
-        DBSubtitle::class,
+        CachedStream::class,
+        CachedSubtitle::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 18,
+    version = 19,
     exportSchema = true,
 )
 @TypeConverters(
@@ -95,9 +93,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun installedProviderDao(): InstalledProviderDao
 
-    abstract fun cachedMediaLinksDao(): CachedMediaLinksDao
-
-    abstract fun dbMediaLinkDao(): DBMediaLinkDao
+    abstract fun cachedMediaLinkDao(): CachedMediaLinkDao
 
     companion object {
         @Suppress("ktlint:standard:property-naming")
@@ -133,6 +129,7 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema15to16,
                         Schema16to17,
                         Schema17to18,
+                        Schema18to19,
                     ).build()
                     .also { INSTANCE = it }
             }

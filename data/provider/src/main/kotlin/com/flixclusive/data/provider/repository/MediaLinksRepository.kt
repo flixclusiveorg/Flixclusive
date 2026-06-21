@@ -1,68 +1,68 @@
 package com.flixclusive.data.provider.repository
 
+import com.flixclusive.core.database.dao.provider.MediaLinksWithData
 import com.flixclusive.core.database.entity.media.DBMedia
-import com.flixclusive.core.database.entity.provider.CachedMediaLinks
-import com.flixclusive.core.database.entity.provider.CachedMediaLinksWithData
-import com.flixclusive.core.database.entity.provider.DBMediaLink
+import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import kotlinx.coroutines.flow.Flow
 
 interface MediaLinksRepository {
-    suspend fun insertCache(
-        entry: CachedMediaLinks,
-        media: DBMedia? = null
+    suspend fun upsertLinks(
+        media: DBMedia,
+        links: List<CachedMediaLink>
     )
 
-    suspend fun upsertLink(link: DBMediaLink)
+    suspend fun upsertLink(link: CachedMediaLink)
 
     suspend fun getLinks(
         ownerId: String,
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): List<CachedMediaLinksWithData>
+    ): List<MediaLinksWithData>
 
-    suspend fun getProviderLinks(
+    suspend fun getLinksByProvider(
         ownerId: String,
         providerId: String,
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): CachedMediaLinksWithData?
+    ): MediaLinksWithData?
 
-    suspend fun observeProviderLinks(
+    fun observeLinksByProvider(
         ownerId: String,
         providerId: String,
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): Flow<CachedMediaLinksWithData?>
+    ): Flow<MediaLinksWithData?>
 
     fun observeLinks(
         ownerId: String,
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): Flow<List<CachedMediaLinksWithData>>
+    ): Flow<List<MediaLinksWithData>>
 
-    suspend fun getById(id: String): CachedMediaLinksWithData?
-
-    fun observeById(id: String): Flow<CachedMediaLinksWithData?>
-
-    fun observeAll(ownerId: String): Flow<List<CachedMediaLinksWithData>>
+    fun observeAll(ownerId: String): Flow<List<MediaLinksWithData>>
 
     fun getSize(ownerId: String): Flow<Int>
 
-    fun observeAllByMedia(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>>
+    fun observeCachedSeasons(mediaId: String, ownerId: String): Flow<List<com.flixclusive.core.database.dao.provider.SeasonLinks>>
 
-    suspend fun markLinkAsAlive(url: String, parentId: String)
+    fun observeCachedEpisodes(mediaId: String, seasonNumber: Int, ownerId: String): Flow<List<com.flixclusive.core.database.dao.provider.EpisodeLinks>>
 
-    suspend fun markLinkAsDead(url: String, parentId: String)
+    suspend fun setLinkStatus(url: String, ownerId: String, isDead: Boolean)
 
-    suspend fun deleteLink(link: DBMediaLink)
+    suspend fun deleteLink(url: String, ownerId: String)
 
-    suspend fun deleteLinks(links: List<DBMediaLink>)
+    suspend fun deleteLinks(urls: List<String>, ownerId: String)
 
-    suspend fun deleteById(id: String)
+    suspend fun deleteLinks(
+        ownerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    )
 
     suspend fun deleteAll(ownerId: String)
 }

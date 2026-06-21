@@ -4,8 +4,6 @@ import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
-import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
-import com.flixclusive.core.database.entity.provider.CachedMediaLinks
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
@@ -13,8 +11,7 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.data.provider.util.extensions.toDBStream
-import com.flixclusive.data.provider.util.extensions.toDBSubtitle
+import com.flixclusive.data.provider.util.extensions.toCachedLink
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.util.extensions.sendCrossMatchingMessage
@@ -23,8 +20,6 @@ import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.media.common.tv.Season
-import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.capability.CrossMatchProviderApi
 import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaLinkType
@@ -54,7 +49,7 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
         val providers = providerRepository.getProviders(ownerId = userId)
 
-        val existingCache = mediaLinksRepository.getProviderLinks(
+        val existingCache = mediaLinksRepository.getLinksByProvider(
             ownerId = userId,
             mediaId = media.id,
             providerId = media.providerId,
@@ -90,29 +85,15 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             return@channelFlow
         }
 
-        val cache = existingCache?.cache ?: CachedMediaLinks(
-            providerId = provider.id,
-            ownerId = userId,
-            mediaId = media.id,
-            episodeNumber = episode?.number,
-            seasonNumber = episode?.season,
-            thumbnail = media.backdropImage ?: media.posterImage,
-        )
-
-        if (existingCache == null) {
-            mediaLinksRepository.insertCache(
-                entry = cache,
-                media = media.toDBMedia()
-            )
-        }
-
         val mediaLinksApi = provider.plugin?.getMediaLinkApi(context)
         if (mediaLinksApi != null && provider.isMediaLinkEnabled) {
             sendExtractingLinksMessage(provider.metadata!!)
 
             val success = try {
                 processProvider(
-                    cacheId = cache.id,
+                    ownerId = userId,
+                    mediaId = media.id,
+                    providerId = media.providerId,
                     media = media,
                     episode = episode,
                     mediaLinksApi = mediaLinksApi,
@@ -191,7 +172,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
                 val success = try {
                     processProvider(
-                        cacheId = cache.id,
+                        ownerId = userId,
+                        mediaId = media.id,
+                        providerId = media.providerId,
                         media = crossMatchedMedia,
                         episode = crossMatchedEpisode,
                         mediaLinksApi = mediaLinkApi,
@@ -242,7 +225,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
                 val success = try {
                     processProvider(
-                        cacheId = cache.id,
+                        ownerId = userId,
+                        mediaId = media.id,
+                        providerId = media.providerId,
                         media = crossMatchedMedia,
                         episode = crossMatchedEpisode,
                         mediaLinksApi = mediaLinkApi,
@@ -260,7 +245,13 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
 
         awaitAll(subtitlesFetchJob, streamsFetchJob)
 
-        val finalCache = mediaLinksRepository.getById(cache.id)
+        val finalCache = mediaLinksRepository.getLinksByProvider(
+            ownerId = userId,
+            providerId = media.providerId,
+            mediaId = media.id,
+            episodeNumber = episode?.number,
+            seasonNumber = episode?.season
+        )
         if (finalCache != null && finalCache.hasValidLinks) {
             send(LoadLinksState.Success)
         } else {
@@ -269,7 +260,9 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
     }.flowOn(appDispatchers.io)
 
     private suspend fun processProvider(
-        cacheId: String,
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
         media: MediaMetadata,
         episode: Episode?,
         mediaLinksApi: MediaLinkProviderApi,
@@ -281,17 +274,26 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
                 onLinkFound = { link ->
                     launch {
                         mediaLinksRepository.upsertLink(
-                            when (link) {
-                                is Stream -> link.toDBStream(cacheId)
-                                is Subtitle -> link.toDBSubtitle(cacheId)
-                            }
+                            link.toCachedLink(
+                                ownerId = ownerId,
+                                mediaId = mediaId,
+                                providerId = providerId,
+                                episodeNumber = episode?.number,
+                                seasonNumber = episode?.season
+                            )
                         )
                     }
                 },
             )
         }
 
-        val updatedLinks = mediaLinksRepository.getById(cacheId)
+        val updatedLinks = mediaLinksRepository.getLinksByProvider(
+            ownerId = ownerId,
+            providerId = providerId,
+            mediaId = mediaId,
+            episodeNumber = episode?.number,
+            seasonNumber = episode?.season
+        )
         return updatedLinks != null && updatedLinks.hasValidLinks
     }
 

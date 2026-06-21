@@ -19,11 +19,7 @@ import androidx.media3.exoplayer.video.VideoRendererEventListener
 import com.flixclusive.core.datastore.model.user.player.DecoderPriority
 import com.flixclusive.core.presentation.player.CuesProvider
 import com.flixclusive.core.presentation.player.renderer.CustomSubtitleDecoderFactory
-import com.flixclusive.core.util.network.okhttp.SSLTrustManager
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
-import java.security.SecureRandom
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLContext
 import kotlin.math.max
 import kotlin.math.min
 
@@ -111,16 +107,5 @@ internal object PlayerBuilderHelper {
                 // bufferForPlaybackAfterRebufferMs =
                 DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS,
             ).build()
-    }
-
-    /**
-     * Disables ssl verification
-     * */
-    fun disableSSLVerification() {
-        val sslContext: SSLContext = SSLContext.getInstance("TLS")
-        sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
-        sslContext.createSSLEngine()
-        HttpsURLConnection.setDefaultHostnameVerifier { _, _ -> true }
-        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
     }
 }

@@ -1,34 +1,38 @@
 package com.flixclusive.data.provider.repository.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.database.dao.provider.CachedMediaLinksDao
-import com.flixclusive.core.database.dao.provider.DBMediaLinkDao
+import com.flixclusive.core.database.dao.provider.CachedMediaLinkDao
+import com.flixclusive.core.database.dao.provider.EpisodeLinks
+import com.flixclusive.core.database.dao.provider.MediaLinksWithData
+import com.flixclusive.core.database.dao.provider.SeasonLinks
 import com.flixclusive.core.database.entity.media.DBMedia
-import com.flixclusive.core.database.entity.provider.CachedMediaLinks
-import com.flixclusive.core.database.entity.provider.CachedMediaLinksWithData
-import com.flixclusive.core.database.entity.provider.DBMediaLink
-import com.flixclusive.core.database.entity.provider.DBStream
-import com.flixclusive.core.database.entity.provider.DBSubtitle
+import com.flixclusive.core.database.entity.provider.CachedMediaLink
+import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.CachedSubtitle
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class MediaLinksRepositoryImpl @Inject constructor(
-    private val cachedMediaLinksDao: CachedMediaLinksDao,
-    private val dbMediaLinkDao: DBMediaLinkDao,
+    private val cachedMediaLinkDao: CachedMediaLinkDao,
     private val appDispatchers: AppDispatchers
 ) : MediaLinksRepository {
-    override suspend fun insertCache(entry: CachedMediaLinks, media: DBMedia?) =
+    override suspend fun upsertLinks(media: DBMedia, links: List<CachedMediaLink>) {
         withContext(appDispatchers.io) {
-            cachedMediaLinksDao.insertCache(entry, media)
+            cachedMediaLinkDao.upsertLinks(
+                media = media,
+                streams = links.filterIsInstance<CachedStream>(),
+                subtitles = links.filterIsInstance<CachedSubtitle>()
+            )
         }
+    }
 
-    override suspend fun upsertLink(link: DBMediaLink) {
+    override suspend fun upsertLink(link: CachedMediaLink) {
         withContext(appDispatchers.io) {
             when (link) {
-                is DBStream -> dbMediaLinkDao.upsertStream(link)
-                is DBSubtitle -> dbMediaLinkDao.upsertSubtitle(link)
+                is CachedStream -> cachedMediaLinkDao.insertStream(link)
+                is CachedSubtitle -> cachedMediaLinkDao.insertSubtitle(link)
             }
         }
     }
@@ -38,89 +42,108 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): List<CachedMediaLinksWithData> =
-        withContext(appDispatchers.io) {
-            cachedMediaLinksDao.getByKey(ownerId, mediaId, episodeNumber, seasonNumber)
-        }
+    ): List<MediaLinksWithData> = withContext(appDispatchers.io) {
+        return@withContext cachedMediaLinkDao.getLinks(ownerId, mediaId, episodeNumber, seasonNumber)
+    }
+
+    override suspend fun getLinksByProvider(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): MediaLinksWithData? = withContext(appDispatchers.io) {
+        return@withContext cachedMediaLinkDao.getLinksByProvider(
+            ownerId = ownerId,
+            providerId = providerId,
+            mediaId = mediaId,
+            episodeNumber = episodeNumber,
+            seasonNumber = seasonNumber
+        )
+    }
+
+    override fun observeLinksByProvider(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        episodeNumber: Int?,
+        seasonNumber: Int?
+    ): Flow<MediaLinksWithData?> {
+        return cachedMediaLinkDao.observeLinksByProvider(
+            ownerId = ownerId,
+            providerId = providerId,
+            mediaId = mediaId,
+            episodeNumber = episodeNumber,
+            seasonNumber = seasonNumber
+        )
+    }
 
     override fun observeLinks(
         ownerId: String,
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): Flow<List<CachedMediaLinksWithData>> =
-        cachedMediaLinksDao.getByKeyAsFlow(ownerId, mediaId, episodeNumber, seasonNumber)
+    ): Flow<List<MediaLinksWithData>> {
+        return cachedMediaLinkDao.observeLinks(
+            ownerId = ownerId,
+            mediaId = mediaId,
+            episodeNumber = episodeNumber,
+            seasonNumber = seasonNumber
+        )
+    }
 
-    override suspend fun getById(id: String): CachedMediaLinksWithData? =
+    override fun observeAll(ownerId: String): Flow<List<MediaLinksWithData>> {
+        return cachedMediaLinkDao.observeAllMediaLinks(ownerId)
+    }
+
+    override fun getSize(ownerId: String): Flow<Int> = cachedMediaLinkDao.getCacheSize(ownerId)
+
+    override fun observeCachedSeasons(mediaId: String, ownerId: String): Flow<List<SeasonLinks>> {
+        return cachedMediaLinkDao.getCachedSeasons(mediaId, ownerId)
+    }
+
+    override fun observeCachedEpisodes(mediaId: String, seasonNumber: Int, ownerId: String): Flow<List<EpisodeLinks>> {
+        return cachedMediaLinkDao.getCachedEpisodes(mediaId, seasonNumber, ownerId)
+    }
+
+    override suspend fun setLinkStatus(url: String, ownerId: String, isDead: Boolean) {
         withContext(appDispatchers.io) {
-            cachedMediaLinksDao.getById(id)
+            cachedMediaLinkDao.setLinkStatus(url, ownerId, isDead)
         }
+    }
 
-    override suspend fun getProviderLinks(
+    override suspend fun deleteLink(url: String, ownerId: String) {
+        withContext(appDispatchers.io) {
+            cachedMediaLinkDao.deleteLink(url, ownerId)
+        }
+    }
+
+    override suspend fun deleteLinks(urls: List<String>, ownerId: String) {
+        withContext(appDispatchers.io) {
+            urls.forEach { cachedMediaLinkDao.deleteLink(it, ownerId) }
+        }
+    }
+
+    override suspend fun deleteLinks(
         ownerId: String,
-        providerId: String,
         mediaId: String,
         episodeNumber: Int?,
         seasonNumber: Int?
-    ): CachedMediaLinksWithData? {
-        return withContext(appDispatchers.io) {
-            cachedMediaLinksDao.getByProviderId(ownerId, providerId, mediaId, episodeNumber, seasonNumber)
-        }
-    }
-
-    override suspend fun observeProviderLinks(
-        ownerId: String,
-        providerId: String,
-        mediaId: String,
-        episodeNumber: Int?,
-        seasonNumber: Int?
-    ): Flow<CachedMediaLinksWithData?> {
-        return cachedMediaLinksDao.getByProviderIdAsFlow(ownerId, providerId, mediaId, episodeNumber, seasonNumber)
-    }
-
-    override fun observeById(id: String): Flow<CachedMediaLinksWithData?> =
-        cachedMediaLinksDao.getByIdAsFlow(id)
-
-    override fun observeAll(ownerId: String): Flow<List<CachedMediaLinksWithData>> =
-        cachedMediaLinksDao.getAllAsFlow(ownerId)
-
-    override fun getSize(ownerId: String): Flow<Int> = cachedMediaLinksDao.getCacheSize(ownerId)
-
-    override fun observeAllByMedia(ownerId: String, mediaId: String): Flow<List<CachedMediaLinksWithData>> =
-        cachedMediaLinksDao.getAllByMediaAsFlow(ownerId, mediaId)
-
-    override suspend fun markLinkAsAlive(url: String, parentId: String) =
+    ) {
         withContext(appDispatchers.io) {
-            dbMediaLinkDao.markLinkAsAlive(url, parentId)
-        }
-
-    override suspend fun markLinkAsDead(url: String, parentId: String) {
-        withContext(appDispatchers.io) {
-            dbMediaLinkDao.markLinkAsDead(url, parentId)
-        }
-    }
-
-    override suspend fun deleteLink(link: DBMediaLink) {
-        withContext(appDispatchers.io) {
-            dbMediaLinkDao.deleteLink(url = link.url, parentId = link.parentId)
-        }
-    }
-
-    override suspend fun deleteLinks(links: List<DBMediaLink>) {
-        withContext(appDispatchers.io) {
-            links.forEach { link ->
-                dbMediaLinkDao.deleteLink(url = link.url, parentId = link.parentId)
+            when {
+                episodeNumber != null && seasonNumber != null ->
+                    cachedMediaLinkDao.deleteLinksByEpisode(ownerId, mediaId, seasonNumber, episodeNumber)
+                seasonNumber != null ->
+                    cachedMediaLinkDao.deleteLinksBySeason(ownerId, mediaId, seasonNumber)
+                else ->
+                    cachedMediaLinkDao.deleteLinksByMedia(ownerId, mediaId)
             }
         }
     }
 
-    override suspend fun deleteById(id: String) =
-        withContext(appDispatchers.io) {
-            cachedMediaLinksDao.delete(id)
-        }
-
     override suspend fun deleteAll(ownerId: String) =
         withContext(appDispatchers.io) {
-            cachedMediaLinksDao.deleteAll(ownerId)
+            cachedMediaLinkDao.deleteAll(ownerId)
         }
 }

@@ -3,11 +3,13 @@ package com.flixclusive.feature.mobile.settings.screen.links.manage
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,25 +30,31 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,18 +64,22 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
-import com.flixclusive.core.database.entity.provider.DBMediaLink
-import com.flixclusive.core.database.entity.provider.DBStream
+import com.flixclusive.core.database.entity.provider.CachedMediaLink
+import com.flixclusive.core.database.entity.provider.CachedStream
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.Placeholder
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.domain.provider.usecase.links.TestLinksProgress
-import com.flixclusive.feature.mobile.settings.R
-import com.flixclusive.feature.mobile.settings.screen.links.manage.LinkUtil.toRelativeTime
+import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.feature.mobile.settings.screen.links.util.CacheLinksFormatUtil
+import com.flixclusive.feature.mobile.settings.screen.links.util.LinkUtil.toRelativeTime
+import com.flixclusive.feature.mobile.settings.screen.links.util.PreviewData
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.tv.Episode
@@ -90,6 +103,7 @@ interface NavigatorManageMediaLinksTweakScreen :
 )
 @Composable
 internal fun ManageMediaLinksTweakScreen(
+    args: ManageMediaLinksTweakScreenArgs,
     navigator: NavigatorManageMediaLinksTweakScreen,
     viewModel: ManageMediaLinksTweakViewModel = hiltViewModel()
 ) {
@@ -97,19 +111,16 @@ internal fun ManageMediaLinksTweakScreen(
     val providerFilters by viewModel.providerFilters.collectAsStateWithLifecycle()
     val typeFilter by viewModel.typeFilter.collectAsStateWithLifecycle()
     val selectedLinks by viewModel.selectedLinks.collectAsStateWithLifecycle()
-    val testProgress by viewModel.testProgress.collectAsStateWithLifecycle()
 
-    androidx.compose.runtime.LaunchedEffect(viewModel) {
+    LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
             when (event) {
                 is ManageMediaLinksTweakEvent.PlayLink -> {
-                    val media = viewModel.args.media
-                    if (media !is PartialMedia) {
+                    if (event.media !is PartialMedia) {
                         navigator.showPlayerSplashScreen(
-                            media = media,
-                            episode = viewModel.args.episode,
+                            media = event.media,
+                            episode = event.episode,
                             initialStreamUrl = event.link.url,
-                            initialCacheId = event.link.parentId,
                             initialHeaders = event.link.customHeaders
                         )
                     }
@@ -119,18 +130,20 @@ internal fun ManageMediaLinksTweakScreen(
     }
 
     ManageMediaLinksTweakScreenContent(
+        topbarTitle = CacheLinksFormatUtil.getFormattedTitle(
+            media = args.media,
+            season = args.episode?.season,
+            episode = args.episode?.number
+        ),
         links = links,
         providerFilters = providerFilters,
         typeFilter = typeFilter,
         selectedLinks = { selectedLinks },
-        testProgress = testProgress,
         onNavigateBack = navigator::navigateBack,
         onTypeFilterChange = viewModel::onUpdateTypeFilter,
         onProviderFilterChange = { viewModel.onUpdateProviderFilter(it.provider.id) },
         onToggleSelect = viewModel::onToggleSelect,
-        onSelectAll = viewModel::onSelectAll,
         onClearSelection = viewModel::onClearSelection,
-        onTestLinks = viewModel::onTestLinks,
         onDeleteLinks = viewModel::onDeleteLinks,
         onResetLinks = viewModel::onResetLinks,
         onPlayLink = viewModel::onPlayLink
@@ -140,42 +153,132 @@ internal fun ManageMediaLinksTweakScreen(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ManageMediaLinksTweakScreenContent(
-    links: Async<List<DBMediaLink>>,
+    topbarTitle: String,
+    links: Async<List<CachedMediaLink>>,
     providerFilters: List<ProviderFilterState>,
     typeFilter: LinkType,
-    selectedLinks: () -> Set<DBMediaLink>,
-    testProgress: TestLinksProgress?,
+    selectedLinks: () -> Set<CachedMediaLink>,
     onNavigateBack: () -> Unit,
     onTypeFilterChange: (LinkType) -> Unit,
     onProviderFilterChange: (ProviderFilterState) -> Unit,
-    onToggleSelect: (DBMediaLink) -> Unit,
-    onSelectAll: () -> Unit,
+    onToggleSelect: (CachedMediaLink) -> Unit,
     onClearSelection: () -> Unit,
-    onTestLinks: (List<DBMediaLink>) -> Unit,
-    onDeleteLinks: (List<DBMediaLink>) -> Unit,
-    onResetLinks: (List<DBMediaLink>) -> Unit,
-    onPlayLink: (DBMediaLink) -> Unit,
+    onDeleteLinks: (List<CachedMediaLink>) -> Unit,
+    onResetLinks: (List<CachedMediaLink>) -> Unit,
+    onPlayLink: (CachedMediaLink) -> Unit,
 ) {
-    val totalCount = (links as? Async.Success)?.data?.size ?: 0
+    val selectedCount by remember {
+        derivedStateOf { selectedLinks().size }
+    }
+    val isSelecting by remember {
+        derivedStateOf { selectedCount > 0 }
+    }
+
+    val titleSelectedCount = remember { mutableIntStateOf(0) }
+    LaunchedEffect(selectedCount) {
+        if (selectedCount > 0) {
+            titleSelectedCount.intValue = selectedCount
+        }
+    }
+
+    val topBarColor by animateColorAsState(
+        targetValue = if (isSelecting) {
+            MaterialTheme.colorScheme.surfaceColorAtElevation(3)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        label = "TopBarColor"
+    )
 
     Scaffold(
+        contentWindowInsets = WindowInsets(),
         topBar = {
             CommonTopBar(
-                title = stringResource(LocaleR.string.label_cached_links),
-                onNavigate = onNavigateBack
+                navigationIcon = {
+                    ActionButton(onClick = { if (isSelecting) onClearSelection() else onNavigateBack() }) {
+                        AnimatedContent(
+                            targetState = isSelecting,
+                            label = "TopBarIcon",
+                            transitionSpec = {
+                                fadeIn() togetherWith fadeOut()
+                            }
+                        ) { selectionMode ->
+                            Icon(
+                                painter = painterResource(
+                                    if (selectionMode) UiCommonR.drawable.round_close_24
+                                    else UiCommonR.drawable.left_arrow
+                                ),
+                                contentDescription = null
+                            )
+                        }
+                    }
+                },
+                title = {
+                    AnimatedContent(
+                        label = "TopBarTitle",
+                        targetState = isSelecting,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() }
+                    ) { selectionMode ->
+                        if (selectionMode) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                AnimatedContent(
+                                    label = "SelectionCount",
+                                    targetState = titleSelectedCount.intValue,
+                                    transitionSpec = {
+                                        if (targetState > initialState) {
+                                            (slideInVertically { height -> height } + fadeIn()) togetherWith
+                                                    slideOutVertically { height -> -height } + fadeOut()
+                                        } else {
+                                            (slideInVertically { height -> -height } + fadeIn()) togetherWith
+                                                    slideOutVertically { height -> height } + fadeOut()
+                                        }.using(SizeTransform(clip = false))
+                                    }
+                                ) { count ->
+                                    Text(
+                                        text = "$count",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                Text(text = " ${stringResource(LocaleR.string.selected)}")
+                            }
+                        } else {
+                            Text(text = topbarTitle)
+                        }
+                    }
+                },
+                actions = {
+                    AnimatedVisibility(
+                        visible = isSelecting,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            PlainTooltipBox(description = stringResource(LocaleR.string.reset)) {
+                                ActionButton(onClick = { onResetLinks(emptyList()) }) {
+                                    Icon(
+                                        painter = painterResource(UiCommonR.drawable.round_refresh_24),
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+
+                            PlainTooltipBox(description = stringResource(LocaleR.string.delete)) {
+                                ActionButton(onClick = { onDeleteLinks(emptyList()) }) {
+                                    Icon(
+                                        painter = painterResource(UiCommonR.drawable.delete),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                containerColor = topBarColor
             )
         },
-        bottomBar = {
-            SelectionBottomBar(
-                isVisible = selectedLinks().isNotEmpty(),
-                totalCount = totalCount,
-                selectedCount = selectedLinks().size,
-                onSelectAll = onSelectAll,
-                onClearSelection = onClearSelection,
-                onTestLinks = { onTestLinks(emptyList()) },
-                onResetLinks = { onResetLinks(emptyList()) }
-            )
-        }
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current)
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -209,14 +312,10 @@ private fun ManageMediaLinksTweakScreenContent(
                                 selectedContainerColor = MaterialTheme.colorScheme.onSurface,
                                 selectedLabelColor = MaterialTheme.colorScheme.surface
                             ),
-                            border = if (isSelected) {
-                                null
-                            } else {
-                                FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = false
-                                )
-                            }
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected
+                            )
                         )
                     }
 
@@ -231,47 +330,12 @@ private fun ManageMediaLinksTweakScreenContent(
                 }
             }
 
-            // Selection & Mass Actions (Removed from body, moved to bottomBar)
-
-            // Test Progress
-            if (testProgress != null && testProgress !is TestLinksProgress.Done) {
-                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    when (testProgress) {
-                        is TestLinksProgress.Testing -> {
-                            Column {
-                                LinearProgressIndicator(
-                                    progress = { testProgress.index.toFloat() / testProgress.total.toFloat() },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Text(
-                                    text = stringResource(
-                                        LocaleR.string.testing_link_format,
-                                        testProgress.index,
-                                        testProgress.total
-                                    ),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                        }
-
-                        is TestLinksProgress.Error -> {
-                            Text(
-                                text = testProgress.cause.message ?: "Unknown error",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    }
-                }
-            }
-
             HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
 
             // Links List
             AsyncAnimatedContent(
                 targetState = links,
+                modifier = Modifier.fillMaxSize(),
                 loadingContent = {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -287,7 +351,7 @@ private fun ManageMediaLinksTweakScreenContent(
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = it.message.toString())
                     }
-                }
+                },
             ) { items ->
                 if (items().isEmpty()) {
                     EmptyDataMessage(
@@ -301,14 +365,26 @@ private fun ManageMediaLinksTweakScreenContent(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(items(), key = { it.url + it.parentId }) { link ->
+                        if (!isSelecting) {
+                            item(key = "mass_action_buttons") {
+                                MassActionButtons(
+                                    onResetAll = { onResetLinks(items()) },
+                                    onDeleteAll = { onDeleteLinks(items()) },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
+
+                        items(items(), key = { it.url }) { link ->
                             LinkCard(
                                 link = link,
+                                actionsEnabled = { selectedLinks().isEmpty() },
                                 isSelected = { link in selectedLinks() },
                                 onToggleSelect = { onToggleSelect(link) },
                                 onPlay = { onPlayLink(link) },
                                 onDelete = { onDeleteLinks(listOf(link)) },
-                                onReset = { onResetLinks(listOf(link)) }
+                                onReset = { onResetLinks(listOf(link)) },
+                                modifier = Modifier.animateItem()
                             )
                         }
                     }
@@ -319,122 +395,73 @@ private fun ManageMediaLinksTweakScreenContent(
 }
 
 @Composable
-private fun SelectionBottomBar(
-    isVisible: Boolean,
-    totalCount: Int,
-    selectedCount: Int,
-    onSelectAll: () -> Unit,
-    onClearSelection: () -> Unit,
-    onTestLinks: () -> Unit,
-    onResetLinks: () -> Unit,
+private fun MassActionButtons(
+    onResetAll: () -> Unit,
+    onDeleteAll: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = fadeIn() + slideInVertically { it },
-        exit = fadeOut() + slideOutVertically { it }
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Surface(
-            tonalElevation = 3.dp,
-            shadowElevation = 8.dp,
+        OutlinedButton(
+            onClick = onResetAll,
+            modifier = Modifier.weight(1f),
+            shape = MaterialTheme.shapes.medium,
+            contentPadding = PaddingValues(12.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = selectedCount == totalCount,
-                    onCheckedChange = { if (it) onSelectAll() else onClearSelection() },
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(24.dp)
-                )
+            Icon(
+                painter = painterResource(UiCommonR.drawable.round_refresh_24),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(LocaleR.string.reset),
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-                AnimatedContent(
-                    targetState = selectedCount,
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            (slideInVertically { height -> height } + fadeIn()) togetherWith
-                                    slideOutVertically { height -> -height } + fadeOut()
-                        } else {
-                            (slideInVertically { height -> -height } + fadeIn()) togetherWith
-                                    slideOutVertically { height -> height } + fadeOut()
-                        }.using(SizeTransform(clip = false))
-                    },
-                    label = "SelectionCount"
-                ) { count ->
-                    Text(
-                        text = stringResource(R.string.count_selection_format, count),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MassActionButton(
-                        text = stringResource(LocaleR.string.test_links_label),
-                        painter = painterResource(UiCommonR.drawable.round_refresh_24),
-                        onClick = onTestLinks
-                    )
-                    MassActionButton(
-                        text = stringResource(LocaleR.string.reset),
-                        painter = painterResource(UiCommonR.drawable.round_close_24),
-                        onClick = onResetLinks,
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                }
-            }
+        TextButton(
+            onClick = onDeleteAll,
+            modifier = Modifier.weight(1f),
+            shape = MaterialTheme.shapes.medium,
+            contentPadding = PaddingValues(12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            Icon(
+                painter = painterResource(UiCommonR.drawable.delete),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(LocaleR.string.delete),
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
-@Composable
-private fun MassActionButton(
-    text: String,
-    painter: androidx.compose.ui.graphics.painter.Painter,
-    onClick: () -> Unit,
-    containerColor: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Surface(
-        onClick = onClick,
-        color = containerColor,
-        contentColor = if (containerColor ==
-            MaterialTheme.colorScheme.onSurface
-        ) {
-            MaterialTheme.colorScheme.surface
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        },
-        shape = CircleShape
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(painter = painter, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = text, style = MaterialTheme.typography.labelLarge)
-        }
-    }
-}
-
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LinkCard(
-    link: DBMediaLink,
+    link: CachedMediaLink,
+    actionsEnabled: () -> Boolean,
     isSelected: () -> Boolean,
     onToggleSelect: () -> Unit,
     onPlay: () -> Unit,
     onDelete: () -> Unit,
     onReset: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     val isUntested = link.updatedAt == link.createdAt
 
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
             .combinedClickable(
@@ -455,7 +482,7 @@ private fun LinkCard(
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 val icon =
-                    if (link is DBStream) UiCommonR.drawable.play_outline_circle
+                    if (link is CachedStream) UiCommonR.drawable.play_outline_circle
                     else UiCommonR.drawable.outline_subtitles_24
                 Icon(
                     painter = painterResource(icon),
@@ -463,7 +490,7 @@ private fun LinkCard(
                     modifier = Modifier
                         .size(20.dp)
                         .padding(top = 2.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -471,14 +498,17 @@ private fun LinkCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = link.label,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
                     )
 
                     link.description?.let {
                         Text(
                             text = it,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
                     }
                 }
@@ -496,32 +526,52 @@ private fun LinkCard(
                 Text(
                     text = link.updatedAt.toRelativeTime(resources),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                IconButton(onClick = onReset, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        painterResource(UiCommonR.drawable.round_refresh_24),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                PlainTooltipBox(description = stringResource(LocaleR.string.reset)) {
+                    IconButton(
+                        onClick = onReset,
+                        enabled = actionsEnabled(),
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            painterResource(UiCommonR.drawable.round_refresh_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
-                IconButton(onClick = onPlay, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        painterResource(UiCommonR.drawable.play),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                PlainTooltipBox(description = stringResource(LocaleR.string.play)) {
+                    IconButton(
+                        onClick = onPlay,
+                        enabled = actionsEnabled(),
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            painterResource(UiCommonR.drawable.play),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
-                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        painterResource(UiCommonR.drawable.delete),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                PlainTooltipBox(description = stringResource(LocaleR.string.delete)) {
+                    IconButton(
+                        onClick = onDelete,
+                        enabled = actionsEnabled(),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            painterResource(UiCommonR.drawable.delete),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
         }
@@ -579,6 +629,7 @@ private fun LinkCardPreview() {
         Surface {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 LinkCard(
+                    actionsEnabled = { false },
                     link = PreviewData.getStream(),
                     isSelected = { false },
                     onToggleSelect = {},
@@ -586,7 +637,9 @@ private fun LinkCardPreview() {
                     onDelete = {},
                     onReset = {}
                 )
+
                 LinkCard(
+                    actionsEnabled = { true },
                     link = PreviewData.getStream().copy(isDead = true),
                     isSelected = { true },
                     onToggleSelect = {},
@@ -603,20 +656,23 @@ private fun LinkCardPreview() {
 @Composable
 private fun ManageMediaLinksTweakScreenPreview() {
     val dummyStreams = List(5) { i ->
-        DBStream(
+        CachedStream(
             url = "https://example.com/video_$i.mkv",
-            parentId = "provider-1",
             label = "Example Stream $i",
             description = "1080p • 2.3 GB",
             isDead = i % 2 == 0,
             createdAt = java.util.Date(),
-            updatedAt = java.util.Date()
+            updatedAt = java.util.Date(),
+            providerId = "provider-1",
+            ownerId = "owner-1",
+            mediaId = "media-1"
         )
     }
 
     FlixclusiveTheme {
         Surface {
             ManageMediaLinksTweakScreenContent(
+                topbarTitle = "",
                 links = Async.Success(dummyStreams),
                 providerFilters = listOf(
                     ProviderFilterState(DummyDataForPreview.getProviderMetadata(), true),
@@ -624,17 +680,14 @@ private fun ManageMediaLinksTweakScreenPreview() {
                 ),
                 typeFilter = LinkType.All,
                 selectedLinks = { emptySet() },
-                testProgress = null,
                 onNavigateBack = {},
                 onTypeFilterChange = {},
                 onProviderFilterChange = {},
                 onToggleSelect = {},
-                onSelectAll = {},
                 onClearSelection = {},
-                onTestLinks = {},
                 onDeleteLinks = {},
                 onResetLinks = {},
-                onPlayLink = {}
+                onPlayLink = {},
             )
         }
     }
