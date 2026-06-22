@@ -157,7 +157,10 @@ internal fun MediaLinksBottomSheet(
             viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
             viewModel.links
         ) { state, links ->
-            playerPrefs.isAutoSelectingServer && !state.isLoading && links.hasPlayableLinks
+            playerPrefs.isAutoSelectingServer
+                && !state.isLoading
+                && links.hasPlayableLinks
+                && state.isSuccess
         }.filter { it }
             .distinctUntilChanged()
             .debounce(1000L.milliseconds) // Debounce to prevent rapid navigation if links change quickly
