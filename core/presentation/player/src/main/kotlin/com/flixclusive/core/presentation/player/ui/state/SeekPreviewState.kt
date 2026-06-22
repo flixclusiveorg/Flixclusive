@@ -16,7 +16,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.C
 import androidx.media3.common.Player
-import androidx.media3.common.listen
+import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.inspector.FrameExtractor
@@ -81,9 +81,7 @@ class SeekPreviewState(
         private set
 
     private suspend fun observe() {
-        player.listen { events ->
-            if (!events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) return@listen
-
+        player.listenTo(Player.EVENT_MEDIA_ITEM_TRANSITION) {
             onScrubEnd()
             frameExtractor?.close()
             frameExtractor = null

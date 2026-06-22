@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
-import androidx.media3.common.listen
+import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util.shouldEnablePlayPauseButton
 import androidx.media3.common.util.Util.shouldShowPlayButton
@@ -18,16 +18,16 @@ import com.flixclusive.core.presentation.player.AppPlayer
  * State that converts the necessary information from the [Player] to correctly deal with a UI
  * component representing a PlayPause button.
  *
- * @property[isEnabled] determined by `isCommandAvailable(Player.COMMAND_PLAY_PAUSE)` and having
+ * @property [isEnabled] determined by `isCommandAvailable(Player.COMMAND_PLAY_PAUSE)` and having
  *   something in the [Timeline][androidx.media3.common.Timeline] to play
- * @property[showPlay] determined by [shouldShowPlayButton]
+ * @property [showPlay] determined by [shouldShowPlayButton]
  */
 @UnstableApi
 @Stable
 class PlayPauseButtonState private constructor(
     private val player: AppPlayer,
 ) {
-    var isBuffering by mutableStateOf(player.playbackState == Player.STATE_BUFFERING)
+    var isBuffering by mutableStateOf(player.playbackState == Player.STATE_BUFFERING || player.isLoading)
         private set
 
     var isEnabled by mutableStateOf(shouldEnablePlayPauseButton(player))
@@ -73,12 +73,13 @@ class PlayPauseButtonState private constructor(
         isEnabled = shouldEnablePlayPauseButton(player)
         isBuffering = player.playbackState == Player.STATE_BUFFERING
 
-        player.listen { events ->
-            if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) {
-                showPlay = shouldShowPlayButton(this)
-                isEnabled = shouldEnablePlayPauseButton(this)
-                isBuffering = playbackState == Player.STATE_BUFFERING
-            }
+        player.listenTo(
+            Player.EVENT_PLAYBACK_STATE_CHANGED,
+            Player.EVENT_IS_PLAYING_CHANGED,
+        ) {
+            showPlay = shouldShowPlayButton(this)
+            isEnabled = shouldEnablePlayPauseButton(this)
+            isBuffering = playbackState == Player.STATE_BUFFERING
         }
     }
 

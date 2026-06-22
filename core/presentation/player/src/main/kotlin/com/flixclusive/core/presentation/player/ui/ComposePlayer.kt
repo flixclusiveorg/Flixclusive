@@ -16,8 +16,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +47,7 @@ import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.presentation.player.extensions.toContentScale
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.google.common.collect.ImmutableList
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
 /**
@@ -63,17 +64,25 @@ fun ComposePlayer(
     val presentationState = rememberPresentationState(player)
     val lifecycleOwner = LocalLifecycleOwner.current
     val activity = LocalActivity.current
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(player, activity) {
-        player.listenTo(Player.EVENT_IS_PLAYING_CHANGED) { events ->
-            if (!events.contains(Player.EVENT_IS_PLAYING_CHANGED)) return@listenTo
-            val window = activity?.window ?: return@listenTo
+    DisposableEffect(player, activity) {
+        val listener = scope.launch {
+            player.listenTo(Player.EVENT_IS_PLAYING_CHANGED) { events ->
+                if (!events.contains(Player.EVENT_IS_PLAYING_CHANGED)) return@listenTo
+                val window = activity?.window ?: return@listenTo
 
-            if (player.isPlaying) {
-                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            } else {
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                if (player.isPlaying) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
             }
+        }
+
+        onDispose {
+            listener.cancel()
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 

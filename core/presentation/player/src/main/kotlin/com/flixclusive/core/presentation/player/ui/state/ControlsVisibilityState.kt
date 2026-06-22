@@ -11,7 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.media3.common.Player
-import androidx.media3.common.listen
+import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import kotlinx.coroutines.delay
@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class ControlsVisibilityState(
     val player: AppPlayer,
 ) {
-    private var controlTimeoutVisibility by mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
+    private var controlsVisibilityTimeout by mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
 
     var isVisible: Boolean by mutableStateOf(true)
         private set
@@ -33,18 +33,18 @@ class ControlsVisibilityState(
         if (isVisible) {
             hide()
         } else {
-            show(indefinite = shouldShowIndefinitely())
+            show(indefinite = player.showControlsIndefinitely())
         }
     }
 
     fun hide() {
         isVisible = false
-        controlTimeoutVisibility = 0
+        controlsVisibilityTimeout = 0
     }
 
     fun show(indefinite: Boolean = false) {
         isVisible = true
-        controlTimeoutVisibility = if (indefinite) Int.MAX_VALUE else PLAYER_CONTROL_VISIBILITY_TIMEOUT
+        controlsVisibilityTimeout = if (indefinite) Int.MAX_VALUE else PLAYER_CONTROL_VISIBILITY_TIMEOUT
     }
 
     /**
@@ -57,28 +57,24 @@ class ControlsVisibilityState(
      * */
     @OptIn(UnstableApi::class)
     private suspend fun observe(isScrubbing: Boolean) {
-        player.listen { events ->
-            if (
-                events.containsAny(
-                    Player.EVENT_PLAYBACK_STATE_CHANGED,
-                    Player.EVENT_IS_PLAYING_CHANGED
-                )
-            ) {
-                if (isScrubbing) return@listen
+        player.listenTo(
+            Player.EVENT_PLAYBACK_STATE_CHANGED,
+            Player.EVENT_IS_PLAYING_CHANGED,
+        ) {
+            if (isScrubbing) return@listenTo
 
-                if (shouldShowIndefinitely()) {
-                    controlTimeoutVisibility = Int.MAX_VALUE
-                } else if (controlTimeoutVisibility > PLAYER_CONTROL_VISIBILITY_TIMEOUT) {
-                    controlTimeoutVisibility = PLAYER_CONTROL_VISIBILITY_TIMEOUT
-                }
+            if (showControlsIndefinitely()) {
+                controlsVisibilityTimeout = Int.MAX_VALUE
+            } else if (controlsVisibilityTimeout > PLAYER_CONTROL_VISIBILITY_TIMEOUT) {
+                controlsVisibilityTimeout = PLAYER_CONTROL_VISIBILITY_TIMEOUT
             }
         }
     }
 
-    private fun shouldShowIndefinitely(): Boolean {
-        return !player.isPlaying ||
-            player.playbackState == Player.STATE_ENDED ||
-            player.playbackState == Player.STATE_BUFFERING
+    private fun Player.showControlsIndefinitely(): Boolean {
+        return playbackState == Player.STATE_ENDED ||
+            playbackState == Player.STATE_BUFFERING ||
+            !isPlaying
     }
 
     companion object {
@@ -97,12 +93,12 @@ class ControlsVisibilityState(
 
             // Handle the countdown for hiding the controls
             LaunchedEffect(state, isScrubbing) {
-                snapshotFlow { state.controlTimeoutVisibility }
+                snapshotFlow { state.controlsVisibilityTimeout }
                     .collect {
                         if (it > 0) {
                             state.isVisible = true
                             delay(1000L.milliseconds)
-                            state.controlTimeoutVisibility--
+                            state.controlsVisibilityTimeout--
                         } else {
                             state.isVisible = false
                         }
