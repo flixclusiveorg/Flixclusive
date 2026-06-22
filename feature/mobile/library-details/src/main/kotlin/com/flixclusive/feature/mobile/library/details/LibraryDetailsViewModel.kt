@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val PAGINATE_SIZE = 20
 
@@ -77,7 +78,7 @@ internal class LibraryDetailsViewModel @Inject constructor(
     val library = _library.asStateFlow()
 
     val searchItems = searchQuery
-        .debounce(800) // Debounce to avoid excessive computations while typing
+        .debounce(800.milliseconds) // Debounce to avoid excessive computations while typing
         .distinctUntilChanged()
         .filter { it.isNotEmpty() }
         .flatMapLatest { query ->

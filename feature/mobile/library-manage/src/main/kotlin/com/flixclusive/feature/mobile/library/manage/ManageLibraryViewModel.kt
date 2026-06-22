@@ -95,15 +95,11 @@ internal class ManageLibraryViewModel @Inject constructor(
 
         loadListsJob = viewModelScope.launch {
             combine(
-                flow = userSessionDataStore.currentUserId.filterNotNull(),
-                flow2 = uiState.map { it.selectedFilter }.distinctUntilChanged(),
-                flow3 = searchQuery
-                    .map { it.trim() }
-                    .debounce { if (it.isEmpty()) 0L else 800L }
-                    .distinctUntilChanged(),
-            ) { userId, filter, query ->
-                Triple(userId, filter, query)
-            }.flatMapLatest { (userId, filter, query) ->
+                userSessionDataStore.currentUserId.filterNotNull(),
+                uiState.map { it.selectedFilter }.distinctUntilChanged(),
+            ) { userId, filter ->
+                userId to filter
+            }.flatMapLatest { (userId, filter) ->
                 val appLists = libraryListRepository
                     .getListsAndItems(userId = userId, sort = filter)
                     .mapLatest { data ->
@@ -143,7 +139,14 @@ internal class ManageLibraryViewModel @Inject constructor(
                     Async.Success(lists)
                 }
 
-                combine(appLists, trackerLists) { app, tracker ->
+                combine(
+                    appLists,
+                    trackerLists,
+                    searchQuery
+                        .map { it.trim() }
+                        .debounce { if (it.isEmpty()) 0L else 800L }
+                        .distinctUntilChanged(),
+                ) { app, tracker, query ->
                     val isTrackerLoading = tracker is Async.Loading
                     if (isTrackerLoading && isRefreshing) {
                         _uiState.update { it.copy(isLoadingTrackers = true) }

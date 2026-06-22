@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -309,7 +310,7 @@ private fun LibraryDetailsScreenContent(
                             NonEmptyScreen(
                                 uiState = uiState,
                                 selectedItems = selectedItems,
-                                items = items,
+                                itemsProvider = items,
                                 scaffoldPadding = paddingValues,
                                 onViewMedia = onViewMedia,
                                 onLongClickItem = onLongClickItem,
@@ -341,7 +342,7 @@ private fun LibraryDetailsScreenContent(
 private fun NonEmptyScreen(
     uiState: () -> LibraryDetailsUiState,
     selectedItems: () -> Set<LibraryListItemWithMetadata>,
-    items: () -> Set<LibraryListItemWithMetadata>,
+    itemsProvider: () -> Set<LibraryListItemWithMetadata>,
     scaffoldPadding: PaddingValues,
     onViewMedia: (MediaMetadata) -> Unit,
     onLongClickItem: (LibraryListItemWithMetadata) -> Unit,
@@ -350,6 +351,9 @@ private fun NonEmptyScreen(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyGridState()
+    val items by remember {
+        derivedStateOf { itemsProvider().toList() }
+    }
 
     val placeholders by remember {
         derivedStateOf {
@@ -381,12 +385,9 @@ private fun NonEmptyScreen(
         }
 
         items(
-            count = items().size,
-            key = { items().elementAt(it).mediaId }
-        ) { i ->
-            val item by remember {
-                derivedStateOf { items().elementAt(i) }
-            }
+            items = items,
+            key = { it.mediaId }
+        ) { item ->
             val media = item.toMediaMetadata()
             val isSelected by remember {
                 derivedStateOf { selectedItems().contains(item) }
@@ -422,7 +423,7 @@ private fun NonEmptyScreen(
             )
         }
 
-        if (uiState().pagingState.isExhausted && items().isNotEmpty()) {
+        if (uiState().pagingState.isExhausted && itemsProvider().isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -439,7 +440,7 @@ private fun NonEmptyScreen(
             }
         }
 
-        if (uiState().pagingState.isError && items().isNotEmpty()) {
+        if (uiState().pagingState.isError && itemsProvider().isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Box(
                     contentAlignment = Alignment.Center,
