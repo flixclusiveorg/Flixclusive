@@ -1,6 +1,8 @@
 package com.flixclusive.core.presentation.player.ui
 
 import android.os.Build
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +31,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.SubtitleView
 import androidx.media3.ui.compose.PlayerSurface
@@ -57,6 +62,20 @@ fun ComposePlayer(
 ) {
     val presentationState = rememberPresentationState(player)
     val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = LocalActivity.current
+
+    LaunchedEffect(player, activity) {
+        player.listenTo(Player.EVENT_IS_PLAYING_CHANGED) { events ->
+            if (!events.contains(Player.EVENT_IS_PLAYING_CHANGED)) return@listenTo
+            val window = activity?.window ?: return@listenTo
+
+            if (player.isPlaying) {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        }
+    }
 
     Box(modifier = modifier) {
         PlayerSurface(
