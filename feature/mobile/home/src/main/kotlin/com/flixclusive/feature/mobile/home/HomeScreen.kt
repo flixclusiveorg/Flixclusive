@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -158,9 +159,8 @@ private fun HomeScreenContent(
         onRefresh = onRefresh,
     ) {
         Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(LocalGlobalScaffoldPadding.current),
+            contentWindowInsets = WindowInsets(),
+            modifier = Modifier.fillMaxSize(),
             topBar = {
                 HomeScreenTopBar(
                     title = stringResource(LocaleR.string.home),
@@ -174,13 +174,20 @@ private fun HomeScreenContent(
             AsyncAnimatedContent(
                 targetState = uiState.catalogs,
                 modifier = Modifier.fillMaxSize(),
-                loadingContent = { LoadingScreen(modifier = Modifier.padding(it)) },
+                loadingContent = {
+                    LoadingScreen(
+                        modifier = Modifier
+                            .padding(it)
+                            .padding(LocalGlobalScaffoldPadding.current),
+                    )
+                },
                 errorContent = { error ->
                     RetryButton(
                         error = error.message.asString(),
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(it),
+                            .padding(it)
+                            .padding(LocalGlobalScaffoldPadding.current),
                         onRetry = onRetry,
                     )
                 }
@@ -193,6 +200,11 @@ private fun HomeScreenContent(
                     if (isEmpty) {
                         EmptyScreenContent(
                             openAddProviderScreen = navigator::navigateToAddProviderScreen,
+                        )
+                        LoadingScreen(
+                            modifier = Modifier
+                                .padding(it)
+                                .padding(LocalGlobalScaffoldPadding.current),
                         )
                     } else {
                         val updatedData by rememberUpdatedState(data)
@@ -286,6 +298,7 @@ private fun NonEmptyScreenContent(
 
     LazyColumn(
         state = listState,
+        contentPadding = LocalGlobalScaffoldPadding.current,
         modifier = Modifier.fillMaxSize(),
     ) {
         item {
