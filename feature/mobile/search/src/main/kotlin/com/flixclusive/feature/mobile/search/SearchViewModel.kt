@@ -158,9 +158,11 @@ internal class SearchViewModel @Inject constructor(
             _uiState.update { it.resetPagination(lastQuerySearched = query) }
             searchResults.clear()
 
-            if (query.isNotBlank()) {
-                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-                searchHistoryRepository.insert(SearchHistory(query = query, ownerId = userId))
+            launch {
+                if (query.isNotBlank()) {
+                    val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+                    searchHistoryRepository.insert(SearchHistory(query = query, ownerId = userId))
+                }
             }
 
             paginate()
