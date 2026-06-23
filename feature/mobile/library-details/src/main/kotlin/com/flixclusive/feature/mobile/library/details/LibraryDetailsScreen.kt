@@ -90,8 +90,8 @@ private enum class LibraryDetailsScreenState {
 
 @Destination<ExternalModuleGraph>(navArgs = LibraryDetailsNavArgs::class)
 @Composable
-internal fun LibraryDetailsScreen(
-    args: LibraryDetailsNavArgs,
+fun LibraryDetailsScreen(
+    navArgs: LibraryDetailsNavArgs,
     navigator: NavigatorLibraryDetailsScreen,
     viewModel: LibraryDetailsViewModel = hiltViewModel(),
 ) {
@@ -112,7 +112,7 @@ internal fun LibraryDetailsScreen(
 
     LibraryDetailsScreenContent(
         library = library,
-        tracker = args.tracker,
+        tracker = navArgs.tracker,
         snackbarHostState = snackbarHostState,
         uiState = { uiState },
         items = {

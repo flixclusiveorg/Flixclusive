@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.library.details
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.ui.util.fastMap
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -22,7 +21,9 @@ import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListItemsUseCase
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.provider.tracker.TrackerList
-import com.ramcosta.composedestinations.generated.librarydetails.navArgs
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -42,21 +43,23 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Date
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val PAGINATE_SIZE = 20
 
 @OptIn(FlowPreview::class)
-@HiltViewModel
-internal class LibraryDetailsViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = LibraryDetailsViewModel.Factory::class)
+class LibraryDetailsViewModel @AssistedInject constructor(
     private val libraryListRepository: LibraryListRepository,
     private val appDispatchers: AppDispatchers,
     private val getTrackerListItems: GetTrackerListItemsUseCase,
     private val getTrackerApi: GetTrackerApiUseCase,
-    savedStateHandle: SavedStateHandle,
+    @Assisted private val navArgs: LibraryDetailsNavArgs,
 ) : ViewModel() {
-    private val navArgs = savedStateHandle.navArgs<LibraryDetailsNavArgs>()
+    @AssistedFactory
+    interface Factory {
+        fun create(navArgs: LibraryDetailsNavArgs): LibraryDetailsViewModel
+    }
 
     private var removeSelectionJob: Job? = null
     private var paginateJob: Job? = null
@@ -284,7 +287,7 @@ private fun MediaMetadata.toLibraryListItemWithMetadata(
     )
 }
 
-internal fun LibraryList.toTrackerList(
+fun LibraryList.toTrackerList(
     providerId: String,
 ): TrackerList {
     return TrackerList(
@@ -299,7 +302,7 @@ internal fun LibraryList.toTrackerList(
 }
 
 @Immutable
-internal data class LibraryDetailsUiState(
+data class LibraryDetailsUiState(
     val isShowingSearchBar: Boolean = false,
     val isMultiSelecting: Boolean = false,
     val selectedFilter: LibrarySort = LibrarySort.Added(ascending = false),

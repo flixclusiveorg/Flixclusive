@@ -12,6 +12,8 @@ import androidx.navigation.NavHostController
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.navigation.navigator.NavigatorExitApp
+import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreen
+import com.flixclusive.feature.mobile.library.details.LibraryDetailsViewModel
 import com.flixclusive.feature.mobile.media.MediaScreen
 import com.flixclusive.feature.mobile.media.MediaScreenViewModel
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreen
@@ -29,6 +31,7 @@ import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchC
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsCommonMediaScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsCommonSeeAllScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
+import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
@@ -139,6 +142,23 @@ internal fun AppNavHost(
                     )
                 )
             }
+        }
+
+        composable(LibraryDetailsScreenDestination) {
+            val dependencies = buildDependencies()
+            val parentEntry = remember(navBackStackEntry) {
+                navController.getBackStackEntry(AppmobileNavGraphs.library.route)
+            }
+
+            LibraryDetailsScreen(
+                navigator = dependencies.require(),
+                navArgs = navArgs,
+                viewModel = hiltViewModel<LibraryDetailsViewModel, LibraryDetailsViewModel.Factory>(
+                    key = navArgs.library.id + navArgs.tracker?.id,
+                    viewModelStoreOwner = parentEntry,
+                    creationCallback = { it.create(navArgs = navArgs) }
+                )
+            )
         }
     }
 }
