@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel(assistedFactory = SeeAllViewModel.Factory::class)
-internal class SeeAllViewModel @AssistedInject constructor(
+class SeeAllViewModel @AssistedInject constructor(
     private val getCatalogItems: GetCatalogItemsUseCase,
     dataStoreManager: DataStoreManager,
     @Assisted private val navArgs: Catalog,
@@ -146,7 +146,7 @@ internal class SeeAllViewModel @AssistedInject constructor(
 }
 
 @Immutable
-internal data class SeeAllUiState(
+data class SeeAllUiState(
     val pagingState: PagingState = PagingState.Loading,
     val page: Int = 1,
     val maxPage: Int = 1,

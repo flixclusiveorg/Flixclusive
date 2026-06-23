@@ -48,7 +48,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
@@ -64,6 +63,7 @@ import com.flixclusive.core.presentation.common.components.GradientCircularProgr
 import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.CommonPullToRefreshBox
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -92,7 +92,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun HomeScreen(
     navigator: NavigatorHome,
-    viewModel: HomeScreenViewModel = hiltViewModel(),
+    viewModel: HomeViewModel = activityHiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showMediaTitles by viewModel.showMediaTitles.collectAsStateWithLifecycle()
@@ -165,7 +165,6 @@ private fun HomeScreenContent(
                 HomeScreenTopBar(
                     title = stringResource(LocaleR.string.home),
                     containerAlpha = { appBarContainerAlpha },
-                    onSearch = navigator::navigateToSearchScreen,
                     onFilterClick = { isSheetOpen = true },
                     enableFilterButton = { providers().let { it is Async.Success && it.data.isNotEmpty() } },
                 )
@@ -414,8 +413,6 @@ private fun HomeScreenBasePreview() {
                 override fun showLinkLoaderSheet(media: MediaMetadata, episode: Episode?) {}
 
                 override fun navigateToAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {}
-
-                override fun navigateToSearchScreen() {}
             }
 
             var previewState by remember { mutableIntStateOf(readyState) }

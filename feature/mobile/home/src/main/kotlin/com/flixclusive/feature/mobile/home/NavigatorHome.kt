@@ -13,6 +13,4 @@ interface NavigatorHome :
     NavigateBack,
     NavigateToMediaPreviewBottomSheet,
     NavigateToLinkLoaderSheet,
-    NavigateToAddProviderScreen {
-    fun navigateToSearchScreen()
-}
+    NavigateToAddProviderScreen

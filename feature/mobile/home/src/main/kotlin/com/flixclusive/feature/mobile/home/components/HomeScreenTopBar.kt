@@ -37,7 +37,6 @@ internal val HomeScreenTopBarDefaultHeight = 64.dp // not the actual expanded he
 internal fun HomeScreenTopBar(
     title: String,
     containerAlpha: () -> Float,
-    onSearch: () -> Unit,
     onFilterClick: () -> Unit,
     enableFilterButton: () -> Boolean,
     modifier: Modifier = Modifier,
@@ -91,17 +90,6 @@ internal fun HomeScreenTopBar(
                             Icon(
                                 painter = painterResource(UiCommonR.drawable.filter_list),
                                 contentDescription = stringResource(LocaleR.string.filter_button),
-                            )
-                        }
-                    }
-
-                    PlainTooltipBox(description = stringResource(LocaleR.string.search)) {
-                        ActionButton(
-                            onClick = onSearch,
-                        ) {
-                            Icon(
-                                painter = painterResource(UiCommonR.drawable.search_outlined),
-                                contentDescription = stringResource(LocaleR.string.search),
                             )
                         }
                     }

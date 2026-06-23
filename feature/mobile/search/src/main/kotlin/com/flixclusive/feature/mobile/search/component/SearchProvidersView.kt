@@ -38,7 +38,6 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiv
 import com.flixclusive.feature.mobile.search.R
 import com.flixclusive.feature.mobile.search.SearchProvider
 import com.flixclusive.feature.mobile.search.ViewLabelHeader
-import kotlin.math.max
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -58,7 +57,7 @@ internal fun SearchProvidersView(
         providers.data.indexOfFirst { it.id == selectedProviderId }
     }
 
-    val listState = rememberLazyGridState(initialFirstVisibleItemIndex = max(selectedIndex, 0))
+    val listState = rememberLazyGridState(initialFirstVisibleItemIndex = selectedIndex.coerceAtLeast(0))
 
     AsyncAnimatedContent(
         targetState = providers,
@@ -71,14 +70,23 @@ internal fun SearchProvidersView(
             )
         },
     ) { data ->
-        SearchProvidersList(
-            providers = data(),
-            selectedProviderId = selectedProviderId,
-            scaffoldPadding = scaffoldPadding,
-            onChangeProvider = onChangeProvider,
-            onToggleProvider = onToggleProvider,
-            listState = listState,
-        )
+        if (data().isEmpty()) {
+            EmptyDataMessage(
+                modifier = Modifier.padding(scaffoldPadding),
+                emojiHeader = "😕",
+                title = stringResource(R.string.label_search_empty_providers),
+                description = stringResource(R.string.description_search_empty_providers),
+            )
+        } else {
+            SearchProvidersList(
+                providers = data(),
+                selectedProviderId = selectedProviderId,
+                scaffoldPadding = scaffoldPadding,
+                onChangeProvider = onChangeProvider,
+                onToggleProvider = onToggleProvider,
+                listState = listState,
+            )
+        }
     }
 }
 
@@ -193,7 +201,11 @@ private fun SearchProvidersLoading(modifier: Modifier = Modifier) {
 private fun SearchProvidersLoadingPreview() {
     FlixclusiveTheme {
         Surface {
-            SearchProvidersLoading()
+            EmptyDataMessage(
+                emojiHeader = "😕",
+                title = stringResource(R.string.label_search_empty_providers),
+                description = stringResource(R.string.description_search_empty_providers),
+            )
         }
     }
 }

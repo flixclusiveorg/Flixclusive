@@ -76,9 +76,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Date
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel(assistedFactory = MediaScreenViewModel.Factory::class)
-internal class MediaScreenViewModel @AssistedInject constructor(
+class MediaScreenViewModel @AssistedInject constructor(
     dataStoreManager: DataStoreManager,
     getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
     @param:ApplicationContext private val context: Context,
@@ -196,7 +197,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
     /** search results for the library lists, this is separate to avoid multiple mappings */
     @OptIn(FlowPreview::class)
     val searchResults = librarySheetQuery
-        .debounce(800) // wait for the user to stop typing
+        .debounce(800.milliseconds) // wait for the user to stop typing
         .filter { it.isNotEmpty() }
         .flatMapLatest { query ->
             libraryLists.mapLatest { state ->
@@ -219,7 +220,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
             val media = _metadata.filterNotNull().first()
             if (media is Show) {
                 seasonToDisplay
-                    .debounce(800)
+                    .debounce(800.milliseconds)
                     .filterNotNull()
                     .collectLatest {
                         if (it !is Async.Success) return@collectLatest
@@ -624,7 +625,7 @@ internal class MediaScreenViewModel @AssistedInject constructor(
 }
 
 @Immutable
-internal data class MediaUiState(
+data class MediaUiState(
     val selectedSeason: Int? = null,
     val provider: ProviderMetadata? = null,
     val error: UiText? = null,
@@ -645,7 +646,7 @@ internal data class MediaUiState(
  * whether a specific media is contained within that list.
  * */
 @Immutable
-internal data class LibraryListAndState(
+data class LibraryListAndState(
     private val listWithItems: LibraryListWithItems,
     val containsMedia: Boolean,
     val images: List<String> = emptyList(),
@@ -697,7 +698,7 @@ internal data class LibraryListAndState(
     }
 }
 
-internal enum class MediaScreenState {
+enum class MediaScreenState {
     Loading,
     Error,
     Success,

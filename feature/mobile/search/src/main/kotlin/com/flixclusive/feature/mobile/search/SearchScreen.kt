@@ -7,9 +7,12 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,17 +26,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFirstOrNull
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.search.component.SearchBarInput
 import com.flixclusive.feature.mobile.search.component.SearchMediasGridView
@@ -53,13 +58,15 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun SearchScreen(
     navigator: NavigatorSearchScreen,
-    viewModel: SearchViewModel = hiltViewModel(),
+    viewModel: SearchViewModel = activityHiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val showMediaTitles by viewModel.showMediaTitles.collectAsStateWithLifecycle()
     val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
     val providers by viewModel.providers.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     SearchScreenContent(
         uiState = { uiState },
@@ -81,6 +88,7 @@ internal fun SearchScreen(
         paginateItems = viewModel::paginate,
         openMediaScreen = navigator::navigateToMediaScreen,
         previewMedia = navigator::showMediaPreviewBottomSheet,
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -105,7 +113,10 @@ private fun SearchScreenContent(
     paginateItems: () -> Unit,
     openMediaScreen: (MediaMetadata) -> Unit,
     previewMedia: (MediaMetadata) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    val resources = LocalResources.current
+
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
 
@@ -136,7 +147,9 @@ private fun SearchScreenContent(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0.dp),
+        contentWindowInsets = WindowInsets(),
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             val provider by remember {
                 derivedStateOf {
@@ -157,10 +170,21 @@ private fun SearchScreenContent(
                 onToggleFilterSheet = { filterGroupIndexToShow = it },
                 onChangeView = onChangeView,
                 onSearch = {
+                    if (provider == null) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = resources.getString(R.string.error_no_selected_provider),
+                                withDismissAction = true
+                            )
+                        }
+                        return@SearchBarInput
+                    }
+
                     scope.launch {
                         safeCall { listState.scrollToItem(0) }
+                    }.invokeOnCompletion {
+                        onSearch()
                     }
-                    onSearch()
                 },
             )
         },
@@ -289,6 +313,7 @@ private fun SearchScreenBasePreview() {
                     SearchUiState(
                         lastQuerySearched = "MediaMetadata 1",
                         currentViewType = SearchViewType.Providers,
+                        selectedProviderId = (providers as Async.Success).data.first().id,
                     )
                 },
                 searchQuery = { "MediaMetadata 1" },

@@ -26,6 +26,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.compose.activity)
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

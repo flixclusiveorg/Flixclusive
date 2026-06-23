@@ -29,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.navigation.navigator.NavigateBack
@@ -37,6 +36,7 @@ import com.flixclusive.core.navigation.navigator.NavigateToManageMediaLinksScree
 import com.flixclusive.core.navigation.navigator.NavigateToMediaPreviewBottomSheet
 import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
@@ -61,7 +61,7 @@ interface NavigatorMediaLinkCardsTweakScreen : NavigateBack, NavigateToMediaPrev
 @Composable
 internal fun MediaLinkCardsTweakScreen(
     navigator: NavigatorMediaLinkCardsTweakScreen,
-    viewModel: MediaLinkCardsTweakViewModel = hiltViewModel()
+    viewModel: MediaLinkCardsTweakViewModel = activityHiltViewModel()
 ) {
     val cacheList by viewModel.cacheList.collectAsStateWithLifecycle()
     val mediaSort by viewModel.mediaSort.collectAsStateWithLifecycle()
@@ -160,7 +160,6 @@ internal fun MediaLinkCardsTweakScreen(
             }
         }
     }
-
 }
 
 @Composable

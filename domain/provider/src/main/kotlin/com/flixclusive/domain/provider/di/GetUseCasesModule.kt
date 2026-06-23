@@ -10,7 +10,6 @@ import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.get.GetRepositoryUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSearchProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.impl.GetCatalogProvidersUseCaseImpl
@@ -23,7 +22,6 @@ import com.flixclusive.domain.provider.usecase.get.impl.GetProviderFromRemoteUse
 import com.flixclusive.domain.provider.usecase.get.impl.GetProviderMetadataUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetProviderPluginUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetRepositoryUseCaseImpl
-import com.flixclusive.domain.provider.usecase.get.impl.GetSearchProvidersUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetSeasonWithWatchProgressUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetTrackerProvidersUseCaseImpl
 import dagger.Binds
@@ -59,9 +57,6 @@ internal abstract class GetUseCasesModule {
 
     @Binds
     abstract fun bindGetCatalogProvidersUseCase(impl: GetCatalogProvidersUseCaseImpl): GetCatalogProvidersUseCase
-
-    @Binds
-    abstract fun bindGetSearchProvidersUseCase(impl: GetSearchProvidersUseCaseImpl): GetSearchProvidersUseCase
 
     @Binds
     abstract fun bindGetTrackerProvidersUseCase(impl: GetTrackerProvidersUseCaseImpl): GetTrackerProvidersUseCase

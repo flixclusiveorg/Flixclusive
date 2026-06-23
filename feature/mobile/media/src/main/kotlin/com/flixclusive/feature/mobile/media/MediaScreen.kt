@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.media
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -95,18 +94,6 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun MediaScreen(
-    navigator: NavigatorMediaScreen,
-    navArgs: MediaScreenNavArgs,
-) {
-    InternalMediaScreen(
-        navigator = navigator,
-        navArgs = navArgs,
-    )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-internal fun InternalMediaScreen(
     navigator: NavigatorMediaScreen,
     navArgs: MediaScreenNavArgs,
     viewModel: MediaScreenViewModel = hiltViewModel<MediaScreenViewModel, MediaScreenViewModel.Factory>(

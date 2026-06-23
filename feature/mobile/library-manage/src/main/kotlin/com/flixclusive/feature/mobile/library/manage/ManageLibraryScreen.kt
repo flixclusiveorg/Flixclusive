@@ -44,7 +44,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFilter
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.collections.SortUtils
 import com.flixclusive.core.common.domain.Async
@@ -52,6 +51,7 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.CommonPullToRefreshBox
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -90,7 +90,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun ManageLibraryScreen(
     navigator: NavigatorManageLibraryScreen,
-    viewModel: ManageLibraryViewModel = hiltViewModel(),
+    viewModel: ManageLibraryViewModel = activityHiltViewModel(),
 ) {
     val lists by viewModel.lists.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

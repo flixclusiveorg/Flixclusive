@@ -55,7 +55,7 @@ import kotlin.coroutines.cancellation.CancellationException
 private const val MAX_PAGINATION_PAGES = 5
 
 @HiltViewModel
-internal class HomeScreenViewModel @Inject constructor(
+internal class HomeViewModel @Inject constructor(
     dataStoreManager: DataStoreManager,
     getCatalogProviders: GetCatalogProvidersUseCase,
     userSessionDataStore: UserSessionDataStore,

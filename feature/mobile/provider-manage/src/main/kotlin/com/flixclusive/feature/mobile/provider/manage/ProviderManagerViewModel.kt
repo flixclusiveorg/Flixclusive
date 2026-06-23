@@ -41,6 +41,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -60,11 +63,11 @@ internal class ProviderManagerViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery
-        .debounce(800)
+        .debounce(800.milliseconds)
         .distinctUntilChanged()
         .stateIn(
             viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,
             initialValue = _searchQuery.value,
         )
 
@@ -74,12 +77,12 @@ internal class ProviderManagerViewModel @Inject constructor(
         .flatMapLatest { userId ->
             providerRepository
                 .getProvidersAsFlow(ownerId = userId)
-                .debounce(600)
+                .debounce(600.milliseconds)
         }
 
     val providers = combine(
         _uiState.map { it.isSearching }.distinctUntilChanged(),
-        _searchQuery.debounce(800).distinctUntilChanged(),
+        _searchQuery.debounce(800.milliseconds).distinctUntilChanged(),
         installedProviders,
     ) { isSearching, query, providers ->
         providers
@@ -122,7 +125,7 @@ internal class ProviderManagerViewModel @Inject constructor(
             versionName = "-1",
             versionCode = -1,
             language = Language.Multiple,
-            providerType = ProviderType(context.getString(R.string.label_invalid)),
+            providerType = ProviderType(context.getString(LocaleR.string.label_invalid)),
             status = ProviderStatus.Down,
         )
     }

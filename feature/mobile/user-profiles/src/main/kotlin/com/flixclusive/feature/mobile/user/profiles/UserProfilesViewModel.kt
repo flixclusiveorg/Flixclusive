@@ -41,7 +41,7 @@ internal class UserProfilesViewModel @Inject constructor(
         .mapLatest { it.filterOutCurrentLoggedInUser() }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = emptyList(),
         )
 

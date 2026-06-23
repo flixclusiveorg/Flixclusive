@@ -51,17 +51,6 @@ import kotlinx.coroutines.launch
 fun SeeAllScreen(
     navigator: NavigatorSeeAllScreen,
     navArgs: SeeAllScreenNavArgs,
-) {
-    InternalSeeAllScreen(
-        navigator = navigator,
-        navArgs = navArgs,
-    )
-}
-
-@Composable
-internal fun InternalSeeAllScreen(
-    navigator: NavigatorSeeAllScreen,
-    navArgs: SeeAllScreenNavArgs,
     viewModel: SeeAllViewModel = hiltViewModel<SeeAllViewModel, SeeAllViewModel.Factory>(
         creationCallback = { it.create(navArgs.catalog) }
     ),

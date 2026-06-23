@@ -25,10 +25,10 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.SearchHistoryRepository
 import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.domain.provider.usecase.get.GetSearchProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ToggleCapabilityUseCase
 import com.flixclusive.feature.mobile.search.SearchUiState.Companion.resetPagination
 import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
+import com.flixclusive.feature.mobile.search.util.extension.toFallbackProvider
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.PaginatedMedia
@@ -44,12 +44,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -64,43 +66,65 @@ internal class SearchViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
     private val providerRepository: ProviderRepository,
     private val toggleCapability: ToggleCapabilityUseCase,
-    getSearchProviders: GetSearchProvidersUseCase,
     dataStoreManager: DataStoreManager,
 ) : ViewModel() {
     private var searchingJob: Job? = null
     private var paginatingJob: Job? = null
 
-    val providers = getSearchProviders()
-        .mapLatest { state ->
-            if (state is Async.Loading) {
-                return@mapLatest Async.Loading
-            } else if (state is Async.Failure) {
-                return@mapLatest Async.Failure(state.message, state.cause)
-            }
+    private val searchApis = LinkedHashMap<String, SearchProviderApi>()
 
-            val data = (state as Async.Success)
-                .data
-                .mapNotNull { provider ->
-                    SearchProvider(
-                        metadata = provider.metadata ?: return@mapNotNull null,
-                        isSearchEnabled = provider.isSearchEnabled,
-                    )
-                }.sortedBy { it.name }
+    val providers = userSessionDataStore.currentUserId.filterNotNull()
+        .flatMapLatest(providerRepository::getProvidersAsFlow)
+        .mapLatest { list ->
+            searchApis.clear()
 
-            Async.Success(data)
-        }.stateIn(
+            val searchableProviders = list
+                .fastFilter { it.isSearchEnabled }
+                .mapNotNull {
+                    val metadata = it.metadata ?: it.provider.toFallbackProvider(context)
+                    try {
+                        val api = it.plugin?.getSearchApi(context) ?: return@mapNotNull null
+                        searchApis[it.id] = api
+
+                        SearchProvider(
+                            metadata = metadata,
+                            isSearchEnabled = it.isSearchEnabled,
+                        )
+                    } catch (e: Throwable) {
+                        errorLog(e)
+                        _uiState.update { state ->
+                            state.copy(
+                                searchApiErrors = state.searchApiErrors?.plus(
+                                    ProviderWithThrowable(
+                                        provider = metadata,
+                                        throwable = e
+                                    )
+                                )
+                            )
+                        }
+
+                        null
+                    }
+                }
+
+            Async.Success(searchableProviders) as Async<List<SearchProvider>>
+        }
+        .onStart { emit(Async.Loading) }
+        .catch { emit(Async.Failure(it)) }
+        .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,
             initialValue = Async.Loading,
         )
 
     val searchHistory = userSessionDataStore.currentUserId
         .filterNotNull()
         .flatMapLatest { userId ->
-            searchHistoryRepository.getAllItemsInFlow(ownerId = userId)
+            searchHistoryRepository
+                .getAllItemsInFlow(ownerId = userId)
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,
             initialValue = emptyList(),
         )
 
@@ -110,7 +134,7 @@ internal class SearchViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = false,
         )
 
@@ -145,7 +169,7 @@ internal class SearchViewModel @Inject constructor(
 
     fun onChangeProvider(id: String) {
         viewModelScope.launch {
-            val searchApi = getSearchApi(providerId = id) ?: return@launch
+            val searchApi = searchApis[id] ?: return@launch
             filters = searchApi.filters
         }
 
@@ -267,7 +291,7 @@ internal class SearchViewModel @Inject constructor(
         val filteredFilters = filters.removeUiComponentsFromFilterList()
 
         return try {
-            val api = getSearchApi(providerId = providerId)
+            val api = searchApis[providerId]
                 ?: return Async.Failure(UiText.from(R.string.error_search_api_not_found))
 
             val result = withContext(appDispatchers.io) {
@@ -279,39 +303,15 @@ internal class SearchViewModel @Inject constructor(
             }
 
             Async.Success(result)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             errorLog(e)
-            val metadata = (providers.value as? Async.Success)
-                ?.data
-                ?.firstOrNull { it.id == providerId }
-                ?.metadata
-            if (metadata != null) {
-                _uiState.update {
-                    it.copy(
-                        searchApiErrors = listOf(
-                            ProviderWithThrowable(
-                                provider = metadata,
-                                throwable = e
-                            )
-                        )
-                    )
-                }
-            }
             Async.Failure(e)
         }
-    }
-
-    private suspend fun getSearchApi(providerId: String): SearchProviderApi? {
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-
-        val providers = providerRepository.getProviders(userId)
-        val providerPlugin = providers.firstOrNull { it.metadata?.id == providerId }?.plugin
-        return providerPlugin?.getSearchApi(context)
     }
 }
 
 @Immutable
-internal data class SearchUiState(
+data class SearchUiState(
     val page: Int = 1,
     val lastQuerySearched: String = "",
     val currentViewType: SearchViewType = SearchViewType.Providers,
@@ -331,7 +331,7 @@ internal data class SearchUiState(
 }
 
 @Stable
-internal data class SearchProvider(
+data class SearchProvider(
     val metadata: ProviderMetadata,
     val isSearchEnabled: Boolean,
 ) {
@@ -344,7 +344,7 @@ internal data class SearchProvider(
     val status: ProviderStatus get() = metadata.status
 }
 
-internal enum class SearchViewType {
+enum class SearchViewType {
     History,
     Providers,
     Medias,

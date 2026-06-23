@@ -54,11 +54,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
@@ -73,6 +73,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -84,7 +85,7 @@ private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array
 @Composable
 internal fun ProviderManagerScreen(
     navigator: NavigatorProviderManagerScreen,
-    viewModel: ProviderManagerViewModel = hiltViewModel(),
+    viewModel: ProviderManagerViewModel = activityHiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -111,7 +112,7 @@ internal fun ProviderManagerScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ProviderManagerScreenContent(
+private fun ProviderManagerScreenContent(
     uiState: ProviderManageUiState,
     isFirstTimeOnProvidersScreen: Boolean,
     providers: () -> List<ProviderWithCapabilities>,
@@ -148,7 +149,7 @@ internal fun ProviderManagerScreenContent(
     }
 
     LaunchedEffect(scrollBehavior.state.heightOffset) {
-        delay(800)
+        delay(800.milliseconds)
         isFabExpanded = scrollBehavior.state.heightOffset < 0f
     }
 

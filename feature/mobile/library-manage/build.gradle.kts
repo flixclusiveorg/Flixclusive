@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.feature.mobile.libraryCommon)
 
     implementation(libs.coil.compose)
+    implementation(libs.compose.activity)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

@@ -50,9 +50,10 @@ internal annotation class AppNavGraph {
 
 @InternalDestination<HomeNavGraph>(navArgs = MediaScreenNavArgs::class)
 @InternalDestination<LibraryNavGraph>(navArgs = MediaScreenNavArgs::class)
+@InternalDestination<SearchNavGraph>(navArgs = MediaScreenNavArgs::class)
 @InternalDestination<SettingsNavGraph>(navArgs = MediaScreenNavArgs::class)
 @Composable
-internal fun AppLevelMediaScreen(
+internal fun CommonMediaScreen(
     navigator: NavigatorMediaScreen,
     navArgs: MediaScreenNavArgs
 ) {
@@ -70,12 +71,16 @@ internal fun AppLevelMediaScreen(
     navArgs = MediaPreviewNavArgs::class,
     style = DestinationStyleBottomSheet::class
 )
+@InternalDestination<SearchNavGraph>(
+    navArgs = MediaPreviewNavArgs::class,
+    style = DestinationStyleBottomSheet::class
+)
 @InternalDestination<SettingsNavGraph>(
     navArgs = MediaPreviewNavArgs::class,
     style = DestinationStyleBottomSheet::class
 )
 @Composable
-internal fun AppLevelMediaPreviewBottomSheet(
+internal fun CommonMediaPreviewBottomSheet(
     navigator: NavigatorMediaPreviewBottomSheet,
     navArgs: MediaPreviewNavArgs
 ) {
@@ -87,9 +92,10 @@ internal fun AppLevelMediaPreviewBottomSheet(
 
 @InternalDestination<HomeNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @InternalDestination<LibraryNavGraph>(navArgs = SeeAllScreenNavArgs::class)
+@InternalDestination<SearchNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @InternalDestination<SettingsNavGraph>(navArgs = SeeAllScreenNavArgs::class)
 @Composable
-internal fun AppLevelSeeAllScreen(
+internal fun CommonSeeAllScreen(
     navigator: NavigatorSeeAllScreen,
     navArgs: SeeAllScreenNavArgs
 ) {

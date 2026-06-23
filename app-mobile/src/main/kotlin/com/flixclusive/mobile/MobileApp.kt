@@ -1,30 +1,20 @@
 package com.flixclusive.mobile
 
 import android.annotation.SuppressLint
-import android.view.ViewGroup
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.navigation.ModalBottomSheetLayout
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.navigation.rememberBottomSheetNavigator
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -33,17 +23,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,9 +40,9 @@ import com.flixclusive.core.presentation.mobile.components.NetworkMonitorSnackba
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
-import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.DisplayChangelogsObserver
+import com.flixclusive.mobile.component.WebViewDriverDialog
 import com.flixclusive.navigation.AppNavHost
 import com.flixclusive.navigation.extensions.bottomBarNavigate
 import com.flixclusive.navigation.extensions.currentScreenAsState
@@ -72,7 +55,6 @@ import com.ramcosta.composedestinations.generated.player.destinations.PlayerScre
 import com.ramcosta.composedestinations.generated.player.destinations.PlayerSplashScreenDestination
 import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
-import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
 import com.ramcosta.composedestinations.generated.splashscreen.destinations.SplashScreenDestination
 import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
 import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
@@ -159,7 +141,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         Scaffold(
             contentWindowInsets = when (currentSelectedScreen) {
                 SplashScreenDestination -> WindowInsets.systemBars
-                else -> WindowInsets(0.dp)
+                else -> WindowInsets()
             },
             snackbarHost = {
                 if (!isInPipMode) {
@@ -237,86 +219,22 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 }
 
 private fun shouldHideBottomBar(route: Route): Boolean {
-    val noBottomBarScreens =
-        listOf(
-            AddProviderScreenDestination,
-            AddUserScreenDestination,
-            MarkdownScreenDestination,
-            AppUpdatesScreenDestination,
-            OnboardingScreenDestination,
-            PinSetupScreenDestination,
-            PinVerifyScreenDestination,
-            PlayerScreenDestination,
-            PlayerSplashScreenDestination,
-            ProviderSettingsScreenDestination,
-            SplashScreenDestination,
-            UserAvatarSelectScreenDestination,
-            UserEditScreenDestination,
-            UserProfilesScreenDestination,
-        )
+    val noBottomBarScreens = listOf(
+        AddProviderScreenDestination,
+        AddUserScreenDestination,
+        MarkdownScreenDestination,
+        AppUpdatesScreenDestination,
+        OnboardingScreenDestination,
+        PinSetupScreenDestination,
+        PinVerifyScreenDestination,
+        PlayerScreenDestination,
+        PlayerSplashScreenDestination,
+        ProviderSettingsScreenDestination,
+        SplashScreenDestination,
+        UserAvatarSelectScreenDestination,
+        UserEditScreenDestination,
+        UserProfilesScreenDestination,
+    )
 
-    val noBottomBarNestedScreens =
-        listOf(SearchScreenDestination.route)
-
-    return noBottomBarNestedScreens.none { it == route.route } &&
-        noBottomBarScreens.none { it == route }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun WebViewDriverDialog(
-    webView: WebViewDriver,
-    onDismiss: () -> Unit,
-) {
-    BasicAlertDialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false,
-        ),
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxHeight(0.9F)
-                .fillMaxWidth(),
-        ) {
-            Surface(tonalElevation = 3.dp) {
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface)
-                        .clip(MaterialTheme.shapes.extraSmall)
-                        .padding(bottom = 6.dp),
-                ) {
-                    Text(
-                        text = webView.name,
-                        style =
-                            MaterialTheme.typography.titleLarge.copy(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                            ),
-                        modifier = Modifier
-                            .padding(10.dp),
-                    )
-                }
-            }
-
-            AndroidView(
-                modifier = Modifier
-                    .weight(0.7F)
-                    .alpha(0.99F)
-                    .fillMaxWidth()
-                    .padding(26.dp),
-                factory = {
-                    webView.apply {
-                        layoutParams =
-                            ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                            )
-                    }
-                },
-            )
-        }
-    }
+    return !noBottomBarScreens.fastAny { it == route }
 }

@@ -55,17 +55,22 @@ import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.navigation.extensions.navGraph
-import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaPreviewBottomSheetDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelMediaScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelSeeAllScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaPreviewBottomSheetDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelMediaScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelSeeAllScreenDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMediaPreviewBottomSheetDestination
-import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMediaScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeCommonMediaPreviewBottomSheetDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeCommonMediaScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeCommonSeeAllScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryCommonMediaPreviewBottomSheetDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryCommonMediaScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryCommonSeeAllScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchCommonMediaPreviewBottomSheetDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchCommonMediaScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchCommonSeeAllScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsCommonMediaPreviewBottomSheetDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsCommonMediaScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsCommonSeeAllScreenDestination
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.HomeGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.LibraryGraph
+import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SearchGraph
 import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
 import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
 import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
@@ -80,7 +85,6 @@ import com.ramcosta.composedestinations.generated.providerdetails.destinations.P
 import com.ramcosta.composedestinations.generated.providermanage.destinations.ProviderManagerScreenDestination
 import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
-import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.AppearanceTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ManageMediaLinksTweakScreenDestination
@@ -162,8 +166,10 @@ internal class MobileAppNavigator(
     override fun navigateToSeeAllScreen(item: Catalog) {
         runOnResumed {
             when (currentNavGraph) {
-                is HomeGraph -> navigator.navigate(HomeAppLevelSeeAllScreenDestination(catalog = item))
-                is LibraryGraph -> navigator.navigate(LibraryAppLevelSeeAllScreenDestination(catalog = item))
+                is HomeGraph -> navigator.navigate(HomeCommonSeeAllScreenDestination(catalog = item))
+                is LibraryGraph -> navigator.navigate(LibraryCommonSeeAllScreenDestination(catalog = item))
+                is SettingsGraph -> navigator.navigate(SettingsCommonSeeAllScreenDestination(catalog = item))
+                is SearchGraph -> navigator.navigate(SearchCommonSeeAllScreenDestination(catalog = item))
             }
         }
     }
@@ -172,15 +178,19 @@ internal class MobileAppNavigator(
         runOnResumed {
             when (currentNavGraph) {
                 is HomeGraph -> navigator.navigate(
-                    HomeAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
+                    HomeCommonMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
                 )
 
                 is LibraryGraph -> navigator.navigate(
-                    LibraryAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
+                    LibraryCommonMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
                 )
 
                 is SettingsGraph -> navigator.navigate(
-                    SettingsAppLevelMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
+                    SettingsCommonMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
+                )
+
+                is SearchGraph -> navigator.navigate(
+                    SearchCommonMediaScreenDestination(media = media, isTogglingLibrary = isTogglingLibrary)
                 )
             }
         }
@@ -336,15 +346,19 @@ internal class MobileAppNavigator(
         runOnResumed {
             when (currentNavGraph) {
                 is HomeGraph -> navigator.navigate(
-                    HomeAppLevelMediaPreviewBottomSheetDestination(media = media)
+                    HomeCommonMediaPreviewBottomSheetDestination(media = media)
                 )
 
                 is LibraryGraph -> navigator.navigate(
-                    LibraryAppLevelMediaPreviewBottomSheetDestination(media = media)
+                    LibraryCommonMediaPreviewBottomSheetDestination(media = media)
+                )
+
+                is SearchGraph -> navigator.navigate(
+                    SearchCommonMediaPreviewBottomSheetDestination(media = media)
                 )
 
                 is SettingsGraph -> navigator.navigate(
-                    SettingsAppLevelMediaPreviewBottomSheetDestination(media = media)
+                    SettingsCommonMediaPreviewBottomSheetDestination(media = media)
                 )
             }
         }
@@ -433,12 +447,6 @@ internal class MobileAppNavigator(
             navigator.navigate(
                 AddProviderScreenDestination(initialSelectedRepositoryFilter = initialSelectedRepositoryFilter),
             )
-        }
-    }
-
-    override fun navigateToSearchScreen() {
-        runOnResumed {
-            navigator.navigate(SearchScreenDestination)
         }
     }
 
