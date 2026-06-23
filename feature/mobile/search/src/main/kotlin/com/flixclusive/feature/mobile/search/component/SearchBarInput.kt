@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.search.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
@@ -62,6 +63,7 @@ import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.feature.mobile.search.R
 import com.flixclusive.feature.mobile.search.SearchProvider
 import com.flixclusive.feature.mobile.search.SearchUiState
 import com.flixclusive.feature.mobile.search.SearchViewType
@@ -82,7 +84,6 @@ internal fun SearchBarInput(
     uiState: () -> SearchUiState,
     onSearch: () -> Unit,
     onChangeView: (SearchViewType) -> Unit,
-    onNavigationIconClick: () -> Unit,
     onToggleFilterSheet: (Int) -> Unit,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -94,6 +95,7 @@ internal fun SearchBarInput(
     val bgColor = MaterialTheme.colorScheme.surface
 
     var isError by remember { mutableStateOf(false) }
+    var isProviderError by remember { mutableStateOf(false) }
     val shakeOffset = remember { Animatable(0f) }
 
     var textFieldValue by remember { mutableStateOf(searchQuery().toTextFieldValue()) }
@@ -104,8 +106,16 @@ internal fun SearchBarInput(
         }
     }
 
-    val triggerError = {
-        isError = true
+    val placeholderColor by animateColorAsState(
+        targetValue = if (isProviderError) MaterialTheme.colorScheme.error else LocalContentColor.current.copy(0.6f),
+        animationSpec = tween(300)
+    )
+    val disabledBorderColor by animateColorAsState(
+        targetValue = if (isProviderError) MaterialTheme.colorScheme.error else Color.Transparent,
+        animationSpec = tween(300)
+    )
+    val triggerError = fun() {
+        isProviderError = true
         scope.launch {
             repeat(3) {
                 shakeOffset.animateTo(10f, animationSpec = tween(50))
@@ -113,7 +123,6 @@ internal fun SearchBarInput(
             }
             shakeOffset.animateTo(0f, animationSpec = tween(50))
         }
-        Unit
     }
 
     LaunchedEffect(Unit) {
@@ -137,6 +146,12 @@ internal fun SearchBarInput(
         }
     }
 
+    LaunchedEffect(provider) {
+        if (isProviderError && provider != null) {
+            isProviderError = false
+        }
+    }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -150,7 +165,8 @@ internal fun SearchBarInput(
                         1f to Color.Transparent,
                     )
                 )
-            }.padding(horizontal = 10.dp),
+            }
+            .padding(horizontal = 10.dp),
     ) {
         Box(
             modifier = Modifier
@@ -204,7 +220,7 @@ internal fun SearchBarInput(
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = disabledBorderColor,
                     errorIndicatorColor = MaterialTheme.colorScheme.error,
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(10.dp),
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
@@ -212,19 +228,15 @@ internal fun SearchBarInput(
                     errorContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
                     disabledPlaceholderColor = LocalContentColor.current.copy(0.4f),
                 ),
-                leadingIcon = {
-                    IconButton(onClick = onNavigationIconClick) {
-                        Icon(
-                            painter = painterResource(UiCommonR.drawable.left_arrow),
-                            contentDescription = stringResource(LocaleR.string.back),
-                        )
-                    }
-                },
                 placeholder = {
                     Text(
-                        text = if (provider == null) "Select a provider first" else stringResource(LocaleR.string.search_text_field_placeholder),
+                        text = if (provider == null) {
+                            stringResource(R.string.label_search_placeholder_no_selected_provider)
+                        } else {
+                            stringResource(LocaleR.string.search_text_field_placeholder)
+                        },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isError) MaterialTheme.colorScheme.error else LocalContentColor.current.copy(0.6f),
+                        color = placeholderColor,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                     )
