@@ -50,16 +50,20 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
                 ascending = sort.ascending
             ),
         ) { movies, episodes ->
+            val comparator = compareBy<WatchProgressWithMetadata> {
+                when (sort) {
+                    is LibrarySort.Added -> it.watchData.createdAt
+                    is LibrarySort.Modified -> it.watchData.updatedAt
+                    is LibrarySort.Name -> it.media.title
+                }
+            }.let {
+                if (sort.ascending) it else it.reversed()
+            }
+
             mergeSortedLists(
                 a = movies,
                 b = episodes,
-                comparator = compareBy {
-                    when (sort) {
-                        is LibrarySort.Added -> it.watchData.createdAt
-                        is LibrarySort.Modified -> it.watchData.updatedAt
-                        is LibrarySort.Name -> it.media.title
-                    }
-                }
+                comparator = comparator
             )
         }.distinctUntilChanged()
     }
@@ -254,21 +258,6 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         b: List<WatchProgressWithMetadata>,
         comparator: Comparator<in WatchProgressWithMetadata>
     ): List<WatchProgressWithMetadata> {
-        val merged = mutableListOf<WatchProgressWithMetadata>()
-        var i = 0
-        var j = 0
-
-        while (i < a.size && j < b.size) {
-            if (comparator.compare(a[i], b[j]) <= 0) {
-                merged.add(a[i++])
-            } else {
-                merged.add(b[j++])
-            }
-        }
-
-        merged.addAll(a.subList(i, a.size))
-        merged.addAll(b.subList(j, b.size))
-
-        return merged
+        return (a + b).sortedWith(comparator)
     }
 }
