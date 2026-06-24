@@ -2,6 +2,7 @@ package com.flixclusive.domain.provider.usecase.tracker.impl
 
 import android.content.Context
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.util.retryWithBackoff
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.coroutines.mapAsync
@@ -50,13 +51,17 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
 
         scrobblers.mapAsync { (provider, api) ->
             try {
-                api.scrobble(
-                    action = action,
-                    media = media,
-                    progressPercent = percentage,
-                    episode = episode,
-                    atMs = watchProgress.progress
-                )
+                retryWithBackoff(
+                    maxDelayMs = 30_000L
+                ) {
+                    api.scrobble(
+                        action = action,
+                        media = media,
+                        progressPercent = percentage,
+                        episode = episode,
+                        atMs = watchProgress.progress
+                    )
+                }
             } catch (e: Throwable) {
                 errorLog("Failed to scrobble progress to provider $provider: ${e.message}")
                 e.printStackTrace()
