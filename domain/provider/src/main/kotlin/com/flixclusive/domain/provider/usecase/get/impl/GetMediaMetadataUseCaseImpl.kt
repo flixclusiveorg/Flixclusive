@@ -53,19 +53,25 @@ internal class GetMediaMetadataUseCaseImpl @Inject constructor(
             if (api == null || !provider.isMetadataEnabled) {
                 val providers = providerRepository.getProviders(ownerId = userId)
 
-                providers.forEach {
-                    val crossMatchedMedia = safeCall {
-                        getCrossMatchedMediaMetadata(
-                            media = media,
-                            providerId = it.id
-                        )
-                    }
+                providers
+                    .filter { it.isCrossMatchEnabled && it.id != media.providerId }
+                    .forEach {
+                        val crossMatchedMedia = safeCall {
+                            getCrossMatchedMediaMetadata(
+                                media = media,
+                                providerId = it.id
+                            )
+                        }
 
-                    if (crossMatchedMedia != null) {
-                        emit(Async.Success(crossMatchedMedia))
-                        return@flow
+                        if (crossMatchedMedia is PartialMedia) {
+                            emit(Async.Failure(UiText.from(R.string.get_media_metadata_error_unk_exception, it.id)))
+                        }
+
+                        if (crossMatchedMedia != null) {
+                            emit(Async.Success(crossMatchedMedia))
+                            return@flow
+                        }
                     }
-                }
 
                 emit(
                     Async.Failure(

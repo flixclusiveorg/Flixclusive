@@ -150,8 +150,9 @@ internal class HomeViewModel @Inject constructor(
                 if (tvShow == null) {
                     val response = getMediaMetadata(item.toMediaMetadata()).last()
                     if (response is Async.Success) {
-                        cachedMediaMetadata[item.media] = response.data as Show
-                        tvShow = response.data
+                        val show = response.data as? Show
+                        tvShow = show ?: return item
+                        cachedMediaMetadata[item.media] = show
                     }
                 }
 
