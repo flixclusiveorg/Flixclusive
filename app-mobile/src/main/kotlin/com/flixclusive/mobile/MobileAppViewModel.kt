@@ -33,9 +33,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -105,6 +103,12 @@ internal class MobileAppViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
+            launch {
+                initializeProviders.isLoading.collect { isLoading ->
+                    _uiState.update { it.copy(isLoadingProviders = isLoading) }
+                }
+            }
+
             // Ensure that the onboarding process has been completed before loading providers for the first time
             dataStoreManager.getSystemPrefs().first { prefs -> !prefs.isFirstTimeUserLaunch }
 
@@ -116,9 +120,7 @@ internal class MobileAppViewModel @Inject constructor(
 
     private suspend fun initProviders() {
         initializeProviders()
-            .onStart {
-                _uiState.update { it.copy(isLoadingProviders = true) }
-            }.onEach { result ->
+            .onEach { result ->
                 if (result !is ProviderResult.Failure) return@onEach
 
                 _uiState.update { state ->
@@ -129,8 +131,6 @@ internal class MobileAppViewModel @Inject constructor(
 
                     state.copy(providerErrors = state.providerErrors + pair)
                 }
-            }.onCompletion {
-                _uiState.update { it.copy(isLoadingProviders = false) }
             }.collect()
     }
 

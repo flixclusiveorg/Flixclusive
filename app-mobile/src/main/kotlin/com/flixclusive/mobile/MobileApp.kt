@@ -112,6 +112,16 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         useBottomBar = shouldHideBottomBar(route = currentSelectedScreen)
     }
 
+    LaunchedEffect(uiState.isLoadingProviders) {
+        if (uiState.isLoadingProviders && currentSelectedScreen != SplashScreenDestination) {
+            destinationsNavigator.navigate(SplashScreenDestination) {
+                popUpTo(AppGraph) {
+                    inclusive = true
+                }
+            }
+        }
+    }
+
     LaunchedEffect(isConnectedAtNetwork) {
         if (!isConnectedAtNetwork) {
             hasBeenDisconnected = true

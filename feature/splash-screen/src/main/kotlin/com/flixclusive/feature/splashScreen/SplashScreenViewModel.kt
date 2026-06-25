@@ -10,6 +10,7 @@ import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.data.app.updates.model.AppUpdateInfo
 import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
 import com.flixclusive.data.database.repository.UserRepository
+import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 internal sealed interface SplashNavigationEvent {
     data object Onboarding : SplashNavigationEvent
@@ -47,6 +49,7 @@ internal class SplashScreenViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val userRepository: UserRepository,
     private val appUpdatesRepository: AppUpdatesRepository,
+    private val initializeProviders: InitializeProvidersUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SplashScreenUiState())
     val uiState = _uiState.asStateFlow()
@@ -97,12 +100,14 @@ internal class SplashScreenViewModel @Inject constructor(
                 uiState,
                 userSessionDataStore.currentUserId,
                 userRepository.observeUsers().map { it.isEmpty() }.distinctUntilChanged(),
-            ) { preferences, state, currentUserId, hasNoUsers ->
+                initializeProviders.isLoading,
+            ) { preferences, state, currentUserId, hasNoUsers, isLoadingProviders ->
                 NavigationSnapshot(
                     preferences = preferences,
                     uiState = state,
                     currentUserId = currentUserId,
                     noUsersFound = hasNoUsers,
+                    isLoadingProviders = isLoadingProviders,
                 )
             }.first { state -> shouldNavigate(state) }
 
@@ -117,7 +122,7 @@ internal class SplashScreenViewModel @Inject constructor(
             snapshot.uiState.appUpdateError != null &&
                 snapshot.preferences.isUsingAutoUpdateAppFeature
 
-        return !hasAppUpdateErrors
+        return !hasAppUpdateErrors && !snapshot.isLoadingProviders
     }
 
     private fun buildNavigationEvent(snapshot: NavigationSnapshot): SplashNavigationEvent {
@@ -137,7 +142,7 @@ internal class SplashScreenViewModel @Inject constructor(
         val elapsedMillis = System.currentTimeMillis() - startTime
         val remainingMillis = MIN_SPLASH_DURATION_MS - elapsedMillis
         if (remainingMillis > 0L) {
-            delay(remainingMillis)
+            delay(remainingMillis.milliseconds)
         }
     }
 }
@@ -147,6 +152,7 @@ private data class NavigationSnapshot(
     val uiState: SplashScreenUiState,
     val currentUserId: String?,
     val noUsersFound: Boolean,
+    val isLoadingProviders: Boolean,
 )
 
 private const val MIN_SPLASH_DURATION_MS = 3_000L

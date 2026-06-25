@@ -20,11 +20,16 @@ import com.flixclusive.domain.provider.util.extensions.toInstalledRepository
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -46,10 +51,12 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
     private val appDispatchers: AppDispatchers,
 ) : InitializeProvidersUseCase {
     private val mutex = Mutex()
-    private var isInitialized = false
+
+    private val _isLoading = MutableStateFlow(false)
+    override val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     override fun invoke() = channelFlow {
-        if (isInitialized) {
+        if (_isLoading.value) {
             warnLog("Providers have already been initialized. Skipping initialization...")
             return@channelFlow
         }
@@ -73,8 +80,10 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                 }
             }
         }
+    }.onStart {
+        _isLoading.update { true }
     }.onCompletion {
-        isInitialized = true
+        _isLoading.update { false }
     }
 
     /**
