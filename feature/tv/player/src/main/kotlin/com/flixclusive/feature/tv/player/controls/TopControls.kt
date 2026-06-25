@@ -41,7 +41,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.getGlowRadialGradient
 import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -51,7 +51,7 @@ internal val PlaybackButtonsSize = 24.dp
 @Composable
 internal fun TopControls(
     modifier: Modifier = Modifier,
-    isTvShow: Boolean,
+    isShow: Boolean,
     isLastEpisode: Boolean = false,
     currentEpisodeSelected: Episode?,
     title: String,
@@ -71,7 +71,6 @@ internal fun TopControls(
     var isArrowIconFocused by remember { mutableStateOf(false) }
     var isEpisodeIconFocused by remember { mutableStateOf(false) }
     var isServersIconFocused by remember { mutableStateOf(false) }
-
 
     val titleStyle = MaterialTheme.typography.titleMedium
 
@@ -103,8 +102,7 @@ internal fun TopControls(
                         if (it.isFocused) {
                             showControls()
                         }
-                    }
-                    .focusProperties {
+                    }.focusProperties {
                         down = bottomFocusRequester
                         left = FocusRequester.Cancel
                     }
@@ -127,7 +125,7 @@ internal fun TopControls(
                 }
             }
 
-            if (isTvShow) {
+            if (isShow) {
                 Box(
                     modifier = Modifier.padding(start = 10.dp)
                 ) {
@@ -148,8 +146,7 @@ internal fun TopControls(
                                 if (it.isFocused) {
                                     showControls()
                                 }
-                            }
-                            .focusProperties {
+                            }.focusProperties {
                                 down = bottomFocusRequester
                             }
                     ) {
@@ -193,10 +190,12 @@ internal fun TopControls(
                             if (it.isFocused) {
                                 showControls()
                             }
-                        }
-                        .focusProperties {
-                            right = if (!isServersIconFocused) FocusRequester.Cancel
-                            else FocusRequester.Default
+                        }.focusProperties {
+                            right = if (!isServersIconFocused) {
+                                FocusRequester.Cancel
+                            } else {
+                                FocusRequester.Default
+                            }
 
                             down = bottomFocusRequester
                         }
@@ -233,10 +232,11 @@ internal fun TopControls(
                             append("S${currentEpisodeSelected.season} E${currentEpisodeSelected.number}:\n")
                         }
                         withStyle(
-                            style = titleStyle.copy(
-                                fontWeight = FontWeight.Light,
-                                color = Color.White.copy(alpha = 0.8F),
-                            ).toSpanStyle()
+                            style = titleStyle
+                                .copy(
+                                    fontWeight = FontWeight.Light,
+                                    color = Color.White.copy(alpha = 0.8F),
+                                ).toSpanStyle()
                         ) {
                             append(currentEpisodeSelected.title)
                         }

@@ -9,6 +9,7 @@ enum class BuildType {
     DEBUG,
     STABLE,
     PREVIEW, // formerly known as "Pre-release"
+    BENCHMARK,
     ;
 
     val isDebug: Boolean get() = this == DEBUG

@@ -3,12 +3,12 @@ package com.flixclusive.tv
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
-import com.flixclusive.core.navigation.navigator.ViewFilmAction
+import com.flixclusive.core.navigation.navigator.ViewMediaAction
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
-import com.flixclusive.feature.tv.film.FilmScreenTvNavigator
-import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.tv.media.MediaScreenTvNavigator
+import com.flixclusive.feature.tv.media.destinations.MediaScreenDestination
 import com.flixclusive.feature.tv.home.HomeScreenTvNavigator
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
 import com.ramcosta.composedestinations.dynamic.within
@@ -19,7 +19,10 @@ internal class AppTvNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : ViewFilmAction, SplashScreenNavigator, FilmScreenTvNavigator, HomeScreenTvNavigator {
+) : ViewMediaAction,
+    SplashScreenNavigator,
+    MediaScreenTvNavigator,
+    HomeScreenTvNavigator {
     override fun goBack() {
         navController.navigateUp()
     }
@@ -28,18 +31,19 @@ internal class AppTvNavigator(
         TODO("Not yet implemented")
     }
 
-    override fun openFilmScreen(film: Film) {
+    override fun openMediaScreen(media: MediaMetadata) {
         navController.navigateIfResumed(
-            FilmScreenDestination(
-                film = film,
+            MediaScreenDestination(
+                media = media,
                 startPlayerAutomatically = false
-            ) within destination.navGraph())
+            ) within destination.navGraph()
+        )
     }
 
-    override fun openFilmScreenSeamlessly(film: Film) {
+    override fun openMediaScreenSeamlessly(media: MediaMetadata) {
         navController.navigateIfResumed(
-            FilmScreenDestination(
-                film = film,
+            MediaScreenDestination(
+                media = media,
                 startPlayerAutomatically = false
             ) within destination.navGraph()
         ) {
@@ -47,11 +51,13 @@ internal class AppTvNavigator(
         }
     }
 
-    override fun openPlayerScreen(film: Film) {
-        navController.navigateIfResumed(FilmScreenDestination(
-            film = film,
-            startPlayerAutomatically = true
-        ) within destination.navGraph())
+    override fun openPlayerScreen(media: MediaMetadata) {
+        navController.navigateIfResumed(
+            MediaScreenDestination(
+                media = media,
+                startPlayerAutomatically = true
+            ) within destination.navGraph()
+        )
     }
 
     //    override fun openSearchExpandedScreen() {

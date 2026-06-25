@@ -34,7 +34,7 @@ internal class WatchProgressBackupCreator @Inject constructor(
 
     private fun MovieProgressWithMetadata.toBackupItem(): BackupWatchMovieProgress {
         return BackupWatchMovieProgress(
-            filmId = filmId,
+            mediaId = mediaId,
             progress = watchData.progress,
             status = watchData.status,
             duration = watchData.duration,
@@ -45,7 +45,7 @@ internal class WatchProgressBackupCreator @Inject constructor(
 
     private fun EpisodeProgressWithMetadata.toBackupItem(): BackupWatchEpisodeProgress {
         return BackupWatchEpisodeProgress(
-            filmId = filmId,
+            mediaId = mediaId,
             progress = watchData.progress,
             status = watchData.status,
             duration = watchData.duration,

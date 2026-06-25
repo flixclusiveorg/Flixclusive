@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTvMaterial3Api::class, ExperimentalTvFoundationApi::class)
 
-package com.flixclusive.feature.tv.film.component.episodes
+package com.flixclusive.feature.tv.media.component.episodes
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -44,7 +44,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.tv.FilmLogo
+import com.flixclusive.core.ui.tv.MediaLogo
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.FocusRequesterModifiers
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
@@ -55,15 +55,15 @@ import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.film.common.tv.Season
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.media.common.tv.Season
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.Show
 
 private const val EPISODES_PANEL_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 
 @Composable
 internal fun EpisodesPanel(
-    film: TvShow,
+    media: Show,
     currentSelectedSeasonNumber: Int,
     currentSelectedSeason: Resource<Season>,
     onSeasonChange: (Int) -> Unit,
@@ -93,7 +93,9 @@ internal fun EpisodesPanel(
                 seasonName = currentSelectedSeason.data?.name ?: return@LaunchedEffect
             }
 
-            else -> return@LaunchedEffect
+            else -> {
+                return@LaunchedEffect
+            }
         }
     }
 
@@ -108,7 +110,9 @@ internal fun EpisodesPanel(
         // Initialize the focus on episode 1.
         val episodeToMount = 1
         lastFocusedItemMap[currentRoute] = String.format(
-            EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episodeToMount
+            EPISODES_PANEL_FOCUS_KEY_FORMAT,
+            1,
+            episodeToMount
         )
     }
 
@@ -130,7 +134,9 @@ internal fun EpisodesPanel(
                     if (hasPressedLeft(it) && isEpisodesTabFullyFocused) {
                         onHidePanel()
                         return@onKeyEvent true
-                    } else isEpisodesTabFullyFocused = true
+                    } else {
+                        isEpisodesTabFullyFocused = true
+                    }
 
                     false
                 }
@@ -147,7 +153,7 @@ internal fun EpisodesPanel(
                     NonFocusableSpacer(height = 40.dp)
                 }
 
-                itemsIndexed(film.seasons) { i, season ->
+                itemsIndexed(media.seasons) { i, season ->
                     val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 0, i) }
 
                     SeasonBlock(
@@ -170,8 +176,8 @@ internal fun EpisodesPanel(
                 }
             }
 
-            FilmLogo(
-                film = film,
+            MediaLogo(
+                media = media,
                 showTitleOnError = false,
                 alignment = Alignment.Center,
                 modifier = Modifier
@@ -214,7 +220,8 @@ internal fun EpisodesPanel(
 
             if (currentSelectedSeason is Resource.Success) {
                 itemsIndexed(currentSelectedSeason.data!!.episodes) { i, episode ->
-                    val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episode.number) }
+                    val currentFocusPosition =
+                        remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episode.number) }
 
                     EpisodeCard(
                         episode = episode,
@@ -277,7 +284,10 @@ private fun createEpisodesPanelFocusRestorers(
 
                     when (isRestored) {
                         true -> FocusRequester.Cancel
-                        null -> FocusRequester.Default // Fail-safe if compose tv acts up
+
+                        null -> FocusRequester.Default
+
+                        // Fail-safe if compose tv acts up
                         else -> childFocusRequester
                     }
                 }

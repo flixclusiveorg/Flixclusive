@@ -104,10 +104,14 @@ internal fun backupTweakGroup(
     val frequencyDays = dataPreferences().autoBackupFrequencyDays
     val currentFrequencyLabel =
         when {
-            frequencyDays <= 0 -> resources.getString(LocaleR.string.backup_auto_frequency_off)
-            else ->
+            frequencyDays <= 0 -> {
+                resources.getString(LocaleR.string.backup_auto_frequency_off)
+            }
+
+            else -> {
                 frequencyOptions[frequencyDays]
                     ?: resources.getString(LocaleR.string.backup_auto_frequency_every_n_days_format, frequencyDays)
+            }
         }
 
     val maxBackups = dataPreferences().maxBackups.coerceAtLeast(1)
@@ -122,7 +126,8 @@ internal fun backupTweakGroup(
         )
     }
 
-    val storageDirectoryUri = systemPreferences().storageDirectoryUri
+    val storageDirectoryUri = systemPreferences()
+        .storageDirectoryUri
         ?.takeIf { it.isNotBlank() }
         ?.let(Uri::parse)
 
@@ -290,8 +295,7 @@ internal fun backupTweakGroup(
                                         isSelected -> manualSelectedOptions.remove(option)
                                         else -> manualSelectedOptions.add(option)
                                     }
-                                }
-                                .minimumInteractiveComponentSize()
+                                }.minimumInteractiveComponentSize()
                                 .padding(horizontal = getAdaptiveDp(10.dp)),
                     ) {
                         Text(

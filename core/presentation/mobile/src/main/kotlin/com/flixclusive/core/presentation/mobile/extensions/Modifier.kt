@@ -8,13 +8,11 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.NativePaint
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
@@ -25,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.nativePaint
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -47,14 +46,11 @@ fun Modifier.fillMaxAdaptiveWidth(
     expanded: Float = (medium - 0.2F).coerceAtLeast(0f),
 ): Modifier {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
-    val windowHeightSizeClass = windowSizeClass.windowHeightSizeClass
 
     val fraction = when {
-        windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact -> compact
-        windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
-        windowWidthSizeClass.isExpanded -> expanded
-        else -> compact
+        windowSizeClass.isWidthCompact || windowSizeClass.isHeightCompact -> compact
+        windowSizeClass.isWidthMedium || windowSizeClass.isHeightMedium -> medium
+        else -> expanded
     }
 
     return fillMaxWidth(fraction)
@@ -115,7 +111,7 @@ fun Modifier.boxShadow(
                 val hasBlurRadius = blurRadius.value.let { it.isFinite() && it != 0f }
                 val paint = Paint()
 
-                paint.asFrameworkPaint().let { frameworkPaint ->
+                paint.nativePaint.let { frameworkPaint ->
 
                     if (hasBlurRadius) {
                         frameworkPaint.maskFilter = BlurMaskFilter(
@@ -181,7 +177,7 @@ fun Modifier.boxShadow(
                             bounds.top,
                             bounds.right,
                             bounds.bottom,
-                            NativePaint().apply {
+                            android.graphics.Paint().apply {
                                 colorFilter = ColorMatrixColorFilter(
                                     ColorMatrix(
                                         floatArrayOf(
@@ -238,17 +234,20 @@ private fun Canvas.clipToOutline(
     clipOp: ClipOp = ClipOp.Intersect,
 ) {
     when (outline) {
-        is Outline.Generic ->
+        is Outline.Generic -> {
             clipPath(path = outline.path, clipOp = clipOp)
+        }
 
-        is Outline.Rectangle ->
+        is Outline.Rectangle -> {
             clipRect(rect = outline.rect, clipOp = clipOp)
+        }
 
-        is Outline.Rounded ->
+        is Outline.Rounded -> {
             clipPath(
                 path = Path()
                     .apply { addRoundRect(outline.roundRect) },
                 clipOp = clipOp,
             )
+        }
     }
 }

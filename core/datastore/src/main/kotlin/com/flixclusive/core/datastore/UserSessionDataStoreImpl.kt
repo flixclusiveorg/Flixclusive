@@ -41,7 +41,6 @@ internal class UserSessionDataStoreImpl @Inject constructor(
         const val USER_SESSION_FILE_NAME = "user_session"
         const val SESSION_TIMEOUT = 4 * 60 * 60 * 1000L // 4 HOURS
 
-
         // TODO: Remove this key in future versions after migration is complete
         @Deprecated("This key is only used for migration purposes and will be removed in future versions")
         private const val CURRENT_USER_ID_KEY = "user_session_id"

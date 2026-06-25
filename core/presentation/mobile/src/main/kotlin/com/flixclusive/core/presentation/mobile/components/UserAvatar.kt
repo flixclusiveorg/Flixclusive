@@ -43,7 +43,6 @@ import com.flixclusive.core.strings.R as LocaleR
 object UserAvatarDefaults {
     val DefaultAvatarShape = RoundedCornerShape(8.0.dp)
     val DefaultAvatarSize = 100.dp
-    const val AVATAR_PREFIX = "avatar"
     const val AVATARS_IMAGE_COUNT = 13
 }
 
@@ -59,7 +58,7 @@ fun UserAvatar(
 ) {
     val context = LocalContext.current
     val avatarId = remember(avatar) {
-        context.getAvatarResource(avatar)
+        getAvatarResource(avatar)
     }
 
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface.copy(0.8F)
@@ -83,8 +82,7 @@ fun UserAvatar(
                 width = borderWidth,
                 color = borderColor,
                 shape = shape,
-            )
-            .dropShadow(
+            ).dropShadow(
                 shape = shape,
                 shadow = Shadow(
                     radius = shadowBlur,
@@ -109,7 +107,7 @@ fun UserAvatar(
 fun getUserBackgroundPalette(avatar: Int): Palette {
     val context = LocalContext.current
 
-    val avatarId = context.getAvatarResource(avatar)
+    val avatarId = getAvatarResource(avatar)
     val drawable = ContextCompat.getDrawable(context, avatarId)!!
 
     return remember {

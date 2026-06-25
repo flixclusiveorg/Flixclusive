@@ -72,7 +72,7 @@ class SetWatchProgressUseCaseImplTest {
 
     private fun createTestWatchProgress(
         id: Long = 1L,
-        filmId: String = "test-film-id",
+        mediaId: String = "test-media-id",
         ownerId: String = "test-owner-id",
         progress: Long = 70_000L,
         status: WatchStatus = WatchStatus.WATCHING,
@@ -82,13 +82,13 @@ class SetWatchProgressUseCaseImplTest {
     ): WatchProgress {
         return MovieProgress(
             id = id,
-            filmId = filmId,
+            mediaId = mediaId,
             ownerId = ownerId,
             progress = progress,
             status = status,
             duration = duration,
             createdAt = createdAt,
-                updatedAt = updatedAt,
+            updatedAt = updatedAt,
         )
     }
 }

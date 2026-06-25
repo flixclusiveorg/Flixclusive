@@ -5,6 +5,7 @@ import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
+import com.flixclusive.core.database.dao.provider.CachedMediaLinkDao
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
@@ -40,4 +41,7 @@ internal object DaoModule {
 
     @Provides
     fun providesInstalledProviderDao(database: AppDatabase): InstalledProviderDao = database.installedProviderDao()
+
+    @Provides
+    fun providesCachedMediaLinkDao(database: AppDatabase): CachedMediaLinkDao = database.cachedMediaLinkDao()
 }

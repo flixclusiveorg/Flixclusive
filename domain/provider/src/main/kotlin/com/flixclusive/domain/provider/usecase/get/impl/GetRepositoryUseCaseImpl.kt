@@ -1,13 +1,14 @@
 package com.flixclusive.domain.provider.usecase.get.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.exception.ExceptionWithUiText
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetRepositoryUseCase
-import com.flixclusive.domain.provider.util.extensions.isUrlOnline
 import com.flixclusive.domain.provider.util.toGithubUrl
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
@@ -23,30 +24,26 @@ internal class GetRepositoryUseCaseImpl @Inject constructor(
     private val installedRepoRepository: InstalledRepoRepository,
     private val appDispatchers: AppDispatchers,
 ) : GetRepositoryUseCase {
-    override suspend operator fun invoke(url: String): Resource<Repository> {
+    override suspend operator fun invoke(url: String): Repository {
         return withContext(appDispatchers.io) {
-            try {
-                val repositoryUrl = url.toGithubUrl()
-                    ?: return@withContext Resource.Failure(R.string.invalid_repository_url)
+            val repositoryUrl = url.toGithubUrl()
+                ?: throw ExceptionWithUiText(UiText.from(R.string.invalid_repository_url))
 
-                val repository = repositoryUrl.toValidRepositoryLink()
-                if (isRepositoryAlreadyAdded(repository)) {
-                    return@withContext Resource.Failure(R.string.already_added_repo_error)
-                }
-
-                val providerBranchUrl = repository.getRawLink(
-                    filename = ProviderConstants.UPDATER_JSON_FILE,
-                    branch = "builds",
-                )
-
-                if (!client.isUrlOnline(providerBranchUrl)) {
-                    return@withContext Resource.Failure(R.string.invalid_repository)
-                }
-
-                Resource.Success(repository)
-            } catch (e: Exception) {
-                Resource.Failure(e)
+            val repository = repositoryUrl.toValidRepositoryLink()
+            if (isRepositoryAlreadyAdded(repository)) {
+                throw ExceptionWithUiText(UiText.from(R.string.already_added_repo_error))
             }
+
+            val providerBranchUrl = repository.getRawLink(
+                filename = ProviderConstants.UPDATER_JSON_FILE,
+                branch = "builds",
+            )
+
+            if (!client.isUrlOnline(providerBranchUrl)) {
+                throw ExceptionWithUiText(UiText.from(R.string.invalid_repository))
+            }
+
+            repository
         }
     }
 
@@ -54,5 +51,11 @@ internal class GetRepositoryUseCaseImpl @Inject constructor(
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
         return installedRepoRepository.isInstalled(repository.url, userId)
+    }
+
+    private fun OkHttpClient.isUrlOnline(branchUrl: String): Boolean {
+        val response = request(branchUrl).execute()
+
+        return response.isSuccessful
     }
 }

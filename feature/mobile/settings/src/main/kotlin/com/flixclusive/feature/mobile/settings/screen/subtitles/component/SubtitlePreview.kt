@@ -68,12 +68,10 @@ internal fun SubtitlePreview(
                     width = 2.dp,
                     color = LocalContentColor.current.copy(0.6f),
                     shape = shape,
-                )
-                .shadow(
+                ).shadow(
                     elevation = 15.dp,
                     shape = shape,
-                )
-                .graphicsLayer {
+                ).graphicsLayer {
                     alpha = if (areSubtitlesAvailableProvider()) 1F else 0.4F
                 },
     ) {
@@ -155,27 +153,31 @@ internal fun OutlineTextPreview(
 private fun CaptionStylePreference.toTextStyle(): TextStyle {
     val style = MaterialTheme.typography.labelLarge
     return when (this) {
-        CaptionStylePreference.Normal ->
+        CaptionStylePreference.Normal -> {
             style.copy(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Normal,
             )
+        }
 
-        CaptionStylePreference.Bold ->
+        CaptionStylePreference.Bold -> {
             style.copy(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
             )
+        }
 
-        CaptionStylePreference.Italic ->
+        CaptionStylePreference.Italic -> {
             style.copy(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
                 fontStyle = FontStyle.Italic,
             )
+        }
 
-        CaptionStylePreference.Monospace ->
+        CaptionStylePreference.Monospace -> {
             style.copy(fontFamily = FontFamily.Monospace)
+        }
     }
 }
 

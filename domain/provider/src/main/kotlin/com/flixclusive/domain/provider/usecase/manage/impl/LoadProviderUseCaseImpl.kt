@@ -1,14 +1,15 @@
 package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
-import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
@@ -18,16 +19,15 @@ import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.util.DynamicResourceLoader
-import com.flixclusive.domain.provider.util.ProviderMigrator
-import com.flixclusive.domain.provider.util.ProviderMigrator.canMigrateSettingsFile
+import com.flixclusive.domain.provider.util.DynamicResourceLoader.getResourcesFromProvider
 import com.flixclusive.domain.provider.util.extensions.getFileFromPath
-import com.flixclusive.domain.provider.util.extensions.getProviderInstance
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import com.flixclusive.model.provider.Status
+import com.flixclusive.provider.ProviderPlugin
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val MANIFEST_FILE = "manifest.json"
@@ -44,24 +45,22 @@ private const val MANIFEST_FILE = "manifest.json"
 internal class LoadProviderUseCaseImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val userSessionDataStore: UserSessionDataStore,
-    private val dataStoreManager: DataStoreManager,
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
 ) : LoadProviderUseCase {
-    private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
+    private val cacheLocalMetadataMap by lazy { HashMap<String, ProviderMetadata>() }
 
-    private val cacheLocalMetadataMap = HashMap<String, ProviderMetadata>()
-
-    private suspend fun getProviderPrefs() =
-        dataStoreManager
-            .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
-            .first()
+    private val dataStores by lazy { ConcurrentHashMap<String, DataStore<Preferences>>() }
 
     // TODO: Create a separate service for loading providers
     //       since `InitializeProvidersUseCase` also needs to load providers
+    @Suppress("UNCHECKED_CAST")
     override fun invoke(installedProvider: InstalledProvider): Flow<ProviderResult> =
         flow {
-            val metadata = providerRepository.getMetadata(installedProvider.id)
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val metadata = providerRepository
+                .getProvider(installedProvider.id, userId)
+                ?.metadata
                 ?: getMetadataFromFile(installedProvider)
 
             if (metadata == null) {
@@ -70,18 +69,6 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                         provider = createMissingMetadata(installedProvider),
                         error = IllegalStateException(
                             context.getString(R.string.missing_metadata, installedProvider.id)
-                        ),
-                    ),
-                )
-                return@flow
-            }
-
-            if (isProviderAlreadyLoaded(metadata)) {
-                emit(
-                    ProviderResult.Failure(
-                        provider = metadata,
-                        error = IllegalStateException(
-                            context.getString(R.string.provider_already_exists, metadata.name)
                         ),
                     ),
                 )
@@ -117,36 +104,46 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                 infoLog("Loading provider: ${metadata.name} [${file.name}]")
 
                 val loader = PathClassLoader(file.absolutePath, context.classLoader)
-                val manifest: ProviderManifest = withContext(appDispatchers.io) {
+                val manifest = withContext<ProviderManifest>(appDispatchers.io) {
                     loader.getFileFromPath(MANIFEST_FILE)
-                }
-                val settingsDirPath = createSettingsDirPath(
-                    repositoryUrl = metadata.repositoryUrl,
-                    isDebugProvider = metadata.id.endsWith(ProviderConstants.PROVIDER_DEBUG),
-                )
+                }.let {
+                    if (!metadata.id.endsWith(ProviderPreferences.DEBUG_SUFFIX)) {
+                        return@let it
+                    }
 
-                if (getProviderPrefs().canMigrateSettingsFile(metadata)) {
-                    withContext(appDispatchers.io) {
-                        ProviderMigrator.migrateForOldSettingsFile(
-                            directory = settingsDirPath,
-                            metadata = metadata,
+                    it.copy(
+                        id = "${it.id}${ProviderPreferences.DEBUG_SUFFIX}",
+                        name = "${it.name}${ProviderPreferences.DEBUG_SUFFIX}"
+                    )
+                }
+
+                val providerClass: Class<out ProviderPlugin?> =
+                    loader.loadClass(manifest.providerClassName) as Class<out ProviderPlugin>
+                val provider = providerClass.getDeclaredConstructor().newInstance() as ProviderPlugin
+
+                val providerPrefs = dataStores.getOrPut(installedProvider.id) {
+                    PreferenceDataStoreFactory.create {
+                        val settingsDirPath = createSettingsDirPath(
+                            userId = installedProvider.ownerId,
+                            repositoryUrl = installedProvider.repositoryUrl,
+                            isDebugProvider = installedProvider.isDebug,
                         )
+
+                        File("$settingsDirPath/${manifest.id}.preferences_pb").apply {
+                            parentFile?.mkdirs()
+                        }
                     }
                 }
 
-                val provider = loader.getProviderInstance(
-                    id = metadata.id,
-                    file = file,
-                    manifest = manifest,
-                    settingsDirPath = settingsDirPath,
-                )
+                provider.manifest = manifest
+                provider.settings = providerPrefs
 
                 if (manifest.requiresResources) {
                     withContext(appDispatchers.io) {
-                        provider.resources = dynamicResourceLoader.load(inputFile = file)
+                        provider.resources = context.getResourcesFromProvider(inputFile = file)
 
-                        if (dynamicResourceLoader.forceCleanUp) {
-                            dynamicResourceLoader.cleanupArtifacts(file)
+                        if (DynamicResourceLoader.needsCleanUp) {
+                            DynamicResourceLoader.cleanupArtifacts(file)
                         }
                     }
                 }
@@ -170,29 +167,6 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
             }
         }
 
-    private suspend fun createSettingsDirPath(
-        repositoryUrl: String,
-        isDebugProvider: Boolean,
-    ): String {
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val parentDirectoryName = if (isDebugProvider) ProviderConstants.PROVIDER_DEBUG else "user-$userId"
-
-        val repository = repositoryUrl.toValidRepositoryLink()
-        val childDirectoryName = "${repository.owner}-${repository.name}"
-        val finalPathPrefix = "$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
-
-        return "${context.getExternalFilesDir(null)}/$finalPathPrefix"
-    }
-
-    private fun isProviderAlreadyLoaded(metadata: ProviderMetadata): Boolean {
-        if (providerRepository.getPlugin(metadata.id) != null) {
-            warnLog("Provider with name ${metadata.name} already exists")
-            return true
-        }
-
-        return false
-    }
-
     /**
      * On Android 14+, files created/downloaded by ADB or other external means
      * may be owned by external UIDs, causing `setReadOnly` to fail due to
@@ -207,7 +181,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         }
 
         warnLog("Failed to set dex as read-only for provider: ${metadata.name}. Replacing with app-owned copy...")
-        val tmpFile = File(parentFile, "${nameWithoutExtension}.tmp")
+        val tmpFile = File(parentFile, "$nameWithoutExtension.tmp")
         try {
             copyTo(target = tmpFile, overwrite = true)
             delete()
@@ -272,6 +246,20 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
             iconUrl = "",
             language = Language("Unknown"),
             providerType = ProviderType("Unknown"),
-            status = Status.Down,
+            status = ProviderStatus.Down,
         )
+
+    private fun createSettingsDirPath(
+        userId: String,
+        repositoryUrl: String,
+        isDebugProvider: Boolean,
+    ): String {
+        val parentDirectoryName = if (isDebugProvider) ProviderConstants.PROVIDER_DEBUG else "user-$userId"
+
+        val repository = repositoryUrl.toValidRepositoryLink()
+        val childDirectoryName = "${repository.owner}-${repository.name}"
+        val finalPathPrefix = "$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
+
+        return "${context.getExternalFilesDir(null)}/$finalPathPrefix"
+    }
 }

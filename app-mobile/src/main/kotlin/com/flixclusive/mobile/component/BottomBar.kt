@@ -2,6 +2,7 @@ package com.flixclusive.mobile.component
 
 import android.content.res.Configuration
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
@@ -26,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,9 +90,7 @@ internal fun BottomBar(
                 CustomNavItem(
                     item = it,
                     isSelected = currentSelectedGraph == it.screen,
-                    onClick = {
-                        onNavigate(it.screen)
-                    },
+                    onClick = { onNavigate(it.screen) },
                 )
             }
         }
@@ -105,7 +105,9 @@ private fun CustomNavItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
-    val unselectedContentColor = LocalContentColor.current.copy(0.6f)
+    val contentColor by animateColorAsState(
+        if (isSelected) Color.White else LocalContentColor.current.copy(0.6f)
+    )
 
     Column(
         modifier =
@@ -136,10 +138,7 @@ private fun CustomNavItem(
                     ),
             )
 
-            Crossfade(
-                targetState = isSelected,
-                label = "",
-            ) {
+            Crossfade(targetState = isSelected) {
                 Icon(
                     painter = if (it) painterResource(item.iconSelected) else painterResource(item.iconUnselected),
                     contentDescription = stringResource(id = item.label),
@@ -151,19 +150,11 @@ private fun CustomNavItem(
             text = stringResource(id = item.label),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style =
-                MaterialTheme.typography.labelSmall.copy(
-                    color =
-                        if (isSelected) {
-                            Color.White
-                        } else {
-                            unselectedContentColor
-                        },
-                    fontWeight = FontWeight.Medium,
-                ),
-            modifier =
-                Modifier
-                    .padding(bottom = 1.5.dp),
+            modifier = Modifier.padding(bottom = 1.5.dp),
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = contentColor,
+                fontWeight = FontWeight.Medium,
+            ),
         )
     }
 }
@@ -178,7 +169,7 @@ private val mobileNavigationItems =
         ),
         AppNavigationItem(
             screen = AppmobileNavGraphs.search,
-            iconSelected = UiCommonR.drawable.search,
+            iconSelected = UiCommonR.drawable.search_filled,
             iconUnselected = UiCommonR.drawable.search_outlined,
             label = LocaleR.string.search,
         ),

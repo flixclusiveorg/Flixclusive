@@ -1,21 +1,31 @@
 package com.flixclusive.feature.mobile.home.components
 
+import android.annotation.SuppressLint
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,50 +35,73 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.common.domain.PagingState
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.film.FilmCard
-import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.media.MediaCard
+import com.flixclusive.core.presentation.mobile.components.media.MediaCardPlaceholder
 import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
-import com.flixclusive.feature.mobile.home.CatalogPagingState
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
+import com.flixclusive.feature.mobile.home.CatalogWithPagingState
+import com.flixclusive.feature.mobile.home.R
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.provider.Catalog
-import kotlinx.collections.immutable.PersistentSet
-import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import com.flixclusive.core.presentation.mobile.R as UiMobileR
 import com.flixclusive.core.strings.R as LocaleR
 
+private enum class CatalogRowState {
+    CONTENT,
+    EMPTY,
+    ERROR
+}
+
 @Composable
 internal fun CatalogRow(
     catalog: Catalog,
-    pagingState: CatalogPagingState,
+    pagingState: PagingState,
     showTitles: Boolean,
-    items: PersistentSet<Film>,
-    onFilmClick: (Film) -> Unit,
-    onFilmLongClick: (Film) -> Unit,
+    items: () -> Set<MediaMetadata>,
+    onMediaClick: (MediaMetadata) -> Unit,
+    onMediaLongClick: (MediaMetadata) -> Unit,
     paginate: () -> Unit,
     onSeeAllItems: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
 
-    LaunchedEffect(listState, paginate, pagingState) {
+    val uiState by remember(pagingState) {
+        derivedStateOf {
+            when {
+                pagingState.isError && items().isEmpty() -> CatalogRowState.ERROR
+                items().isEmpty() && pagingState.isExhausted -> CatalogRowState.EMPTY
+                else -> CatalogRowState.CONTENT
+            }
+        }
+    }
+
+    LaunchedEffect(listState, paginate, pagingState, items) {
         snapshotFlow {
-            pagingState.hasNext && (listState.shouldPaginate() || items.isEmpty() && pagingState.page == 1)
+            pagingState.isIdle && (listState.shouldPaginate() || items().isEmpty())
         }.distinctUntilChanged()
             .filter { it }
             .collect {
@@ -123,38 +156,167 @@ internal fun CatalogRow(
             }
         }
 
-        LazyRow(state = listState) {
-            items(
-                count = items.size,
-                key = { items.elementAt(it).identifier },
-            ) {
-                FilmCard(
-                    modifier = Modifier.width(getAdaptiveFilmCardWidth()),
-                    isShowingTitle = showTitles,
-                    film = items.elementAt(it),
-                    onClick = onFilmClick,
-                    onLongClick = onFilmLongClick,
-                )
-            }
-
-            if (
-                pagingState.state.isLoading ||
-                pagingState.state.isError ||
-                items.isEmpty()
-            ) {
-                items(20) {
-                    FilmCardPlaceholder(
-                        isShowingTitle = showTitles,
-                        modifier = Modifier
-                            .padding(3.dp)
-                            .width(getAdaptiveFilmCardWidth())
+        Crossfade(targetState = uiState) { state ->
+            when (state) {
+                CatalogRowState.ERROR -> {
+                    ErrorCatalogRow(
+                        onRetry = { paginate() },
+                        error = (pagingState as? PagingState.Error)?.error,
                     )
+                }
+
+                CatalogRowState.EMPTY -> {
+                    EmptyCatalogRow()
+                }
+
+                else -> {
+                    LazyRow(state = listState) {
+                        items(
+                            count = items().size,
+                            key = { items().elementAt(it).id },
+                        ) {
+                            val item by remember {
+                                derivedStateOf {
+                                    items().elementAt(it)
+                                }
+                            }
+
+                            MediaCard(
+                                modifier = Modifier.width(getAdaptiveMediaCardWidth()),
+                                isShowingTitle = showTitles,
+                                media = item,
+                                onClick = onMediaClick,
+                                onLongClick = onMediaLongClick,
+                            )
+                        }
+
+                        if (pagingState.isLoading || items().isEmpty()) {
+                            items(10) {
+                                MediaCardPlaceholder(
+                                    isShowingTitle = showTitles,
+                                    modifier = Modifier
+                                        .animateItem()
+                                        .padding(3.dp)
+                                        .width(getAdaptiveMediaCardWidth())
+                                )
+                            }
+                        }
+
+                        if (pagingState.isError) {
+                            item {
+                                ErrorCatalogRow(
+                                    onRetry = { paginate() },
+                                    error = (pagingState as? PagingState.Error)?.error,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+private fun ErrorCatalogRow(
+    error: UiText?,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val defaultLabel = stringResource(LocaleR.string.unknown_season)
+    val message = remember { error?.asString(context) ?: defaultLabel }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(3.dp)
+            .background(
+                color = MaterialTheme.colorScheme.error.copy(0.1f),
+                shape = MaterialTheme.shapes.small
+            ).border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.error.copy(0.6f),
+                shape = MaterialTheme.shapes.small
+            )
+    ) {
+        Spacer(
+            modifier = Modifier
+                .width(getAdaptiveMediaCardWidth())
+                .aspectRatio(MediaCover.Poster.ratio)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .align(Alignment.Center)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            EmptyDataMessage(
+                title = stringResource(UiMobileR.string.an_error_occurred),
+                description = message,
+                icon = {},
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = onRetry,
+                shape = MaterialTheme.shapes.small,
+            ) {
+                Text(
+                    text = stringResource(LocaleR.string.retry),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyCatalogRow(modifier: Modifier = Modifier) {
+    val borderColor = MaterialTheme.colorScheme.onSurface.copy(0.2f)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(3.dp)
+            .drawBehind {
+                val stroke = Stroke(
+                    width = 6f,
+                    pathEffect = PathEffect.dashPathEffect(
+                        intervals = floatArrayOf(30f, 50f),
+                        phase = 0f
+                    )
+                )
+
+                drawRoundRect(
+                    color = borderColor,
+                    style = stroke,
+                    cornerRadius = CornerRadius(8f, 8f)
+                )
+            }
+    ) {
+        Spacer(
+            modifier = Modifier
+                .width(getAdaptiveMediaCardWidth())
+                .aspectRatio(MediaCover.Poster.ratio)
+        )
+
+        EmptyDataMessage(
+            emojiHeader = "🫗",
+            title = stringResource(R.string.empty_catalog_title),
+            description = stringResource(R.string.empty_catalog_desc),
+            modifier = Modifier
+                .padding(horizontal = 15.dp)
+                .align(Alignment.Center)
+        )
+    }
+}
+
+@SuppressLint("MutableCollectionMutableState")
 @Preview
 @Composable
 private fun CatalogRowBasePreview() {
@@ -164,13 +326,13 @@ private fun CatalogRowBasePreview() {
         ) {
             var items by remember {
                 mutableStateOf(
-                    List(6) { index ->
-                        DummyDataForPreview.getFilm(
-                            id = "film_$index",
-                            title = "Sample Film ${index + 1}",
-                            filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
+                    MutableList(6) { index ->
+                        DummyDataForPreview.getMedia(
+                            id = "media_$index",
+                            title = "Sample MediaMetadata ${index + 1}",
+                            mediaType = if (index % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
                         )
-                    }.toPersistentSet(),
+                    }.toSet()
                 )
             }
             var currentPage by remember { mutableIntStateOf(1) }
@@ -178,61 +340,103 @@ private fun CatalogRowBasePreview() {
             var requestedPage by remember { mutableIntStateOf(-1) }
 
             val dummyCatalog = remember {
-                object : Catalog() {
-                    override val name: String = "Popular Movies"
-                    override val url: String = "https://example.com/popular"
-                    override val image: String? = null
-                    override val canPaginate: Boolean = true
-                }
+                Catalog(
+                    name = "Dummy Catalog",
+                    url = "https://example.com/catalog",
+                    image = null,
+                    canPaginate = true,
+                    providerId = "dummy_provider",
+                )
             }
 
             val pagingState = remember(currentPage, isLoading) {
-                CatalogPagingState(
-                    hasNext = currentPage < 3, // Simulate max 3 pages
+                CatalogWithPagingState(
                     page = currentPage,
+                    catalog = dummyCatalog,
+                    medias = items,
                     state = when {
-                        isLoading -> PagingDataState.Loading
-                        currentPage >= 3 -> PagingDataState.Error("End of list")
-                        else -> PagingDataState.Success(isExhausted = false)
+                        isLoading -> PagingState.Loading
+                        currentPage >= 3 -> PagingState.Error("End of list")
+                        else -> PagingState.Exhausted
                     },
                 )
             }
 
             // Handle pagination simulation with LaunchedEffect
             LaunchedEffect(requestedPage) {
-                if (requestedPage > 0 && requestedPage <= 3 && !isLoading) {
+                if (requestedPage in 1..3 && !isLoading) {
                     isLoading = true
                     delay(1000) // Simulate loading
 
                     val newItems = List(6) { index ->
                         val itemIndex = (items.size - 1) + index
-                        DummyDataForPreview.getFilm(
-                            id = "film_$itemIndex",
-                            title = "Sample Film ${itemIndex + 1}",
-                            filmType = if (itemIndex % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
+                        DummyDataForPreview.getMedia(
+                            id = "media_$itemIndex",
+                            title = "Sample MediaMetadata ${itemIndex + 1}",
+                            mediaType = if (itemIndex % 2 == 0) MediaType.MOVIE else MediaType.SHOW,
                         )
                     }
-                    items = items.addAll(newItems)
+                    items += newItems
                     currentPage = requestedPage
                     isLoading = false
                     requestedPage = -1 // Reset
                 }
             }
 
-            CatalogRow(
-                catalog = dummyCatalog,
-                pagingState = pagingState,
-                showTitles = true,
-                items = items,
-                onFilmClick = { },
-                onFilmLongClick = { },
-                onSeeAllItems = { },
-                paginate = {
-                    if (!isLoading && requestedPage <= 3) {
-                        requestedPage += 1
-                    }
-                },
-            )
+            val error = remember {
+                PagingState.Error(
+                    UiText.from(
+                        "Failed to load data. Please try again."
+                    )
+                )
+            }
+
+            Column {
+                CatalogRow(
+                    catalog = dummyCatalog,
+                    pagingState = error,
+                    showTitles = true,
+                    items = { emptySet() },
+                    onMediaClick = { },
+                    onMediaLongClick = { },
+                    onSeeAllItems = { },
+                    paginate = {
+                        if (!isLoading && requestedPage <= 3) {
+                            requestedPage += 1
+                        }
+                    },
+                )
+
+                CatalogRow(
+                    catalog = dummyCatalog,
+                    pagingState = error,
+                    showTitles = true,
+                    items = { items },
+                    onMediaClick = { },
+                    onMediaLongClick = { },
+                    onSeeAllItems = { },
+                    paginate = {
+                        if (!isLoading && requestedPage <= 3) {
+                            requestedPage += 1
+                        }
+                    },
+                )
+
+                CatalogRow(
+                    catalog = dummyCatalog,
+                    pagingState = pagingState.state,
+                    showTitles = true,
+                    items = { emptySet() },
+                    onMediaClick = { },
+                    onMediaLongClick = { },
+                    onSeeAllItems = { },
+                    paginate = {
+                        if (!isLoading && requestedPage <= 3) {
+                            requestedPage += 1
+                        }
+                    },
+                )
+            }
         }
     }
 }

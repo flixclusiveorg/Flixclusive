@@ -39,10 +39,10 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewMediaAction
 import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.tv.component.FilmCard
+import com.flixclusive.core.ui.tv.component.MediaCard
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.LocalDirectionalFocusRequesterProvider
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
@@ -65,17 +65,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface SearchScreenNavigator : GoBackAction, ViewFilmAction
+interface SearchScreenNavigator :
+    GoBackAction,
+    ViewMediaAction
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun SearchScreen(
     navigator: SearchScreenNavigator
-) {
-    val viewModel: SearchScreenViewModel = hiltViewModel()
+,viewModel: SearchScreenViewModel = hiltViewModel()) {
     val categories by viewModel.catalogs.collectAsStateWithLifecycle()
-
 
     var lastSearchedQuery by remember { mutableStateOf(viewModel.searchQuery) }
 
@@ -88,16 +88,21 @@ internal fun SearchScreen(
     }
 
     LaunchedEffect(shouldStartPaginate) {
-        if(shouldStartPaginate && (viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE || viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR))
+        if (shouldStartPaginate &&
+            (
+                viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE ||
+                    viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR
+            )
+        ) {
             viewModel.paginate()
+        }
     }
-
 
     LaunchedEffect(viewModel.searchQuery, lastSearchedQuery) {
         val queryIsNotEmpty = viewModel.searchQuery.isNotEmpty()
         val userIsTypingNewQuery = viewModel.searchQuery != lastSearchedQuery
 
-        if(queryIsNotEmpty && userIsTypingNewQuery) {
+        if (queryIsNotEmpty && userIsTypingNewQuery) {
             delay(1500L)
             safeCall { listState.scrollToItem(0) }
             viewModel.onSearch()
@@ -170,15 +175,13 @@ internal fun SearchScreen(
                                         .ifElse(
                                             condition = i == 0,
                                             ifTrueModifier = focusRestorersModifiers.childModifier
-                                        )
-                                        .focusOnMount(itemKey = "category=${item.url}")
+                                        ).focusOnMount(itemKey = "category=${item.url}")
                                         .focusProperties {
                                             right = filtersGroupFocusRequester
                                         }
                                 )
                             }
-                        }
-                        else if (viewModel.searchSuggestions.isNotEmpty()) {
+                        } else if (viewModel.searchSuggestions.isNotEmpty()) {
                             itemsIndexed(viewModel.searchSuggestions) { i, suggestion ->
                                 SuggestionBlock(
                                     suggestion = suggestion,
@@ -187,9 +190,9 @@ internal fun SearchScreen(
                                         .ifElse(
                                             condition = i == 0,
                                             ifTrueModifier = focusRestorersModifiers.childModifier
-                                        )
-                                        .focusOnMount(itemKey = "suggestion=${suggestion}, query=${viewModel.searchQuery}")
-                                        .focusProperties {
+                                        ).focusOnMount(
+                                            itemKey = "suggestion=$suggestion, query=${viewModel.searchQuery}"
+                                        ).focusProperties {
                                             right = filtersGroupFocusRequester
                                         }
                                 )
@@ -250,28 +253,28 @@ internal fun SearchScreen(
                         }
                     }
 
-                    val filmSearchHeight = 215.dp
-                    val filmSearchWidth = 165.dp
-                    val filmsFocusRestorersModifiers = createInitialFocusRestorerModifiers()
+                    val mediaSearchHeight = 215.dp
+                    val mediaSearchWidth = 165.dp
+                    val mediasFocusRestorersModifiers = createInitialFocusRestorerModifiers()
 
                     TvLazyVerticalGrid(
                         columns = TvGridCells.Adaptive(150.dp),
-                        modifier = filmsFocusRestorersModifiers.parentModifier,
+                        modifier = mediasFocusRestorersModifiers.parentModifier,
                         pivotOffsets = PivotOffsets(0F, 0F),
                         state = listState,
                     ) {
-                        itemsIndexed(viewModel.searchResults) { i, film ->
-                            FilmCard(
+                        itemsIndexed(viewModel.searchResults) { i, media ->
+                            MediaCard(
                                 modifier = Modifier
-                                    .focusOnMount(itemKey = "filmIndex=$i")
+                                    .focusOnMount(itemKey = "mediaIndex=$i")
                                     .ifElse(
                                         condition = i == 0,
-                                        ifTrueModifier = filmsFocusRestorersModifiers.childModifier
+                                        ifTrueModifier = mediasFocusRestorersModifiers.childModifier
                                     ),
-                                film = film,
-                                onClick = navigator::openFilmScreen,
-                                filmCardHeight = filmSearchHeight,
-                                filmCardWidth = filmSearchWidth,
+                                media = media,
+                                onClick = navigator::openMediaScreen,
+                                mediaCardHeight = mediaSearchHeight,
+                                mediaCardWidth = mediaSearchWidth,
                             )
                         }
                     }

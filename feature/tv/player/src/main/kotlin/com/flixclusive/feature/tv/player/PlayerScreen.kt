@@ -41,10 +41,9 @@ import com.flixclusive.core.ui.tv.component.SourceDataDialog
 import com.flixclusive.core.ui.tv.util.LocalDirectionalFocusRequesterProvider
 import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,10 +51,10 @@ import kotlinx.coroutines.launch
 private const val PLAYER_SCREEN_DELAY = 800
 
 private fun isSameEpisode(
-    film: Film,
+    media: MediaMetadata,
     currentEpisode: Episode?,
     episodeToPlay: Episode?,
-) = film is TvShow &&
+) = media is Show &&
     currentEpisode != null &&
     episodeToPlay != null &&
     currentEpisode.id == episodeToPlay.id
@@ -64,7 +63,7 @@ private fun isSameEpisode(
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun PlayerScreen(
-    film: Film,
+    media: MediaMetadata,
     episodeToPlay: Episode?,
     isPlayerRunning: Boolean,
     isIdle: Boolean,
@@ -77,7 +76,7 @@ fun PlayerScreen(
         playerScreenViewModel(
             args =
                 PlayerScreenNavArgs(
-                    film = film,
+                    media = media,
                     episodeToPlay = episodeToPlay,
                 ),
         )
@@ -101,11 +100,11 @@ fun PlayerScreen(
             dialogState.isSuccess &&
             (
                 isSameEpisode(
-                    film = film,
+                    media = media,
                     currentEpisode = currentEpisodeSelected,
                     episodeToPlay = episodeToPlay,
                 ) ||
-                    film.filmType == FilmType.MOVIE ||
+                    media.type == MediaType.MOVIE ||
                     !isPlayerRunning
             )
         ) {
@@ -178,7 +177,7 @@ fun PlayerScreen(
 
         val currentPlayerTitle =
             remember(currentEpisodeSelected) {
-                formatPlayerTitle(film, currentEpisodeSelected)
+                formatPlayerTitle(media, currentEpisodeSelected)
             }
         var controlTimeoutVisibility by remember {
             mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
@@ -229,7 +228,7 @@ fun PlayerScreen(
                 }
         }
 
-        fun goBackToFilmScreen() {
+        fun goBackToMediaScreen() {
             val playWhenReady = player.isPlaying
             player.pause()
             player.playWhenReady = playWhenReady
@@ -242,7 +241,7 @@ fun PlayerScreen(
         }
 
         BackHandler(enabled = !isOverviewShown) {
-            goBackToFilmScreen()
+            goBackToMediaScreen()
         }
 
         LaunchedEffect(Unit) {
@@ -391,7 +390,7 @@ fun PlayerScreen(
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
                         playbackTitle = currentPlayerTitle,
-                        isTvShow = film.filmType == FilmType.TV_SHOW,
+                        isShow = media.type == MediaType.SHOW,
                         isLastEpisode = isLastEpisode,
                         seekMultiplier = seekMultiplier,
                         showControls = { showControls(it) },
@@ -410,7 +409,7 @@ fun PlayerScreen(
 
                             seekMultiplier += it
                         },
-                        onBack = { goBackToFilmScreen() },
+                        onBack = { goBackToMediaScreen() },
                         onNextEpisode = {
                             player.run {
                                 viewModel.updateWatchHistory(

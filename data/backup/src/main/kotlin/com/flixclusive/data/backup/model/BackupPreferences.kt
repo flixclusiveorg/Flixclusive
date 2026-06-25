@@ -18,4 +18,6 @@ data class BackupPreference(
 sealed class PreferenceValue
 
 @Serializable
-data class StringPreferenceValue(val value: String) : PreferenceValue()
+data class StringPreferenceValue(
+    val value: String
+) : PreferenceValue()

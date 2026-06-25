@@ -4,7 +4,7 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -15,29 +15,36 @@ import kotlinx.coroutines.flow.Flow
 interface LibraryListRepository {
     fun getLists(userId: String): Flow<List<LibraryList>>
 
-    fun getList(listId: Int): Flow<LibraryList?>
+    fun getList(listId: String): Flow<LibraryList?>
 
-    suspend fun insertList(list: LibraryList): Int
+    suspend fun insertList(list: LibraryList): String
 
     suspend fun updateList(list: LibraryList)
 
-    suspend fun deleteListById(listId: Int)
+    suspend fun deleteListById(listId: String)
 
-    fun getItemAsFlow(itemId: Long): Flow<LibraryListItemWithMetadata?>
+    fun getItemAsFlow(itemId: String): Flow<LibraryListItemWithMetadata?>
 
-    suspend fun getItem(itemId: Long): LibraryListItemWithMetadata?
+    suspend fun getItem(itemId: String): LibraryListItemWithMetadata?
 
-    suspend fun insertItem(item: LibraryListItem, film: Film? = null): Long
+    suspend fun insertItem(item: LibraryListItem, media: MediaMetadata? = null): String
 
-    fun getListsContainingFilm(filmId: String, ownerId: String): Flow<List<LibraryList>>
+    fun getListsContainingMedia(mediaId: String, ownerId: String): Flow<List<LibraryList>>
 
-    suspend fun deleteItem(itemId: Long)
+    suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean
 
-    fun getItems(listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
+    suspend fun deleteItem(itemId: String)
+
+    suspend fun paginateItems(
+        listId: String,
+        sort: LibrarySort,
+        pageSize: Int,
+        page: Int,
+    ): List<LibraryListItemWithMetadata>
 
     fun getListsAndItems(userId: String, sort: LibrarySort): Flow<List<LibraryListWithItems>>
 
-    fun searchItems(query: String, listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
+    fun searchItems(query: String, listId: String, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>>
 
     suspend fun deleteAllExceptWatched(ownerId: String)
 

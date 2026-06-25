@@ -20,14 +20,14 @@ import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.core.ui.tv.component.FilmCardHeight
-import com.flixclusive.core.ui.tv.component.FilmPadding
+import com.flixclusive.core.ui.tv.component.MediaCardHeight
+import com.flixclusive.core.ui.tv.component.MediaPadding
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.database.entity.WatchHistoryItem
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import kotlinx.coroutines.launch
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -38,7 +38,7 @@ internal const val HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT = "watchedRow=%d, watched
 internal fun HomeContinueWatchingRow(
     modifier: Modifier = Modifier,
     items: List<WatchHistoryItem>,
-    onPlayClick: (Film) -> Unit,
+    onPlayClick: (MediaMetadata) -> Unit,
 ) {
     val listState = rememberTvLazyListState()
     val scope = rememberCoroutineScope()
@@ -53,7 +53,7 @@ internal fun HomeContinueWatchingRow(
 
     Column(
         modifier = modifier
-            .heightIn(min = FilmPadding.bottom + 18.dp + FilmCardHeight)
+            .heightIn(min = MediaPadding.bottom + 18.dp + MediaCardHeight)
     ) {
         Text(
             text = stringResource(id = LocaleR.string.continue_watching),
@@ -64,7 +64,7 @@ internal fun HomeContinueWatchingRow(
             modifier = Modifier
                 .padding(start = LabelStartPadding.start + getLocalDrawerWidth())
                 .padding(
-                    bottom = FilmPadding.bottom,
+                    bottom = MediaPadding.bottom,
                     top = 18.dp
                 )
         )
@@ -80,14 +80,13 @@ internal fun HomeContinueWatchingRow(
             itemsIndexed(items = items) { i, item ->
                 val key = String.format(HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT, 0, i)
 
-                WatchedFilmCard(
+                WatchedMediaCard(
                     modifier = Modifier
                         .focusOnMount(itemKey = key),
                     watchHistoryItem = item,
-                    onClick = { onPlayClick(item.film) },
+                    onClick = { onPlayClick(item.media) },
                 )
             }
         }
-
     }
 }

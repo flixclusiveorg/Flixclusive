@@ -9,7 +9,7 @@ import java.util.Date
  * */
 sealed interface WatchProgress {
     val id: Long
-    val filmId: String
+    val mediaId: String
     val ownerId: String
     val progress: Long
     val duration: Long
@@ -17,10 +17,11 @@ sealed interface WatchProgress {
     val createdAt: Date
     val updatedAt: Date
 
-    val isAboveThreshold: Boolean get() {
-        val percentage = (progress.toDouble() / duration.toDouble()) * 100
-        return percentage >= WATCH_COMPLETED_THRESHOLD
-    }
+    val isAboveThreshold: Boolean
+        get() {
+            val percentage = (progress.toDouble() / duration.toDouble()) * 100
+            return percentage >= WATCH_COMPLETED_THRESHOLD
+        }
     val isCompleted: Boolean get() = status == WatchStatus.COMPLETED
     val isWatching get() = status == WatchStatus.WATCHING
 
@@ -30,6 +31,6 @@ sealed interface WatchProgress {
     fun isLessThanAMinute(): Boolean = progress <= 60_000L
 
     companion object {
-        private const val WATCH_COMPLETED_THRESHOLD = 95 // 95% of the total duration
+        const val WATCH_COMPLETED_THRESHOLD = 90 // 90% of the total duration
     }
 }

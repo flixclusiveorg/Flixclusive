@@ -47,7 +47,6 @@ import com.flixclusive.core.presentation.player.model.CueWithTiming
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.ui.PiPEvent
-import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.disableSSLVerification
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getLoadControl
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getRenderers
 import com.flixclusive.core.util.exception.safeCall
@@ -72,7 +71,8 @@ class AppPlayer(
     private val playerPrefs: PlayerPreferences,
     private val subtitlePrefs: SubtitlesPreferences,
     internal val dataSourceFactory: AppDataSourceFactory,
-) : CuesProvider, Player {
+) : CuesProvider,
+    Player {
     private val mediaSourceManager: MediaSourceManager by lazy {
         MediaSourceManager(dataSourceFactory)
     }
@@ -88,7 +88,8 @@ class AppPlayer(
     /** Only internally visible so ComposePlayer component can access it */
     internal var exoPlayer: ExoPlayer? = null
 
-    internal val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
+    @Suppress("ktlint:standard:backing-property-naming")
+    private val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
     val errors = _errors.asSharedFlow()
 
     override var offset by mutableLongStateOf(0L)
@@ -103,7 +104,6 @@ class AppPlayer(
 
         if (exoPlayer == null) {
             infoLog("Initializing the player...")
-            disableSSLVerification()
 
             val trackSelector = DefaultTrackSelector(context)
             val loadControl = getLoadControl(
@@ -268,8 +268,13 @@ class AppPlayer(
                 _playWhenReady = false
             }
 
-            PiPEvent.FORWARD.ordinal -> seekForward()
-            PiPEvent.BACKWARD.ordinal -> seekBack()
+            PiPEvent.FORWARD.ordinal -> {
+                seekForward()
+            }
+
+            PiPEvent.BACKWARD.ordinal -> {
+                seekBack()
+            }
         }
     }
 
@@ -316,7 +321,11 @@ class AppPlayer(
         currentCuesWithTiming.clear()
     }
 
-    private inner class InternalPlayerListener() : Player.Listener {
+    internal fun emitError(msg: UiText) {
+        _errors.tryEmit(msg)
+    }
+
+    private inner class InternalPlayerListener : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 changeSubtitleDelay(0)

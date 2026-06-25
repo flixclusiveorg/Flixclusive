@@ -23,7 +23,6 @@ class AutoBackupScheduler @Inject constructor(
     private val backupWorkManager: BackupWorkManager,
     private val appDispatchers: AppDispatchers,
 ) {
-
     private var job: Job? = null
 
     @OptIn(FlowPreview::class)
@@ -43,7 +42,7 @@ class AutoBackupScheduler @Inject constructor(
 
                     previousUserId = currentUserId
                     dataStoreManager
-                        .getUserPrefs(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
+                        .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
                         .map { it.autoBackupFrequencyDays }
                         .distinctUntilChanged()
                         .debounce(2000L)

@@ -2,7 +2,7 @@ package com.flixclusive.tv
 
 import com.flixclusive.ROOT
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
-import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.tv.media.destinations.MediaScreenDestination
 import com.flixclusive.feature.tv.home.destinations.HomeScreenDestination
 import com.flixclusive.feature.tv.search.destinations.SearchScreenDestination
 import com.ramcosta.composedestinations.dynamic.routedIn
@@ -10,7 +10,6 @@ import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 
 internal object TvNavGraphs {
-
     val home = object : NavGraphSpec {
         override val route = "home"
 
@@ -18,7 +17,7 @@ internal object TvNavGraphs {
 
         override val destinationsByRoute = listOf<DestinationSpec<*>>(
             HomeScreenDestination,
-            FilmScreenDestination,
+            MediaScreenDestination,
         ).routedIn(this)
             .associateBy { it.route }
     }
@@ -30,7 +29,7 @@ internal object TvNavGraphs {
 
         override val destinationsByRoute = listOf<DestinationSpec<*>>(
             SearchScreenDestination,
-            FilmScreenDestination,
+            MediaScreenDestination,
         ).routedIn(this)
             .associateBy { it.route }
     }

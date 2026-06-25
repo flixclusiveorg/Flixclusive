@@ -1,19 +1,17 @@
 package com.flixclusive.domain.provider.util.extensions
 
-import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.provider.ProviderConstants
-import com.flixclusive.core.util.log.infoLog
+import com.flixclusive.data.downloads.model.DownloadState
+import com.flixclusive.data.downloads.model.DownloadStatus
 import com.flixclusive.domain.downloads.model.DownloadRequest
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.model.provider.ProviderMetadata
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.takeWhile
 import java.io.File
 
 suspend fun DownloadFileUseCase.downloadProvider(
     file: File,
     metadata: ProviderMetadata,
+    onStateChange: (DownloadState) -> Unit,
 ) {
     val providerDownloadRequest = DownloadRequest.from(
         url = metadata.buildUrl,
@@ -34,20 +32,20 @@ suspend fun DownloadFileUseCase.downloadProvider(
         fileName = ProviderConstants.UPDATER_JSON_FILE,
     )
 
-    combine(
-        invoke(providerDownloadRequest),
-        invoke(updaterJsonDownloadRequest)
-    ) { provider, updaterJson ->
-        provider to updaterJson
-    }.takeWhile { (provider, updaterJson) ->
-        val exception = provider.error ?: updaterJson.error
-        val isFinished = provider.status.isFinished && updaterJson.status.isFinished
+    invoke(updaterJsonDownloadRequest).collect {
+        onStateChange(
+            it.copy(
+                status = if (it.status == DownloadStatus.COMPLETED) DownloadStatus.DOWNLOADING else it.status,
+                progress = it.progress * 0.2f
+            )
+        )
+    }
 
-        when {
-            isFinished && exception != null -> throw ExceptionWithUiText(exception)
-            isFinished -> infoLog("Successfully downloaded provider: ${metadata.name} [${file.name}]")
-        }
-
-        !isFinished
-    }.collect()
+    invoke(providerDownloadRequest).collect {
+        onStateChange(
+            it.copy(
+                progress = (it.progress * 0.8f) + 20f
+            )
+        )
+    }
 }

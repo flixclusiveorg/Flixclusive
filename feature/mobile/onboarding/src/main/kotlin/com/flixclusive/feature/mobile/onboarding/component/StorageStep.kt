@@ -45,7 +45,7 @@ internal fun StorageStep(
 
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(R.string.onboarding_storage_current_label),
@@ -62,10 +62,15 @@ internal fun StorageStep(
             )
         }
 
-
         Button(
             onClick = onPickStorageDirectory,
-            colors = if (storageDirectoryUri == null) ButtonDefaults.buttonColors() else ButtonDefaults.outlinedButtonColors(),
+            colors = if (storageDirectoryUri ==
+                null
+            ) {
+                ButtonDefaults.buttonColors()
+            } else {
+                ButtonDefaults.outlinedButtonColors()
+            },
             border = if (storageDirectoryUri == null) null else ButtonDefaults.outlinedButtonBorder(true),
             shape = MaterialTheme.shapes.medium,
         ) {
@@ -74,7 +79,7 @@ internal fun StorageStep(
 
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = modifier
+            modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth(),
         ) {
@@ -87,12 +92,12 @@ internal fun StorageStep(
 
             Text(
                 text = stringResource(R.string.onboarding_storage_tip),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    lineHeight = 16.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                ).asAdaptiveTextStyle(),
+                style = MaterialTheme.typography.bodyMedium
+                    .copy(
+                        lineHeight = 16.sp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                    ).asAdaptiveTextStyle(),
             )
         }
-
     }
 }

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTvMaterial3Api::class)
 
-package com.flixclusive.feature.tv.film.component.episodes
+package com.flixclusive.feature.tv.media.component.episodes
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -45,7 +45,7 @@ import coil3.imageLoader
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -61,7 +61,9 @@ internal fun EpisodeCard(
     val borderFocused = remember(isFocused) {
         if (isFocused) {
             BorderStroke(width = 2.dp, color = Color.White)
-        } else BorderStroke(width = 0.dp, color = Color.Transparent)
+        } else {
+            BorderStroke(width = 0.dp, color = Color.Transparent)
+        }
     }
 
     Surface(
@@ -95,13 +97,11 @@ internal fun EpisodeCard(
                     .graphicsLayer {
                         this.shape = shape
                         clip = true
-                    }
-                    .border(borderFocused)
+                    }.border(borderFocused)
             ) {
                 AsyncImage(
                     model = context.buildTMDBImageUrl(
                         imagePath = episode.image,
-                        imageSize = "w500"
                     ),
                     imageLoader = LocalContext.current.imageLoader,
                     contentDescription = stringResource(
@@ -192,7 +192,7 @@ internal fun EpisodeCard(
                         }
                     }
 
-                    //progress?.let {
+                    // progress?.let {
                     //    LinearProgressIndicator(
                     //        progress = it,
                     //        color = MaterialTheme.colorScheme.tertiary,
@@ -204,7 +204,7 @@ internal fun EpisodeCard(
                     //                clip = true
                     //            }
                     //    )
-                    //}
+                    // }
                 }
             }
         }

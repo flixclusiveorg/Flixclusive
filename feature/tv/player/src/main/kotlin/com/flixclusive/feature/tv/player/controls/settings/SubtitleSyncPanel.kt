@@ -147,7 +147,7 @@ internal fun SubtitleSyncPanel(
                 transitionSpec = {
                     if (targetState > initialState) {
                         slideInHorizontally { it / 3 } + fadeIn() togetherWith
-                                slideOutHorizontally { -it / 3 } + fadeOut()
+                            slideOutHorizontally { -it / 3 } + fadeOut()
                     } else {
                         slideInHorizontally { -it / 3 } + fadeIn() togetherWith
                             slideOutHorizontally { it / 3 } + fadeOut()

@@ -20,6 +20,7 @@ val semanticVersion = "$versionMajor.$versionMinor.$versionPatch"
 val commitCount by lazy { getCommitCount() }
 val previewVersionCode by lazy { "p$commitCount" }
 val debugVersionCode by lazy { "d$commitCount" }
+val benchmarkVersionCode by lazy { "b$commitCount" }
 
 android {
     namespace = appId
@@ -42,6 +43,7 @@ android {
         }
 
         release {
+            isDebuggable = false
             resValue("string", "app_name", appName)
             buildConfigField("int", "BUILD_TYPE", "1") // 1 for stable
         }
@@ -51,6 +53,15 @@ android {
 
             resValue("string", "app_name", "PRE-$appName")
             buildConfigField("int", "BUILD_TYPE", "2") // 2 for preview
+        }
+
+        getByName("benchmark") {
+            applicationIdSuffix = ".benchmark"
+
+            resValue("string", "app_name", "BENCHMARK-$appName")
+            buildConfigField("int", "BUILD_TYPE", "3") // 3 for benchmark
+
+            // Debug key signing is available on all machines, you can also use your own signing keys.
         }
     }
 
@@ -66,6 +77,15 @@ android {
             merges += "META-INF/LICENSE-notice.md"
         }
     }
+
+//    splits {
+//        abi {
+//            isEnable = true
+//            reset()
+//            include("x86", "x86_64", "armeabi-v7a", "arm64-v8a")
+//            isUniversalApk = true
+//        }
+//    }
 }
 
 /*
@@ -87,30 +107,35 @@ androidComponents {
                     output.versionName.set(previewVersionCode)
                 }
             }
+
+            "benchmark" -> {
+                variant.outputs.forEach { output ->
+                    output.versionCode.set(commitCount.toInt())
+                    output.versionName.set(benchmarkVersionCode)
+                }
+            }
         }
     }
 }
 
 dependencies {
-    implementation(projects.feature.mobile.film)
+    implementation(projects.feature.mobile.media)
     implementation(projects.feature.mobile.home)
     implementation(projects.feature.mobile.player)
     implementation(projects.feature.mobile.providerAdd)
     implementation(projects.feature.mobile.providerDetails)
     implementation(projects.feature.mobile.providerManage)
     implementation(projects.feature.mobile.providerSettings)
-    implementation(projects.feature.mobile.providerTest)
     implementation(projects.feature.mobile.markdown)
     implementation(projects.feature.mobile.libraryDetails)
     implementation(projects.feature.mobile.libraryManage)
     implementation(projects.feature.mobile.repositoryManage)
     implementation(projects.feature.mobile.search)
-    implementation(projects.feature.mobile.searchExpanded)
     implementation(projects.feature.mobile.seeAll)
     implementation(projects.feature.mobile.settings)
     implementation(projects.feature.splashScreen)
     implementation(projects.feature.mobile.appUpdates)
-    implementation(projects.feature.mobile.profiles)
+    implementation(projects.feature.mobile.userProfiles)
     implementation(projects.feature.mobile.onboarding)
     implementation(projects.feature.mobile.userAdd)
     implementation(projects.feature.mobile.userEdit)
@@ -119,7 +144,7 @@ dependencies {
 
 //    implementation(projects.feature.tv.home)
 //    implementation(projects.feature.tv.search)
-//    implementation(projects.feature.tv.film)
+//    implementation(projects.feature.tv.media)
 
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
@@ -138,7 +163,7 @@ dependencies {
     implementation(projects.dataProvider)
     implementation(projects.domainProvider)
 
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.model.provider)
     implementation(libs.stubs.util)
 
@@ -150,8 +175,8 @@ dependencies {
     implementation(libs.compose.tv.material)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.constraintlayout.compose)
     implementation(libs.core.splashscreen)
+    implementation(libs.destinations.bottomSheet)
     implementation(libs.hilt.navigation)
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.kotlinx.immutables)

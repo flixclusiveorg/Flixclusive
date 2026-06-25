@@ -11,11 +11,11 @@ import com.flixclusive.core.presentation.common.theme.Elevations.getElevationFor
  * */
 object MobileColors {
     val darkBackground = Color(0xFF121212)
-    val darkOnBackground = Color(0xFFEAE0E4)
+    val darkOnBackground = Color(0xFFFFFFFF)
     val darkSurface = Color(0xFF121212)
-    val darkOnSurface = Color(0xFFEAE0E4)
+    val darkOnSurface = Color(0xFFFFFFFF)
     val darkSurfaceVariant = Color(0xFF282828)
-    val darkOnSurfaceVariant = Color(0xFFE7E4EE)
+    val darkOnSurfaceVariant = Color(0xFFFFFFFF)
 
     /**
      * Extension function to get surface color at a specific elevation.
@@ -32,7 +32,8 @@ object MobileColors {
         color: Color = onSurface,
     ): Color {
         if (elevation == 0f) return surface
-        return color.copy(alpha = elevation.coerceIn(0f, 1f))
+        return color
+            .copy(alpha = elevation.coerceIn(0f, 1f))
             .compositeOver(surface)
     }
 
@@ -56,5 +57,4 @@ object MobileColors {
 
         return surfaceColorAtElevation(elevation, color)
     }
-
 }

@@ -70,11 +70,10 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.strings.R as LocaleR
 
-
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun OnboardingScreen(
-    navigator: OnboardingScreenNavigator,
+    navigator: NavigatorOnboardingScreen,
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -141,8 +140,8 @@ internal fun OnboardingScreen(
     LaunchedEffect(viewModel) {
         viewModel.nextStepNavigation.collect { navigation ->
             when (navigation) {
-                NextStepNavigation.CONTINUE_ONBOARDING -> navigator.openAddProfileScreen(true)
-                NextStepNavigation.HOME -> navigator.openHomeScreen()
+                NextStepNavigation.CONTINUE_ONBOARDING -> navigator.navigateToAddProfileScreen(true)
+                NextStepNavigation.HOME -> navigator.navigateToHomeScreen()
             }
         }
     }
@@ -222,15 +221,23 @@ private fun OnboardingScreenContent(
                     val widthDivisor = 6
 
                     if (targetState > initialState) {
-                        (fadeIn(tweenAlpha) +
-                            slideInHorizontally(animationSpec = tweenOffset) { it / widthDivisor }) togetherWith
-                            (fadeOut(tweenAlpha) +
-                                slideOutHorizontally(animationSpec = tweenOffset) { -it / widthDivisor })
+                        (
+                            fadeIn(tweenAlpha) +
+                                slideInHorizontally(animationSpec = tweenOffset) { it / widthDivisor }
+                        ) togetherWith
+                            (
+                                fadeOut(tweenAlpha) +
+                                    slideOutHorizontally(animationSpec = tweenOffset) { -it / widthDivisor }
+                            )
                     } else {
-                        (fadeIn(tweenAlpha) +
-                            slideInHorizontally(animationSpec = tweenOffset) { -it / widthDivisor }) togetherWith
-                            (fadeOut(tweenAlpha) +
-                                slideOutHorizontally(animationSpec = tweenOffset) { it / widthDivisor })
+                        (
+                            fadeIn(tweenAlpha) +
+                                slideInHorizontally(animationSpec = tweenOffset) { -it / widthDivisor }
+                        ) togetherWith
+                            (
+                                fadeOut(tweenAlpha) +
+                                    slideOutHorizontally(animationSpec = tweenOffset) { it / widthDivisor }
+                            )
                     }.using(
                         SizeTransform(
                             clip = false,
@@ -245,6 +252,7 @@ private fun OnboardingScreenContent(
             ) { stepIndex ->
                 when (OnboardingStep.entries[stepIndex]) {
                     OnboardingStep.Welcome -> WelcomeStep()
+
                     OnboardingStep.Permissions -> PermissionsStep(
                         notificationsGranted = notificationsGranted,
                         unknownSourcesAllowed = unknownSourcesAllowed,
@@ -265,7 +273,8 @@ private fun OnboardingScreenContent(
 
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .align(Alignment.BottomCenter),
         ) {
             if (!isContinueEnabled) {
@@ -335,6 +344,7 @@ private enum class OnboardingStep {
 private fun isNotificationsGranted(context: Context): Boolean {
     return when {
         Build.VERSION.SDK_INT < 33 -> true
+
         else -> ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.POST_NOTIFICATIONS,
@@ -345,7 +355,10 @@ private fun isNotificationsGranted(context: Context): Boolean {
 @Suppress("DEPRECATION")
 private fun isUnknownSourcesAllowed(context: Context): Boolean {
     return when {
-        Build.VERSION.SDK_INT >= 26 -> context.packageManager.canRequestPackageInstalls()
+        Build.VERSION.SDK_INT >= 26 -> {
+            context.packageManager.canRequestPackageInstalls()
+        }
+
         else -> {
             runCatching {
                 Settings.Secure.getInt(
@@ -366,10 +379,11 @@ private fun getPreGrantedPermissions(
 
     val requestedPermissions = runCatching {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.getPackageInfo(
-                context.packageName,
-                PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong()),
-            ).requestedPermissions
+            pm
+                .getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong()),
+                ).requestedPermissions
         } else {
             @Suppress("DEPRECATION")
             pm.getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS).requestedPermissions
@@ -381,17 +395,18 @@ private fun getPreGrantedPermissions(
         .filterNot { it in excludedPermissions }
         .filter { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-        }
-        .distinct()
+        }.distinct()
         .mapNotNull { permission ->
             val label = runCatching {
-                pm.getPermissionInfo(permission, 0)
+                pm
+                    .getPermissionInfo(permission, 0)
                     .loadLabel(pm)
                     .toString()
             }.getOrNull().orEmpty()
 
             val description = runCatching {
-                pm.getPermissionInfo(permission, 0)
+                pm
+                    .getPermissionInfo(permission, 0)
                     .loadDescription(pm)
                     .toString()
             }.getOrNull().orEmpty()
@@ -406,8 +421,7 @@ private fun getPreGrantedPermissions(
                 description = description
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
             )
-        }
-        .sortedBy { it.label.lowercase() }
+        }.sortedBy { it.label.lowercase() }
         .toList()
 }
 

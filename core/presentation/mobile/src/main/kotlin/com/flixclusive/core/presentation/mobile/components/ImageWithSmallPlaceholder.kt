@@ -1,7 +1,5 @@
 package com.flixclusive.core.presentation.mobile.components
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -26,8 +24,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -38,19 +34,20 @@ import coil3.request.crossfade
 @Composable
 fun ImageWithSmallPlaceholder(
     urlImage: String?,
-    @DrawableRes placeholderId: Int,
-    @StringRes contentDescId: Int,
+    placeholder: Painter,
     modifier: Modifier = Modifier,
     placeholderSize: Dp = Dp.Unspecified,
-    shape: Shape = CircleShape
+    shape: Shape = CircleShape,
+    contentDescription: String? = null
 ) {
     ImageWithSmallPlaceholder(
-        model = ImageRequest.Builder(LocalContext.current)
+        model = ImageRequest
+            .Builder(LocalContext.current)
             .data(urlImage)
             .crossfade(true)
             .build(),
-        placeholder = painterResource(id = placeholderId),
-        contentDescription = stringResource(id = contentDescId),
+        placeholder = placeholder,
+        contentDescription = contentDescription,
         modifier = modifier,
         placeholderSize = placeholderSize,
         shape = shape
@@ -94,7 +91,9 @@ fun ImageWithSmallPlaceholder(
                     tint = LocalContentColor.current.copy(0.8F),
                     modifier = if (placeholderSize != Dp.Unspecified) {
                         Modifier.size(placeholderSize)
-                    } else Modifier
+                    } else {
+                        Modifier
+                    }
                 )
             }
 

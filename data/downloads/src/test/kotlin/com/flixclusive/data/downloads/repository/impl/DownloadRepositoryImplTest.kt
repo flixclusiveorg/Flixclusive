@@ -1,17 +1,22 @@
 package com.flixclusive.data.downloads.repository.impl
 
 import app.cash.turbine.test
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.download.CoroutineDownloader
 import com.flixclusive.core.network.download.DownloadProgress
+import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.data.downloads.model.DownloadStatus
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
@@ -24,13 +29,21 @@ class DownloadRepositoryImplTest {
 
     private lateinit var coroutineDownloader: CoroutineDownloader
     private lateinit var downloadRepository: DownloadRepositoryImpl
+    private lateinit var appDispatchers: AppDispatchers
 
     private val mockFile = mockk<File>()
+
+    @get:Rule
+    val logRule = LogRule()
 
     @Before
     fun setup() {
         coroutineDownloader = mockk()
-        downloadRepository = DownloadRepositoryImpl(coroutineDownloader)
+        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
+        downloadRepository = DownloadRepositoryImpl(
+            coroutineDownloader,
+            appDispatchers
+        )
     }
 
     @Test
@@ -42,9 +55,9 @@ class DownloadRepositoryImplTest {
 
             stateFlow.test {
                 val initialState = awaitItem()
-                expectThat(initialState.downloadId).isEqualTo(downloadId)
+                expectThat(initialState.id).isEqualTo(downloadId)
                 expectThat(initialState.status).isEqualTo(DownloadStatus.IDLE)
-                expectThat(initialState.progress).isEqualTo(0)
+                expectThat(initialState.progress).isEqualTo(0f)
                 expectThat(initialState.bytesDownloaded).isEqualTo(0L)
                 expectThat(initialState.totalBytes).isEqualTo(0L)
                 expectThat(initialState.error).isNull()
@@ -59,10 +72,10 @@ class DownloadRepositoryImplTest {
         runTest(testDispatcher) {
             val downloadId = "test_download_1"
 
-            val stateFlow1 = downloadRepository.getDownloadState(downloadId)
-            val stateFlow2 = downloadRepository.getDownloadState(downloadId)
+            val stateFlow1 = downloadRepository.getDownloadState(downloadId).first()
+            val stateFlow2 = downloadRepository.getDownloadState(downloadId).first()
 
-            expectThat(stateFlow1.value).isEqualTo(stateFlow2.value)
+            expectThat(stateFlow1).isEqualTo(stateFlow2)
 
             advanceUntilIdle()
         }
@@ -73,10 +86,10 @@ class DownloadRepositoryImplTest {
             val downloadId = "test_download_1"
             val url = "https://example.com/file.apk"
             val progressSteps = listOf(
-                DownloadProgress(bytesDownloaded = 250L, totalBytes = 1000L, progress = 25, isComplete = false),
-                DownloadProgress(bytesDownloaded = 500L, totalBytes = 1000L, progress = 50, isComplete = false),
-                DownloadProgress(bytesDownloaded = 750L, totalBytes = 1000L, progress = 75, isComplete = false),
-                DownloadProgress(bytesDownloaded = 1000L, totalBytes = 1000L, progress = 100, isComplete = true),
+                DownloadProgress(bytesDownloaded = 250L, totalBytes = 1000L, progress = 25f, isComplete = false),
+                DownloadProgress(bytesDownloaded = 500L, totalBytes = 1000L, progress = 50f, isComplete = false),
+                DownloadProgress(bytesDownloaded = 750L, totalBytes = 1000L, progress = 75f, isComplete = false),
+                DownloadProgress(bytesDownloaded = 1000L, totalBytes = 1000L, progress = 100f, isComplete = true),
             )
 
             every { coroutineDownloader.download(url, mockFile) } returns flow {
@@ -96,23 +109,23 @@ class DownloadRepositoryImplTest {
 
                 val progress25State = awaitItem()
                 expectThat(progress25State.status).isEqualTo(DownloadStatus.DOWNLOADING)
-                expectThat(progress25State.progress).isEqualTo(25)
+                expectThat(progress25State.progress).isEqualTo(25f)
                 expectThat(progress25State.bytesDownloaded).isEqualTo(250L)
                 expectThat(progress25State.totalBytes).isEqualTo(1000L)
 
                 val progress50State = awaitItem()
                 expectThat(progress50State.status).isEqualTo(DownloadStatus.DOWNLOADING)
-                expectThat(progress50State.progress).isEqualTo(50)
+                expectThat(progress50State.progress).isEqualTo(50f)
                 expectThat(progress50State.bytesDownloaded).isEqualTo(500L)
 
                 val progress75State = awaitItem()
                 expectThat(progress75State.status).isEqualTo(DownloadStatus.DOWNLOADING)
-                expectThat(progress75State.progress).isEqualTo(75)
+                expectThat(progress75State.progress).isEqualTo(75f)
                 expectThat(progress75State.bytesDownloaded).isEqualTo(750L)
 
                 val completedState = awaitItem()
                 expectThat(completedState.status).isEqualTo(DownloadStatus.COMPLETED)
-                expectThat(completedState.progress).isEqualTo(100)
+                expectThat(completedState.progress).isEqualTo(100f)
                 expectThat(completedState.bytesDownloaded).isEqualTo(1000L)
                 expectThat(completedState.totalBytes).isEqualTo(1000L)
 
@@ -184,13 +197,13 @@ class DownloadRepositoryImplTest {
             val url2 = "https://example.com/file2.apk"
 
             val progress1 = listOf(
-                DownloadProgress(bytesDownloaded = 500L, totalBytes = 1000L, progress = 50, isComplete = false),
-                DownloadProgress(bytesDownloaded = 1000L, totalBytes = 1000L, progress = 100, isComplete = true),
+                DownloadProgress(bytesDownloaded = 500L, totalBytes = 1000L, progress = 50f, isComplete = false),
+                DownloadProgress(bytesDownloaded = 1000L, totalBytes = 1000L, progress = 100f, isComplete = true),
             )
 
             val progress2 = listOf(
-                DownloadProgress(bytesDownloaded = 250L, totalBytes = 500L, progress = 50, isComplete = false),
-                DownloadProgress(bytesDownloaded = 500L, totalBytes = 500L, progress = 100, isComplete = true),
+                DownloadProgress(bytesDownloaded = 250L, totalBytes = 500L, progress = 50f, isComplete = false),
+                DownloadProgress(bytesDownloaded = 500L, totalBytes = 500L, progress = 100f, isComplete = true),
             )
 
             every { coroutineDownloader.download(url1, any()) } returns flow {
@@ -206,7 +219,7 @@ class DownloadRepositoryImplTest {
 
             stateFlow1.test {
                 val initialState1 = awaitItem()
-                expectThat(initialState1.downloadId).isEqualTo(downloadId1)
+                expectThat(initialState1.id).isEqualTo(downloadId1)
                 expectThat(initialState1.status).isEqualTo(DownloadStatus.IDLE)
 
                 downloadRepository.executeDownload(downloadId1, url1, mockFile)
@@ -221,7 +234,7 @@ class DownloadRepositoryImplTest {
 
             stateFlow2.test {
                 val initialState2 = awaitItem()
-                expectThat(initialState2.downloadId).isEqualTo(downloadId2)
+                expectThat(initialState2.id).isEqualTo(downloadId2)
                 expectThat(initialState2.status).isEqualTo(DownloadStatus.IDLE)
 
                 downloadRepository.executeDownload(downloadId2, url2, mockFile)
@@ -245,7 +258,7 @@ class DownloadRepositoryImplTest {
             val progressWithZeroTotal = DownloadProgress(
                 bytesDownloaded = 100L,
                 totalBytes = 0L,
-                progress = 0,
+                progress = 0f,
                 isComplete = true,
             )
 
@@ -264,7 +277,7 @@ class DownloadRepositoryImplTest {
 
                 val completedState = awaitItem()
                 expectThat(completedState.status).isEqualTo(DownloadStatus.COMPLETED)
-                expectThat(completedState.progress).isEqualTo(0)
+                expectThat(completedState.progress).isEqualTo(0f)
                 expectThat(completedState.bytesDownloaded).isEqualTo(100L)
                 expectThat(completedState.totalBytes).isEqualTo(0L)
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tracker_selector_desc">Choose a tracker to add this list to</string>
+    <string name="select_tracker">Select tracker</string>
+    <string name="tracker_to_sync_with">Tracker to sync with</string>
+</resources>

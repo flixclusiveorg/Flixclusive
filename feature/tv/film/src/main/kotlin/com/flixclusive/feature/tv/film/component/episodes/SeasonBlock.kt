@@ -1,4 +1,4 @@
-package com.flixclusive.feature.tv.film.component.episodes
+package com.flixclusive.feature.tv.media.component.episodes
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding

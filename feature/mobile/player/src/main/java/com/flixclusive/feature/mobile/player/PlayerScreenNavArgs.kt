@@ -1,16 +1,24 @@
 package com.flixclusive.feature.mobile.player
 
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.tv.Episode
+import kotlinx.serialization.Serializable
 
 /**
  * Navigation arguments for the PlayerScreen.
  *
- * @param film The film metadata to be played.
- * @param providerId The ID of the provider to be used for fetching links.
- * @param episode The episode to be played (if the film is a TV show).
+ * @param media The media metadata to be played.
+ * @param episode The episode to be played (if the media is a TV show).
  * */
 data class PlayerScreenNavArgs(
-    val film: FilmMetadata,
+    val media: MediaMetadata,
     val episode: Episode?,
+    val initialStreamUrl: String?,
+    val initialCacheId: String?,
+    val initialHeaders: PlayerScreenInitialHeader?,
+)
+
+@Serializable
+data class PlayerScreenInitialHeader(
+    val headers: Map<String, String>
 )

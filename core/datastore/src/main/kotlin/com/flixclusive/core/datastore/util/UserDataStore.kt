@@ -9,7 +9,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.datastore.util.DataStoreLock.USER_PREFS_INSTANCE
-import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.coroutines.FlxDispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -20,7 +20,7 @@ internal fun Context.createUserPreferences(
     userId: String,
     corruptionHandler: ReplaceFileCorruptionHandler<Preferences>? = null,
     produceMigrations: (Context) -> List<DataMigration<Preferences>> = { listOf() },
-    scope: CoroutineScope = CoroutineScope(AppDispatchers.IO.dispatcher + SupervisorJob()),
+    scope: CoroutineScope = CoroutineScope(FlxDispatchers.IO.dispatcher + SupervisorJob()),
 ): DataStore<Preferences> {
     synchronized(DataStoreLock.lock) {
         if (DataStoreLock.CURRENT_USER_ID != userId) {

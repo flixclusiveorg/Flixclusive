@@ -48,16 +48,25 @@ internal fun ServersScreen(
     servers: () -> List<PlayerServer>,
     currentServer: () -> Int,
     onServerChange: (Int) -> Unit,
-    providers: List<ProviderMetadata>,
-    currentProvider: ProviderMetadata,
-    failedStreamUrls: () -> Set<String>,
+    providers: () -> List<ProviderMetadata>,
+    currentProvider: () -> ProviderMetadata,
     onProviderChange: (ProviderMetadata) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val clipboardManager = LocalClipboard.current
-    val selectedProviderIndex by remember(currentProvider) {
-        derivedStateOf { providers.indexOfFirst { it.id == currentProvider.id }.coerceAtLeast(0) }
+    val selectedProviderIndex by remember {
+        derivedStateOf {
+            providers()
+                .indexOfFirst { it.id == currentProvider().id }
+                .coerceAtLeast(0)
+        }
+    }
+
+    val hasFailedStreams by remember {
+        derivedStateOf {
+            servers().any { it.isDead }
+        }
     }
 
     BackHandler {
@@ -102,10 +111,10 @@ internal fun ServersScreen(
                     icon = painterResource(id = UiCommonR.drawable.provider_logo),
                     contentDescription = stringResource(id = LocaleR.string.providers),
                     label = stringResource(id = LocaleR.string.providers),
-                    items = providers,
+                    items = providers(),
                     selectedIndex = selectedProviderIndex,
                     onItemClick = {
-                        val provider = providers[it]
+                        val provider = providers()[it]
                         onProviderChange(provider)
                     },
                     modifier = Modifier
@@ -128,7 +137,6 @@ internal fun ServersScreen(
                     items = servers(),
                     selectedIndex = currentServer(),
                     onItemClick = onServerChange,
-                    failedItems = failedStreamUrls,
                     onItemLongClick = {
                         val item = servers()[it]
                         val data = """
@@ -147,7 +155,7 @@ internal fun ServersScreen(
             }
 
             AnimatedVisibility(
-                visible = failedStreamUrls().isNotEmpty(),
+                visible = hasFailedStreams,
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
                 exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
                 modifier = Modifier.align(Alignment.Start)
@@ -174,5 +182,3 @@ internal fun ServersScreen(
         }
     }
 }
-
-

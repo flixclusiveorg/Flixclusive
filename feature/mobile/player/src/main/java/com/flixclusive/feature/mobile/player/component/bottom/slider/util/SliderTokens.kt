@@ -3,10 +3,11 @@ package com.flixclusive.feature.mobile.player.component.bottom.slider.util
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.dp
 
-
+@Suppress("ktlint:standard:property-naming")
 internal object SliderTokens {
     val ActiveTrackColor = ColorSchemeKeyTokens.Primary
     val DisabledActiveTrackColor = ColorSchemeKeyTokens.OnSurface
+
     const val DisabledActiveTrackOpacity = 0.38f
     val DisabledHandleColor = ColorSchemeKeyTokens.OnSurface
     const val DisabledHandleOpacity = 0.38f

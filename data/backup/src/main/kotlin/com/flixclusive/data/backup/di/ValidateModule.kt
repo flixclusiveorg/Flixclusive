@@ -13,8 +13,8 @@ import com.flixclusive.data.backup.validate.impl.ProviderBackupValidator
 import com.flixclusive.data.backup.validate.impl.RepositoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.SearchHistoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.WatchProgressBackupValidator
-import dagger.Module
 import dagger.Binds
+import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton

@@ -18,7 +18,7 @@ import com.flixclusive.core.ui.tv.util.LocalCurrentRouteProvider
 import com.flixclusive.core.ui.tv.util.LocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.LocalLastFocusedItemPerDestinationProvider
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
-import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.tv.media.destinations.MediaScreenDestination
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.ramcosta.composedestinations.navigation.navigate
@@ -30,15 +30,17 @@ import kotlin.system.exitProcess
 @Composable
 internal fun TvActivity.TvApp() {
     val navController = rememberNavController()
-    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(initialValue = TvNavGraphs.root.startRoute)
+    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(
+        initialValue = TvNavGraphs.root.startRoute
+    )
     val currentNavGraph by navController.currentScreenAsState(TvNavGraphs.home, isTv = true)
 
     var isNavDrawerVisible by remember { mutableStateOf(false) }
     var isDrawerOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(currentSelectedScreen) {
-        isNavDrawerVisible = currentSelectedScreen.route.contains(FilmScreenDestination.route, true).not()
-            && currentSelectedScreen != SplashScreenDestination
+        isNavDrawerVisible = currentSelectedScreen.route.contains(MediaScreenDestination.route, true).not() &&
+            currentSelectedScreen != SplashScreenDestination
     }
 
     val currentScreenIndexSelected = remember(currentNavGraph) {
@@ -46,7 +48,7 @@ internal fun TvActivity.TvApp() {
     }
 
     LaunchedEffect(isDrawerOpen) {
-        if(isDrawerOpen) {
+        if (isDrawerOpen) {
             NavItemsFocusRequesters.getOrNull(currentScreenIndexSelected)?.requestFocus()
         }
     }
@@ -59,14 +61,20 @@ internal fun TvActivity.TvApp() {
                 1. On user's first back press, bring focus to the current selected tab, if TopBar is not visible, first make it visible, then focus the selected tab
                 2. On second back press, bring focus back to the first displayed tab
                 3. On third back press, exit the app
-                */
+                 */
 
-                !isDrawerOpen -> isDrawerOpen = true
+                !isDrawerOpen -> {
+                    isDrawerOpen = true
+                }
+
                 currentScreenIndexSelected == 0 -> {
                     finish()
                     exitProcess(0)
                 }
-                else -> NavItemsFocusRequesters[0].requestFocus()
+
+                else -> {
+                    NavItemsFocusRequesters[0].requestFocus()
+                }
             }
         }
     )

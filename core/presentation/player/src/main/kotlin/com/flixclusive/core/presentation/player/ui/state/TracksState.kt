@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.media3.common.C
@@ -61,7 +62,9 @@ class TracksState(
 
     internal suspend fun observe() {
         player.listen { events ->
-            if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) && currentMediaItem?.mediaId != lastInitializedMediaItem) {
+            if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) &&
+                currentMediaItem?.mediaId != lastInitializedMediaItem
+            ) {
                 lastInitializedMediaItem = null
                 audios.clear()
                 subtitles.clear()
@@ -86,7 +89,14 @@ class TracksState(
             val name = format.getName(type, i)
             infoLog("Found audio track ${i + 1}: ${format.getName(type, i)}")
 
-            audios.add(name)
+            // Check if the audio track is already added then add a suffix to differentiate them
+            var uniqueName = name
+            var suffix = 1
+            while (audios.fastAny { it == uniqueName }) {
+                uniqueName = "$name (${suffix++})"
+            }
+
+            audios.add(uniqueName)
         }
     }
 
@@ -113,7 +123,8 @@ class TracksState(
                 PlayerSubtitle(
                     url = format.id ?: "",
                     label = format.getName(type, i),
-                    source = source
+                    source = source,
+                    isDead = false
                 )
             )
         }
@@ -132,8 +143,13 @@ class TracksState(
             languageProvider = { it },
         )
 
-        onSubtitleSelect(subtitleIndex)
-        onAudioSelect(audioIndex)
+        if (subtitleIndex in subtitles.indices) {
+            onSubtitleSelect(subtitleIndex)
+        }
+
+        if (audioIndex in audios.indices) {
+            onAudioSelect(audioIndex)
+        }
     }
 
     fun resetTracks() {
@@ -147,7 +163,7 @@ class TracksState(
         val success = player.addSubtitle(subtitle)
         if (!success) {
             warnLog("Failed to add subtitle: ${subtitle.label}")
-            player._errors.tryEmit(UiText.from(R.string.failed_to_add_subtitle))
+            player.emitError(UiText.from(R.string.failed_to_add_subtitle))
             return
         }
 
@@ -186,15 +202,17 @@ class TracksState(
             PlayerSubtitle(
                 url = "",
                 label = "Off",
-                source = TrackSource.EMBEDDED
+                source = TrackSource.EMBEDDED,
+                isDead = false
             )
         )
     }
 
     private fun getTrackFormats(type: Int): List<Format> {
-        return player.currentTracks.groups.fastFilter {
-            it.type == type && it.isSupported
-        }.getFormats()
+        return player.currentTracks.groups
+            .fastFilter {
+                it.type == type && it.isSupported
+            }.getFormats()
     }
 
     companion object {

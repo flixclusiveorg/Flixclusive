@@ -147,8 +147,7 @@ private fun ColorButton(
                     indication = null,
                     onClick = onPick,
                     enabled = enabled(),
-                )
-                .graphicsLayer {
+                ).graphicsLayer {
                     scaleX = scale.value
                     scaleY = scale.value
                 },
@@ -165,8 +164,7 @@ private fun ColorButton(
                         offset = DpOffset(3.dp, 4.dp),
                         inset = true,
                         shape = CircleShape,
-                    )
-                    .indication(
+                    ).indication(
                         interactionSource = interactionSource,
                         indication = LocalIndication.current
                     ),
@@ -188,15 +186,13 @@ private fun ColorButton(
                             0.5.dp,
                             shadowColor.copy(0.1F),
                             CircleShape,
-                        )
-                        .boxShadow(
+                        ).boxShadow(
                             color = shadowColor,
                             blurRadius = 4.dp,
                             spreadRadius = 0.05.dp,
                             offset = DpOffset(3.dp, 3.dp),
                             shape = CircleShape,
-                        )
-                        .size(size / 2)
+                        ).size(size / 2)
                         .background(color = Color.White, shape = CircleShape),
             ) {
                 AdaptiveIcon(

@@ -12,9 +12,9 @@ import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.tmdb.usecase.GetSearchCardsUseCase
 import com.flixclusive.model.configuration.catalog.SearchCatalog
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.SearchResponseData
-import com.flixclusive.model.film.util.replaceTypeInUrl
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.SearchResponseData
+import com.flixclusive.model.media.util.replaceTypeInUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,7 +28,7 @@ internal class SearchScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     getSearchCardsUseCase: GetSearchCardsUseCase
 ) : ViewModel() {
-    val searchResults = mutableStateListOf<FilmSearchItem>()
+    val searchResults = mutableStateListOf<PartialMedia>()
     val searchSuggestions = mutableStateListOf<String>()
 
     private var searchingJob: Job? = null
@@ -54,9 +54,10 @@ internal class SearchScreenViewModel @Inject constructor(
         .map { value ->
             if (value is Resource.Success) {
                 Resource.Success(value.data?.filterNot { it.id == -1 })
-            } else value
-        }
-        .stateIn(
+            } else {
+                value
+            }
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = Resource.Loading
@@ -67,8 +68,9 @@ internal class SearchScreenViewModel @Inject constructor(
     }
 
     fun onSearch() {
-        if (searchingJob?.isActive == true)
+        if (searchingJob?.isActive == true) {
             return
+        }
 
         searchingJob = viewModelScope.launch {
             // Reset pagination
@@ -82,8 +84,9 @@ internal class SearchScreenViewModel @Inject constructor(
     }
 
     fun onChangeFilter(filter: SearchFilter) {
-        if (onChangeFilterJob?.isActive == true)
+        if (onChangeFilterJob?.isActive == true) {
             return
+        }
 
         onChangeFilterJob = viewModelScope.launch {
             currentFilterSelected = filter
@@ -114,11 +117,14 @@ internal class SearchScreenViewModel @Inject constructor(
     }
 
     private fun loadItems(
-        callResponse: Resource<SearchResponseData<FilmSearchItem>>,
-        onSuccess: SearchResponseData<FilmSearchItem>.() -> Unit
+        callResponse: Resource<SearchResponseData<PartialMedia>>,
+        onSuccess: SearchResponseData<PartialMedia>.() -> Unit
     ) {
-        if (page != 1 && (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE))
+        if (page != 1 &&
+            (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE)
+        ) {
             return
+        }
 
         pagingState = when (page) {
             1 -> com.flixclusive.core.common.pagination.PagingState.LOADING
@@ -132,7 +138,11 @@ internal class SearchScreenViewModel @Inject constructor(
                     else -> com.flixclusive.core.common.pagination.PagingState.EXHAUSTED
                 }
             }
-            Resource.Loading -> Unit
+
+            Resource.Loading -> {
+                Unit
+            }
+
             is Resource.Success -> {
                 callResponse.data?.run(onSuccess)
             }
@@ -164,8 +174,9 @@ internal class SearchScreenViewModel @Inject constructor(
 
                     pagingState = PagingState.IDLE
 
-                    if (canPaginate)
+                    if (canPaginate) {
                         this@SearchScreenViewModel.page++
+                    }
                 }
             )
         }
@@ -173,11 +184,12 @@ internal class SearchScreenViewModel @Inject constructor(
 
     private fun getCatalogItems() {
         viewModelScope.launch {
-            val filmTypeCouldBeBoth = selectedCatalog!!.mediaType == "all"
-            val urlQuery = if(filmTypeCouldBeBoth && currentFilterSelected != SearchFilter.ALL) {
+            val mediaTypeCouldBeBoth = selectedCatalog!!.type == "all"
+            val urlQuery = if (mediaTypeCouldBeBoth && currentFilterSelected != SearchFilter.ALL) {
                 selectedCatalog!!.url.replaceTypeInUrl(currentFilterSelected.type)
-            } else selectedCatalog!!.url
-
+            } else {
+                selectedCatalog!!.url
+            }
 
             loadItems(
                 callResponse = tmdbRepository.paginateConfigItems(
@@ -201,8 +213,9 @@ internal class SearchScreenViewModel @Inject constructor(
 
                     pagingState = PagingState.IDLE
 
-                    if (canPaginate)
+                    if (canPaginate) {
                         this@SearchScreenViewModel.page++
+                    }
                 }
             )
         }
@@ -210,14 +223,16 @@ internal class SearchScreenViewModel @Inject constructor(
 
     private fun loadRecentlyTrending() {
         viewModelScope.launch {
-            val filmType =
-                if (currentFilterSelected.type == "multi")
+            val mediaType =
+                if (currentFilterSelected.type == "multi") {
                     "all"
-                else currentFilterSelected.type
+                } else {
+                    currentFilterSelected.type
+                }
 
             loadItems(
                 callResponse = tmdbRepository.getTrending(
-                    mediaType = filmType,
+                    mediaType = mediaType,
                     page = page,
                 ),
                 onSuccess = {
@@ -235,8 +250,9 @@ internal class SearchScreenViewModel @Inject constructor(
 
                     pagingState = PagingState.IDLE
 
-                    if (canPaginate)
+                    if (canPaginate) {
                         this@SearchScreenViewModel.page++
+                    }
                 }
             )
         }

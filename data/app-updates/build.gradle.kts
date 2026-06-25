@@ -16,5 +16,4 @@ dependencies {
     implementation(libs.stubs.util)
 
     testImplementation(projects.coreTesting)
-    testImplementation(libs.retrofit.gson)
 }

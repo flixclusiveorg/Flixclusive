@@ -12,15 +12,20 @@ android {
 dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreDatabase)
+    implementation(projects.coreDatastore)
     implementation(projects.coreDrawables)
     implementation(projects.coreNavigation)
     implementation(projects.coreNetwork)
     implementation(projects.corePresentationCommon)
+    implementation(projects.corePresentationMobile)
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
+    implementation(projects.dataProvider)
+    implementation(projects.domainProvider)
     implementation(projects.feature.mobile.libraryCommon)
 
     implementation(libs.coil.compose)
+    implementation(libs.compose.activity)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
@@ -29,7 +34,8 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.kotlinx.immutables)
     implementation(libs.lifecycle.runtimeCompose)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
+    implementation(libs.stubs.provider)
 
     testImplementation(projects.coreTesting)
 }

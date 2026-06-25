@@ -40,14 +40,17 @@ class MediaSourceManager(
         val dataSourceFactory = dataSourceFactory.remote
 
         return when {
-            MimeTypeParser.isM3U8(url) ->
+            MimeTypeParser.isM3U8(url) -> {
                 HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            }
 
-            url.contains(".mpd", ignoreCase = true) ->
+            url.contains(".mpd", ignoreCase = true) -> {
                 DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            }
 
-            else ->
+            else -> {
                 ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            }
         }
     }
 

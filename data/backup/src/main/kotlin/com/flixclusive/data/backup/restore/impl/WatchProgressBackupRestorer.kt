@@ -32,16 +32,16 @@ internal class WatchProgressBackupRestorer @Inject constructor(
             val watchedList = libraryListDao.getWatchedList(ownerId)
 
             items.forEach { progress ->
-                val existing = libraryListItemDao.getByListIdAndFilmId(
+                val existing = libraryListItemDao.getByListIdAndMediaId(
                     listId = watchedList.id,
-                    filmId = progress.filmId,
+                    mediaId = progress.mediaId,
                 )
 
                 val listItem = existing?.item?.copy(
                     createdAt = Date(progress.createdAt),
                     updatedAt = Date(progress.updatedAt),
                 ) ?: LibraryListItem(
-                    filmId = progress.filmId,
+                    mediaId = progress.mediaId,
                     listId = watchedList.id,
                     createdAt = Date(progress.createdAt),
                     updatedAt = Date(progress.updatedAt),
@@ -53,6 +53,7 @@ internal class WatchProgressBackupRestorer @Inject constructor(
                     is BackupWatchMovieProgress -> movieProgressDao.insertProgress(
                         progress.toMovieProgress(ownerId)
                     )
+
                     is BackupWatchEpisodeProgress -> episodeProgressDao.insertProgress(
                         progress.toEpisodeProgress(ownerId)
                     )
@@ -68,7 +69,7 @@ internal class WatchProgressBackupRestorer @Inject constructor(
 
     private fun BackupWatchMovieProgress.toMovieProgress(ownerId: String): MovieProgress {
         return MovieProgress(
-            filmId = filmId,
+            mediaId = mediaId,
             ownerId = ownerId,
             progress = progress,
             status = toActualStatus(),
@@ -80,7 +81,7 @@ internal class WatchProgressBackupRestorer @Inject constructor(
 
     private fun BackupWatchEpisodeProgress.toEpisodeProgress(ownerId: String): EpisodeProgress {
         return EpisodeProgress(
-            filmId = filmId,
+            mediaId = mediaId,
             ownerId = ownerId,
             progress = progress,
             status = toActualStatus(),

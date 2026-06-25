@@ -1,5 +1,6 @@
 package com.flixclusive.domain.catalog.usecase
 
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.model.provider.Catalog
 import kotlinx.coroutines.flow.Flow
 
@@ -14,5 +15,5 @@ interface GetHomeCatalogsUseCase {
      *
      * @return A list of [Catalog] objects representing the home catalogs.
      * */
-    operator fun invoke(): Flow<List<Catalog>>
+    operator fun invoke(): Flow<Async<List<Catalog>>>
 }

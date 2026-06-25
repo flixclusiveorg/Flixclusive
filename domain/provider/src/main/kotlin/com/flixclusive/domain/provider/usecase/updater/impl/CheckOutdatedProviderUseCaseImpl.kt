@@ -1,11 +1,7 @@
 package com.flixclusive.domain.provider.usecase.updater.impl
 
-import com.flixclusive.core.common.exception.ExceptionWithUiText
-import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
@@ -22,11 +18,10 @@ internal class CheckOutdatedProviderUseCaseImpl @Inject constructor(
 ) : CheckOutdatedProviderUseCase {
     override suspend fun invoke(): List<CheckOutdatedProviderResult> {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val installedProviders = providerRepository.getInstalledProviders(userId)
+        val providers = providerRepository.getProviders(userId)
 
-        return installedProviders.mapNotNull { provider ->
-            val metadata = providerRepository.getMetadata(provider.id)
-                ?: return@mapNotNull null
+        return providers.mapNotNull { provider ->
+            val metadata = provider.metadata ?: return@mapNotNull null
 
             try {
                 if (invoke(metadata)) {
@@ -47,31 +42,17 @@ internal class CheckOutdatedProviderUseCaseImpl @Inject constructor(
         val id = metadata.id
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-        val isDebug = providerRepository.getInstalledProvider(id, userId)?.isDebug ?: false
+        val provider = providerRepository.getProvider(id, userId) ?: return false
+        val isDebug = providerRepository.getProvider(id, userId)?.isDebug ?: false
         if (isDebug) return false
 
-        val provider = providerRepository.getPlugin(id) ?: return false
-
-        val manifest = provider.manifest
-        if (manifest.updateUrl == null || manifest.updateUrl.equals("")) {
+        val manifest = provider.plugin?.manifest
+        if (manifest?.updateUrl == null || manifest.updateUrl.equals("")) {
             return false
         }
 
         val repository = metadata.repositoryUrl.toValidRepositoryLink()
-        val response = getProviderFromRemoteUseCase(repository, id)
-
-        if (response is Resource.Failure) {
-            throw ExceptionWithUiText(response.error)
-        }
-
-        if (response.data == null) {
-            throw ExceptionWithUiText(
-                uiText = UiText.from(R.string.provider_not_found_message),
-                cause = NullPointerException(),
-            )
-        }
-
-        val updatedMetadata = response.data!!
+        val updatedMetadata = getProviderFromRemoteUseCase(repository, id)
 
         return manifest.versionCode < updatedMetadata.versionCode
     }

@@ -10,10 +10,10 @@ import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.flixclusive.core.common.file.FileConstants
 import com.flixclusive.core.database.AppDatabase
-import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListType
+import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.BackupOptions
@@ -22,7 +22,7 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.data.backup.repository.BackupResult
 import com.flixclusive.data.backup.work.util.BackupWorkConstants
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.common.MediaType
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
@@ -118,7 +118,7 @@ class BackupCreateWorkerTest {
                 db = database,
                 ownerId = userId,
                 listName = "Test List",
-                filmId = "film-1",
+                mediaId = "media-1",
             )
 
             val uniqueName = backupWorkManager.enqueueCreate(userId)
@@ -191,7 +191,7 @@ class BackupCreateWorkerTest {
                 db = database,
                 ownerId = userId,
                 listName = "Test List",
-                filmId = "film-1",
+                mediaId = "media-1",
             )
 
             backupWorkManager.syncPeriodicAutoBackup(
@@ -298,8 +298,6 @@ class BackupCreateWorkerTest {
 
                     delay(50)
                 }
-
-                error("Timeout waiting for backup output for userId=$userId")
             }
         }
     }
@@ -319,12 +317,14 @@ class BackupCreateWorkerTest {
         db: AppDatabase,
         ownerId: String,
         listName: String,
-        filmId: String,
+        mediaId: String,
     ) {
         val fixedDate = Date(1_700_000_000_000)
 
-        val listId = db.libraryListDao().insert(
+        val listId = "list-${System.currentTimeMillis()}"
+        db.libraryListDao().insert(
             LibraryList(
+                id = listId,
                 ownerId = ownerId,
                 name = listName,
                 description = null,
@@ -332,22 +332,21 @@ class BackupCreateWorkerTest {
                 createdAt = fixedDate,
                 updatedAt = fixedDate,
             )
-        ).toInt()
+        )
 
-        db.libraryListItemDao().upsertFilm(
-            DBFilm(
-                id = filmId,
-                title = "Test Film",
+        db.libraryListItemDao().upsertMedia(
+            DBMedia(
+                id = mediaId,
+                title = "Test Media",
                 providerId = "test-provider",
                 adult = false,
-                filmType = FilmType.MOVIE,
+                type = MediaType.MOVIE,
                 overview = null,
                 posterImage = null,
                 language = null,
                 rating = null,
                 backdropImage = null,
                 releaseDate = null,
-                year = null,
                 createdAt = fixedDate,
                 updatedAt = fixedDate,
             )
@@ -355,7 +354,7 @@ class BackupCreateWorkerTest {
 
         db.libraryListItemDao().insertItem(
             LibraryListItem(
-                filmId = filmId,
+                mediaId = mediaId,
                 listId = listId,
                 createdAt = fixedDate,
                 updatedAt = fixedDate,

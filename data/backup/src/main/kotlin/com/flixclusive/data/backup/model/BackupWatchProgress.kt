@@ -5,8 +5,9 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
+@Serializable
 sealed interface BackupWatchProgress {
-    val filmId: String
+    val mediaId: String
     val progress: Long
     val status: WatchStatus
     val duration: Long
@@ -17,7 +18,7 @@ sealed interface BackupWatchProgress {
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 internal data class BackupWatchMovieProgress(
-    @ProtoNumber(1) override val filmId: String,
+    @ProtoNumber(1) override val mediaId: String,
     @ProtoNumber(2) override val progress: Long,
     @ProtoNumber(3) override val status: WatchStatus,
     @ProtoNumber(4) override val duration: Long,
@@ -28,7 +29,7 @@ internal data class BackupWatchMovieProgress(
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 internal data class BackupWatchEpisodeProgress(
-    @ProtoNumber(1) override val filmId: String,
+    @ProtoNumber(1) override val mediaId: String,
     @ProtoNumber(2) override val progress: Long,
     @ProtoNumber(3) override val status: WatchStatus,
     @ProtoNumber(4) override val duration: Long,

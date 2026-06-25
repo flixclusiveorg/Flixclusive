@@ -40,22 +40,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
-import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.extensions.placeholderEffect
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun EpisodeCard(
-    modifier: Modifier = Modifier,
     data: EpisodeWithProgress,
     currentEpisodeSelected: Episode,
     onEpisodeClick: (Episode) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val title = remember(data) { "${data.number}. ${data.title}" }
 
@@ -68,7 +69,14 @@ internal fun EpisodeCard(
     val overlayColor = Brush.verticalGradient(
         0F to Color.Transparent,
         0.6F to Color.Transparent,
-        0.95F to if (isSelected) MaterialTheme.colorScheme.primary.copy(0.8F) else MaterialTheme.colorScheme.surface.copy(0.8F)
+        0.95F to
+            if (isSelected) {
+                MaterialTheme.colorScheme.primary.copy(0.8F)
+            } else {
+                MaterialTheme.colorScheme.surface.copy(
+                    0.8F
+                )
+            }
     )
     val progressColor = remember {
         when (isSelected) {
@@ -82,7 +90,7 @@ internal fun EpisodeCard(
             .width(220.dp)
             .padding(vertical = 5.dp, horizontal = 10.dp)
             .clip(MaterialTheme.shapes.extraSmall)
-            .clickable(enabled = !isSelected) {
+            .clickable(enabled = !isSelected && data.episode.isReleased) {
                 onEpisodeClick(data.episode)
             },
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -94,10 +102,9 @@ internal fun EpisodeCard(
                     onEpisodeClick(data.episode)
                 },
         ) {
-            FilmCover.Backdrop(
+            MediaCover.Backdrop(
                 imagePath = data.image,
-                title = data.title,
-                imageSize = "w227_and_h127_bestv2",
+                title = data.title ?: stringResource(id = LocaleR.string.untitled_episode, data.number),
                 modifier = Modifier
                     .fillMaxWidth()
             )
@@ -111,8 +118,7 @@ internal fun EpisodeCard(
                             width = 1.dp,
                             color = Color.White,
                             shape = CircleShape
-                        )
-                        .background(
+                        ).background(
                             color = Color.Black.copy(0.6f),
                             shape = CircleShape
                         )
@@ -165,31 +171,32 @@ internal fun EpisodeCard(
             )
         }
 
-        HorizontalDivider(
-            thickness = 0.5.dp,
-            color = LocalContentColor.current.copy(0.6f)
-        )
-
-        Box(
-            modifier = Modifier
-                .height(65.dp)
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = data.overview,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 10.sp,
-                    lineHeight = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = LocalContentColor.current.copy(0.6f)
-                ),
-                maxLines = 4,
-                overflow = TextOverflow.Ellipsis
+        data.overview?.let {
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = LocalContentColor.current.copy(0.6f)
             )
+
+            Box(
+                modifier = Modifier
+                    .height(65.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 10.sp,
+                        lineHeight = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = LocalContentColor.current.copy(0.6f)
+                    ),
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
-
 
 @Composable
 internal fun EpisodeCardPlaceholder(
@@ -208,7 +215,7 @@ internal fun EpisodeCardPlaceholder(
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(FilmCover.Backdrop.ratio)
+                    .aspectRatio(MediaCover.Backdrop.ratio)
                     .placeholderEffect()
             )
         }
@@ -244,9 +251,9 @@ internal fun EpisodeCardPlaceholder(
 )
 @Composable
 private fun EpisodeCardPreview() {
-    val sampleShow = remember { DummyDataForPreview.getTvShow() }
+    val sampleShow = remember { DummyDataForPreview.getShow() }
     val sampleEpisode = remember {
-        val season = sampleShow.seasons.first()
+        val season = sampleShow.seasons.first() as Season.Full
         val episode = season.episodes.first()
         EpisodeWithProgress(
             episode = episode,
@@ -254,7 +261,7 @@ private fun EpisodeCardPreview() {
                 episodeNumber = episode.number,
                 progress = 1200L,
                 duration = 2400L,
-                filmId = sampleShow.identifier,
+                mediaId = sampleShow.id,
                 ownerId = "preview-user",
                 status = WatchStatus.WATCHING,
                 seasonNumber = season.number,
@@ -269,7 +276,14 @@ private fun EpisodeCardPreview() {
             Row {
                 EpisodeCard(
                     data = sampleEpisode,
-                    currentEpisodeSelected = Episode(),
+                    currentEpisodeSelected = Episode(
+                        id = "1",
+                        title = "Episode 1",
+                        season = 1,
+                        number = 1,
+                        isReleased = true,
+                        releaseDate = System.currentTimeMillis()
+                    ),
                     onEpisodeClick = { _ -> }
                 )
 

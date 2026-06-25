@@ -1,0 +1,89 @@
+package com.flixclusive.core.presentation.common.util
+
+import android.content.Context
+import com.flixclusive.core.presentation.common.R
+import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRating
+import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.Before
+import org.junit.Test
+import strikt.api.expectThat
+import strikt.assertions.isEqualTo
+import java.util.Locale
+import com.flixclusive.core.strings.R as LocaleR
+
+class MediaDetailsFormatterUtilTest {
+    private lateinit var context: Context
+
+    @Before
+    fun setUp() {
+        context = mockk {
+            every { getString(R.string.no_runtime, *anyVararg<Any>()) } returns "No runtime"
+            every { getString(R.string.no_ratings, *anyVararg<Any>()) } returns "No ratings"
+            every {
+                resources.getQuantityString(
+                    LocaleR.plurals.season_runtime,
+                    any(),
+                    any()
+                )
+            } answers {
+                val count = args[1] as Int
+                val string = String.format(Locale.ROOT, "%d Season", count)
+
+                string + if (count > 1) "s" else ""
+            }
+            every {
+                resources.getQuantityString(
+                    LocaleR.plurals.episode_runtime,
+                    any(),
+                    any()
+                )
+            } answers {
+                val count = args[1] as Int
+                val string = String.format(Locale.ROOT, "%d Episode", count)
+
+                string + if (count > 1) "s" else ""
+            }
+        }
+    }
+
+    @Test
+    fun formatAsRuntime() {
+        val testCases = listOf(
+            0 to "No runtime",
+            45 to "45m",
+            120 to "2h",
+            135 to "2h 15m",
+            60 to "1h",
+            61 to "1h 1m",
+            59 to "59m",
+            -10 to "No runtime"
+        )
+
+        for ((input, expected) in testCases) {
+            val result = input.formatAsRuntime()
+            expectThat(result.asString(context))
+                .isEqualTo(expected)
+        }
+    }
+
+    @Test
+    fun formatAsRating() {
+        val testCases = listOf(
+            0.0 to "No ratings",
+            3.0 to "3.0",
+            4.25 to "4.25",
+            4.2 to "4.2",
+            5.75 to "5.75",
+            2.5 to "2.5",
+            4.567 to "4.57"
+        )
+
+        for ((input, expected) in testCases) {
+            val result = input.formatAsRating()
+            expectThat(result.asString(context))
+                .isEqualTo(expected)
+        }
+    }
+}

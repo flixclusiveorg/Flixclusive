@@ -1,6 +1,6 @@
 package com.flixclusive.feature.mobile.player.component
 
-
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -29,6 +29,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState
  *
  * Requires Android Oreo (26) or up to Android R (30).
  * */
+@SuppressLint("WrongConstant")
 @OptIn(UnstableApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -63,9 +64,12 @@ internal fun AutoPipModeObserverForAndroidOToR(
         if (isInPipMode) {
             ContextCompat.registerReceiver(
                 activity,
-                /* receiver = */ broadcastReceiver,
-                /* filter = */ IntentFilter(ACTION_PIP_CONTROL),
-                /* flags = */ ContextCompat.RECEIVER_NOT_EXPORTED
+                // receiver =
+                broadcastReceiver,
+                // filter =
+                IntentFilter(ACTION_PIP_CONTROL),
+                // flags =
+                ContextCompat.RECEIVER_NOT_EXPORTED
             )
 
             activity.updatePiPParams(
@@ -77,7 +81,7 @@ internal fun AutoPipModeObserverForAndroidOToR(
         }
     }
 
-    DisposableEffect(activity) {
+    DisposableEffect(activity, onPipInvoke) {
         val params = activity.createPiPParams(
             playPauseState = playPauseState,
             seekAmount = seekAmount

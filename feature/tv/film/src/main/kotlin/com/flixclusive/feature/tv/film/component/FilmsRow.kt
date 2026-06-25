@@ -1,4 +1,4 @@
-package com.flixclusive.feature.tv.film.component
+package com.flixclusive.feature.tv.media.component
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -46,26 +46,26 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.tv.component.FilmCard
-import com.flixclusive.core.ui.tv.component.FilmCardShape
+import com.flixclusive.core.ui.tv.component.MediaCard
+import com.flixclusive.core.ui.tv.component.MediaCardShape
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.core.strings.UiText
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalTvMaterial3Api::class)
 @Composable
-internal fun FilmsRow(
+internal fun MediasRow(
     modifier: Modifier = Modifier,
-    currentFilm: Film,
+    currentMedia: MediaMetadata,
     label: UiText,
     @DrawableRes iconId: Int,
-    films: List<Film>,
+    medias: List<MediaMetadata>,
     hasFocus: Boolean,
-    onFilmClick: (Film) -> Unit,
+    onMediaClick: (MediaMetadata) -> Unit,
     onFocusChange: (Boolean) -> Unit,
     goBack: () -> Unit,
 ) {
@@ -81,7 +81,7 @@ internal fun FilmsRow(
         shape = RectangleShape,
         colors = NonInteractiveSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = if(hasFocus) Color.White else LocalContentColor.current.copy(0.6f)
+            contentColor = if (hasFocus) Color.White else LocalContentColor.current.copy(0.6f)
         ),
     ) {
         Column(
@@ -125,21 +125,22 @@ internal fun FilmsRow(
                     contentPadding = PaddingValues(start = LabelStartPadding.start + getLocalDrawerWidth()),
                     pivotOffsets = PivotOffsets(parentFraction = 0.05F)
                 ) {
-                    itemsIndexed(films) { columnIndex, film ->
+                    itemsIndexed(medias) { columnIndex, media ->
                         Box {
-                            FilmCard(
+                            MediaCard(
                                 modifier = Modifier
                                     .ifElse(
                                         condition = columnIndex == firstInitialIndex,
                                         ifTrueModifier = focusRestorers.childModifier
-                                    )
-                                    .ifElse(
+                                    ).ifElse(
                                         condition = columnIndex == firstInitialIndex,
                                         ifTrueModifier = Modifier.onKeyEvent {
                                             if (hasPressedLeft(it) && isFirstItemFullyFocused) {
                                                 goBack()
                                                 return@onKeyEvent true
-                                            } else isFirstItemFullyFocused = true
+                                            } else {
+                                                isFirstItemFullyFocused = true
+                                            }
 
                                             false
                                         },
@@ -147,16 +148,15 @@ internal fun FilmsRow(
                                             isFirstItemFullyFocused = false
                                             false
                                         }
-                                    )
-                                    .focusProperties {
-                                        if (columnIndex == films.lastIndex) {
+                                    ).focusProperties {
+                                        if (columnIndex == medias.lastIndex) {
                                             right = FocusRequester.Cancel
                                         }
                                     },
-                                film = film,
+                                media = media,
                                 onClick = {
-                                    if (currentFilm.identifier != it.identifier) {
-                                        onFilmClick(it)
+                                    if (currentMedia.id != it.id) {
+                                        onMediaClick(it)
                                     }
                                 }
                             )
@@ -167,8 +167,10 @@ internal fun FilmsRow(
                                     .background(
                                         color = if (!hasFocus) {
                                             MaterialTheme.colorScheme.surface.copy(0.6f)
-                                        } else Color.Transparent,
-                                        shape = FilmCardShape
+                                        } else {
+                                            Color.Transparent
+                                        },
+                                        shape = MediaCardShape
                                     )
                             )
                         }

@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="failed_to_fetch_cards">Something went wrong fetching search categories</string>
+    <string name="error_search_api_not_found">Search API not found for provider ID: %1$s</string>
+    <string name="search_provider_button_placeholder">Select a provider</string>
+    <string name="search_failed_to_load_search_providers">Failed to load search providers</string>
+    <string name="search_failed_pagination_generic_message">An error occurred while loading more results.</string>
+    <string name="search_empty_results_title">No results found</string>
+    <string name="search_empty_results_desc">Are you sure you spelled it right?</string>
+    <string name="label_search_empty_providers">No searchable providers</string>
+    <string name="description_search_empty_providers">There are no providers that support searching.</string>
+    <string name="error_no_selected_provider">Select a provider first</string>
+    <string name="label_search_placeholder_no_selected_provider">Select a provider first</string>
 </resources>

@@ -9,17 +9,20 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.common.provider.ProviderWithThrowable
-import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallState
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
-import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
+import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
+import com.flixclusive.domain.provider.usecase.manage.DownloadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.InstallProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
@@ -50,33 +53,46 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.generated.provideradd.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 
+// TODO: Make installAndLoadProvider a use case so it can work
+//  seamlessly with the provider details screen when installing from there as well
+
 @HiltViewModel
 internal class AddProviderViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val installedRepoRepository: InstalledRepoRepository,
-    private val providerRepository: ProviderRepository,
     private val getProviderFromRemote: GetProviderFromRemoteUseCase,
-    private val _updateProvider: UpdateProviderUseCase,
+    private val getProviderMetadata: GetProviderMetadataUseCase,
+    private val getProviderPlugin: GetProviderPluginUseCase,
+    private val getInstalledProvider: GetInstalledProviderUseCase,
+    private val updateProvider: UpdateProviderUseCase,
     private val installProvider: InstallProviderUseCase,
     private val loadProvider: LoadProviderUseCase,
     private val unloadProvider: UnloadProviderUseCase,
     private val appDispatchers: AppDispatchers,
+    private val cancelDownload: CancelDownloadUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val navArgs = savedStateHandle.navArgs<AddProviderScreenNavArgs>()
@@ -88,7 +104,7 @@ internal class AddProviderViewModel @Inject constructor(
     private var initJob: Job? = null
 
     private val providerJobs = HashMap<String, Job?>()
-    val providerInstallationStatusMap = mutableStateMapOf<String, ProviderInstallationStatus>()
+    val providerInstallStates = mutableStateMapOf<String, ProviderInstallState>()
 
     private val _selected = MutableStateFlow(persistentSetOf<ProviderMetadata>())
     val selected = _selected.asStateFlow()
@@ -96,18 +112,22 @@ internal class AddProviderViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _filters = MutableStateFlow(persistentListOf<AddProviderFilterType<*>>())
+    private val _availableProviders = MutableStateFlow<Async<PersistentList<ProviderItem>>>(Async.Loading)
+    private val _filters = MutableStateFlow<Async<PersistentList<AddProviderFilterType<*>>>>(Async.Loading)
     val filters = _filters.asStateFlow()
 
-    private val _availableProviders = MutableStateFlow(persistentListOf<SearchableProvider>())
-    val availableProviders = _availableProviders
-        .asStateFlow()
-        .combine(filters) { providers, currentFilters ->
-            // Apply filters first then search query
-            // This way, the every time the query changes,
-            // we don't have to re-apply the filters
+    val availableProviders = combine(_availableProviders, _filters) { asyncProviders, asyncFilters ->
+        if (asyncProviders is Async.Loading || asyncFilters is Async.Loading) {
+            return@combine Async.Loading
+        }
+        if (asyncProviders is Async.Failure) return@combine asyncProviders
+        if (asyncFilters is Async.Failure) return@combine asyncFilters
+
+        val providers = (asyncProviders as Async.Success).data
+        val currentFilters = (asyncFilters as Async.Success).data
+        Async.Success(
             currentFilters
-                .fastFold(providers as List<SearchableProvider>) { currentList, filter ->
+                .fastFold(providers as List<ProviderItem>) { currentList, filter ->
                     when (filter) {
                         is CommonSortFilters -> currentList.sort(filter)
                         is AuthorsFilters -> currentList.filterAuthors(filter)
@@ -118,30 +138,187 @@ internal class AddProviderViewModel @Inject constructor(
                         else -> throw IllegalArgumentException("Invalid filter provided: $filter")
                     }
                 }.toPersistentList()
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = persistentListOf(),
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = Async.Loading,
+    )
 
     val searchResults = availableProviders
-        .combine(searchQuery) { providers, query ->
-            if (query.isBlank()) {
-                providers
-            } else {
-                providers
-                    .fastFilter {
-                        it.searchText.contains(query, ignoreCase = true)
-                    }.toPersistentList()
-            }
+        .combine(searchQuery) { asyncProviders, query ->
+            if (asyncProviders !is Async.Success) return@combine asyncProviders
+            if (query.isBlank()) return@combine asyncProviders
+            Async.Success(
+                asyncProviders.data
+                    .fastFilter { it.searchText.contains(query, ignoreCase = true) }
+                    .toPersistentList()
+            )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = persistentListOf(),
+            initialValue = Async.Loading,
         )
 
     init {
         initialize()
+    }
+
+    private suspend fun onUpdateProvider(provider: ProviderMetadata) {
+        val initialState = providerInstallStates[provider.id] ?: ProviderInstallState.NotInstalled
+        try {
+            updateProvider(provider).collect { result ->
+                when (result) {
+                    is DownloadProviderResult.Failure -> {
+                        throw result.error
+                    }
+
+                    is DownloadProviderResult.Downloading -> {
+                        providerInstallStates[provider.id] = ProviderInstallState.Installing(
+                            progress = result.progress,
+                            downloadId = result.downloadId,
+                        )
+                    }
+
+                    is DownloadProviderResult.Success -> {
+                        providerInstallStates[provider.id] = ProviderInstallState.Installed
+                    }
+                }
+            }
+        } catch (e: Throwable) {
+            _uiState.update {
+                it.copy(providerExceptions = it.providerExceptions + ProviderWithThrowable(provider, e))
+            }
+            providerInstallStates[provider.id] = initialState
+        }
+    }
+
+    private suspend fun onInstallProvider(provider: ProviderMetadata) {
+        val initialState = providerInstallStates[provider.id] ?: ProviderInstallState.NotInstalled
+        try {
+            infoLog("Downloading and installing provider: ${provider.name}")
+            installProvider(provider)
+                .onEach { result ->
+                    when (result) {
+                        is DownloadProviderResult.Failure -> {
+                            throw result.error
+                        }
+
+                        is DownloadProviderResult.Downloading -> {
+                            providerInstallStates[provider.id] = ProviderInstallState.Installing(
+                                progress = result.progress,
+                                downloadId = result.downloadId,
+                            )
+                        }
+
+                        is DownloadProviderResult.Success -> {
+                            Unit
+                        }
+                    }
+                }.catch { throw it }
+                .collect()
+
+            val installedProvider = getInstalledProvider(provider.id)
+                ?: error("Provider ${provider.name} not found after installation")
+
+            loadProvider(installedProvider)
+                .onEach { result ->
+                    if (result is ProviderResult.Failure) throw result.error
+                }.catch { throw it }
+                .collect()
+
+            providerInstallStates[provider.id] = ProviderInstallState.Installed
+        } catch (e: Throwable) {
+            _uiState.update {
+                it.copy(providerExceptions = it.providerExceptions + ProviderWithThrowable(provider, e))
+            }
+            val isInstalled = getInstalledProvider(provider.id) != null
+            providerInstallStates[provider.id] = if (isInstalled) ProviderInstallState.Installed else initialState
+        }
+    }
+
+    private suspend fun onUninstallProvider(provider: ProviderMetadata) {
+        try {
+            val installedProvider = getInstalledProvider(provider.id)
+            if (installedProvider == null) {
+                warnLog("Provider ${provider.name} was not found. Skipping uninstallation...")
+                return
+            }
+
+            infoLog("Uninstalling provider: ${provider.name}")
+            providerInstallStates[provider.id] = ProviderInstallState.Uninstalling
+            unloadProvider(installedProvider)
+            providerInstallStates[provider.id] = ProviderInstallState.NotInstalled
+        } catch (e: Throwable) {
+            _uiState.update {
+                it.copy(providerExceptions = it.providerExceptions + ProviderWithThrowable(provider, e))
+            }
+            providerInstallStates[provider.id] = ProviderInstallState.Installed
+        }
+    }
+
+    private suspend fun onCancelDownload(
+        downloadId: String,
+        provider: ProviderMetadata
+    ) {
+        try {
+            providerJobs[provider.id]?.cancel()
+            cancelDownload(downloadId)
+            providerInstallStates[provider.id] = getInstallState(provider)
+        } catch (_: CancellationException) {
+            // No-op
+        } catch (e: Throwable) {
+            _uiState.update {
+                it.copy(providerExceptions = it.providerExceptions + ProviderWithThrowable(provider, e))
+            }
+        }
+    }
+
+    private suspend fun loadAvailableProviders(repositories: List<Repository>) {
+        val providerList = mutableListOf<ProviderItem>()
+        repositories.forEach { repository ->
+            try {
+                val providers = getProviderFromRemote(repository)
+                providers.fastForEach { remote ->
+                    providerInstallStates[remote.id] = getInstallState(remote)
+                    providerList.add(ProviderItem.from(remote))
+                }
+            } catch (e: Throwable) {
+                val pair = repository to UiText.from(e.message ?: "Unknown error")
+                _uiState.update {
+                    it.copy(repositoryExceptions = it.repositoryExceptions + pair)
+                }
+            }
+        }
+
+        if (providerList.isEmpty() && _uiState.value.repositoryExceptions.isNotEmpty()) {
+            _availableProviders.value = Async.Failure(
+                message = _uiState.value.repositoryExceptions
+                    .first()
+                    .second,
+            )
+        } else {
+            _availableProviders.value = Async.Success(providerList.toPersistentList())
+        }
+    }
+
+    private suspend fun getInstallState(remote: ProviderMetadata): ProviderInstallState {
+        val localMetadata = getProviderMetadata(remote.id) ?: return ProviderInstallState.NotInstalled
+        val plugin = getProviderPlugin(localMetadata.id) ?: return ProviderInstallState.Installed
+
+        val manifest = plugin.manifest
+        if (manifest.updateUrl == null || manifest.updateUrl.equals("")) {
+            return ProviderInstallState.Installed
+        }
+
+        return if (manifest.versionCode < remote.versionCode) {
+            ProviderInstallState.Outdated(
+                newVersion = remote.versionName,
+                newChangelogs = remote.changelog,
+            )
+        } else {
+            ProviderInstallState.Installed
+        }
     }
 
     fun initialize() {
@@ -149,43 +326,38 @@ internal class AddProviderViewModel @Inject constructor(
 
         initJob = viewModelScope.launch {
             _selected.value = _selected.value.clear()
-            _availableProviders.value = _availableProviders.value.clear()
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    repositoryExceptions = emptyList(),
-                )
-            }
+            providerInstallStates.clear()
+            _availableProviders.value = Async.Loading
+            _filters.value = Async.Loading
+            _uiState.update { it.copy(repositoryExceptions = emptyList()) }
 
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val repositories = installedRepoRepository
                 .getAll(userId)
                 .map { it.toRepository() }
 
-            loadAvailableProviders(repositories) // Load providers from the given repositories
+            loadAvailableProviders(repositories)
 
-            val providers = _availableProviders.value
+            val asyncProviders = _availableProviders.value
+            if (asyncProviders is Async.Failure) {
+                _filters.value = asyncProviders
+                return@launch
+            }
 
-            val sortFilters = CommonSortFilters.create()
-            val repositoryFilters = providers.toRepositoryFilters(
-                repositories = repositories,
-                initialSelectedRepository = navArgs.initialSelectedRepositoryFilter,
+            val providers = (asyncProviders as Async.Success).data
+            _filters.value = Async.Success(
+                persistentListOf(
+                    CommonSortFilters.create(),
+                    providers.toRepositoryFilters(
+                        repositories = repositories,
+                        initialSelectedRepository = navArgs.initialSelectedRepositoryFilter,
+                    ),
+                    providers.toAuthorFilters(),
+                    providers.toLanguageFilters(),
+                    providers.toProviderTypeFilters(),
+                    providers.toStatusFilters(),
+                )
             )
-            val authorFilters = providers.toAuthorFilters()
-            val languageFilters = providers.toLanguageFilters()
-            val providerTypeFilters = providers.toProviderTypeFilters()
-            val statusFilters = providers.toStatusFilters()
-
-            _filters.value = persistentListOf(
-                sortFilters,
-                repositoryFilters,
-                authorFilters,
-                languageFilters,
-                providerTypeFilters,
-                statusFilters,
-            )
-
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
@@ -198,124 +370,87 @@ internal class AddProviderViewModel @Inject constructor(
 
         installSelectionJob = appDispatchers.ioScope.launch {
             _uiState.update { it.copy(isInstallingProviders = _selected.value.isNotEmpty()) }
-            _selected.value.forEach { provider ->
-                val job = providerJobs[provider.id]
-                val installationStatus = providerInstallationStatusMap[provider.id]!!
 
-                if (job?.isActive == true ||
-                    installationStatus.isInstalled ||
-                    installationStatus.isInstalling
-                ) {
-                    return@forEach
-                }
+            val selected = _selected.value
+            val batches = selected.chunked(3)
 
-                when (installationStatus) {
-                    ProviderInstallationStatus.NotInstalled -> installAndLoadProvider(provider)
-                    ProviderInstallationStatus.Installed -> uninstallProvider(provider)
-                    ProviderInstallationStatus.Outdated -> updateProvider(provider)
-                    else -> Unit
-                }
+            _selected.value = _selected.value.clear()
+            val oldTempInstallStates = providerInstallStates.toMap()
+
+            selected.forEach {
+                providerJobs[it.id]?.cancel()
+                providerInstallStates[it.id] = ProviderInstallState.Installing(
+                    progress = 0f,
+                    downloadId = "batch-${it.id}",
+                )
             }
+
+            batches.forEach { batch ->
+                val deferred = batch.map { selectedProvider ->
+                    async {
+                        val installState =
+                            oldTempInstallStates[selectedProvider.id] ?: ProviderInstallState.NotInstalled
+                        when (installState) {
+                            is ProviderInstallState.NotInstalled -> onInstallProvider(selectedProvider)
+                            is ProviderInstallState.Outdated -> onUpdateProvider(selectedProvider)
+                            else -> Unit
+                        }
+                    }
+                }
+
+                deferred.awaitAll()
+            }
+
             _uiState.update { it.copy(isInstallingProviders = false) }
         }
     }
 
-    /**
-     * Toggles the installation status of the given provider.
-     *
-     * @param provider The provider to toggle installation for.
-     * */
-    fun onToggleInstallation(provider: ProviderMetadata) {
+    fun onToggleInstallState(provider: ProviderMetadata) {
         val job = providerJobs[provider.id]
-        if (job?.isActive == true || installSelectionJob?.isActive == true) return
+        if (
+            (job?.isActive == true || installSelectionJob?.isActive == true) &&
+            providerInstallStates[provider.id] !is ProviderInstallState.Installing
+        ) {
+            return
+        }
 
         providerJobs[provider.id] = appDispatchers.ioScope.launch {
-            when (providerInstallationStatusMap[provider.id]) {
-                ProviderInstallationStatus.NotInstalled -> installAndLoadProvider(provider)
-                ProviderInstallationStatus.Installed -> uninstallProvider(provider)
-                ProviderInstallationStatus.Outdated -> updateProvider(provider)
+            when (val state = providerInstallStates[provider.id] ?: ProviderInstallState.NotInstalled) {
+                is ProviderInstallState.Installing -> onCancelDownload(state.downloadId, provider)
+                is ProviderInstallState.Installed -> onUninstallProvider(provider)
+                is ProviderInstallState.Outdated -> onUpdateProvider(provider)
+                is ProviderInstallState.NotInstalled -> onInstallProvider(provider)
                 else -> Unit
             }
         }
     }
 
-    /**
-     * Updates the given provider.
-     *
-     * @param provider The provider to update.
-     * */
-    private suspend fun updateProvider(provider: ProviderMetadata) {
-        try {
-            infoLog("Updating and installing provider: ${provider.name}")
-            providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
+    fun onUninstall(provider: ProviderMetadata) {
+        val job = providerJobs[provider.id]
+        if (job?.isActive == true || installSelectionJob?.isActive == true) return
 
-            _updateProvider(provider)
-            providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installed
-        } catch (e: Throwable) {
-            _uiState.update {
-                val error = ProviderWithThrowable(provider = provider, throwable = e)
-                it.copy(providerExceptions = it.providerExceptions + error)
-            }
+        providerJobs[provider.id] = appDispatchers.ioScope.launch {
+            onUninstallProvider(provider)
         }
     }
 
-    private suspend fun installAndLoadProvider(provider: ProviderMetadata) {
-        try {
-            providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
-            infoLog("Downloading and installing provider: ${provider.name}")
+    fun onRepositoryFilterClick(repositoryUrl: String) {
+        val filters = (_filters.value as? Async.Success)?.data ?: return
+        val repositoryFilterIndex = filters.indexOfFirst { it is RepositoriesFilters }
+        if (repositoryFilterIndex == -1) return
 
-            installProvider(provider).collect {
-                if (it is ProviderResult.Failure) throw it.error
-            }
-
-            val installedProvider = getInstalledProvider(provider.id)
-                ?: error("Provider ${provider.name} not found after installation")
-
-            loadProvider(installedProvider).collect {
-                if (it is ProviderResult.Failure) throw it.error
-            }
-
-            providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installed
-        } catch (e: Throwable) {
-            _uiState.update {
-                val error = ProviderWithThrowable(provider = provider, throwable = e)
-                it.copy(providerExceptions = it.providerExceptions + error)
-            }
-
-            val isInstalled = providerRepository.getMetadata(provider.id) != null
-            val status = when {
-                isInstalled -> ProviderInstallationStatus.Installed
-                else -> ProviderInstallationStatus.NotInstalled
-            }
-
-            providerInstallationStatusMap[provider.id] = status
-        }
+        val repositoryFilter = filters[repositoryFilterIndex] as RepositoriesFilters
+        val formatted = extractGithubInfoFromLink(repositoryUrl)?.let { (owner, repo) ->
+            String.format(Locale.getDefault(), REPOSITORY_NAME_OWNER_FORMAT, owner, repo)
+        } ?: return
+        onUpdateFilter(repositoryFilterIndex, repositoryFilter.copy(selectedValue = setOf(formatted)))
     }
 
-    private suspend fun uninstallProvider(provider: ProviderMetadata) {
-        try {
-            val installedProvider = getInstalledProvider(provider.id)
-            if (installedProvider == null) {
-                warnLog("Provider ${provider.name} was not found. Skipping uninstallation...")
-                return
-            }
-
-            infoLog("Uninstalling provider: ${provider.name}")
-            unloadProvider(installedProvider)
-            providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.NotInstalled
-        } catch (e: Throwable) {
-            _uiState.update {
-                val error = ProviderWithThrowable(provider = provider, throwable = e)
-                it.copy(providerExceptions = it.providerExceptions + error)
-            }
+    fun onUpdateFilter(index: Int, filter: AddProviderFilterType<*>) {
+        _filters.update { asyncFilters ->
+            if (asyncFilters !is Async.Success) return@update asyncFilters
+            Async.Success(asyncFilters.data.set(index, filter))
         }
-    }
-
-    fun onUpdateFilter(
-        index: Int,
-        filter: AddProviderFilterType<*>,
-    ) {
-        _filters.update { it.set(index, filter) }
     }
 
     fun onUnselectAll() {
@@ -339,74 +474,10 @@ internal class AddProviderViewModel @Inject constructor(
     fun consumeProviderExceptions() {
         _uiState.update { it.copy(providerExceptions = emptyList()) }
     }
-
-    /**
-     * Loads providers from the given list of repositories.
-     *
-     * Errors from each repository are collected and stored in the UI state.
-     * */
-    private suspend fun loadAvailableProviders(repositories: List<Repository>) {
-        repositories.forEach { repository ->
-            when (val result = getProviderFromRemote(repository)) {
-                Resource.Loading -> Unit
-                is Resource.Failure -> {
-                    val pair = repository to result.error!!
-                    _uiState.update {
-                        it.copy(repositoryExceptions = it.repositoryExceptions + pair)
-                    }
-                }
-
-                is Resource.Success -> {
-                    val providers = result.data!!
-
-                    providers.fastForEach {
-                        val provider = SearchableProvider.from(it)
-                        var status = ProviderInstallationStatus.NotInstalled
-
-                        val metadata = providerRepository.getMetadata(provider.id)
-                        val isInstalled = metadata != null
-
-                        if (isInstalled && isOutdated(old = metadata, new = provider.metadata)) {
-                            status = ProviderInstallationStatus.Outdated
-                        } else if (isInstalled) {
-                            status = ProviderInstallationStatus.Installed
-                        }
-
-                        providerInstallationStatusMap[provider.id] = status
-
-                        _availableProviders.value = _availableProviders.value.add(provider)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun isOutdated(
-        old: ProviderMetadata,
-        new: ProviderMetadata,
-    ): Boolean {
-        val provider = providerRepository.getPlugin(old.id) ?: return false
-
-        val manifest = provider.manifest
-        if (manifest.updateUrl == null || manifest.updateUrl.equals("")) {
-            return false
-        }
-
-        return manifest.versionCode < new.versionCode
-    }
-
-    private suspend fun getInstalledProvider(id: String): InstalledProvider? {
-        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        return providerRepository.getInstalledProvider(
-            id = id,
-            ownerId = userId
-        )
-    }
 }
 
 @Immutable
 internal data class AddProviderUiState(
-    val isLoading: Boolean = false,
     val isInstallingProviders: Boolean = false,
     val repositoryExceptions: List<RepositoryWithError> = emptyList(),
     val providerExceptions: List<ProviderWithThrowable> = emptyList(),
@@ -416,7 +487,7 @@ internal data class AddProviderUiState(
 internal typealias RepositoryWithError = Pair<Repository, UiText>
 
 @Immutable
-internal data class SearchableProvider(
+internal data class ProviderItem(
     val metadata: ProviderMetadata,
     val searchText: String,
 ) {
@@ -424,24 +495,30 @@ internal data class SearchableProvider(
     val name get() = metadata.name
 
     companion object {
-        fun from(provider: ProviderMetadata): SearchableProvider {
-            val searchText =
-                buildString {
-                    append(provider.id)
-                    append(provider.name)
-                    provider.description?.let { append(it) }
-                    append(provider.providerType.type)
-                    append(provider.language.languageCode)
-                    provider.authors.forEach { append(it) }
+        fun from(provider: ProviderMetadata): ProviderItem {
+            val searchText = buildString {
+                append(provider.id)
+                append(provider.name)
+                provider.description?.let { append(it) }
+                append(provider.providerType.type)
+                append(provider.language.code)
+                provider.authors.forEach { append(it) }
 
-                    extractGithubInfoFromLink(provider.repositoryUrl)?.let { (username, repository) ->
-                        append(String.format(Locale.getDefault(), REPOSITORY_NAME_OWNER_FORMAT, username, repository))
-                    }
-
-                    append(provider.versionName)
+                extractGithubInfoFromLink(provider.repositoryUrl)?.let { (username, repository) ->
+                    append(
+                        String.format(
+                            Locale.getDefault(),
+                            REPOSITORY_NAME_OWNER_FORMAT,
+                            username,
+                            repository,
+                        )
+                    )
                 }
 
-            return SearchableProvider(provider, searchText)
+                append(provider.versionName)
+            }
+
+            return ProviderItem(provider, searchText)
         }
     }
 }

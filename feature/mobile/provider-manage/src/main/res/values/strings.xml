@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_no_capabilities">No capabilities</string>
+    <string name="label_provider_capability_catalogs">Catalogs</string>
+    <string name="label_provider_capability_links">Links</string>
+    <string name="label_provider_capability_metadata">Metadata</string>
+    <string name="label_provider_capability_tracking">Tracking</string>
+    <string name="label_provider_capability_cross_match">Cross-match</string>
+    <string name="label_provider_capability_search">Search</string>
+    <string name="label_provider_capability_streams">Streams</string>
+    <string name="label_provider_capability_subs">Subs</string>
+    <string name="error_missing_provider_plugin">Provider plugin is not registered, cannot check capabilities.</string>
+</resources>

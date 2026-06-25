@@ -28,14 +28,20 @@ fun Activity.toggleSystemBars(isVisible: Boolean) {
         return
     }
 
-    val state = if(!isVisible) {
-        (window.decorView.systemUiVisibility
-            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_FULLSCREEN)
-    } else (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+    val state = if (!isVisible) {
+        (
+            window.decorView.systemUiVisibility
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+        )
+    } else {
+        (
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        )
+    }
 
     if (window.decorView.systemUiVisibility != state) {
         window.decorView.systemUiVisibility = state

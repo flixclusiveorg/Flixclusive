@@ -52,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
@@ -91,10 +92,10 @@ import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleAndAudio
 import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleSyncScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.feature.mobile.player.util.UiMode
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -105,19 +106,18 @@ import com.flixclusive.core.drawables.R as UiCommonR
 @Composable
 internal fun PlayerControls(
     player: AppPlayer,
-    film: FilmMetadata,
+    media: MediaMetadata,
     snackbarState: PlayerSnackbarState,
     isInPipMode: Boolean,
     playerPrefs: PlayerPreferences,
     subtitlesPrefs: SubtitlesPreferences,
     currentResizeMode: ResizeMode,
-    currentProvider: ProviderMetadata,
-    providers: List<ProviderMetadata>,
+    currentProvider: () -> ProviderMetadata,
+    providers: () -> List<ProviderMetadata>,
     servers: () -> List<PlayerServer>,
-    failedStreamUrls: () -> Set<String>,
     currentServer: () -> Int,
     onServerChange: (Int) -> Unit,
-    onServerFail: (Int) -> Unit,
+    onServerFail: (String) -> Unit,
     onProviderChange: (ProviderMetadata) -> Unit,
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
@@ -136,7 +136,7 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
     var savedSpeed by remember { mutableFloatStateOf(0f) }
     var volumeSliderHideJob by remember { mutableStateOf<Job?>(null) }
-    val key = remember(currentEpisode, currentProvider) { currentEpisode?.id + currentProvider.id }
+    val key = remember(currentEpisode, currentProvider) { currentEpisode?.id + currentProvider().id }
 
     val scope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
@@ -160,13 +160,13 @@ internal fun PlayerControls(
 
     val areCenterControlsVisible by remember {
         derivedStateOf {
-            controlsVisibilityState.isVisible
-                && !uiMode.isPlaybackSpeed
-                && !uiMode.isResize
-                && !gestureState.isDoubleTapping
-                && !gestureState.isSliding
-                && !gestureState.isSpeedBoosting
-                && !scrubState.isScrubbing
+            controlsVisibilityState.isVisible &&
+                !uiMode.isPlaybackSpeed &&
+                !uiMode.isResize &&
+                !gestureState.isDoubleTapping &&
+                !gestureState.isSliding &&
+                !gestureState.isSpeedBoosting &&
+                !scrubState.isScrubbing
         }
     }
 
@@ -181,10 +181,11 @@ internal fun PlayerControls(
     )
 
     SideEffect {
-        if (!scrubState.isScrubbing
-            && !gestureState.isSliding
-            && !gestureState.isDoubleTapping
-            && !gestureState.isSpeedBoosting) {
+        if (!scrubState.isScrubbing &&
+            !gestureState.isSliding &&
+            !gestureState.isDoubleTapping &&
+            !gestureState.isSpeedBoosting
+        ) {
             onUpdateWatchProgress()
         }
     }
@@ -307,9 +308,19 @@ internal fun PlayerControls(
             .onPreviewKeyEvent { keyEvent ->
                 if (keyEvent.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 val handled = when (keyEvent.key) {
-                    Key.VolumeUp -> { volumeManager.increaseVolume(); true }
-                    Key.VolumeDown -> { volumeManager.decreaseVolume(); true }
-                    else -> false
+                    Key.VolumeUp -> {
+                        volumeManager.increaseVolume()
+                        true
+                    }
+
+                    Key.VolumeDown -> {
+                        volumeManager.decreaseVolume()
+                        true
+                    }
+
+                    else -> {
+                        false
+                    }
                 }
                 if (handled) {
                     gestureState.showVolumeSlider()
@@ -390,7 +401,7 @@ internal fun PlayerControls(
                         modifier = Modifier.align(Alignment.TopCenter)
                     ) {
                         PlayerTopBar(
-                            title = film.title,
+                            title = media.title,
                             episode = currentEpisode,
                             onBack = onBack,
                         )
@@ -485,15 +496,23 @@ internal fun PlayerControls(
                     }
 
                     AnimatedPanel(
-                        visible = uiMode.isEpisodes
-                            && film is TvShow
-                            && currentEpisode != null
-                            && onEpisodeChange != null
-                            && onSeasonChange != null
+                        visible = uiMode.isEpisodes &&
+                            media is Show &&
+                            currentEpisode != null &&
+                            onEpisodeChange != null &&
+                            onSeasonChange != null
                     ) {
+                        val filteredSeasons by remember(media) {
+                            derivedStateOf {
+                                (media as Show)
+                                    .seasons
+                                    .fastFilter { it.isReleased }
+                            }
+                        }
+
                         EpisodesScreen(
                             currentSeason = currentSeason,
-                            seasons = (film as TvShow).seasons,
+                            seasons = filteredSeasons,
                             currentEpisode = currentEpisode!!,
                             onSeasonChange = onSeasonChange!!::invoke,
                             onEpisodeClick = onEpisodeChange!!::invoke,
@@ -508,7 +527,6 @@ internal fun PlayerControls(
                     ) {
                         ServersScreen(
                             servers = servers,
-                            failedStreamUrls = failedStreamUrls,
                             currentServer = currentServer,
                             onServerChange = onServerChange,
                             currentProvider = currentProvider,
@@ -534,7 +552,8 @@ internal fun PlayerControls(
                                 // Force seek to update subtitle timings immediately after changing the offset
                                 val isMediaSeekable = player.isCommandAvailable(
                                     command = Player.COMMAND_GET_CURRENT_MEDIA_ITEM
-                                ) && player.isCurrentMediaItemSeekable
+                                ) &&
+                                    player.isCurrentMediaItemSeekable
 
                                 if (isMediaSeekable) {
                                     player.seekTo(scrubState.progress + 1L)
@@ -693,7 +712,7 @@ private fun VerticalSlideAnimation(
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn() + slideInVertically { (it / 4) * (if (slideDown) 1 else -1) },
-        exit = fadeOut() + slideOutVertically { (it / 6) * (if (slideDown) 1 else -1)},
+        exit = fadeOut() + slideOutVertically { (it / 6) * (if (slideDown) 1 else -1) },
         content = content,
         modifier = modifier,
     )

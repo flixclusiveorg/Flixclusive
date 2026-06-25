@@ -5,10 +5,10 @@ import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.provider.InstalledRepository
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.domain.provider.usecase.get.GetRepositoryUseCase
 import com.flixclusive.domain.provider.util.extensions.toRepository
@@ -73,13 +73,13 @@ internal class RepositoryManagerViewModel @Inject constructor(
         userId to query
     }.flatMapLatest { (userId, query) ->
         installedRepoRepository.getAllAsFlow(userId).map { list ->
-            list.fastFilter {
-                it.name.contains(query, true) ||
-                    it.owner.contains(query, true)
-            }.fastMap { it.toRepository() }
+            list
+                .fastFilter {
+                    it.name.contains(query, true) ||
+                        it.owner.contains(query, true)
+                }.fastMap { it.toRepository() }
         }
-    }
-    .stateIn(
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = emptyList(),
@@ -119,18 +119,21 @@ internal class RepositoryManagerViewModel @Inject constructor(
         }
 
         addJob = appDispatchers.ioScope.launch {
-            when (val repository = getRepository(_urlQuery.value)) {
-                Resource.Loading -> Unit
-                is Resource.Failure -> {
-                    _uiState.update { it.copy(error = repository.error) }
+            try {
+                val repository = getRepository(_urlQuery.value)
+                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+                installedRepoRepository.insert(
+                    item = repository.toInstalledRepository(userId)
+                )
+            } catch (e: Throwable) {
+                _uiState.update {
+                    if (e is ExceptionWithUiText) {
+                        it.copy(error = e.uiText)
+                    } else {
+                        it.copy(error = UiText.from(e.localizedMessage ?: "Unknown error"))
+                    }
                 }
-
-                is Resource.Success -> {
-                    val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-                    installedRepoRepository.insert(
-                        item = repository.data!!.toInstalledRepository(userId)
-                    )
-                }
+                return@launch
             }
         }
     }

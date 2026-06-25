@@ -5,7 +5,7 @@ import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Build
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderPlugin
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -36,18 +36,16 @@ import java.util.zip.ZipOutputStream
  * @property context The Android application context.
  */
 @Suppress("DEPRECATION")
-internal class DynamicResourceLoader(
-    private val context: Context,
-) {
+internal object DynamicResourceLoader {
     /**
-     * Loads the resources from the input file and sets them to the provided [Provider].
+     * Loads the resources from the input file and sets them to the provided [ProviderPlugin].
      * For Android Marshmallow and below, it manipulates the ZIP file before loading.
      *
      * @param inputFile The input file containing the resources to be loaded.
      */
-    fun load(inputFile: File): Resources {
+    fun Context.getResourcesFromProvider(inputFile: File): Resources {
         var filePath = inputFile.absolutePath
-        if (forceCleanUp) {
+        if (needsCleanUp) {
             val tempFile = createTempFile(inputFile)
             val manifestFile = createManifestFile(tempFile)
             manipulateZipFile(
@@ -66,7 +64,7 @@ internal class DynamicResourceLoader(
      *
      * @return True if the device is running Android Marshmallow or below, false otherwise.
      */
-    internal val forceCleanUp: Boolean get() = Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
+    internal val needsCleanUp: Boolean get() = Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
 
     /**
      * Creates a new Resources instance using the provided file path.
@@ -74,15 +72,17 @@ internal class DynamicResourceLoader(
      * @param filePath The path to the file containing the resources.
      * @return A new Resources instance loaded with the assets from the provided file.
      */
-    private fun getDynamicResources(filePath: String): Resources {
+    private fun Context.getDynamicResources(filePath: String): Resources {
         val assets = AssetManager::class.java.getDeclaredConstructor().newInstance()
         val addAssetPath = AssetManager::class.java.getMethod("addAssetPath", String::class.java)
+
         addAssetPath.invoke(assets, filePath)
+        addAssetPath.invoke(this@getDynamicResources.assets, filePath)
 
         return Resources(
             assets,
-            context.resources.displayMetrics,
-            context.resources.configuration,
+            resources.displayMetrics,
+            resources.configuration,
         )
     }
 

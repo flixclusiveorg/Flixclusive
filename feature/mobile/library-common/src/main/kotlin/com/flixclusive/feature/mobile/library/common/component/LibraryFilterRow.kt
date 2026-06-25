@@ -34,6 +34,7 @@ fun LibraryFilterRow(
     onUpdate: (LibrarySort) -> Unit,
     onStartSelecting: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val buttonHeight = getAdaptiveDp(29.dp)
 
@@ -88,6 +89,7 @@ fun LibraryFilterRow(
             LibraryFilterPill(
                 selected = selected,
                 filter = filter,
+                enabled = enabled,
                 onToggleDirection = { onUpdate(filter) },
             )
         }

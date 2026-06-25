@@ -26,6 +26,7 @@ fun CharSequenceText(
             textAlign = TextAlign.Center,
             modifier = modifier
         )
+
         is AnnotatedString -> Text(
             text = text,
             style = style,

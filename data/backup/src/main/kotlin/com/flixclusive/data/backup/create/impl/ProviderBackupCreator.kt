@@ -21,10 +21,14 @@ internal class ProviderBackupCreator @Inject constructor(
                 BackupProvider(
                     id = provider.id,
                     repositoryUrl = provider.repositoryUrl,
-                    sortOrder = provider.sortOrder,
-                    isEnabled = provider.isEnabled,
                     createdAt = provider.createdAt.time,
                     updatedAt = provider.updatedAt.time,
+                    isCatalogEnabled = provider.isCatalogEnabled,
+                    isCrossMatchEnabled = provider.isCrossMatchEnabled,
+                    isMediaLinkEnabled = provider.isMediaLinkEnabled,
+                    isMetadataEnabled = provider.isMetadataEnabled,
+                    isSearchEnabled = provider.isSearchEnabled,
+                    isTrackerEnabled = provider.isTrackerEnabled,
                 )
             }
         }

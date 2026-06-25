@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="invalid_library_item_selection">This library is a built-in library and cannot be selected.</string>
     <string name="failed_to_select_system_list_message">You can\'t delete system default lists</string>
+    <string name="trackers">Trackers</string>
+
+    <string name="tracker_providers_sheet_label">Tracker providers</string>
+    <string name="tracker_providers_sheet_desc">Here are all the tracker providers that are currently being used in this library. You can enable or disable trackers here to control which trackers are used for syncing your library.</string>
+    <string name="sign_in">Sign in</string>
 </resources>

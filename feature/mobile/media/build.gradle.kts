@@ -1,0 +1,48 @@
+plugins {
+    alias(libs.plugins.flixclusive.feature.mobile)
+    alias(libs.plugins.flixclusive.compose)
+    alias(libs.plugins.flixclusive.destinations)
+    alias(libs.plugins.flixclusive.testing)
+}
+
+android {
+    namespace = "com.flixclusive.feature.mobile.media"
+}
+
+dependencies {
+    implementation(projects.coreCommon)
+    implementation(projects.coreStrings)
+    implementation(projects.coreDrawables)
+    implementation(projects.coreNavigation)
+    implementation(projects.coreNetwork)
+    implementation(projects.coreDatabase)
+    implementation(projects.coreDatastore)
+    implementation(projects.corePresentationCommon)
+    implementation(projects.corePresentationMobile)
+    implementation(projects.dataDatabase)
+    implementation(projects.domainDatabase)
+    implementation(projects.dataProvider)
+    implementation(projects.domainProvider)
+    implementation(projects.feature.mobile.libraryCommon)
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.compose.adaptive)
+    implementation(libs.compose.animation)
+    implementation(libs.compose.animation.graphics)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.constraintlayout.compose)
+    implementation(libs.destinations.bottomSheet)
+    implementation(libs.kotlinx.immutables)
+    implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.stubs.util)
+    implementation(libs.stubs.model.media)
+    implementation(libs.stubs.model.provider)
+    implementation(libs.stubs.provider)
+
+    testImplementation(projects.coreTesting)
+}

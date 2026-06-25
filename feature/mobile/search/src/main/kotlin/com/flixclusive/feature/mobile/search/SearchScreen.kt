@@ -1,298 +1,336 @@
 package com.flixclusive.feature.mobile.search
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.presentation.common.components.FilmCover
-import com.flixclusive.core.presentation.mobile.components.RetryButton
-import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.database.entity.search.SearchHistory
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
+import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.presentation.mobile.util.copy
-import com.flixclusive.data.tmdb.model.TMDBDiscoverCatalog
-import com.flixclusive.domain.catalog.model.DiscoverCards
-import com.flixclusive.feature.mobile.search.component.DiscoverCard
-import com.flixclusive.feature.mobile.search.component.DiscoverCardPlaceholder
-import com.flixclusive.feature.mobile.search.component.DiscoverRow
-import com.flixclusive.feature.mobile.search.util.SearchUiUtils
-import com.flixclusive.model.provider.Catalog
-import com.flixclusive.model.provider.ProviderCatalog
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.feature.mobile.search.component.SearchBarInput
+import com.flixclusive.feature.mobile.search.component.SearchMediasGridView
+import com.flixclusive.feature.mobile.search.component.SearchProvidersView
+import com.flixclusive.feature.mobile.search.component.SearchSearchHistoryView
+import com.flixclusive.feature.mobile.search.component.filter.FilterBottomSheet
+import com.flixclusive.feature.mobile.search.util.FilterHelper.isBeingUsed
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
-import com.flixclusive.core.drawables.R as UiCommonR
-import com.flixclusive.core.strings.R as LocaleR
-
-// TODO: Remove this screen in the future and use only SearchExpandedScreen
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun SearchScreen(
-    navigator: SearchScreenNavigator,
-    viewModel: SearchScreenViewModel = hiltViewModel(),
+    navigator: NavigatorSearchScreen,
+    viewModel: SearchViewModel = activityHiltViewModel(),
 ) {
-    val cards by viewModel.cards.collectAsStateWithLifecycle()
-    val providerCards by viewModel.providersCatalogsCards.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val showMediaTitles by viewModel.showMediaTitles.collectAsStateWithLifecycle()
+    val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
+    val providers by viewModel.providers.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     SearchScreenContent(
-        cards = cards,
-        providerCards = providerCards,
-        openSearchExpandedScreen = navigator::openSearchExpandedScreen,
-        onRetryLoadingCards = viewModel::initializeCards,
-        openSeeAllScreen = navigator::openSeeAllScreen,
+        uiState = { uiState },
+        searchQuery = { searchQuery },
+        showMediaTitles = showMediaTitles,
+        searchHistory = { searchHistory },
+        searchResults = { viewModel.searchResults },
+        providers = { providers },
+        filters = { viewModel.filters },
+        onQueryChange = viewModel::onQueryChange,
+        onSearch = viewModel::onSearch,
+        onChangeView = viewModel::onChangeView,
+        onChangeProvider = viewModel::onChangeProvider,
+        onUpdateFilters = viewModel::onUpdateFilters,
+        onToggleProvider = viewModel::onToggleProvider,
+        onConsumeSearchApiErrors = viewModel::onConsumeSearchApiErrors,
+        deleteSearchHistoryItem = viewModel::deleteSearchHistoryItem,
+        paginateItems = viewModel::paginate,
+        openMediaScreen = navigator::navigateToMediaScreen,
+        previewMedia = navigator::showMediaPreviewBottomSheet,
+        snackbarHostState = snackbarHostState,
     )
 }
 
 @Composable
 private fun SearchScreenContent(
-    cards: Resource<DiscoverCards>,
-    providerCards: List<ProviderCatalog>,
-    onRetryLoadingCards: () -> Unit,
-    openSearchExpandedScreen: () -> Unit,
-    openSeeAllScreen: (Catalog) -> Unit,
+    showMediaTitles: Boolean,
+    uiState: () -> SearchUiState,
+    searchQuery: () -> String,
+    searchHistory: () -> List<SearchHistory>,
+    searchResults: () -> Set<MediaMetadata>,
+    providers: () -> Async<List<SearchProvider>>,
+    filters: () -> FilterList,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onChangeView: (SearchViewType) -> Unit,
+    onChangeProvider: (String) -> Unit,
+    onUpdateFilters: (FilterList) -> Unit,
+    onToggleProvider: (SearchProvider) -> Unit,
+    onConsumeSearchApiErrors: () -> Unit,
+    deleteSearchHistoryItem: (SearchHistory) -> Unit,
+    paginateItems: () -> Unit,
+    openMediaScreen: (MediaMetadata) -> Unit,
+    previewMedia: (MediaMetadata) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val tvShowNetworkCards = remember(cards) {
-        cards.data?.tvNetworks ?: emptyList()
-    }
-    val movieCompanyCards = remember(cards) {
-        cards.data?.movieCompanies ?: emptyList()
-    }
-    val categoryCards = remember(cards) {
-        cards.data?.categories ?: emptyList()
+    val resources = LocalResources.current
+
+    val scope = rememberCoroutineScope()
+    val listState = rememberLazyGridState()
+
+    var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
+
+    val updatedPaginateItems by rememberUpdatedState(paginateItems)
+    LaunchedEffect(listState, uiState) {
+        snapshotFlow { listState.shouldPaginate() && uiState().pagingState.isIdle }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect {
+                updatedPaginateItems()
+            }
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = SearchUiUtils.getCardWidth(170.dp)),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = LocalGlobalScaffoldPadding.current.copy(
-            start = 15.dp,
-            end = 15.dp,
-        ),
-    ) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            SearchBarHeader(
-                onSearchBarClick = openSearchExpandedScreen,
-            )
+    val sortedFilters by remember {
+        derivedStateOf {
+            FilterList(filters().sortedByDescending { it.isBeingUsed() })
         }
+    }
 
-        if (providerCards.isNotEmpty()) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                DiscoverRow(
-                    list = providerCards,
-                    rowTitle = UiText.from(LocaleR.string.browse_providers_catalogs),
-                ) {
-                    DiscoverCard(
-                        label = it.name,
-                        image = it.image,
-                        isProviderCatalog = true,
-                        onClick = { openSeeAllScreen(it) },
-                        modifier = Modifier.width(SearchUiUtils.getCardWidth()),
+    val viewTypes by remember {
+        derivedStateOf { uiState().currentViewType }
+    }
+
+    val apiErrors by remember {
+        derivedStateOf { uiState().searchApiErrors }
+    }
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(),
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            val provider by remember {
+                derivedStateOf {
+                    val state = providers()
+                    if (state !is Async.Success) return@derivedStateOf null
+                    val selectedProvider = uiState().selectedProviderId ?: return@derivedStateOf null
+                    state.data.fastFirstOrNull { selectedProvider == it.id }
+                }
+            }
+
+            SearchBarInput(
+                searchQuery = searchQuery,
+                provider = provider,
+                filters = sortedFilters,
+                onQueryChange = onQueryChange,
+                uiState = uiState,
+                onToggleFilterSheet = { filterGroupIndexToShow = it },
+                onChangeView = onChangeView,
+                onSearch = {
+                    if (provider == null) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = resources.getString(R.string.error_no_selected_provider),
+                                withDismissAction = true
+                            )
+                        }
+                        return@SearchBarInput
+                    }
+
+                    scope
+                        .launch {
+                            safeCall { listState.scrollToItem(0) }
+                        }.invokeOnCompletion {
+                            onSearch()
+                        }
+                },
+            )
+        },
+    ) { innerPadding ->
+        AnimatedContent(
+            targetState = viewTypes,
+            transitionSpec = {
+                val enter = when (targetState) {
+                    SearchViewType.Medias -> slideInHorizontally { it } + fadeIn()
+                    SearchViewType.Providers -> slideInHorizontally { -it } + fadeIn()
+                    else -> fadeIn()
+                }
+
+                val exit = when (initialState) {
+                    SearchViewType.Medias -> slideOutHorizontally { it } + fadeOut()
+                    SearchViewType.Providers -> slideOutHorizontally { -it } + fadeOut()
+                    else -> fadeOut()
+                }
+
+                enter togetherWith exit
+            },
+        ) { viewType ->
+            val modifier = Modifier.clip(RoundedCornerShape(topEnd = 4.dp, topStart = 4.dp))
+
+            when (viewType) {
+                SearchViewType.History -> {
+                    SearchSearchHistoryView(
+                        modifier = modifier,
+                        searchHistory = searchHistory,
+                        scaffoldPadding = innerPadding,
+                        onSearch = onSearch,
+                        onQueryChange = onQueryChange,
+                        deleteSearchHistoryItem = deleteSearchHistoryItem,
+                        onChangeView = onChangeView
+                    )
+                }
+
+                SearchViewType.Providers -> {
+                    SearchProvidersView(
+                        modifier = modifier,
+                        providers = providers(),
+                        selectedProviderId = uiState().selectedProviderId,
+                        onChangeProvider = onChangeProvider,
+                        onToggleProvider = onToggleProvider,
+                        scaffoldPadding = innerPadding,
+                    )
+                }
+
+                SearchViewType.Medias -> {
+                    SearchMediasGridView(
+                        modifier = modifier,
+                        showMediaTitles = showMediaTitles,
+                        listState = listState,
+                        previewMedia = previewMedia,
+                        searchResults = searchResults,
+                        pagingState = { uiState().pagingState },
+                        scaffoldPadding = innerPadding,
+                        paginateItems = paginateItems,
+                        openMediaScreen = openMediaScreen,
                     )
                 }
             }
         }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            DiscoverRow(
-                list = tvShowNetworkCards,
-                rowTitle = UiText.StringResource(LocaleR.string.browse_tv_networks),
-            ) {
-                DiscoverCard(
-                    label = it.name,
-                    image = it.image,
-                    imageSize = "w300_filter(negate,000,666)",
-                    isCompanyCatalog = true,
-                    onClick = { openSeeAllScreen(it) },
-                    modifier = Modifier.width(SearchUiUtils.getCardWidth()),
-                )
-            }
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            DiscoverRow(
-                list = movieCompanyCards,
-                rowTitle = UiText.StringResource(LocaleR.string.browse_movie_companies),
-            ) {
-                DiscoverCard(
-                    label = it.name,
-                    image = it.image,
-                    imageSize = "w300_filter(negate,000,666)",
-                    isCompanyCatalog = true,
-                    onClick = { openSeeAllScreen(it) },
-                    modifier = Modifier.width(SearchUiUtils.getCardWidth()),
-                )
-            }
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Text(
-                text = stringResource(LocaleR.string.browse_categories),
-                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 15.dp),
-            )
-        }
-
-        if (cards !is Resource.Failure) {
-            items(categoryCards) {
-                DiscoverCard(
-                    image = it.image,
-                    label = it.name,
-                    onClick = { openSeeAllScreen(it) },
-                )
-            }
-
-            if (cards is Resource.Loading) {
-                items(10) {
-                    DiscoverCardPlaceholder()
-                }
-            }
-        } else {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                RetryButton(
-                    modifier = Modifier.aspectRatio(FilmCover.Backdrop.ratio),
-                    error = cards.error?.asString()
-                        ?: stringResource(R.string.failed_to_fetch_cards),
-                    onRetry = onRetryLoadingCards,
-                )
-            }
-        }
     }
-}
 
-@Composable
-private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Text(
-            text = stringResource(id = LocaleR.string.search),
-            style = getTopBarHeadlinerTextStyle(),
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding(),
+    filterGroupIndexToShow?.let {
+        FilterBottomSheet(
+            filters = { sortedFilters[it] },
+            onUpdateFilters = { onUpdateFilters(sortedFilters) },
+            onDismissRequest = { filterGroupIndexToShow = null },
         )
+    }
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = TextFieldDefaults.MinHeight)
-                .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onSearchBarClick() },
-        ) {
-            Spacer(modifier = Modifier.width(15.dp))
-
-            Icon(
-                painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                contentDescription = stringResource(id = LocaleR.string.search),
-            )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = stringResource(id = LocaleR.string.search_suggestion),
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalContentColor.current.copy(0.6f),
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-
-            Spacer(modifier = Modifier.width(15.dp))
-        }
+    apiErrors?.let {
+        ProviderCrashBottomSheet(
+            isLoading = false,
+            onDismissRequest = onConsumeSearchApiErrors,
+            errors = it,
+        )
     }
 }
 
 @Preview
 @Composable
 private fun SearchScreenBasePreview() {
-    val tvShowNetworkCards = List(10) {
-        TMDBDiscoverCatalog(
-            name = "Network $it",
-            image = null,
-            url = "$it",
+    val providers: Async<List<SearchProvider>> = remember {
+//        Async.Loading
+        Async.Success(
+            List(10) {
+                SearchProvider(
+                    DummyDataForPreview.getProviderMetadata(
+                        id = "$it",
+                        name = "Provider $it",
+                    ),
+                    isSearchEnabled = it % 2 == 0,
+                )
+            }
         )
     }
-    val movieCompanyCards = List(10) {
-        TMDBDiscoverCatalog(
-            name = "Company $it",
-            image = null,
-            url = "$it",
-        )
+
+    val searchHistory = remember {
+        List(10) {
+            SearchHistory(
+                id = it,
+                query = "Search query $it",
+                ownerId = "preview-user",
+            )
+        }
     }
-    val genreCards = List(10) {
-        TMDBDiscoverCatalog(
-            name = "Genre $it",
-            image = null,
-            url = "$it",
-        )
+
+    val medias = remember {
+        List(5) {
+            DummyDataForPreview.getMedia(
+                id = "$it",
+                title = "MediaMetadata $it",
+            )
+        }.toSet()
     }
-    val providerCards = List(10) {
-        ProviderCatalog(
-            name = "Provider $it",
-            image = null,
-            url = "$it",
-            canPaginate = true,
-            providerId = "$it",
-        )
-    }
+
+    val filters = remember { FilterList() }
 
     FlixclusiveTheme {
         Surface {
             SearchScreenContent(
-                cards = remember {
-                    Resource.Success(
-                        DiscoverCards(
-                            tvNetworks = tvShowNetworkCards,
-                            movieCompanies = movieCompanyCards,
-                            categories = genreCards,
-                        ),
+                uiState = {
+                    SearchUiState(
+                        lastQuerySearched = "MediaMetadata 1",
+                        currentViewType = SearchViewType.Providers,
+                        selectedProviderId = (providers as Async.Success).data.first().id,
                     )
                 },
-                providerCards = providerCards,
-                openSearchExpandedScreen = {},
-                onRetryLoadingCards = {},
-                openSeeAllScreen = {},
+                searchQuery = { "MediaMetadata 1" },
+                showMediaTitles = true,
+                searchHistory = { searchHistory },
+                searchResults = { medias },
+                providers = { providers },
+                filters = { filters },
+                onQueryChange = {},
+                onSearch = {},
+                onChangeView = {},
+                onChangeProvider = {},
+                onUpdateFilters = {},
+                onToggleProvider = {},
+                onConsumeSearchApiErrors = {},
+                deleteSearchHistoryItem = {},
+                paginateItems = {},
+                openMediaScreen = {},
+                previewMedia = {},
             )
         }
     }

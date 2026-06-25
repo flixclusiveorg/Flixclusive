@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="failed_to_get_header_item">An error occurred while fetching the headline item</string>
+    <string name="empty_catalog_providers_msg">Start adding catalog providers now!</string>
+    <string name="empty_catalogs_label">No catalog providers</string>
+    <string name="catalog_providers_sheet_label">Catalog providers</string>
+    <string name="catalog_providers_sheet_desc">Here are all the providers that the app can fetch catalogs from. You can enable or disable them to your liking.</string>
+    <string name="empty_catalog_title">No juice here!</string>
+    <string name="empty_catalog_desc">This catalog seems to be empty</string>
+    <string name="label_loading_catalogs">Loading catalogs...</string>
 </resources>

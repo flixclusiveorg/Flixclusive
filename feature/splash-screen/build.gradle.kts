@@ -22,7 +22,6 @@ dependencies {
     implementation(projects.dataAppUpdates)
     implementation(projects.domainProvider)
 
-    implementation(libs.accompanist.permissions)
     implementation(libs.compose.animation)
     implementation(libs.compose.animation.graphics)
     implementation(libs.compose.foundation)

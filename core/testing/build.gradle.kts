@@ -18,9 +18,8 @@ dependencies {
     implementation(libs.turbine)
     implementation(libs.androidx.test.ext.junit)
 
-    implementation(libs.retrofit.gson)
     implementation(libs.stubs.util)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(libs.stubs.model.provider)
 
     implementation(libs.room.runtime)

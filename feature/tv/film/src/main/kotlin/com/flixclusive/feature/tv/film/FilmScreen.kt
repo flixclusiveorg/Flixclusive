@@ -1,4 +1,4 @@
-package com.flixclusive.feature.tv.film
+package com.flixclusive.feature.tv.media
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -50,9 +50,9 @@ import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.film.FilmScreenNavArgs
+import com.flixclusive.core.ui.media.MediaScreenNavArgs
 import com.flixclusive.core.ui.tv.FadeInAndOutScreenTransition
-import com.flixclusive.core.ui.tv.component.FilmOverview
+import com.flixclusive.core.ui.tv.component.MediaOverview
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
@@ -62,42 +62,40 @@ import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
-import com.flixclusive.feature.tv.film.component.FilmErrorSnackbar
-import com.flixclusive.feature.tv.film.component.FilmsRow
-import com.flixclusive.feature.tv.film.component.buttons.EPISODES_BUTTON_KEY
-import com.flixclusive.feature.tv.film.component.buttons.MainButtons
-import com.flixclusive.feature.tv.film.component.buttons.PLAY_BUTTON_KEY
-import com.flixclusive.feature.tv.film.component.episodes.EpisodesPanel
+import com.flixclusive.feature.tv.media.component.MediaErrorSnackbar
+import com.flixclusive.feature.tv.media.component.MediasRow
+import com.flixclusive.feature.tv.media.component.buttons.EPISODES_BUTTON_KEY
+import com.flixclusive.feature.tv.media.component.buttons.MainButtons
+import com.flixclusive.feature.tv.media.component.buttons.PLAY_BUTTON_KEY
+import com.flixclusive.feature.tv.media.component.episodes.EpisodesPanel
 import com.flixclusive.feature.tv.player.PlayerScreen
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.Movie
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Movie
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface FilmScreenTvNavigator : GoBackAction {
-    fun openFilmScreenSeamlessly(film: Film)
+interface MediaScreenTvNavigator : GoBackAction {
+    fun openMediaScreenSeamlessly(media: MediaMetadata)
 }
 
 @Destination<ExternalModuleGraph>(
-    navArgs = FilmScreenNavArgs::class,
+    navArgs = MediaScreenNavArgs::class,
     style = FadeInAndOutScreenTransition::class
 )
 @Composable
-internal fun FilmScreen(
-    navigator: FilmScreenTvNavigator,
-    args: FilmScreenNavArgs
-) {
-    val viewModel = hiltViewModel<FilmScreenViewModel>()
+internal fun MediaScreen(
+    navigator: MediaScreenTvNavigator,
+    args: MediaScreenNavArgs
+,viewModel: MediaScreenViewModel = hiltViewModel()) {
     val context = LocalContext.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
-    val film by viewModel.film.collectAsStateWithLifecycle()
+    val media by viewModel.media.collectAsStateWithLifecycle()
     val currentSeasonSelected by viewModel.currentSeasonSelected.collectAsStateWithLifecycle()
 
     var episodeToPlay: Episode? by remember { mutableStateOf(null) }
@@ -109,12 +107,12 @@ internal fun FilmScreen(
 
     var buttonsHasFocus by remember { mutableStateOf(false) }
     var collectionHasFocus by remember { mutableStateOf(false) }
-    var otherFilmsHasFocus by remember { mutableStateOf(false) }
+    var otherMediasHasFocus by remember { mutableStateOf(false) }
 
     val delayPlayerAnimation = 1000
 
-    val filmsRowEnterTransition = fadeIn() + slideInVertically()
-    val filmsRowExitTransition = slideOutVertically(
+    val mediasRowEnterTransition = fadeIn() + slideInVertically()
+    val mediasRowExitTransition = slideOutVertically(
         animationSpec = tween(
             delayMillis = if (isPlayerRunning) delayPlayerAnimation else 0,
             durationMillis = if (isPlayerRunning) delayPlayerAnimation else 300
@@ -126,11 +124,8 @@ internal fun FilmScreen(
         )
     )
 
-    val backdropPath = remember(film) {
-        context.buildTMDBImageUrl(
-            imagePath = film?.backdropImage,
-            imageSize = "w1280"
-        )
+    val backdropPath = remember(media) {
+        context.buildTMDBImageUrl(imagePath = media?.backdropImage)
     }
     val bottomFade = remember(buttonsHasFocus) {
         if (buttonsHasFocus) {
@@ -150,7 +145,6 @@ internal fun FilmScreen(
 
     val lastItemFocusedMap = useLocalLastFocusedItemPerDestination()
     val currentRoute = useLocalCurrentRoute()
-
 
     Box(
         modifier = Modifier
@@ -196,7 +190,7 @@ internal fun FilmScreen(
                         .height(400.dp),
                     model = it,
                     imageLoader = LocalContext.current.imageLoader,
-                    contentDescription = stringResource(id = LocaleR.string.film_item_content_description)
+                    contentDescription = stringResource(id = LocaleR.string.media_item_content_description)
                 )
             }
         }
@@ -207,9 +201,9 @@ internal fun FilmScreen(
                     .focusGroup()
                     .fillMaxSize()
             ) {
-                film?.let {
+                media?.let {
                     PlayerScreen(
-                        film = it,
+                        media = it,
                         episodeToPlay = episodeToPlay,
                         isPlayerRunning = isPlayerRunning,
                         isOverviewShown = isOverviewShown,
@@ -266,12 +260,12 @@ internal fun FilmScreen(
                         .align(Alignment.TopStart)
                         .fadingEdge(bottomFade),
                     pivotOffsets = PivotOffsets(
-                        parentFraction = if (collectionHasFocus || otherFilmsHasFocus) 0.4F else 0.8F
+                        parentFraction = if (collectionHasFocus || otherMediasHasFocus) 0.4F else 0.8F
                     ),
                     contentPadding = PaddingValues(top = 35.dp, bottom = 35.dp),
                 ) {
                     item {
-                        if (film != null) {
+                        if (media != null) {
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(35.dp),
                                 modifier = Modifier
@@ -279,15 +273,13 @@ internal fun FilmScreen(
                                     .padding(
                                         start = LabelStartPadding.start + getLocalDrawerWidth(),
                                         bottom = 55.dp
-                                    )
-                                    .animateEnterExit(
+                                    ).animateEnterExit(
                                         enter = slideInHorizontally(),
                                         exit = slideOutHorizontally()
-                                    )
-                                    .onFocusChanged { buttonsHasFocus = it.hasFocus }
+                                    ).onFocusChanged { buttonsHasFocus = it.hasFocus }
                             ) {
                                 AnimatedContent(
-                                    targetState = film!!,
+                                    targetState = media!!,
                                     transitionSpec = {
                                         ContentTransform(
                                             targetContentEnter = fadeIn(),
@@ -296,8 +288,8 @@ internal fun FilmScreen(
                                     },
                                     label = ""
                                 ) {
-                                    FilmOverview(
-                                        film = it,
+                                    MediaOverview(
+                                        media = it,
                                         watchHistoryItem = watchHistoryItem,
                                         shouldEllipsize = false
                                     )
@@ -305,8 +297,8 @@ internal fun FilmScreen(
 
                                 MainButtons(
                                     watchHistoryItem = watchHistoryItem,
-                                    isInWatchlist = uiState.isFilmInWatchlist,
-                                    isTvShow = film?.filmType == FilmType.TV_SHOW,
+                                    isInWatchlist = uiState.isMediaInWatchlist,
+                                    isShow = media?.type == MediaType.SHOW,
                                     onPlay = {
                                         isOverviewShown = false
                                         isPlayerRunning = true
@@ -322,30 +314,30 @@ internal fun FilmScreen(
                         }
                     }
 
-                    if (film?.filmType == FilmType.MOVIE) {
+                    if (media?.type == MediaType.MOVIE) {
                         item {
-                            (film as Movie).collection?.let {
+                            (media as Movie).collection?.let {
                                 Box(
                                     modifier = Modifier
                                         .padding(bottom = 25.dp)
                                         .animateEnterExit(
-                                            enter = filmsRowEnterTransition,
-                                            exit = filmsRowExitTransition
+                                            enter = mediasRowEnterTransition,
+                                            exit = mediasRowExitTransition
                                         )
                                 ) {
-                                    FilmsRow(
-                                        films = it.films,
+                                    MediasRow(
+                                        medias = it.medias,
                                         hasFocus = collectionHasFocus,
                                         label = UiText.StringValue(it.collectionName),
                                         iconId = UiCommonR.drawable.round_library,
-                                        currentFilm = film as Movie,
+                                        currentMedia = media as Movie,
                                         goBack = navigator::goBack,
                                         onFocusChange = {
                                             collectionHasFocus = it
                                         },
-                                        onFilmClick = { newFilm ->
+                                        onMediaClick = { newMedia ->
                                             isPlayerRunning = false
-                                            viewModel.initializeData(film = newFilm)
+                                            viewModel.initializeData(media = newMedia)
                                         }
                                     )
                                 }
@@ -353,28 +345,28 @@ internal fun FilmScreen(
                         }
                     }
 
-                    if (film?.recommendations?.isNotEmpty() == true) {
+                    if (media?.recommendations?.isNotEmpty() == true) {
                         item {
                             Box(
                                 modifier = Modifier
                                     .animateEnterExit(
-                                        enter = filmsRowEnterTransition,
-                                        exit = filmsRowExitTransition
+                                        enter = mediasRowEnterTransition,
+                                        exit = mediasRowExitTransition
                                     )
                             ) {
-                                FilmsRow(
-                                    films = film!!.recommendations,
-                                    hasFocus = otherFilmsHasFocus,
-                                    label = UiText.StringResource(LocaleR.string.other_films_message),
+                                MediasRow(
+                                    medias = media!!.recommendations,
+                                    hasFocus = otherMediasHasFocus,
+                                    label = UiText.StringResource(LocaleR.string.other_medias_message),
                                     iconId = R.drawable.round_dashboard_24,
-                                    currentFilm = film!!,
+                                    currentMedia = media!!,
                                     goBack = navigator::goBack,
                                     onFocusChange = {
-                                        otherFilmsHasFocus = it
+                                        otherMediasHasFocus = it
                                     },
-                                    onFilmClick = {
+                                    onMediaClick = {
                                         isPlayerRunning = false
-                                        navigator.openFilmScreenSeamlessly(it)
+                                        navigator.openMediaScreenSeamlessly(it)
                                     }
                                 )
                             }
@@ -387,7 +379,7 @@ internal fun FilmScreen(
                 }
             }
 
-            FilmErrorSnackbar(
+            MediaErrorSnackbar(
                 errorMessage = viewModel.errorSnackBarMessage,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -396,8 +388,7 @@ internal fun FilmScreen(
         }
     }
 
-
-    if (film is TvShow) {
+    if (media is Show) {
         AnimatedVisibility(
             visible = isEpisodesPanelOpen && !isPlayerRunning,
             enter = fadeIn(),
@@ -410,7 +401,7 @@ internal fun FilmScreen(
                         .fillMaxSize()
                 ) {
                     EpisodesPanel(
-                        film = film as TvShow,
+                        media = media as Show,
                         currentSelectedSeasonNumber = viewModel.selectedSeasonNumber,
                         currentSelectedSeason = currentSeasonSelected,
                         onSeasonChange = viewModel::onSeasonChange,

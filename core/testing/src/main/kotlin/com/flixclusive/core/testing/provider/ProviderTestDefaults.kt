@@ -3,10 +3,8 @@ package com.flixclusive.core.testing.provider
 import com.flixclusive.model.provider.Author
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
-import com.flixclusive.model.provider.Repository
-import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import com.flixclusive.model.provider.Status
 
 /**
  * Provides default values for testing provider-related functionality.
@@ -35,35 +33,11 @@ object ProviderTestDefaults {
     )
 
     /**
-     * Returns a default [Repository] instance for testing purposes.
-     *
-     * Default values represent the Flixclusive providers template repository.
-     */
-    fun getRepository(
-        owner: String = "flixclusiveorg",
-        name: String = "providers-template",
-        url: String = "https://github.com/flixclusiveorg/providers-template",
-        rawLinkFormat: String = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/%branch%/%filename%",
-    ) = Repository(
-        owner = owner,
-        name = name,
-        url = url,
-        rawLinkFormat = rawLinkFormat,
-    )
-
-    /**
-     * Returns a default [Repository] instance created from a GitHub URL.
-     *
-     * This is useful for testing the URL parsing functionality.
-     */
-    fun getRepositoryFromUrl(url: String = "https://github.com/flixclusiveorg/providers-template"): Repository =
-        url.toValidRepositoryLink()
-
-    /**
      * Returns a default [ProviderMetadata] instance for testing purposes.
      *
      * Default values represent a working test provider with multiple language support.
      */
+    @Suppress("ktlint:standard:max-line-length")
     fun getProviderMetadata(
         id: String = "14a5037ac9553dd",
         name: String = "Test Provider",
@@ -78,7 +52,7 @@ object ProviderTestDefaults {
         iconUrl: String? = null,
         language: Language = Language.Multiple,
         providerType: ProviderType = ProviderType.All,
-        status: Status = Status.Working,
+        status: ProviderStatus = ProviderStatus.Working,
     ) = ProviderMetadata(
         id = id,
         name = name,
@@ -95,52 +69,4 @@ object ProviderTestDefaults {
         providerType = providerType,
         status = status,
     )
-
-    /**
-     * Returns a default [ProviderMetadata] instance for WebView testing purposes.
-     *
-     * This variant represents a WebView-based provider.
-     */
-    fun getWebViewProviderMetadata(
-        id: String = "407e8638eb9d50c",
-        name: String = "WebView Test Provider",
-        authors: List<Author> = listOf(getAuthor()),
-        repositoryUrl: String = "https://github.com/flixclusiveorg/providers-template",
-        buildUrl: String = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/BasicDummyWebViewProvider.flx",
-        changelog: String = DEFAULT_PROVIDER_CHANGELOG,
-        versionName: String = "1.0.0",
-        versionCode: Long = 10000,
-        adult: Boolean = false,
-        description: String? = DEFAULT_PROVIDER_DESCRIPTION,
-        iconUrl: String? = null,
-        language: Language = Language.Multiple,
-        providerType: ProviderType = ProviderType.All,
-        status: Status = Status.Working,
-    ) = ProviderMetadata(
-        id = id,
-        name = name,
-        authors = authors,
-        repositoryUrl = repositoryUrl,
-        buildUrl = buildUrl,
-        changelog = changelog,
-        versionName = versionName,
-        versionCode = versionCode,
-        adult = adult,
-        description = description,
-        iconUrl = iconUrl,
-        language = language,
-        providerType = providerType,
-        status = status,
-    )
-
-    /**
-     * Returns a list of default [ProviderMetadata] instances for testing purposes.
-     *
-     * Useful for testing scenarios that require multiple providers.
-     */
-    fun getProviderMetadataList(): List<ProviderMetadata> =
-        listOf(
-            getProviderMetadata(),
-            getWebViewProviderMetadata(),
-        )
 }

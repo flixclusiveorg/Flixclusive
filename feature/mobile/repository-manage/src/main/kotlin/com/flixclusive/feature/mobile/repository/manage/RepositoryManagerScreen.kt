@@ -40,7 +40,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.navigation.navigator.GoBackAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -64,7 +65,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun RepositoryManagerScreen(
-    navigator: GoBackAction,
+    navigator: NavigateBack,
     viewModel: RepositoryManagerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,7 +83,7 @@ internal fun RepositoryManagerScreen(
         onAddLink = viewModel::onAddLink,
         clearSelection = viewModel::clearSelection,
         toggleRepositorySelection = viewModel::toggleRepositorySelection,
-        onGoBack = navigator::goBack,
+        onGoBack = navigator::navigateBack,
         onRemoveRepository = viewModel::onRemoveRepository,
         onRemoveSelection = viewModel::onRemoveSelection,
         onConsumeError = viewModel::onConsumeError,
@@ -174,10 +175,10 @@ private fun RepositoryManagerScreenContent(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .padding(LocalGlobalScaffoldPadding.current),
-    ) {
+    ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(
-                contentPadding = it,
+                contentPadding = padding,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 columns = getAdaptiveGridCellsCount(),
@@ -238,19 +239,21 @@ private fun RepositoryManagerScreenContent(
                 }
             }
 
-            AnimatedVisibility(
-                visible = isListOfRepositoryEmpty,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxSize()
-                    .padding(it),
-            ) {
-                EmptyDataMessage(
-                    description = stringResource(LocaleR.string.empty_repositories_list_message),
-                    modifier = Modifier.alpha(0.8F),
-                )
+            if (isListOfRepositoryEmpty) {
+                AnimatedVisibility(
+                    visible = isLoadingWithDelay(),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxSize()
+                        .padding(padding),
+                ) {
+                    EmptyDataMessage(
+                        description = stringResource(LocaleR.string.empty_repositories_list_message),
+                        modifier = Modifier.alpha(0.8F),
+                    )
+                }
             }
         }
     }

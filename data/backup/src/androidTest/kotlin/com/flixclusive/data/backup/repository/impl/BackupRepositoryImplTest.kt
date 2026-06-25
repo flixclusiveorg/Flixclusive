@@ -10,10 +10,10 @@ import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.database.AppDatabase
-import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListType
+import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -41,7 +41,7 @@ import com.flixclusive.data.backup.validate.impl.ProviderBackupValidator
 import com.flixclusive.data.backup.validate.impl.RepositoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.SearchHistoryBackupValidator
 import com.flixclusive.data.backup.validate.impl.WatchProgressBackupValidator
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.common.MediaType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,8 +91,8 @@ class BackupRepositoryImplTest {
                 )
 
                 val listName = "Test List"
-                val filmId = "film-1"
-                seedCustomLibraryList(db, ownerId = userId, listName = listName, filmId = filmId)
+                val mediaId = "media-1"
+                seedCustomLibraryList(db, ownerId = userId, listName = listName, mediaId = mediaId)
 
                 repository.create(uri = Uri.fromFile(backupFile), options = libraryOnlyOptions())
 
@@ -104,7 +104,11 @@ class BackupRepositoryImplTest {
                 expectThat(backedUpList.name).isEqualTo(listName)
                 expectThat(backedUpList.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(backedUpList.items).hasSize(1)
-                expectThat(backedUpList.items.first().film.id).isEqualTo(filmId)
+                expectThat(
+                    backedUpList.items
+                        .first()
+                        .media.id
+                ).isEqualTo(mediaId)
 
                 expectThat(backup.preferences).isEmpty()
                 expectThat(backup.watchProgressList).isEmpty()
@@ -132,7 +136,7 @@ class BackupRepositoryImplTest {
                     appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
                 )
 
-                seedCustomLibraryList(db, ownerId = userId, listName = "Test List", filmId = "film-1")
+                seedCustomLibraryList(db, ownerId = userId, listName = "Test List", mediaId = "media-1")
 
                 val result = repository.create(uri = Uri.fromFile(backupFile), options = libraryOnlyOptions())
 
@@ -166,7 +170,8 @@ class BackupRepositoryImplTest {
                 val repositoryDir = File(providersDir, "test-repo").apply { mkdirs() }
 
                 val providerFileContent = "dummy content"
-                val providerFile = File(repositoryDir, "BasicDummyProvider.flx").apply { writeText(providerFileContent) }
+                val providerFile =
+                    File(repositoryDir, "BasicDummyProvider.flx").apply { writeText(providerFileContent) }
 
                 val settingsRepositoryDir = File(providersSettingsDir, "test-repo").apply { mkdirs() }
                 val settingsFileContent = "provider settings"
@@ -174,7 +179,8 @@ class BackupRepositoryImplTest {
                     .apply { writeText(settingsFileContent) }
 
                 File(repositoryDir, ProviderConstants.UPDATER_JSON_FILE).apply {
-                    writeText("""
+                    writeText(
+                        """
                         [{
                             "repositoryUrl": "https://github.com/flixclusiveorg/providers-template",
                             "adult": false,
@@ -200,7 +206,8 @@ class BackupRepositoryImplTest {
                             "versionName": "1.0.0",
                             "name": "Test Provider"
                         }]
-                    """.trimIndent())
+                        """.trimIndent()
+                    )
                 }
 
                 val repositoryUrl = "https://example.com/repo"
@@ -270,7 +277,13 @@ class BackupRepositoryImplTest {
                 expectThat(restoredLists.first().name).isEqualTo("Test List")
                 expectThat(restoredLists.first().list.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(restoredLists.first().items).hasSize(1)
-                expectThat(restoredLists.first().items.first().filmId).isEqualTo("film-1")
+                expectThat(
+                    restoredLists
+                        .first()
+                        .items
+                        .first()
+                        .mediaId
+                ).isEqualTo("media-1")
             } finally {
                 targetDb.close()
                 backupFile.delete()
@@ -311,10 +324,12 @@ class BackupRepositoryImplTest {
         db: AppDatabase,
         ownerId: String,
         listName: String,
-        filmId: String,
+        mediaId: String,
     ) {
-        val listId = db.libraryListDao().insert(
+        val listId = "list-${UUID.randomUUID()}"
+        db.libraryListDao().insert(
             LibraryList(
+                id = listId,
                 ownerId = ownerId,
                 name = listName,
                 description = null,
@@ -322,22 +337,21 @@ class BackupRepositoryImplTest {
                 createdAt = Date(1_700_000_000_000),
                 updatedAt = Date(1_700_000_000_000),
             )
-        ).toInt()
+        )
 
-        db.libraryListItemDao().upsertFilm(
-            DBFilm(
-                id = filmId,
-                title = "Test Film",
+        db.libraryListItemDao().upsertMedia(
+            DBMedia(
+                id = mediaId,
+                title = "Test Media",
                 providerId = "test-provider",
                 adult = false,
-                filmType = FilmType.MOVIE,
+                type = MediaType.MOVIE,
                 overview = null,
                 posterImage = null,
                 language = null,
                 rating = null,
                 backdropImage = null,
                 releaseDate = null,
-                year = null,
                 createdAt = Date(1_700_000_000_000),
                 updatedAt = Date(1_700_000_000_000),
             )
@@ -345,7 +359,7 @@ class BackupRepositoryImplTest {
 
         db.libraryListItemDao().insertItem(
             LibraryListItem(
-                filmId = filmId,
+                mediaId = mediaId,
                 listId = listId,
                 createdAt = Date(1_700_000_000_000),
                 updatedAt = Date(1_700_000_000_000),
@@ -373,7 +387,7 @@ class BackupRepositoryImplTest {
                 appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
             )
 
-            seedCustomLibraryList(db, ownerId = userId, listName = "Test List", filmId = "film-1")
+            seedCustomLibraryList(db, ownerId = userId, listName = "Test List", mediaId = "media-1")
 
             repository.create(uri = Uri.fromFile(backupFile), options = libraryOnlyOptions())
 
@@ -524,11 +538,14 @@ class BackupRepositoryImplTest {
         }
     }
 
-    private class TestUserSessionDataStore(initialUserId: String) : UserSessionDataStore {
+    private class TestUserSessionDataStore(
+        initialUserId: String
+    ) : UserSessionDataStore {
         private val currentUserIdState = MutableStateFlow<String?>(initialUserId)
         private val sessionTimeoutState = MutableStateFlow(0L)
 
         override val currentUserId: Flow<String?> = currentUserIdState.asStateFlow()
+
         @Deprecated("This field is only used for migration purposes and will be removed in future versions")
         override val legacyCurrentUserId: Flow<Int?> = emptyFlow()
         override val sessionTimeout: Flow<Long> = sessionTimeoutState.asStateFlow()
@@ -551,7 +568,7 @@ class BackupRepositoryImplTest {
             transform: suspend (t: SystemPreferences) -> SystemPreferences
         ) = Unit
 
-        override fun <T : UserPreferences> getUserPrefs(
+        override fun <T : UserPreferences> getUserPrefsAsFlow(
             key: Preferences.Key<String>,
             type: KClass<T>
         ): Flow<T> {

@@ -1,7 +1,7 @@
 package com.flixclusive.crash
 
 import com.flixclusive.core.common.exception.CrashReportSender
-import com.flixclusive.core.common.exception.REMOTE_FORM_URL
+import com.flixclusive.core.common.exception.URL_CRASH_REPORT_FORM
 import com.flixclusive.core.util.network.okhttp.HttpMethod
 import com.flixclusive.core.util.network.okhttp.formRequest
 import kotlinx.coroutines.test.runTest
@@ -15,7 +15,8 @@ class CrashReportSenderTest : CrashReportSender {
     private lateinit var client: OkHttpClient
 
     private fun generateDirtyClient(): OkHttpClient {
-        return OkHttpClient.Builder()
+        return OkHttpClient
+            .Builder()
             .followRedirects(true)
             .followSslRedirects(true)
             .build()
@@ -27,26 +28,28 @@ class CrashReportSenderTest : CrashReportSender {
     }
 
     @Test
-    fun `send function should return true`() = runTest {
-        val errorMessage = """
-            ========== ERROR-SAMPLE ===========
+    fun `send function should return true`() =
+        runTest {
+            val errorMessage = """
+                ========== ERROR-SAMPLE ===========
 
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM
-            ===================================
-        """.trimIndent()
+                LOREM IPSUM LOREM IPSUM LOREM IPSUM
+                LOREM IPSUM LOREM IPSUM LOREM IPSUM
+                LOREM IPSUM LOREM IPSUM LOREM IPSUM
+                LOREM IPSUM LOREM IPSUM LOREM IPSUM
+                ===================================
+            """.trimIndent()
 
-        send(errorMessage)
-    }
+            send(errorMessage)
+        }
 
     override suspend fun send(errorLog: String) {
-        val response = client.formRequest(
-            url = REMOTE_FORM_URL,
-            method = HttpMethod.POST,
-            body = mapOf("entry.1687138646" to errorLog)
-        ).execute()
+        val response = client
+            .formRequest(
+                url = URL_CRASH_REPORT_FORM,
+                method = HttpMethod.POST,
+                body = mapOf("entry.1687138646" to errorLog)
+            ).execute()
 
         expectThat(response.isSuccessful).isTrue()
     }

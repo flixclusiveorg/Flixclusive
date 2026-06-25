@@ -10,20 +10,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface InstalledProviderDao {
-    @Query("SELECT * FROM installed_providers ORDER BY sortOrder ASC")
+    @Query("SELECT * FROM installed_providers ORDER BY createdAt ASC")
     suspend fun getAll(): List<InstalledProvider>
 
-    @Query("SELECT * FROM installed_providers WHERE ownerId = :ownerId ORDER BY sortOrder ASC")
+    @Query("SELECT * FROM installed_providers WHERE ownerId = :ownerId ORDER BY createdAt ASC")
     fun getAllAsFlow(ownerId: String): Flow<List<InstalledProvider>>
 
-    @Query("SELECT * FROM installed_providers WHERE ownerId = :ownerId ORDER BY sortOrder ASC")
+    @Query("SELECT * FROM installed_providers WHERE ownerId = :ownerId ORDER BY createdAt ASC")
     suspend fun getAll(ownerId: String): List<InstalledProvider>
-
-    @Query("SELECT * FROM installed_providers WHERE isEnabled = 1 AND ownerId = :ownerId ORDER BY sortOrder ASC")
-    fun getEnabledAsFlow(ownerId: String): Flow<List<InstalledProvider>>
-
-    @Query("SELECT * FROM installed_providers WHERE isEnabled = 1 AND ownerId = :ownerId ORDER BY sortOrder ASC")
-    suspend fun getEnabled(ownerId: String): List<InstalledProvider>
 
     @Query("SELECT * FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
     suspend fun get(id: String, ownerId: String): InstalledProvider?
@@ -31,7 +25,9 @@ interface InstalledProviderDao {
     @Query("SELECT * FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
     fun getAsFlow(id: String, ownerId: String): Flow<InstalledProvider?>
 
-    @Query("SELECT * FROM installed_providers WHERE repositoryUrl = :repositoryUrl AND ownerId = :ownerId ORDER BY sortOrder ASC")
+    @Query(
+        "SELECT * FROM installed_providers WHERE repositoryUrl = :repositoryUrl AND ownerId = :ownerId ORDER BY createdAt ASC"
+    )
     fun getByRepositoryUrl(repositoryUrl: String, ownerId: String): Flow<List<InstalledProvider>>
 
     @Upsert
@@ -52,25 +48,63 @@ interface InstalledProviderDao {
     @Query("DELETE FROM installed_providers WHERE ownerId = :ownerId")
     suspend fun deleteAll(ownerId: String)
 
-    @Query("UPDATE installed_providers SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
-    suspend fun updateSortOrder(
-        id: String,
-        ownerId: String,
-        sortOrder: Double,
-        updatedAt: Long = System.currentTimeMillis()
+    @Query(
+        "UPDATE installed_providers SET isCatalogEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
     )
-
-    @Query("UPDATE installed_providers SET isEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId")
-    suspend fun setEnabled(
+    suspend fun setCatalogEnabled(
         id: String,
         ownerId: String,
         isEnabled: Boolean,
-        updatedAt: Long = System.currentTimeMillis()
+        updatedAt: Long = System.currentTimeMillis(),
     )
 
-    @Query("SELECT isEnabled FROM installed_providers WHERE id = :id AND ownerId = :ownerId")
-    suspend fun isEnabled(id: String, ownerId: String): Boolean
+    @Query(
+        "UPDATE installed_providers SET isCrossMatchEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
+    suspend fun setCrossMatchEnabled(
+        id: String,
+        ownerId: String,
+        isEnabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
 
-    @Query("SELECT MAX(sortOrder) FROM installed_providers WHERE ownerId = :ownerId")
-    suspend fun getMaxSortOrder(ownerId: String): Double?
+    @Query(
+        "UPDATE installed_providers SET isMediaLinkEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
+    suspend fun setMediaLinkEnabled(
+        id: String,
+        ownerId: String,
+        isEnabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
+
+    @Query(
+        "UPDATE installed_providers SET isMetadataEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
+    suspend fun setMetadataEnabled(
+        id: String,
+        ownerId: String,
+        isEnabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
+
+    @Query(
+        "UPDATE installed_providers SET isSearchEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
+    suspend fun setSearchEnabled(
+        id: String,
+        ownerId: String,
+        isEnabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
+
+    @Query(
+        "UPDATE installed_providers SET isTrackerEnabled = :isEnabled, updatedAt = :updatedAt WHERE id = :id AND ownerId = :ownerId"
+    )
+    suspend fun setTrackerEnabled(
+        id: String,
+        ownerId: String,
+        isEnabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
 }

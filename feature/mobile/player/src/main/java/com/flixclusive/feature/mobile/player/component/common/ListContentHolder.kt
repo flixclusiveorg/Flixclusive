@@ -17,8 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,7 +42,6 @@ internal fun <Type> ListContentHolder(
     selectedIndex: Int,
     onItemClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    failedItems: () -> Set<String> = { emptySet() },
     onItemLongClick: (Int) -> Unit = {},
     actions: @Composable RowScope.() -> Unit = { }
 ) {
@@ -91,11 +88,7 @@ internal fun <Type> ListContentHolder(
                 ListItem(
                     name = name,
                     isSelected = i == selectedIndex,
-                    isFailed = if (item is PlayerServer) {
-                        remember { derivedStateOf { item.url in failedItems() } }.value
-                    } else {
-                        false
-                    },
+                    isFailed = if (item is PlayerTrack) item.isDead else false,
                     onClick = { onItemClick(i) },
                     onLongClick = { onItemLongClick(i) },
                     modifier = Modifier.animateItem()
@@ -121,9 +114,10 @@ internal fun <Type> ListContentHolder(
 
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ).asAdaptiveTextStyle(size = 22.sp),
+                    style = MaterialTheme.typography.headlineSmall
+                        .copy(
+                            fontWeight = FontWeight.Bold
+                        ).asAdaptiveTextStyle(size = 22.sp),
                     modifier = Modifier.weight(1f)
                 )
 

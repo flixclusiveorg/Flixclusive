@@ -2,74 +2,67 @@ package com.flixclusive.feature.mobile.settings.screen.appearance
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.datastore.model.user.UiPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.feature.mobile.settings.Tweak
+import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.feature.mobile.settings.TweakGroup
+import com.flixclusive.feature.mobile.settings.TweakScaffold
 import com.flixclusive.feature.mobile.settings.TweakUI
-import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.StateFlow
-import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-internal class AppearanceTweakScreen(
-    private val viewModel: SettingsViewModel,
-) : BaseTweakScreen<UiPreferences> {
-    override val key = UserPreferences.UI_PREFS_KEY
-    override val preferencesAsState: StateFlow<UiPreferences> =
-        viewModel.getUserPrefsAsState<UiPreferences>(key)
+@Destination<ExternalModuleGraph>
+@Composable
+internal fun AppearanceTweakScreen(
+    navigator: NavigateBack,
+    viewModel: AppearanceTweakViewModel = hiltViewModel(),
+) {
+    val uiPreferences by viewModel.preferences.collectAsStateWithLifecycle()
 
-    override fun onUpdatePreferences(transform: suspend (t: UiPreferences) -> UiPreferences) {
-        viewModel.updateUserPrefs(key, transform)
-    }
+    TweakScaffold(
+        title = stringResource(LocaleR.string.appearance),
+        description = stringResource(LocaleR.string.appearance_settings_content_desc),
+        navigateBack = navigator::navigateBack,
+        tweaksProvider = {
+            listOf(
+                getGeneralTweaks(
+                    uiPreferences = { uiPreferences },
+                    onUpdatePreferences = viewModel::updateUserPrefs,
+                )
+            )
+        },
+    )
+}
 
-    @Composable
-    override fun getTitle(): String = stringResource(LocaleR.string.appearance)
-
-    @Composable
-    override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.appearance_settings)
-
-    @Composable
-    override fun getDescription(): String = stringResource(LocaleR.string.appearance_settings_content_desc)
-
-    @Composable
-    override fun getTweaks(): List<Tweak> {
-        val uiPreferences by preferencesAsState.collectAsStateWithLifecycle()
-
-        return listOf(
-            getGeneralTweaks(shouldShowTitleOnCardsProvider = { uiPreferences.shouldShowTitleOnCards }),
-        )
-    }
-
-    @Composable
-    private fun getGeneralTweaks(shouldShowTitleOnCardsProvider: () -> Boolean): TweakGroup {
-        val resources = LocalResources.current
-        return TweakGroup(
-            title = stringResource(LocaleR.string.general),
-            tweaks =
-                persistentListOf(
-                    TweakUI.SwitchTweak(
-                        title = stringResource(LocaleR.string.film_card_titles),
-                        description = {
-                            resources.getString(
-                                LocaleR.string.film_card_titles_settings_description,
-                            )
-                        },
-                        value = shouldShowTitleOnCardsProvider,
-                        onTweaked = {
-                            onUpdatePreferences { oldValue ->
-                                oldValue.copy(shouldShowTitleOnCards = it)
-                            }
-                        },
-                    ),
+@Composable
+private fun getGeneralTweaks(
+    uiPreferences: () -> UiPreferences,
+    onUpdatePreferences: (transform: suspend (t: UiPreferences) -> UiPreferences) -> Unit
+): TweakGroup {
+    val resources = LocalResources.current
+    return TweakGroup(
+        title = stringResource(LocaleR.string.general),
+        tweaks =
+            persistentListOf(
+                TweakUI.SwitchTweak(
+                    title = stringResource(LocaleR.string.media_card_titles),
+                    description = {
+                        resources.getString(
+                            LocaleR.string.media_card_titles_settings_description,
+                        )
+                    },
+                    value = { uiPreferences().shouldShowTitleOnCards },
+                    onTweaked = {
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(shouldShowTitleOnCards = it)
+                        }
+                    },
                 ),
-        )
-    }
+            ),
+    )
 }

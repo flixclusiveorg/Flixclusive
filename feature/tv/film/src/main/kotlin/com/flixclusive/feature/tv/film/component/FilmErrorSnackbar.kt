@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTvMaterial3Api::class)
 
-package com.flixclusive.feature.tv.film.component
+package com.flixclusive.feature.tv.media.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
@@ -41,7 +41,7 @@ import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
-internal fun FilmErrorSnackbar(
+internal fun MediaErrorSnackbar(
     errorMessage: UiText?,
     modifier: Modifier = Modifier,
 ) {
@@ -108,7 +108,7 @@ internal fun FilmErrorSnackbar(
 
 @Preview(device = "id:tv_1080p")
 @Composable
-private fun FilmErrorSnackbarPreview() {
+private fun MediaErrorSnackbarPreview() {
     var errorMessage by remember { mutableStateOf<UiText?>(null) }
 
     FlixclusiveTheme(isTv = true) {
@@ -126,13 +126,17 @@ private fun FilmErrorSnackbarPreview() {
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                FilmErrorSnackbar(errorMessage)
+                MediaErrorSnackbar(errorMessage)
 
                 Button(
                     onClick = {
-                        errorMessage = if(errorMessage == null) {
-                            UiText.StringValue("ERR 404: Failed to fetch the film fetch the film fetch the film fetch the film")
-                        } else null
+                        errorMessage = if (errorMessage == null) {
+                            UiText.StringValue(
+                                "ERR 404: Failed to fetch the media fetch the media fetch the media fetch the media"
+                            )
+                        } else {
+                            null
+                        }
                     }
                 ) {
                     Text("Click me")

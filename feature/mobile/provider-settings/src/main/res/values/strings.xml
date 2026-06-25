@@ -2,4 +2,7 @@
 <resources>
     <string name="empty_settings_message">Nothing to configure here</string>
     <string name="empty_settings_title">No settings</string>
+    <string name="failed_to_load_provider_settings">Failed to load provider settings: %1$s</string>
+    <string name="provider_plugin_not_found">Provider plugin not found</string>
+    <string name="provider_setting_not_found">Provider has no settings screen</string>
 </resources>

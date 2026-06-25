@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="report_a_bug">Report a bug</string>
-    <string name="github">GitHub</string>
+    <string name="github">GITHUB</string>
     <string name="feature_request">Request a feature!</string>
+    <string name="label_links_size">%1$d links</string>
+    <string name="label_links_filter_count">Count</string>
+    <string name="label_links_filter_title">Title</string>
+    <string name="desc_prefs_auto_select_server">Allows the app to automatically select a server from available streams based on your preferred quality. Uses descending fallback if the selected quality is unavailable.</string>
+    <string name="label_prefs_auto_select_server">Auto-select server</string>
+    <string name="count_selection_format">%1$d selected</string>
+    <string name="label_untested">untested</string>
+    <string name="label_dead">dead</string>
+    <string name="label_alive">alive</string>
+    <string name="label_total_format">%1$d total</string>
 </resources>

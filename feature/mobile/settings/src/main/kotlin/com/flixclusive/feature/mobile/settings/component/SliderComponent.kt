@@ -36,8 +36,8 @@ internal fun SliderComponent(
     BaseTweakComponent(
         modifier = modifier.onKeyEvent { keyEvent ->
             if (
-                keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_UP
-                && range.contains(selectedValueProvider())
+                keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_UP &&
+                range.contains(selectedValueProvider())
             ) {
                 val percentIncrement = range.endInclusive * 0.01f
 
@@ -48,12 +48,14 @@ internal fun SliderComponent(
                         onValueChange(newValue)
                         true
                     }
+
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
                         val newValue = (selectedValueProvider() - percentIncrement)
                             .coerceIn(range)
                         onValueChange(newValue)
                         true
                     }
+
                     else -> {
                         false
                     }

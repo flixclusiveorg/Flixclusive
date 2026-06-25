@@ -24,11 +24,12 @@ internal class BackupCreateWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
-
     override suspend fun doWork(): Result {
-        val userId = inputData.getString(BackupWorkConstants.INPUT_USER_ID)
+        val userId = inputData
+            .getString(BackupWorkConstants.INPUT_USER_ID)
             ?.takeIf { it.isNotBlank() }
-            ?: inputData.getInt(BackupWorkConstants.INPUT_USER_ID, -1)
+            ?: inputData
+                .getInt(BackupWorkConstants.INPUT_USER_ID, -1)
                 .takeIf { it > 0 }
                 ?.toString()
 
@@ -81,7 +82,8 @@ internal class BackupCreateWorker(
             val dataStoreManager = entryPoint.dataStoreManager()
             dataStoreManager.usePreferencesByUserId(userId)
 
-            val storageDirectoryUri = dataStoreManager.getSystemPrefs()
+            val storageDirectoryUri = dataStoreManager
+                .getSystemPrefs()
                 .first()
                 .storageDirectoryUri
                 ?.takeIf { it.isNotBlank() }
@@ -92,12 +94,13 @@ internal class BackupCreateWorker(
                 )
 
             val dataPreferences = dataStoreManager
-                .getUserPrefs(UserPreferences.DATA_PREFS_KEY, type = DataPreferences::class)
+                .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, type = DataPreferences::class)
                 .first()
 
             val maxBackups = dataPreferences.maxBackups.coerceAtLeast(1)
 
-            val explicitOutputUri = inputData.getString(BackupWorkConstants.INPUT_URI)
+            val explicitOutputUri = inputData
+                .getString(BackupWorkConstants.INPUT_URI)
                 ?.takeIf { it.isNotBlank() }
                 ?.let(Uri::parse)
 
@@ -145,12 +148,30 @@ internal class BackupCreateWorker(
             runCatching {
                 val defaultOptions = dataPreferences.autoBackupOptions
                 val options = defaultOptions.copy(
-                    includeLibrary = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_LIBRARY, defaultOptions.includeLibrary),
-                    includeWatchProgress = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_WATCH_PROGRESS, defaultOptions.includeWatchProgress),
-                    includeSearchHistory = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_SEARCH_HISTORY, defaultOptions.includeSearchHistory),
-                    includePreferences = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_PREFERENCES, defaultOptions.includePreferences),
-                    includeProviders = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_PROVIDERS, defaultOptions.includeProviders),
-                    includeRepositories = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES, defaultOptions.includeRepositories),
+                    includeLibrary = inputData.getBoolean(
+                        BackupWorkConstants.INPUT_INCLUDE_LIBRARY,
+                        defaultOptions.includeLibrary
+                    ),
+                    includeWatchProgress = inputData.getBoolean(
+                        BackupWorkConstants.INPUT_INCLUDE_WATCH_PROGRESS,
+                        defaultOptions.includeWatchProgress
+                    ),
+                    includeSearchHistory = inputData.getBoolean(
+                        BackupWorkConstants.INPUT_INCLUDE_SEARCH_HISTORY,
+                        defaultOptions.includeSearchHistory
+                    ),
+                    includePreferences = inputData.getBoolean(
+                        BackupWorkConstants.INPUT_INCLUDE_PREFERENCES,
+                        defaultOptions.includePreferences
+                    ),
+                    includeProviders = inputData.getBoolean(
+                        BackupWorkConstants.INPUT_INCLUDE_PROVIDERS,
+                        defaultOptions.includeProviders
+                    ),
+                    includeRepositories = inputData.getBoolean(
+                        BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES,
+                        defaultOptions.includeRepositories
+                    ),
                 )
                 val result = entryPoint.backupRepository().create(
                     uri = outputUri,
@@ -183,7 +204,8 @@ internal class BackupCreateWorker(
         userBackupDir: UniFile,
         maxBackups: Int,
     ): UniFile {
-        val backups = userBackupDir.listFiles()
+        val backups = userBackupDir
+            .listFiles()
             ?.asSequence()
             ?.filter { it.isFile }
             ?.filter { it.name?.startsWith(BackupWorkConstants.BACKUP_FILE_PREFIX) == true }
@@ -200,7 +222,8 @@ internal class BackupCreateWorker(
     }
 
     private fun trimOldBackups(userBackupDir: UniFile, maxBackups: Int) {
-        val backups = userBackupDir.listFiles()
+        val backups = userBackupDir
+            .listFiles()
             ?.asSequence()
             ?.filter { it.isFile }
             ?.filter { it.name?.startsWith(BackupWorkConstants.BACKUP_FILE_PREFIX) == true }

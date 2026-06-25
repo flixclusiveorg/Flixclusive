@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlin.reflect.KClass
 
 interface DataStoreManager {
@@ -16,7 +17,7 @@ interface DataStoreManager {
 
     suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences)
 
-    fun <T : UserPreferences> getUserPrefs(
+    fun <T : UserPreferences> getUserPrefsAsFlow(
         key: Preferences.Key<String>,
         type: KClass<T>,
     ): Flow<T>
@@ -28,4 +29,27 @@ interface DataStoreManager {
     )
 
     suspend fun deleteAllUserRelatedFiles(userId: String)
+
+    companion object {
+        inline fun <reified T : UserPreferences> DataStoreManager.getUserPrefsAsFlow(key: Preferences.Key<String>) =
+            getUserPrefsAsFlow(
+                key = key,
+                type = T::class
+            )
+
+        suspend inline fun <reified T : UserPreferences> DataStoreManager.getUserPrefs(key: Preferences.Key<String>) =
+            getUserPrefsAsFlow(
+                key = key,
+                type = T::class
+            ).first()
+
+        suspend inline fun <reified T : UserPreferences> DataStoreManager.updateUserPrefs(
+            key: Preferences.Key<String>,
+            noinline transform: suspend (T) -> T
+        ) = updateUserPrefs(
+            key = key,
+            type = T::class,
+            transform = transform
+        )
+    }
 }

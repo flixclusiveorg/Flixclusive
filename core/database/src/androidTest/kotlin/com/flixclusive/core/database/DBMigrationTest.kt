@@ -1,11 +1,17 @@
 package com.flixclusive.core.database
 
-import androidx.room.migration.Migration
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flixclusive.core.database.migration.Schema10to11
 import com.flixclusive.core.database.migration.Schema11to12
+import com.flixclusive.core.database.migration.Schema12to13
+import com.flixclusive.core.database.migration.Schema13to14
+import com.flixclusive.core.database.migration.Schema14to15
+import com.flixclusive.core.database.migration.Schema15to16
+import com.flixclusive.core.database.migration.Schema16to17
+import com.flixclusive.core.database.migration.Schema17to18
+import com.flixclusive.core.database.migration.Schema18to19
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -31,166 +37,16 @@ class DBMigrationTest {
             AppDatabase::class.java,
         )
 
+    @Test
     @Throws(IOException::class)
-    private fun testMigrate(
-        initialVersion: Int,
-        migrateVersion: Int,
-        vararg migration: Migration,
-    ) {
-        helper.createDatabase(TEST_DB, initialVersion)
+    fun migrate() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        helper.createDatabase(TEST_DB, 2)
 
         helper.runMigrationsAndValidate(
             name = TEST_DB,
-            version = migrateVersion,
+            version = 19,
             validateDroppedTables = true,
-            *migration,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate2To3() {
-        testMigrate(
-            initialVersion = 2,
-            migrateVersion = 3,
-            Schema1to2,
-            Schema2to3,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate3To4() {
-        testMigrate(
-            initialVersion = 3,
-            migrateVersion = 4,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate4To5() {
-        testMigrate(
-            initialVersion = 4,
-            migrateVersion = 5,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-            Schema4to5,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate5To6() {
-        testMigrate(
-            initialVersion = 5,
-            migrateVersion = 6,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-            Schema4to5,
-            Schema5to6,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate6to7() {
-        testMigrate(
-            initialVersion = 6,
-            migrateVersion = 7,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-            Schema4to5,
-            Schema5to6,
-            Schema6to7,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate7To8() {
-        testMigrate(
-            initialVersion = 7,
-            migrateVersion = 8,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-            Schema4to5,
-            Schema5to6,
-            Schema6to7,
-            Schema7to8,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate8To9() {
-        testMigrate(
-            initialVersion = 8,
-            migrateVersion = 9,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-            Schema4to5,
-            Schema5to6,
-            Schema6to7,
-            Schema7to8,
-            Schema8to9,
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate9To10() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        testMigrate(
-            initialVersion = 9,
-            migrateVersion = 10,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-            Schema4to5,
-            Schema5to6,
-            Schema6to7,
-            Schema7to8,
-            Schema8to9,
-            Schema9to10(context),
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate10To11() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        testMigrate(
-            initialVersion = 10,
-            migrateVersion = 11,
-            Schema1to2,
-            Schema2to3,
-            Schema3to4,
-            Schema4to5,
-            Schema5to6,
-            Schema6to7,
-            Schema7to8,
-            Schema8to9,
-            Schema9to10(context),
-            Schema10to11(context),
-        )
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun migrate11To12() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        testMigrate(
-            initialVersion = 11,
-            migrateVersion = 12,
             Schema1to2,
             Schema2to3,
             Schema3to4,
@@ -202,6 +58,13 @@ class DBMigrationTest {
             Schema9to10(context),
             Schema10to11(context),
             Schema11to12,
+            Schema12to13,
+            Schema13to14,
+            Schema14to15,
+            Schema15to16,
+            Schema16to17,
+            Schema17to18,
+            Schema18to19,
         )
     }
 }

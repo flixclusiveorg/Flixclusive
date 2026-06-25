@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -26,69 +27,56 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.common.pagination.PagingDataState
-import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.common.domain.PagingState
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
-import com.flixclusive.core.presentation.mobile.components.film.FilmCard
-import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.presentation.mobile.components.media.MediaCard
+import com.flixclusive.core.presentation.mobile.components.media.MediaCardPlaceholder
 import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
-import com.flixclusive.model.film.Film
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveMediaCardWidth
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.provider.Catalog
-import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 @Composable
 fun SeeAllScreen(
-    navigator: SeeAllScreenNavigator,
-    navArgs: SeeAllScreenNavArgs,
-) {
-    InternalSeeAllScreen(
-        navigator = navigator,
-        navArgs = navArgs,
-    )
-}
-
-@Composable
-internal fun InternalSeeAllScreen(
-    navigator: SeeAllScreenNavigator,
+    navigator: NavigatorSeeAllScreen,
     navArgs: SeeAllScreenNavArgs,
     viewModel: SeeAllViewModel = hiltViewModel<SeeAllViewModel, SeeAllViewModel.Factory>(
         creationCallback = { it.create(navArgs.catalog) }
     ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
+    val showMediaTitles by viewModel.showMediaTitles.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     SeeAllScreenContent(
         items = {
             if (searchQuery.isNotBlank() && uiState.isSearching) {
-                viewModel.items
-                    .filter {
-                        it.title.contains(searchQuery, ignoreCase = true)
-                    }.toImmutableSet()
+                viewModel.items.fastFilter {
+                    it.title.contains(searchQuery, ignoreCase = true)
+                }
             } else {
                 viewModel.items
             }
         },
-        uiState = uiState,
-        showFilmTitles = showFilmTitles,
+        uiState = { uiState },
+        showMediaTitles = showMediaTitles,
         catalog = navArgs.catalog,
         searchQuery = { searchQuery },
         onQueryChange = viewModel::onQueryChange,
-        previewFilm = navigator::previewFilm,
-        onGoBack = navigator::goBack,
-        openFilmScreen = navigator::openFilmScreen,
+        previewMedia = navigator::showMediaPreviewBottomSheet,
+        onGoBack = navigator::navigateBack,
+        openMediaScreen = navigator::navigateToMediaScreen,
         onToggleSearchBar = viewModel::onToggleSearch,
         paginate = viewModel::paginate,
     )
@@ -96,16 +84,16 @@ internal fun InternalSeeAllScreen(
 
 @Composable
 private fun SeeAllScreenContent(
-    items: () -> ImmutableSet<Film>,
-    uiState: SeeAllUiState,
-    showFilmTitles: Boolean,
+    items: () -> List<MediaMetadata>,
+    uiState: () -> SeeAllUiState,
+    showMediaTitles: Boolean,
     catalog: Catalog,
     searchQuery: () -> String,
     onQueryChange: (String) -> Unit,
-    previewFilm: (Film) -> Unit,
+    previewMedia: (MediaMetadata) -> Unit,
     onGoBack: () -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
-    openFilmScreen: (Film) -> Unit,
+    openMediaScreen: (MediaMetadata) -> Unit,
     paginate: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -113,8 +101,8 @@ private fun SeeAllScreenContent(
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
 
     val updatedPaginateItems by rememberUpdatedState(paginate)
-    LaunchedEffect(listState, uiState.canPaginate) {
-        snapshotFlow { uiState.canPaginate && listState.shouldPaginate() }
+    LaunchedEffect(listState, uiState) {
+        snapshotFlow { uiState().canPaginate && listState.shouldPaginate() }
             .distinctUntilChanged()
             .collect { shouldPaginate ->
                 if (shouldPaginate) {
@@ -142,7 +130,7 @@ private fun SeeAllScreenContent(
                 title = catalog.name,
                 onNavigate = onGoBack,
                 scrollBehavior = scrollBehavior,
-                isSearching = uiState.isSearching,
+                isSearching = uiState().isSearching,
                 searchQuery = searchQuery,
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
@@ -151,36 +139,31 @@ private fun SeeAllScreenContent(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .padding(LocalGlobalScaffoldPadding.current),
-    ) {
+    ) { padding ->
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
-            contentPadding = it,
+            columns = GridCells.Adaptive(getAdaptiveMediaCardWidth()),
+            contentPadding = padding,
             state = listState,
             modifier = Modifier.fillMaxSize(),
         ) {
             items(
-                items().size,
-                key = {
-                    val film = items().elementAt(it)
-                    film.identifier
-                },
-            ) {
-                val film = items().elementAt(it)
-
-                FilmCard(
-                    isShowingTitle = showFilmTitles,
-                    film = film,
-                    onClick = openFilmScreen,
-                    onLongClick = previewFilm,
+                items = items(),
+                key = { media -> media.id },
+            ) { media ->
+                MediaCard(
+                    isShowingTitle = showMediaTitles,
+                    media = media,
+                    onClick = openMediaScreen,
+                    onLongClick = previewMedia,
                     modifier = Modifier
                         .animateItem()
                         .fillMaxWidth(),
                 )
             }
 
-            if (uiState.pagingState.isLoading) {
+            if (uiState().pagingState.isLoading) {
                 items(20) {
-                    FilmCardPlaceholder(
+                    MediaCardPlaceholder(
                         modifier = Modifier
                             .padding(3.dp)
                             .fillMaxWidth(),
@@ -188,12 +171,12 @@ private fun SeeAllScreenContent(
                 }
             }
 
-            if (uiState.pagingState is PagingDataState.Error) {
+            (uiState().pagingState as? PagingState.Error)?.let { errorState ->
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     RetryButton(
-                        error = uiState.pagingState.error.asString(),
+                        error = errorState.error.asString(),
                         onRetry = paginate,
-                        modifier = Modifier.aspectRatio(FilmCover.Backdrop.ratio),
+                        modifier = Modifier.aspectRatio(MediaCover.Backdrop.ratio),
                     )
                 }
             }
@@ -204,14 +187,14 @@ private fun SeeAllScreenContent(
 @Preview
 @Composable
 private fun SeeAllScreenBasePreview() {
-    val films = remember {
+    val medias = remember {
         (1..20)
             .map {
-                DummyDataForPreview.getFilm(
+                DummyDataForPreview.getMedia(
                     id = it.toString(),
-                    title = "Film $it",
+                    title = "MediaMetadata $it",
                 )
-            }.toImmutableSet()
+            }
     }
     var searchQuery by remember { mutableStateOf("") }
     var uiState by remember {
@@ -220,7 +203,7 @@ private fun SeeAllScreenBasePreview() {
                 page = 1,
                 maxPage = 1,
                 canPaginate = false,
-                pagingState = PagingDataState.Success(isExhausted = true),
+                pagingState = PagingState.Exhausted,
             ),
         )
     }
@@ -230,29 +213,30 @@ private fun SeeAllScreenBasePreview() {
             SeeAllScreenContent(
                 items = {
                     if (searchQuery.isBlank()) {
-                        films
+                        medias
                     } else {
-                        films
+                        medias
                             .filter {
                                 it.title.contains(searchQuery, ignoreCase = true)
-                            }.toImmutableSet()
+                            }
                     }
                 },
-                uiState = uiState,
-                showFilmTitles = true,
+                uiState = { uiState },
+                showMediaTitles = true,
                 catalog = remember {
-                    object : Catalog() {
-                        override val canPaginate: Boolean = true
-                        override val image: String? = null
-                        override val name: String = "Netflix"
-                        override val url: String = ""
-                    }
+                    Catalog(
+                        name = "Netflix",
+                        image = null,
+                        url = "",
+                        canPaginate = true,
+                        providerId = "netflix",
+                    )
                 },
                 searchQuery = { searchQuery },
                 onQueryChange = { searchQuery = it },
-                previewFilm = {},
+                previewMedia = {},
                 onGoBack = {},
-                openFilmScreen = {},
+                openMediaScreen = {},
                 onToggleSearchBar = {
                     uiState = uiState.copy(isSearching = it)
                 },

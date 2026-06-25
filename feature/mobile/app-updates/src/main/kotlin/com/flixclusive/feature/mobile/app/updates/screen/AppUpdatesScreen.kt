@@ -81,7 +81,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun AppUpdatesScreen(
-    navigator: AppUpdatesScreenNavigator,
+    navigator: NavigatorAppUpdatesScreen,
     newVersion: String,
     updateUrl: String,
     updateInfo: String?,
@@ -102,8 +102,8 @@ internal fun AppUpdatesScreen(
                 url = updateUrl,
             )
         },
-        openHomeScreen = navigator::openHomeScreen,
-        goBack = navigator::goBack,
+        openHomeScreen = navigator::navigateToHomeScreen,
+        goBack = navigator::navigateBack,
     )
 }
 
@@ -320,7 +320,7 @@ private fun AppUpdatesScreenContent(
                                     var label = context.getString(LocaleR.string.update_label)
 
                                     if (downloadState.status == DownloadStatus.COMPLETED) {
-                                        label = context.getString(LocaleR.string.install)
+                                        label = context.getString(LocaleR.string.label_install)
                                     } else if (downloadState.status.isDownloading) {
                                         label = "${downloadState.progress}%"
                                     }
@@ -352,9 +352,9 @@ private fun AppUpdatesScreenBasePreview() {
     LaunchedEffect(state.progress) {
         state = when {
             state.status.isIdle -> DownloadState(
-                downloadId = "",
+                id = "",
                 status = DownloadStatus.DOWNLOADING,
-                progress = 0,
+                progress = 0f,
             )
 
             state.status.isDownloading && state.progress < 100 -> state.copy(
@@ -362,9 +362,9 @@ private fun AppUpdatesScreenBasePreview() {
             )
 
             state.status.isDownloading && state.progress >= 100 -> DownloadState(
-                downloadId = "",
+                id = "",
                 status = DownloadStatus.COMPLETED,
-                progress = 100,
+                progress = 100f,
             )
 
             else -> DownloadState.IDLE
@@ -392,9 +392,9 @@ private fun AppUpdatesScreenBasePreview() {
                 downloadState = state,
                 downloadUpdate = {
                     state = state.copy(
-                        downloadId = "",
+                        id = "",
                         status = DownloadStatus.DOWNLOADING,
-                        progress = 0,
+                        progress = 0f,
                     )
                 },
                 openHomeScreen = {},

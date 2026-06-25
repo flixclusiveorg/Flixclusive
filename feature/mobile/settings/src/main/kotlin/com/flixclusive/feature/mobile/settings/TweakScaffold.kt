@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,7 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,17 +28,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastForEachIndexed
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
 import com.flixclusive.feature.mobile.settings.component.DialogComponent
 import com.flixclusive.feature.mobile.settings.component.ListRadioComponent
@@ -42,10 +53,10 @@ import com.flixclusive.feature.mobile.settings.component.StaticInformationCard
 import com.flixclusive.feature.mobile.settings.component.SwitchComponent
 import com.flixclusive.feature.mobile.settings.component.TextFieldComponent
 import com.flixclusive.feature.mobile.settings.component.TitleDescriptionHeader
-import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.time.Duration.Companion.milliseconds
 
 internal val TweakPaddingHorizontal = 10.dp
 private val TweakGroupSpacing = 25.dp
@@ -54,25 +65,29 @@ private val TweakGroupSpacing = 25.dp
 internal fun TweakScaffold(
     title: String,
     description: String,
+    navigateBack: () -> Unit,
     tweaksProvider: @Composable () -> List<Tweak>,
+    modifier: Modifier = Modifier,
 ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val screenPadding = getAdaptiveDp(TweakPaddingHorizontal)
 
     val tweaks = tweaksProvider()
-    val settingsSearchQuery = LocalSettingsSearchQuery.current
     var tweaksFiltered by remember { mutableStateOf<List<Tweak>?>(null) }
 
-    LaunchedEffect(settingsSearchQuery) {
-        snapshotFlow {
-            settingsSearchQuery.value
-        }.distinctUntilChanged()
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearching by remember { mutableStateOf(false) }
+
+    LaunchedEffect(true) {
+        snapshotFlow { searchQuery }
+            .distinctUntilChanged()
             .collectLatest { query ->
                 if (query.isEmpty()) {
                     tweaksFiltered = null
                     return@collectLatest
                 }
 
-                delay(800)
+                delay(800.milliseconds)
                 tweaksFiltered =
                     tweaks
                         .fastFlatMap {
@@ -87,27 +102,60 @@ internal fun TweakScaffold(
             }
     }
 
-    LazyColumn(
-        contentPadding = PaddingValues(vertical = screenPadding),
-    ) {
-        if (tweaksFiltered == null) {
-            item(key = "Header") {
-                SubScreenHeader(
-                    title = title,
-                    description = description,
-                    modifier =
-                        Modifier
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0.dp),
+        topBar = {
+            CommonTopBarWithSearch(
+                title = null,
+                isSearching = isSearching,
+                searchQuery = { searchQuery },
+                onQueryChange = { searchQuery = it },
+                onToggleSearchBar = { isSearching = it },
+                onNavigate = navigateBack,
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        modifier = modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .fillMaxSize(),
+    ) { padding ->
+        LazyColumn(
+            contentPadding = PaddingValues(
+                top = padding.calculateTopPadding() + screenPadding,
+                bottom = padding.calculateBottomPadding() + screenPadding,
+                start = padding.calculateStartPadding(LayoutDirection.Ltr),
+                end = padding.calculateEndPadding(LayoutDirection.Ltr),
+            ),
+            modifier = Modifier
+                .fillMaxSize(),
+        ) {
+            if (tweaksFiltered == null) {
+                item(key = "Header") {
+                    SubScreenHeader(
+                        title = title,
+                        description = description,
+                        modifier = Modifier
                             .padding(horizontal = screenPadding)
                             .animateItem(),
-                )
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(TweakGroupSpacing))
+                }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(TweakGroupSpacing))
+            renderTweak(tweaksFiltered ?: tweaks)
+
+            if (tweaks.isNotEmpty()) {
+                item {
+                    Spacer(
+                        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current)
+                    )
+                }
             }
         }
-
-        renderTweak(tweaksFiltered ?: tweaks)
     }
 }
 
@@ -159,12 +207,10 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                             .animateItem()
                             .graphicsLayer {
                                 alpha = if (tweak.enabledProvider()) 1F else 0.6F
-                            }
-                            .padding(
+                            }.padding(
                                 bottom = getAdaptiveDp(10.dp),
                                 top = TweakGroupSpacing,
-                            )
-                            .padding(horizontal = TweakPaddingHorizontal),
+                            ).padding(horizontal = TweakPaddingHorizontal),
                     )
                 }
 
@@ -304,8 +350,8 @@ private fun RenderTweakUi(
 @Composable
 private fun <S> RenderMultiSelectTweak(
     tweak: TweakUI.MultiSelectListTweak<S>,
-    modifier: Modifier,
     icon: Painter?,
+    modifier: Modifier = Modifier,
 ) {
     ListSelectComponent(
         modifier = modifier,
@@ -326,8 +372,8 @@ private fun <S> RenderMultiSelectTweak(
 @Composable
 private fun <S> RenderListTweak(
     tweak: TweakUI.ListTweak<S>,
-    modifier: Modifier,
     icon: Painter?,
+    modifier: Modifier = Modifier,
 ) {
     ListRadioComponent(
         modifier = modifier,

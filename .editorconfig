@@ -15,14 +15,21 @@ ij_kotlin_name_count_to_use_star_import = 2147483647
 ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
 ij_kotlin_packages_to_use_import_on_demand = unset
 ktlint_code_style = ktlint_official
+ktlint_compose_lambda-param-event-trailing = disabled
+ktlint_compose_compositionlocal-allowlist = disabled
 ktlint_function_naming_ignore_when_annotated_with = Composable
+ktlint_function_signature_body_expression_wrapping = multiline
 ktlint_standard_discouraged-comment-location = disabled
 ktlint_standard_function-expression-body = disabled
-ktlint_compose_lambda-param-event-trailing = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_import-ordering = disabled
 ktlint_standard_multiline-expression-wrapping = disabled
 ktlint_standard_string-template-indent = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
 # https://github.com/pinterest/ktlint/issues/2138#issuecomment-1680901126
 ktlint_standard_annotation = disabled
+
 
 [*.md]
 trim_trailing_whitespace = false

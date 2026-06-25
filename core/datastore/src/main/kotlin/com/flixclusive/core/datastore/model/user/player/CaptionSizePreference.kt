@@ -11,10 +11,10 @@ enum class CaptionSizePreference {
         private const val LARGE_FONT_SIZE = 24F
 
         fun CaptionSizePreference.getDp(isTv: Boolean = false): Float {
-            return when(this) {
-                Large -> LARGE_FONT_SIZE + (if(isTv) 4F else 0F)
-                Medium -> MEDIUM_FONT_SIZE + (if(isTv) 4F else 0F)
-                Small -> SMALL_FONT_SIZE + (if(isTv) 2F else 0F)
+            return when (this) {
+                Large -> LARGE_FONT_SIZE + (if (isTv) 4F else 0F)
+                Medium -> MEDIUM_FONT_SIZE + (if (isTv) 4F else 0F)
+                Small -> SMALL_FONT_SIZE + (if (isTv) 2F else 0F)
             }
         }
     }

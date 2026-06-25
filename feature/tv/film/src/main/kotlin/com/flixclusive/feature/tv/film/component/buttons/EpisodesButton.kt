@@ -1,4 +1,4 @@
-package com.flixclusive.feature.tv.film.component.buttons
+package com.flixclusive.feature.tv.media.component.buttons
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement

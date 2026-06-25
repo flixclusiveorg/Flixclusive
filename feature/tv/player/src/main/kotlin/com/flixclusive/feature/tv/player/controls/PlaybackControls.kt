@@ -45,7 +45,7 @@ import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.SubtitlesPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
 import kotlinx.coroutines.delay
@@ -64,7 +64,7 @@ internal fun PlaybackControls(
     isPlaybackSpeedPanelOpened: MutableState<Boolean>,
     isServerPanelOpened: MutableState<Boolean>,
     isVisible: Boolean,
-    isTvShow: Boolean,
+    isShow: Boolean,
     providers: List<ProviderMetadata>,
     servers: List<Stream>,
     stateProvider: () -> PlayerUiState,
@@ -86,9 +86,9 @@ internal fun PlaybackControls(
     val dialogState by rememberUpdatedState(dialogStateProvider())
 
     val isLoading = remember(player.playbackState, dialogState, seekMultiplier) {
-        player.playbackState == Player.STATE_BUFFERING
-        && seekMultiplier == 0L
-        || !dialogState.isSuccess
+        player.playbackState == Player.STATE_BUFFERING &&
+            seekMultiplier == 0L ||
+            !dialogState.isSuccess
     }
 
     val topFadeEdge = Brush.verticalGradient(
@@ -124,11 +124,11 @@ internal fun PlaybackControls(
         isServerPanelOpened.value,
         isPlaybackSpeedPanelOpened.value,
     ) {
-        !isSubtitleStylePanelOpened.value
-            && !isSyncSubtitlesPanelOpened.value
-            && !isAudioAndSubtitlesPanelOpened.value
-            && !isServerPanelOpened.value
-            && !isPlaybackSpeedPanelOpened.value
+        !isSubtitleStylePanelOpened.value &&
+            !isSyncSubtitlesPanelOpened.value &&
+            !isAudioAndSubtitlesPanelOpened.value &&
+            !isServerPanelOpened.value &&
+            !isPlaybackSpeedPanelOpened.value
     }
 
     val areControlsVisible = remember(isVisible, noPanelsAreOpen, isSeeking) {
@@ -153,7 +153,7 @@ internal fun PlaybackControls(
         var shouldPlayAfterSeek = false
 
         showControls(true)
-        if(player.isPlaying) {
+        if (player.isPlaying) {
             player.pause()
             shouldPlayAfterSeek = true
         }
@@ -166,8 +166,9 @@ internal fun PlaybackControls(
             onSeekMultiplierChange(0)
         }
 
-        if(shouldPlayAfterSeek)
+        if (shouldPlayAfterSeek) {
             player.play()
+        }
     }
 
     BackHandler(enabled = !areControlsVisible) {
@@ -192,7 +193,7 @@ internal fun PlaybackControls(
                 modifier = Modifier.drawBehind {
                     drawRect(topFadeEdge)
                 },
-                isTvShow = isTvShow,
+                isShow = isShow,
                 isLastEpisode = isLastEpisode,
                 title = playbackTitle,
                 currentEpisodeSelected = currentEpisodeSelected,
@@ -254,7 +255,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible =  isSubtitleStylePanelOpened.value,
+            visible = isSubtitleStylePanelOpened.value,
             enter = bottomHalfSlideEnter,
             exit = bottomHalfSlideExit,
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -269,7 +270,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible =  isSyncSubtitlesPanelOpened.value,
+            visible = isSyncSubtitlesPanelOpened.value,
             enter = bottomHalfSlideEnter,
             exit = bottomHalfSlideExit,
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -280,7 +281,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible =  isAudioAndSubtitlesPanelOpened.value,
+            visible = isAudioAndSubtitlesPanelOpened.value,
             enter = fadeIn() + slideInHorizontally { it / 2 },
             exit = fadeOut() + slideOutHorizontally { it / 2 },
             modifier = Modifier.align(Alignment.CenterEnd)
@@ -291,7 +292,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible =  isServerPanelOpened.value,
+            visible = isServerPanelOpened.value,
             enter = fadeIn() + slideInHorizontally(),
             exit = fadeOut() + slideOutHorizontally(),
             modifier = Modifier.align(Alignment.CenterStart)
@@ -307,7 +308,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible =  isPlaybackSpeedPanelOpened.value,
+            visible = isPlaybackSpeedPanelOpened.value,
             enter = bottomHalfSlideEnter,
             exit = bottomHalfSlideExit,
             modifier = Modifier.align(Alignment.CenterStart)

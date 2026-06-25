@@ -25,10 +25,11 @@ internal abstract class BaseSettingsSerializer<T>(
     @Suppress("BlockingMethodInNonBlockingContext")
     override suspend fun writeTo(t: T, output: OutputStream) {
         output.write(
-            Json.encodeToString(
-                serializer = serializer,
-                value = t
-            ).encodeToByteArray()
+            Json
+                .encodeToString(
+                    serializer = serializer,
+                    value = t
+                ).encodeToByteArray()
         )
     }
 }

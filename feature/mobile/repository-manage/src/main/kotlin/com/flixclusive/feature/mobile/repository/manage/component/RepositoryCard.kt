@@ -105,8 +105,8 @@ internal fun RepositoryCard(
                     modifier = Modifier.size(16.dp),
                     placeholderSize = 9.dp,
                     urlImage = image,
-                    placeholderId = UiCommonR.drawable.repository,
-                    contentDescId = LocaleR.string.owner_avatar_content_desc,
+                    placeholder = painterResource(UiCommonR.drawable.repository),
+                    contentDescription = repository.owner,
                 )
 
                 Text(

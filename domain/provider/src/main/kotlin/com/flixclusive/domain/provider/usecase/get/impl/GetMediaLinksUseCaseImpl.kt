@@ -1,352 +1,354 @@
 package com.flixclusive.domain.provider.usecase.get.impl
 
+import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
+import com.flixclusive.core.util.coroutines.mapAsync
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.provider.repository.CacheKey
-import com.flixclusive.data.provider.repository.CachedLinks
-import com.flixclusive.data.provider.repository.CachedLinksRepository
+import com.flixclusive.core.util.log.warnLog
+import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.data.tmdb.repository.TMDBWatchProvidersRepository
+import com.flixclusive.data.provider.util.extensions.toCachedLink
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
-import com.flixclusive.domain.provider.util.extensions.getWatchId
+import com.flixclusive.domain.provider.util.extensions.sendCrossMatchingMessage
 import com.flixclusive.domain.provider.util.extensions.sendExtractingLinksMessage
-import com.flixclusive.domain.provider.util.extensions.sendFetchingFilmMessage
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.Movie
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.provider.link.MediaLink
-import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.model.provider.link.Subtitle
-import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.ProviderWebViewApi
-import com.flixclusive.provider.webview.ProviderWebView
-import kotlinx.coroutines.flow.Flow
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
+import com.flixclusive.provider.capability.CrossMatchProviderApi
+import com.flixclusive.provider.capability.MediaLinkProviderApi
+import com.flixclusive.provider.capability.MediaLinkType
+import com.flixclusive.provider.capability.MediaMetadataProviderApi
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.strings.R as LocaleR
 
 internal class GetMediaLinksUseCaseImpl @Inject constructor(
-    private val cachedLinksRepository: CachedLinksRepository,
-    private val tmdbWatchProvidersRepository: TMDBWatchProvidersRepository,
+    @param:ApplicationContext private val context: Context,
+    private val mediaLinksRepository: MediaLinksRepository,
+    private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
-    private val userSessionDataStore: UserSessionDataStore,
 ) : GetMediaLinksUseCase {
     override operator fun invoke(
-        movie: Movie,
-        providerId: String?,
-    ): Flow<LoadLinksState> =
-        run(
-            film = movie,
-            providerId = providerId,
-        )
-
-    override operator fun invoke(
-        tvShow: TvShow,
-        episode: Episode,
-        providerId: String?,
-    ): Flow<LoadLinksState> =
-        run(
-            film = tvShow,
-            episode = episode,
-            providerId = providerId,
-        )
-
-    override operator fun invoke(
-        film: FilmMetadata,
-        watchId: String,
+        media: MediaMetadata,
         episode: Episode?,
-        providerId: String?,
-    ): Flow<LoadLinksState> =
-        run(
-            film = film,
-            episode = episode,
-            watchId = watchId,
-            providerId = providerId,
-        )
-
-    private fun run(
-        film: FilmMetadata,
-        watchId: String? = null,
-        episode: Episode? = null,
-        providerId: String? = null,
     ) = channelFlow {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val enabledProviders = providerRepository.getEnabledProviders(ownerId = userId)
-        val oldCache = cachedLinksRepository.getCache(
-            CacheKey.create(
-                filmId = film.identifier,
-                providerId = film.providerId,
-                episode = episode,
-            )
+        val providers = providerRepository.getProviders(ownerId = userId)
+
+        val existingCache = mediaLinksRepository.getLinksByProvider(
+            ownerId = userId,
+            mediaId = media.id,
+            providerId = media.providerId,
+            episodeNumber = episode?.number,
+            seasonNumber = episode?.season
         )
 
-        val isCached = oldCache?.isReady == true
-        if (isCached && film.isFromTmdb && enabledProviders.isEmpty()) {
-            send(LoadLinksState.SuccessWithTrustedProviders)
-            return@channelFlow
-        } else if (isCached) {
-            send(LoadLinksState.Success(providerId = oldCache.providerId))
+        if (existingCache != null && existingCache.hasValidLinks) {
+            send(LoadLinksState.Success)
             return@channelFlow
         }
 
-        if (enabledProviders.isEmpty() && film.isFromTmdb) {
-            try {
-                extractLinksFromTMDB(film = film, episode = episode)
-            } catch (e: ExceptionWithUiText) {
-                send(LoadLinksState.Error(e.uiText))
-                return@channelFlow
-            }
-
-            send(LoadLinksState.SuccessWithTrustedProviders)
-            return@channelFlow
-        }
-
-        /**
-         * A nested function that processes each provider API to fetch media links.
-         * */
-        suspend fun processProviders(
-            id: String,
-            api: ProviderApi,
-        ): Boolean {
-            val metadata = providerRepository.getMetadata(id)
-            if (metadata == null) {
-                send(LoadLinksState.Error(UiText.from(R.string.provider_api_not_found, id)))
-                return false
-            }
-
-            sendFetchingFilmMessage(provider = metadata.name)
-
-            val cacheKey = CacheKey.create(
-                filmId = film.identifier,
-                providerId = id,
-                episode = episode,
-            )
-
-            // Check if the cache already exists for this provider
-            val cache = cachedLinksRepository.getCache(cacheKey)
-                ?: CachedLinks(
-                    providerId = id,
-                    thumbnail = film.backdropImage ?: film.posterImage,
+        if (providers.isEmpty()) {
+            send(
+                LoadLinksState.Unavailable(
+                    UiText.from(R.string.get_media_links_error_empty_provider_list)
                 )
+            )
+            return@channelFlow
+        }
 
-            if (cache.isReady) {
-                send(LoadLinksState.Success(providerId = cache.providerId))
-                return true
+        val provider = providerRepository.getProvider(media.providerId, userId)
+        if (provider == null) {
+            warnLog("Failed to fetch media links: no provider plugin found for id: ${media.providerId}")
+            send(
+                LoadLinksState.Unavailable(
+                    UiText.from(
+                        R.string.get_media_links_error_no_provider_plugin,
+                        media.providerId
+                    )
+                )
+            )
+            return@channelFlow
+        }
+
+        val mediaLinksApi = provider.plugin?.getMediaLinkApi(context)
+        if (mediaLinksApi != null && provider.isMediaLinkEnabled) {
+            sendExtractingLinksMessage(provider.metadata!!)
+
+            val success = try {
+                processProvider(
+                    ownerId = userId,
+                    mediaId = media.id,
+                    providerId = media.providerId,
+                    media = media,
+                    episode = episode,
+                    mediaLinksApi = mediaLinksApi,
+                )
+            } catch (e: Throwable) {
+                errorLog(e)
+                send(LoadLinksState.Error(e))
+                false
             }
 
-            val watchIdTouse = if (
-                watchId == null
-                && film.isFromTmdb
-                && cache.watchId.isEmpty()
-            ) {
-                // Get the watch ID of the TMDB movie from the given provider API
-                val response = api.getWatchId(film = film)
-                if (response is Resource.Failure || response.data == null) {
-                    val error = response.error ?: UiText.from(R.string.no_watch_id_message)
-                    send(LoadLinksState.Error(error))
-                    return false
-                }
-
-                response.data!!
-            } else {
-                watchId
-                    ?: cache.watchId.takeIf { it.isNotEmpty() }
-                    ?: film.identifier
-            }
-
-            cachedLinksRepository.storeCache(
-                key = cacheKey,
-                cachedLinks = cache.copy(watchId = watchIdTouse),
-            )
-
-            sendExtractingLinksMessage(
-                provider = metadata,
-                isOnWebView = api is ProviderWebViewApi,
-            )
-
-            val result = getMediaLinks(
-                film = film,
-                episode = episode,
-                watchId = watchIdTouse,
-                api = api,
-                onLinkFound = { link ->
-                    when (link) {
-                        is Stream -> cachedLinksRepository.addStream(cacheKey, link)
-                        is Subtitle -> cachedLinksRepository.addSubtitle(cacheKey, link)
-                    }
-                },
-            )
-
-            when (result) {
-                is Resource.Success -> {
-                    val cache = cachedLinksRepository.getCache(cacheKey)
-                    if (cache != null && cache.hasStreamableLinks) {
-                        cachedLinksRepository.storeCache(cacheKey, cache.copy(hasExtractedSuccessfully = true))
-                        send(LoadLinksState.Success(providerId = cache.providerId))
-                        return true
-                    } else {
-                        send(
-                            LoadLinksState.Error(
-                                UiText.from(R.string.no_links_loaded_format_message, metadata.name),
-                            ),
-                        )
-                        return false
-                    }
-                }
-
-                is Resource.Failure -> {
-                    send(LoadLinksState.Error(result.error))
-                    return false
-                }
-
-                Resource.Loading -> return false
+            if (success) {
+                send(LoadLinksState.Success)
+                return@channelFlow
             }
         }
 
-        if (!film.isFromTmdb || providerId != null) {
-            val id = providerId ?: film.providerId
-            val api = providerRepository.getApi(id, userId)
+        if (media.externalIds.isEmpty()) {
+            send(
+                LoadLinksState.Unavailable(
+                    UiText.from(R.string.no_links_loaded_format_message, provider.name!!),
+                ),
+            )
+            return@channelFlow
+        }
 
-            if (api == null) {
-                send(LoadLinksState.Unavailable(UiText.from(R.string.provider_api_not_found, id)))
-                return@channelFlow
-            }
+        send(LoadLinksState.Fetching(R.string.label_check_cross_match_providers))
+        val providersMap = providers.associateBy { it.id }
+        val combinedApis = providersMap.mapNotNull { (_, value) ->
+            if (value.id == provider.id) return@mapNotNull null
+            if (!value.isCrossMatchEnabled || !value.isMediaLinkEnabled) return@mapNotNull null
 
-            processProviders(id = id, api = api)
-        } else {
-            enabledProviders.forEach { provider ->
-                val id = provider.id
+            val plugin = value.plugin
+            val metadata = value.metadata
+            if (metadata == null || plugin == null) return@mapNotNull null
 
-                val api = try {
-                    providerRepository.getApi(id, userId)!!
+            val crossMatchApi = plugin.getCrossMatchApi(context) ?: return@mapNotNull null
+            val mediaLinkApi = plugin.getMediaLinkApi(context) ?: return@mapNotNull null
+
+            Triple(metadata, crossMatchApi, mediaLinkApi)
+        }
+
+        if (combinedApis.isEmpty()) {
+            warnLog("Failed to fetch media links: no cross-matcher API found among enabled providers")
+            send(LoadLinksState.Unavailable())
+            return@channelFlow
+        }
+
+        val subtitlesOnlyApi = combinedApis.filter { (_, _, mediaLinkApi) ->
+            mediaLinkApi.supportedLinkTypes.size == 1 &&
+                mediaLinkApi.supportedLinkTypes.contains(MediaLinkType.SUBTITLES)
+        }
+
+        val subtitlesFetchJob = async {
+            subtitlesOnlyApi.mapAsync { (providerMeta, crossMatcherApi, mediaLinkApi) ->
+                val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
+                if (crossMatchedMedia == null) {
+                    warnLog(
+                        "Cross-matching failed for subtitle-only provider ${providerMeta.name} with media ${media.title} (${media.id})"
+                    )
+                    return@mapAsync
+                }
+
+                val crossMatchedEpisode = if (crossMatchedMedia is Show && episode != null) {
+                    val provider = providersMap[providerMeta.id] ?: return@mapAsync
+                    val plugin = provider.plugin ?: return@mapAsync
+                    val metadataApi = safeCall { plugin.getMetadataApi(context) } ?: return@mapAsync
+
+                    getCrossMatchedEpisode(
+                        crossMatchedShow = crossMatchedMedia,
+                        referenceEpisode = episode,
+                        metadataApi = metadataApi
+                    )
+                } else {
+                    null
+                }
+
+                val success = try {
+                    processProvider(
+                        ownerId = userId,
+                        mediaId = media.id,
+                        providerId = media.providerId,
+                        media = crossMatchedMedia,
+                        episode = crossMatchedEpisode,
+                        mediaLinksApi = mediaLinkApi,
+                    )
                 } catch (e: Throwable) {
-                    errorLog("Failed to get API for provider with id: $id")
                     errorLog(e)
-                    send(
-                        LoadLinksState.Unavailable(
-                            UiText.from(e.cause?.message ?: "UNKNOWN_PROVIDER_API_ERROR")
-                        )
+                    false
+                }
+
+                if (!success) {
+                    warnLog(
+                        "Failed to fetch subtitles from provider ${providerMeta.name} for media ${media.title} (${media.id})"
+                    )
+                }
+            }
+        }
+
+        val streamsFetchJob = async {
+            val streamProviders = combinedApis - subtitlesOnlyApi.toSet()
+            streamProviders.forEach { (providerMeta, crossMatcherApi, mediaLinkApi) ->
+                sendCrossMatchingMessage(providerMeta)
+
+                val crossMatchedMedia = getCrossMatchedMedia(media, crossMatcherApi)
+                if (crossMatchedMedia == null) {
+                    warnLog(
+                        "Cross-matching failed for stream links provider ${providerMeta.name} with media ${media.title} (${media.id})"
                     )
                     return@forEach
                 }
 
-                val success = processProviders(id = id, api = api)
+                var crossMatchedEpisode: Episode? = null
+                if (crossMatchedMedia is Show && episode != null) {
+                    val provider = providersMap[providerMeta.id] ?: return@forEach
+                    val plugin = provider.plugin ?: return@forEach
+                    val metadataApi = safeCall { plugin.getMetadataApi(context) } ?: return@forEach
+
+                    crossMatchedEpisode = getCrossMatchedEpisode(
+                        crossMatchedShow = crossMatchedMedia,
+                        referenceEpisode = episode,
+                        metadataApi = metadataApi
+                    )
+                }
+
+                if (crossMatchedMedia is Show && crossMatchedEpisode == null) {
+                    send(LoadLinksState.Unavailable())
+                    return@forEach
+                }
+
+                val success = try {
+                    processProvider(
+                        ownerId = userId,
+                        mediaId = media.id,
+                        providerId = media.providerId,
+                        media = crossMatchedMedia,
+                        episode = crossMatchedEpisode,
+                        mediaLinksApi = mediaLinkApi,
+                    )
+                } catch (e: Throwable) {
+                    errorLog(e)
+                    false
+                }
+
                 if (success) {
-                    return@channelFlow
+                    return@async
                 }
             }
         }
-    }
 
-    /**
-     * Extracts links from TMDB watch providers for a given [FilmMetadata].
-     * */
-    @Throws(ExceptionWithUiText::class)
-    private suspend fun extractLinksFromTMDB(
-        film: FilmMetadata,
-        episode: Episode? = null,
-    ) {
-        when (
-            val response = tmdbWatchProvidersRepository.getWatchProviders(
-                mediaType = film.filmType.type,
-                id = film.tmdbId!!,
-            )
-        ) {
-            is Resource.Success<*> -> {
-                val streams = response.data
+        awaitAll(subtitlesFetchJob, streamsFetchJob)
 
-                if (streams.isNullOrEmpty()) {
-                    throw ExceptionWithUiText(UiText.from(LocaleR.string.no_available_providers))
-                }
-
-                val tmdbKey = CacheKey.create(
-                    filmId = film.identifier,
-                    providerId = DEFAULT_FILM_SOURCE_NAME,
-                    episode = episode,
-                )
-
-                val cache = CachedLinks(
-                    watchId = film.identifier,
-                    providerId = DEFAULT_FILM_SOURCE_NAME,
-                    thumbnail = film.backdropImage ?: film.posterImage,
-                    streams = streams,
-                )
-
-                cachedLinksRepository.storeCache(tmdbKey, cache)
-
-                // Safe to call since this assumes that the user doesn't have any providers
-                cachedLinksRepository.setCurrentCache(tmdbKey)
-            }
-
-            is Resource.Failure -> throw ExceptionWithUiText(response.error)
-            Resource.Loading -> Unit
+        val finalCache = mediaLinksRepository.getLinksByProvider(
+            ownerId = userId,
+            providerId = media.providerId,
+            mediaId = media.id,
+            episodeNumber = episode?.number,
+            seasonNumber = episode?.season
+        )
+        if (finalCache != null && finalCache.hasValidLinks) {
+            send(LoadLinksState.Success)
+        } else {
+            send(LoadLinksState.Unavailable())
         }
-    }
+    }.flowOn(appDispatchers.io)
 
-    /**
-     *
-     * Obtains the list of [MediaLink] of a given [FilmMetadata] from the given [ProviderApi].
-     *
-     * @param api The api to be used to obtain the links.
-     * @param watchId The unique identifier to be used to obtain the links.
-     * @param film A detailed film object used to obtain the links. It could either be a [Movie] or a [TvShow]
-     * @param episode An episode data used to obtain the links if the [film] parameter is a [TvShow]
-     * @param onLinkFound A callback function that is invoked when a [Stream] or [Subtitle] is found.
-     *
-     * @return a [Resource] of [List] of [MediaLink]
-     * */
-    private suspend fun getMediaLinks(
-        api: ProviderApi,
-        watchId: String,
-        film: FilmMetadata,
-        episode: Episode? = null,
-        onLinkFound: (MediaLink) -> Unit,
-    ): Resource<Unit> {
-        return withContext(appDispatchers.io) {
-            var webView: ProviderWebView? = null
-
-            try {
-                if (api is ProviderWebViewApi) {
-                    withContext(appDispatchers.main) {
-                        webView = api.getWebView()
+    private suspend fun processProvider(
+        ownerId: String,
+        providerId: String,
+        mediaId: String,
+        media: MediaMetadata,
+        episode: Episode?,
+        mediaLinksApi: MediaLinkProviderApi,
+    ): Boolean {
+        coroutineScope {
+            mediaLinksApi.getLinks(
+                media = media,
+                episode = episode,
+                onLinkFound = { link ->
+                    launch {
+                        mediaLinksRepository.upsertLink(
+                            link.toCachedLink(
+                                ownerId = ownerId,
+                                mediaId = mediaId,
+                                providerId = providerId,
+                                episodeNumber = episode?.number,
+                                seasonNumber = episode?.season
+                            )
+                        )
                     }
+                },
+            )
+        }
 
-                    webView!!.getLinks(
-                        watchId = watchId,
-                        film = film,
-                        episode = episode,
-                        onLinkFound = onLinkFound,
-                    )
-                } else {
-                    api.getLinks(
-                        watchId = watchId,
-                        film = film,
-                        episode = episode,
-                        onLinkFound = onLinkFound,
-                    )
-                }
+        val updatedLinks = mediaLinksRepository.getLinksByProvider(
+            ownerId = ownerId,
+            providerId = providerId,
+            mediaId = mediaId,
+            episodeNumber = episode?.number,
+            seasonNumber = episode?.season
+        )
+        return updatedLinks != null && updatedLinks.hasValidLinks
+    }
 
-                Resource.Success(Unit)
-            } catch (e: Throwable) {
-                e.toNetworkException()
-            } finally {
-                withContext(appDispatchers.main) {
-                    webView?.destroy()
-                }
+    private suspend fun getCrossMatchedMedia(
+        media: MediaMetadata,
+        crossMatcherApi: CrossMatchProviderApi,
+    ): MediaMetadata? {
+        try {
+            var crossMatchedMedia = crossMatcherApi.getById(
+                mediaType = media.type,
+                sourceIds = media.externalIds
+            )
+
+            if (crossMatchedMedia == null) {
+                crossMatchedMedia = crossMatcherApi.getByFuzzy(media)
             }
+
+            return crossMatchedMedia
+        } catch (e: Throwable) {
+            errorLog("Cross-matching failed for media ${media.title} (${media.id})}")
+            errorLog(e)
+            return null
+        }
+    }
+
+    private suspend fun getCrossMatchedEpisode(
+        crossMatchedShow: Show,
+        referenceEpisode: Episode,
+        metadataApi: MediaMetadataProviderApi
+    ): Episode? {
+        try {
+            val season = crossMatchedShow.getSeason(referenceEpisode.season)
+            if (season == null) {
+                warnLog(
+                    "Cross-matching failed to find season ${referenceEpisode.season} for show ${crossMatchedShow.title} (${crossMatchedShow.id})"
+                )
+                return null
+            }
+
+            if (season is Season.Full) {
+                return season.getEpisode(referenceEpisode.number)
+            }
+
+            val fullSeasonData = metadataApi.getSeason(
+                show = crossMatchedShow,
+                season = season as Season.Partial,
+            ) ?: return null
+
+            return fullSeasonData.getEpisode(referenceEpisode.number)
+        } catch (e: Throwable) {
+            errorLog(
+                "Cross-matching failed for episode S${referenceEpisode.season}E${referenceEpisode.number} of media ${referenceEpisode.title} (${referenceEpisode.id})}"
+            )
+            errorLog(e)
+            return null
         }
     }
 }

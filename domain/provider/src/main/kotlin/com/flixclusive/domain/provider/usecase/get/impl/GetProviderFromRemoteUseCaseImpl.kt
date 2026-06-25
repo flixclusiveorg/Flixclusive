@@ -4,7 +4,6 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.ProviderConstants
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
@@ -36,53 +35,36 @@ internal class GetProviderFromRemoteUseCaseImpl @Inject constructor(
     override suspend fun invoke(
         repository: Repository,
         id: String,
-    ): Resource<ProviderMetadata> {
-        return when (val result = invoke(repository)) {
-            is Resource.Success -> {
-                val provider = result.data?.firstOrNull { it.id == id }
-
-                if (provider != null) {
-                    Resource.Success(provider)
-                } else {
-                    Resource.Failure(
-                        ExceptionWithUiText(
-                            uiText = UiText.from(R.string.provider_not_found_message),
-                            cause = NullPointerException(),
-                        ),
-                    )
-                }
-            }
-
-            is Resource.Failure -> Resource.Failure(result.error)
-            Resource.Loading -> Resource.Loading
-        }
+    ): ProviderMetadata {
+        val providers = invoke(repository)
+        return providers.firstOrNull { it.id == id }
+            ?: throw ExceptionWithUiText(
+                uiText = UiText.from(R.string.provider_not_found_message),
+                cause = NullPointerException(),
+            )
     }
 
-    override suspend operator fun invoke(repository: Repository): Resource<List<ProviderMetadata>> {
+    override suspend operator fun invoke(repository: Repository): List<ProviderMetadata> {
         return withContext(appDispatchers.io) {
-            try {
-                val updaterJsonUrl =
-                    repository.getRawLink(
-                        filename = ProviderConstants.UPDATER_JSON_FILE,
-                        branch = "builds", // TODO: This should not be hardcoded, consider making it configurable
-                    )
+            val updaterJsonUrl =
+                repository.getRawLink(
+                    filename = ProviderConstants.UPDATER_JSON_FILE,
+                    branch = "builds", // TODO: This should not be hardcoded, consider making it configurable
+                )
 
-                val providersFromRemote = getProvidersFromUrl(updaterJsonUrl)
+            val providersFromRemote = getProvidersFromUrl(updaterJsonUrl)
 
-                if (providersFromRemote.isEmpty()) {
-                    val e = NullPointerException()
+            if (providersFromRemote.isEmpty()) {
+                val e = NullPointerException()
 
-                    throw ExceptionWithUiText(
-                        uiText = UiText.from(R.string.empty_repository_message),
-                        cause = e,
-                        message = e.actualMessage,
-                    )
-                }
-
-                Resource.Success(providersFromRemote)
-            } catch (e: Throwable) {
-                return@withContext Resource.Failure(e)
+                throw ExceptionWithUiText(
+                    uiText = UiText.from(R.string.empty_repository_message),
+                    cause = e,
+                    message = e.actualMessage,
+                )
             }
+
+            providersFromRemote
         }
     }
 
@@ -109,7 +91,8 @@ internal class GetProviderFromRemoteUseCaseImpl @Inject constructor(
 
                 when (response.code) {
                     200 -> {
-                        response.fromJson<List<ProviderMetadata>>()
+                        response
+                            .fromJson<List<ProviderMetadata>>()
                             .also {
                                 cachedProviders[updaterJsonUrl] = CachedUpdaterJsonFile(it)
                             }

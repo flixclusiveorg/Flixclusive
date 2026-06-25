@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTvMaterial3Api::class)
 
-package com.flixclusive.feature.tv.film.component.buttons
+package com.flixclusive.feature.tv.media.component.buttons
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -29,7 +29,7 @@ internal const val EPISODES_BUTTON_KEY = "episodes_button"
 internal fun MainButtons(
     watchHistoryItem: WatchHistoryItem?,
     isInWatchlist: Boolean,
-    isTvShow: Boolean,
+    isShow: Boolean,
     onPlay: () -> Unit,
     onWatchlistClick: () -> Unit,
     onSeeMoreEpisodes: () -> Unit,
@@ -58,13 +58,15 @@ internal fun MainButtons(
                     if (hasPressedLeft(it) && isPlayButtonFullyFocused) {
                         goBack()
                         return@onKeyEvent true
-                    } else isPlayButtonFullyFocused = true
+                    } else {
+                        isPlayButtonFullyFocused = true
+                    }
 
                     false
                 }
         )
 
-        if (isTvShow) {
+        if (isShow) {
             EpisodesButton(
                 shape = buttonShape,
                 onClick = onSeeMoreEpisodes,
@@ -85,5 +87,4 @@ internal fun MainButtons(
 @Preview
 @Composable
 private fun MainButtonsPreview() {
-
 }

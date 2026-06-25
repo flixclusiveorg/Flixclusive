@@ -3,60 +3,40 @@
     <string name="already_added_repo_error">Repository has already been added!</string>
     <string name="empty_repository_message">This repository has no providers</string>
     <string name="failed_repository_fetch_message">Couldn\'t parse providers from the repository</string>
-    <string name="failed_to_fetch_data_message">Failed to fetch data:\n%1$s</string>
-    <string name="failed_to_fetch_provider_message">The provider of this item could not be found. It may have been removed.</string>
-    <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
     <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
-    <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now…"</string>
-    <string name="fetching_episode_message">Fetching show episode…</string>
-    <string name="film_not_found">Film not found</string>
-    <string name="invalid_provider_file_msg_format">Invalid provider file detected for %1$s</string>
-    <string name="invalid_repo_link">Could not parse url link.</string>
     <string name="invalid_repository">Invalid repository</string>
     <string name="invalid_repository_url">Repository URL is invalid</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
-    <string name="no_tmdb_id_found">No TMDB ID provided for this one</string>
-    <string name="no_watch_id_message">No watch ID has been found</string>
     <string name="provider_already_exists">Provider with name %1$s already exists</string>
-    <string name="provider_api_not_found">Provider [%1$s] not found</string>
     <string name="provider_file_not_found">Provider file not found for %1$s.</string>
     <string name="provider_not_found_message">Provider is not available or has been removed</string>
     <string name="repository_not_found_message">Repository does not exist or has been removed</string>
 
-    <string name="fetching_from_provider_format">Fetching from %1$s…</string>
-    <string name="extracting_from_provider_format">Extracting from %1$s…</string>
-    <string name="extracting_from_web_view_provider_format">Running WebView for %1$s…</string>
 
-    <!--  Provider test labels  -->
-    <string name="provider_test_stage_idle">Testing has not started</string>
-    <string name="provider_test_stage_stage1">Testing API properties…</string>
-    <string name="provider_test_stage_stage2">Testing API methods…</string>
-
-    <string name="ptest_error_get_api">Failed to get provider API</string>
-    <string name="ptest_error_get_catalog_list">Failed to get catalog list</string>
-    <string name="ptest_error_get_search_filters">Failed to get search filters</string>
-    <string name="ptest_error_get_testable_film">Failed to get testable film</string>
-    <string name="ptest_error_method_get_catalog_items">Failed to load catalog item %1$s</string>
-    <string name="ptest_error_method_get_film_details">Failed to get detailed film for %1$s</string>
-    <string name="ptest_error_method_get_links">Failed to fetch links for %1$s</string>
-    <string name="ptest_error_not_implemented">This has not been implemented.</string>
-    <string name="ptest_error_default_full_log">No additional information is available</string>
-    <string name="ptest_error_default_short_log">An error occurred</string>
-    <string name="ptest_get_api">Get provider API</string>
-    <string name="ptest_get_catalog_list">Get catalog list</string>
-    <string name="ptest_get_search_filters">Get search filters</string>
-    <string name="ptest_get_testable_film">Get testable film</string>
-    <string name="ptest_method_get_catalog_items">Load a catalog item</string>
-    <string name="ptest_method_get_film_details">Get film details</string>
-    <string name="ptest_method_get_links">Get links</string>
-    <string name="ptest_method_get_search_items">Search for items</string>
-    <string name="ptest_success_get_api">API has been loaded</string>
-    <string name="ptest_success_items_count_found">%1$d items found</string>
-    <string name="ptest_success_items_count_found_empty">Passed but no items found</string>
     <string name="provider_not_found">Provider [%1$s (%2$s)] not found. Cannot be unloaded</string>
     <string name="provider_not_even_installed">No such installed provider: %1$s</string>
     <string name="unload_exception_message">An error occurred while unloading %1$s (%2$s): %3$s</string>
-    <string name="failed_to_download_provider">Failed to download provider: %1$s (%2$s)</string>
-    <string name="failed_to_load_provider">Failed to load provider %1$s (%2$s) after updating. Try reinstalling to see if it could fix the problem.</string>
     <string name="missing_metadata">Metadata not found for provider with id: %1$s</string>
+
+    <string name="get_media_metadata_error_unk_exception">Failed to fetch metadata: %1$s</string>
+    <string name="get_media_metadata_error_no_provider_plugin">Failed to fetch metadata: no provider plugin found for %1$s</string>
+    <string name="get_media_metadata_error_no_provider_api">Failed to fetch metadata: no MetadataProviderApi found for %1$s</string>
+
+    <string name="get_media_links_error_empty_provider_list">Failed to fetch media links: no providers installed to fetch from</string>
+    <string name="get_media_links_error_no_provider_plugin">Failed to fetch media links: no provider plugin found for %1$s</string>
+    <string name="get_media_links_fetching_from_provider">Fetching from %1$s…</string>
+    <string name="get_media_links_cross_matching_provider">Cross-matching with %1$s…</string>
+    <string name="get_media_links_extracting_from_provider">Extracting from %1$s…</string>
+    <string name="tracker_failed_to_add_item_to_list_from_tracker">Failed to add item to list from tracker</string>
+    <string name="tracker_no_list_management_feature">%1$s doesn\'t allow list management features.</string>
+    <string name="cross_match_failed_to_find_plugin">Provider plugin with ID \'%1$s\' not found.</string>
+    <string name="cross_match_not_allowed">Provider %1$s does not support cross-matching.</string>
+    <string name="cross_match_no_item_found">No cross-match found for media \'%1$s\' with provider \'%2$s\'</string>
+    <string name="tracker_not_matched_provider">Media item does not belong to the same provider as the list.</string>
+    <string name="failed_scrobbling_progress_to_provider">Scrobbling failed for %1$s: %2$s</string>
+    <string name="error_msg_failed_to_download_provider_file">Failed to download provider file</string>
+    <string name="error_cancelled_provider_download">Download has been cancelled by the user for provider: %1$s</string>
+    <string name="error_provider_updated_but_failed_to_load">Provider %1$s updated but failed to load. The provider is still updated</string>
+    <string name="label_check_cross_match_providers">Checking other providers…</string>
+    <string name="error_provider_no_get_season_method">Provider does not support fetching full season details</string>
 </resources>

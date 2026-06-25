@@ -6,7 +6,7 @@ import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastMap
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.strings.R
-import com.flixclusive.feature.mobile.provider.add.SearchableProvider
+import com.flixclusive.feature.mobile.provider.add.ProviderItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -16,7 +16,7 @@ internal data class AuthorsFilters(
     override val selectedValue: Set<String>,
 ) : AddProviderFilterType.MultiSelect() {
     companion object {
-        fun List<SearchableProvider>.filterAuthors(filter: AuthorsFilters): List<SearchableProvider> {
+        fun List<ProviderItem>.filterAuthors(filter: AuthorsFilters): List<ProviderItem> {
             if (filter.selectedValue.isEmpty()) return this
 
             return fastFilter { provider ->
@@ -26,9 +26,10 @@ internal data class AuthorsFilters(
             }
         }
 
-        fun List<SearchableProvider>.toAuthorFilters(): AuthorsFilters {
-            val options = fastFlatMap { it.metadata.authors.fastMap { it.name } }
-                .fastDistinctBy { it }
+        fun List<ProviderItem>.toAuthorFilters(): AuthorsFilters {
+            val options = fastFlatMap { option ->
+                option.metadata.authors.fastMap { it.name }
+            }.fastDistinctBy { it }
                 .toImmutableList()
 
             return AuthorsFilters(

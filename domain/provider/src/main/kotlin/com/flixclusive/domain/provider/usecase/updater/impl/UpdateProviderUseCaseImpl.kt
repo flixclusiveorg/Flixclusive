@@ -10,6 +10,7 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
+import com.flixclusive.domain.provider.usecase.manage.DownloadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
@@ -20,6 +21,8 @@ import com.flixclusive.domain.provider.util.extensions.downloadProvider
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -34,24 +37,31 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
-    private val loadProviderUseCase: LoadProviderUseCase,
-    private val unloadProviderUseCase: UnloadProviderUseCase,
-    private val downloadFileUseCase: DownloadFileUseCase,
+    private val loadProvider: LoadProviderUseCase,
+    private val unloadProvider: UnloadProviderUseCase,
+    private val downloadFile: DownloadFileUseCase,
     private val getProviderFromRemoteUseCase: GetProviderFromRemoteUseCase,
     private val appDispatchers: AppDispatchers,
 ) : UpdateProviderUseCase {
-
     @Throws(Throwable::class)
-    override suspend fun invoke(provider: ProviderMetadata) {
-        if (providerRepository.getPlugin(provider.id) == null) {
-            error(context.getString(R.string.provider_not_found, provider.name, provider.id))
+    override fun invoke(provider: ProviderMetadata): Flow<DownloadProviderResult> = channelFlow {
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        if (providerRepository.getProvider(id = provider.id, ownerId = userId) == null) {
+            send(
+                DownloadProviderResult.Failure(
+                    IllegalStateException(
+                        context.getString(R.string.provider_not_found, provider.name, provider.id)
+                    )
+                )
+            )
+            return@channelFlow
         }
 
         val repository = provider.repositoryUrl.toValidRepositoryLink()
         val updatedMetadata = getProviderFromRemoteUseCase(
             repository = repository,
             id = provider.id,
-        ).getOrThrow()
+        )
 
         val old = getOldProviderConfig(provider.id)
         createBackup(old)
@@ -61,56 +71,87 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
             newMetadata = updatedMetadata,
         )
 
-
         val oldFile = File(old.filePath)
         val newFile = File(new.filePath)
 
         withContext(appDispatchers.io) {
             oldFile.delete()
-            downloadFileUseCase.downloadProvider(
+            downloadFile.downloadProvider(
                 metadata = updatedMetadata,
                 file = newFile,
+                onStateChange = { state ->
+                    trySend(
+                        DownloadProviderResult.Downloading(
+                            progress = state.progress.coerceIn(0f, 99f),
+                            downloadId = state.id,
+                        )
+                    )
+                },
             )
         }
 
         if (!newFile.exists()) {
             withContext(appDispatchers.io) { restoreBackup(old) }
-            throw DownloadException(
-                Throwable(
-                    message = context.getString(
-                        R.string.failed_to_download_provider,
-                        provider.name,
-                        provider.id,
-                    )
+            send(
+                DownloadProviderResult.Failure(
+                    IllegalStateException(context.getString(R.string.error_msg_failed_to_download_provider_file))
                 )
             )
+            return@channelFlow
         }
 
         try {
-            unloadProviderUseCase(provider = old)
+            if (old.id != new.id) {
+                unloadProvider(provider = old)
+            }
         } catch (e: Throwable) {
-            throw UnloadException(e)
+            send(DownloadProviderResult.Failure(e))
+            return@channelFlow
         }
 
         providerRepository.install(new, updatedMetadata)
-        loadProviderUseCase(installedProvider = new).onEach {
-            // If the provider failed to load, but it was
-            // previously loaded, just log the exception
-            if (it is ProviderResult.Failure && providerRepository.getPlugin(provider.id) != null) {
-                // If the provider is loaded, just log the exception and continue
-                infoLog("Provider ${provider.name} updated but failed to load with exception: ${it.error}")
-                return@onEach
-            }
+        loadProvider(installedProvider = new)
+            .onEach {
+                // If the provider failed to load, but it was
+                // previously loaded, just log the exception
+                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+                val updatedProvider = providerRepository.getProvider(id = provider.id, ownerId = userId)
+                if (it is ProviderResult.Failure && updatedProvider != null) {
+                    // If the provider is loaded, just log the exception and continue
+                    infoLog("Provider ${provider.name} updated but failed to load with exception: ${it.error}")
+                    send(
+                        DownloadProviderResult.Failure(
+                            IllegalStateException(
+                                context.getString(R.string.error_provider_updated_but_failed_to_load, provider.name),
+                                it.error
+                            )
+                        )
+                    )
+                    return@onEach
+                }
 
-            // If the provider failed to load, and it wasn't previously
-            // loaded, restore the backup and throw an exception
-            if (it is ProviderResult.Failure) {
-                restoreBackup(old)
-                providerRepository.install(old, provider)
-                loadProviderUseCase(installedProvider = old).collect()
-                throw LoadException(it.error)
-            }
-        }.collect()
+                // If the provider failed to load, and it wasn't previously
+                // loaded, restore the backup and throw an exception
+                if (it is ProviderResult.Failure) {
+                    try {
+                        restoreBackup(old)
+                        providerRepository.install(old, provider)
+                        loadProvider(installedProvider = old).collect()
+                        send(DownloadProviderResult.Failure(it.error))
+                    } catch (e: Throwable) {
+                        infoLog(
+                            "Failed to restore old provider after update failure for provider ${provider.name} with exception: $e"
+                        )
+                        send(DownloadProviderResult.Failure(e))
+                    }
+
+                    return@onEach
+                }
+
+                if (it is ProviderResult.Success) {
+                    send(DownloadProviderResult.Success)
+                }
+            }.collect()
     }
 
     override suspend fun invoke(providers: List<ProviderMetadata>): ProviderUpdateResult {
@@ -119,37 +160,14 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
 
         for (provider in providers) {
             val error = try {
-                invoke(provider)
+                invoke(provider).collect {
+                    if (it is DownloadProviderResult.Failure) {
+                        throw it.error
+                    }
+                }
+
                 updatedProviders.add(provider)
                 null
-            } catch (e: DownloadException) {
-                Throwable(
-                    message = context.getString(
-                        R.string.failed_to_download_provider,
-                        provider.name,
-                        provider.id,
-                    ),
-                    cause = e.cause!!,
-                )
-            } catch (e: UnloadException) {
-                Throwable(
-                    cause = e.cause!!,
-                    message = context.getString(
-                        R.string.unload_exception_message,
-                        provider.name,
-                        provider.id,
-                        e.cause?.localizedMessage ?: "Unknown cause",
-                    ),
-                )
-            } catch (e: LoadException) {
-                Throwable(
-                    message = context.getString(
-                        R.string.failed_to_load_provider,
-                        provider.name,
-                        provider.id,
-                    ),
-                    cause = e.cause!!,
-                )
             } catch (e: Throwable) {
                 e
             }
@@ -167,15 +185,14 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
 
     private suspend fun getOldProviderConfig(id: String): InstalledProvider {
         val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-
-        val old = providerRepository.getInstalledProvider(id, userId) ?: error(
+        val old = providerRepository.getProvider(id, userId) ?: error(
             context.getString(
                 R.string.provider_not_even_installed,
                 id
             )
         )
 
-        return old
+        return old.provider
     }
 
     private suspend fun getNewPreferenceItem(
@@ -235,15 +252,3 @@ internal class UpdateProviderUseCaseImpl @Inject constructor(
         }
     }
 }
-
-internal class DownloadException(
-    cause: Throwable,
-) : Throwable(cause)
-
-internal class LoadException(
-    cause: Throwable,
-) : Throwable(cause)
-
-internal class UnloadException(
-    cause: Throwable,
-) : Throwable(cause)

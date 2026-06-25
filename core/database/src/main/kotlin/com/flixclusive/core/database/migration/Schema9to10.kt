@@ -66,7 +66,9 @@ import com.flixclusive.core.database.R
  * ### `library_list_item_with_metadata` (VIEW)
  * - Recreated to reflect the updated `films` schema after column changes.
  */
-internal class Schema9to10(private val context: Context) : Migration(startVersion = 9, endVersion = 10) {
+internal class Schema9to10(
+    private val context: Context
+) : Migration(startVersion = 9, endVersion = 10) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val now = System.currentTimeMillis()
 
@@ -217,7 +219,9 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         )
         db.execSQL("DROP TABLE `search_history`")
         db.execSQL("ALTER TABLE `search_history_new` RENAME TO `search_history`")
-        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_search_history_query_ownerId` ON `search_history` (`query`, `ownerId`)")
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_search_history_query_ownerId` ON `search_history` (`query`, `ownerId`)"
+        )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_search_history_ownerId` ON `search_history` (`ownerId`)")
     }
 
@@ -245,7 +249,9 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         db.execSQL("DROP TABLE `library_lists`")
         db.execSQL("ALTER TABLE `library_lists_new` RENAME TO `library_lists`")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_lists_ownerId` ON `library_lists` (`ownerId`)")
-        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_library_lists_ownerId_name` ON `library_lists` (`ownerId`, `name`)")
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_lists_ownerId_name` ON `library_lists` (`ownerId`, `name`)"
+        )
     }
 
     private fun migrateLibraryListItems(db: SupportSQLiteDatabase) {
@@ -270,7 +276,9 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
         )
         db.execSQL("DROP TABLE `library_list_items`")
         db.execSQL("ALTER TABLE `library_list_items_new` RENAME TO `library_list_items`")
-        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_library_list_items_filmId_listId` ON `library_list_items` (`filmId`, `listId`)")
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_list_items_filmId_listId` ON `library_list_items` (`filmId`, `listId`)"
+        )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_list_items_filmId` ON `library_list_items` (`filmId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_list_items_listId` ON `library_list_items` (`listId`)")
     }
@@ -528,31 +536,45 @@ internal class Schema9to10(private val context: Context) : Migration(startVersio
             )
             """.trimIndent()
         )
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_repositoryUrl` ON `installed_providers` (`repositoryUrl`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_sortOrder` ON `installed_providers` (`sortOrder`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_ownerId` ON `installed_providers` (`ownerId`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_isEnabled` ON `installed_providers` (`isEnabled`)")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_installed_providers_repositoryUrl` ON `installed_providers` (`repositoryUrl`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_installed_providers_sortOrder` ON `installed_providers` (`sortOrder`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_installed_providers_ownerId` ON `installed_providers` (`ownerId`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_installed_providers_isEnabled` ON `installed_providers` (`isEnabled`)"
+        )
     }
 
     private fun recreateView(db: SupportSQLiteDatabase) {
         db.execSQL("DROP VIEW IF EXISTS `library_list_item_with_metadata`")
-        db.execSQL("CREATE VIEW `library_list_item_with_metadata` AS SELECT library_list_items.id AS item_id, library_list_items.filmId AS item_filmId, library_list_items.listId AS item_listId, library_list_items.createdAt AS item_createdAt, library_list_items.updatedAt AS item_updatedAt, films.id AS film_id, films.title AS film_title, films.providerId AS film_providerId, films.filmType AS film_filmType, films.overview AS film_overview, films.posterImage AS film_posterImage, films.adult AS film_adult, films.language AS film_language, films.rating AS film_rating, films.backdropImage AS film_backdropImage, films.releaseDate AS film_releaseDate, films.year AS film_year, films.createdAt AS film_createdAt, films.updatedAt AS film_updatedAt FROM library_list_items INNER JOIN films ON library_list_items.filmId = films.id")
+        db.execSQL(
+            "CREATE VIEW `library_list_item_with_metadata` AS SELECT library_list_items.id AS item_id, library_list_items.filmId AS item_filmId, library_list_items.listId AS item_listId, library_list_items.createdAt AS item_createdAt, library_list_items.updatedAt AS item_updatedAt, films.id AS film_id, films.title AS film_title, films.providerId AS film_providerId, films.filmType AS film_filmType, films.overview AS film_overview, films.posterImage AS film_posterImage, films.adult AS film_adult, films.language AS film_language, films.rating AS film_rating, films.backdropImage AS film_backdropImage, films.releaseDate AS film_releaseDate, films.year AS film_year, films.createdAt AS film_createdAt, films.updatedAt AS film_updatedAt FROM library_list_items INNER JOIN films ON library_list_items.filmId = films.id"
+        )
     }
 
     private fun createDbFilmsFstTable(db: SupportSQLiteDatabase) {
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE VIRTUAL TABLE IF NOT EXISTS `films_fts`
             USING fts3(
                 `filmId` TEXT NOT NULL,
                 `title` TEXT NOT NULL,
                 `overview` TEXT NOT NULL
             )
-        """)
+        """
+        )
 
         // Optional backfill for existing data
-        db.execSQL("""
+        db.execSQL(
+            """
             INSERT INTO films_fts (filmId, title, overview)
             SELECT id, title, COALESCE(overview, '') FROM films
-        """)
+        """
+        )
     }
 }

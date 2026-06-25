@@ -10,7 +10,6 @@
     <string name="onboarding_permissions_desc">Enable what\'s needed.</string>
     <string name="onboarding_permission_unknown_sources_title">Install unknown apps</string>
     <string name="onboarding_permission_notifications_title">Notifications</string>
-    <string name="onboarding_open_settings">Open settings</string>
     <string name="onboarding_permissions_required_hint">Enable Install unknown apps to continue.</string>
     <string name="onboarding_permissions_view_granted_button">View other granted permissions</string>
     <string name="onboarding_permissions_granted_sheet_title">Other granted permissions</string>

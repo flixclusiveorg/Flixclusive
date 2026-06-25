@@ -25,7 +25,7 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -71,7 +71,9 @@ private fun PlayerLabel(
     episode: Episode?,
     modifier: Modifier = Modifier
 ) {
-    val titleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp).asAdaptiveTextStyle()
+    val titleStyle = MaterialTheme.typography.titleMedium
+        .copy(fontSize = 14.sp)
+        .asAdaptiveTextStyle()
 
     Box(
         modifier = modifier,
@@ -85,10 +87,11 @@ private fun PlayerLabel(
                     }
 
                     withStyle(
-                        style = titleStyle.copy(
-                            fontWeight = FontWeight.Light,
-                            color = Color.White.copy(alpha = 0.8F),
-                        ).toSpanStyle()
+                        style = titleStyle
+                            .copy(
+                                fontWeight = FontWeight.Light,
+                                color = Color.White.copy(alpha = 0.8F),
+                            ).toSpanStyle()
                     ) {
                         append(episode.title)
                     }
@@ -105,7 +108,6 @@ private fun PlayerLabel(
             )
         }
     }
-
 }
 
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
@@ -120,6 +122,8 @@ private fun PlayerTopBarBasePreview() {
                     season = 1,
                     number = 1,
                     title = "Episode Title",
+                    releaseDate = System.currentTimeMillis(),
+                    isReleased = true,
                 ),
                 onBack = {}
             )

@@ -6,8 +6,8 @@ import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
@@ -36,7 +36,7 @@ interface EpisodeProgressDao {
         AND (seasonNumber, episodeNumber) = (
             SELECT seasonNumber, episodeNumber
             FROM series_watch_history s2
-            WHERE s2.filmId = s1.filmId
+            WHERE s2.mediaId = s1.mediaId
             AND s2.ownerId = ?
             ORDER BY seasonNumber DESC, episodeNumber DESC
             LIMIT 1
@@ -59,19 +59,6 @@ interface EpisodeProgressDao {
     fun getAllAsFlowRaw(query: RoomRawQuery): Flow<List<EpisodeProgressWithMetadata>>
 
     @Transaction
-    @Query(
-        """
-        SELECT * FROM series_watch_history
-        WHERE ownerId = :ownerId
-        ORDER BY RANDOM() LIMIT :count
-        """,
-    )
-    fun getRandoms(
-        ownerId: String,
-        count: Int,
-    ): Flow<List<EpisodeProgressWithMetadata>>
-
-    @Transaction
     @Query("SELECT * FROM series_watch_history WHERE id = :id")
     suspend fun get(id: Long): EpisodeProgressWithMetadata?
 
@@ -82,12 +69,12 @@ interface EpisodeProgressDao {
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :filmId AND ownerId = :ownerId
+        WHERE mediaId = :mediaId AND ownerId = :ownerId
         ORDER BY seasonNumber DESC, episodeNumber DESC
         LIMIT 1
         """,
     )
-    suspend fun get(filmId: String, ownerId: String): EpisodeProgressWithMetadata?
+    suspend fun get(mediaId: String, ownerId: String): EpisodeProgressWithMetadata?
 
     @Transaction
     @Query("SELECT * FROM series_watch_history WHERE id = :id")
@@ -100,7 +87,7 @@ interface EpisodeProgressDao {
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :itemId AND ownerId = :ownerId
+        WHERE mediaId = :itemId AND ownerId = :ownerId
         ORDER BY seasonNumber DESC, episodeNumber DESC
         LIMIT 1
         """,
@@ -110,38 +97,38 @@ interface EpisodeProgressDao {
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :filmId AND ownerId = :ownerId AND seasonNumber = :season
+        WHERE mediaId = :mediaId AND ownerId = :ownerId AND seasonNumber = :season
         ORDER BY episodeNumber ASC
         """,
     )
-    suspend fun getSeasonProgress(filmId: String, season: Int, ownerId: String): List<EpisodeProgress>
+    suspend fun getSeasonProgress(mediaId: String, season: Int, ownerId: String): List<EpisodeProgress>
 
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :filmId AND ownerId = :ownerId AND seasonNumber = :season AND episodeNumber = :episode
+        WHERE mediaId = :mediaId AND ownerId = :ownerId AND seasonNumber = :season AND episodeNumber = :episode
         LIMIT 1
         """,
     )
-    suspend fun getEpisodeProgress(filmId: String, season: Int, episode: Int, ownerId: String): EpisodeProgress?
+    suspend fun getEpisodeProgress(mediaId: String, season: Int, episode: Int, ownerId: String): EpisodeProgress?
 
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :filmId AND ownerId = :ownerId AND seasonNumber = :season
+        WHERE mediaId = :mediaId AND ownerId = :ownerId AND seasonNumber = :season
         ORDER BY episodeNumber ASC
         """,
     )
-    fun getSeasonProgressAsFlow(filmId: String, season: Int, ownerId: String): Flow<List<EpisodeProgress>>
+    fun getSeasonProgressAsFlow(mediaId: String, season: Int, ownerId: String): Flow<List<EpisodeProgress>>
 
     @Transaction
     suspend fun insert(
         item: EpisodeProgress,
         listItem: LibraryListItem? = null,
-        film: DBFilm? = null,
+        media: DBMedia? = null,
     ): Long {
-        if (film != null) {
-            insertFilm(film)
+        if (media != null) {
+            insertMedia(media)
         }
 
         if (listItem != null) {
@@ -155,7 +142,7 @@ interface EpisodeProgressDao {
     suspend fun insertProgress(item: EpisodeProgress): Long
 
     @Upsert
-    suspend fun insertFilm(film: DBFilm)
+    suspend fun insertMedia(media: DBMedia)
 
     @Upsert
     suspend fun insertListItem(item: LibraryListItem)
@@ -169,11 +156,11 @@ interface EpisodeProgressDao {
     @Query(
         "UPDATE series_watch_history " +
             "SET progress = :progress, status = :status, duration = :duration, createdAt = :watchedAt " +
-            "WHERE filmId = :filmId AND seasonNumber = :season AND episodeNumber = :episode AND id = :id",
+            "WHERE mediaId = :mediaId AND seasonNumber = :season AND episodeNumber = :episode AND id = :id",
     )
     suspend fun update(
         id: Long,
-        filmId: String,
+        mediaId: String,
         season: Int,
         episode: Int,
         progress: Long,

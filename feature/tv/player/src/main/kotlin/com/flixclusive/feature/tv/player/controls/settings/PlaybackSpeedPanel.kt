@@ -134,6 +134,5 @@ internal fun PlaybackSpeedPanel(
             onClick = hidePanel,
             modifier = Modifier.focusOnInitialVisibility()
         )
-
     }
 }

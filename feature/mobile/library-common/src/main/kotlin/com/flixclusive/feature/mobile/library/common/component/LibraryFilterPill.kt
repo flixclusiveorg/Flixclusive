@@ -36,6 +36,7 @@ fun LibraryFilterPill(
     filter: LibrarySort,
     onToggleDirection: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val resources = LocalResources.current
     val displayName = remember {
@@ -48,19 +49,16 @@ fun LibraryFilterPill(
 
     OutlinedButton(
         onClick = onToggleDirection,
-        modifier =
-            modifier
-                .height(getAdaptiveDp(29.dp))
-                .widthIn(min = getAdaptiveDp(55.dp))
-                .graphicsLayer {
-                    val isSelected = when (filter) {
-                        is LibrarySort.Name -> selected() is LibrarySort.Name
-                        is LibrarySort.Modified -> selected() is LibrarySort.Modified
-                        is LibrarySort.Added -> selected() is LibrarySort.Added
-                    }
+        enabled = enabled,
+        modifier = modifier.height(getAdaptiveDp(29.dp)).widthIn(min = getAdaptiveDp(55.dp)).graphicsLayer {
+            val isSelected = when (filter) {
+                is LibrarySort.Name -> selected() is LibrarySort.Name
+                is LibrarySort.Modified -> selected() is LibrarySort.Modified
+                is LibrarySort.Added -> selected() is LibrarySort.Added
+            }
 
-                    alpha = if (isSelected) 1f else 0.6f
-                },
+            alpha = if (isSelected && enabled) 1f else 0.8f
+        },
         contentPadding = PaddingValues(
             horizontal = 8.dp,
             vertical = 3.dp,
@@ -73,9 +71,9 @@ fun LibraryFilterPill(
         ) {
             AnimatedVisibility(
                 when (filter) {
-                    is LibrarySort.Name -> selected() is LibrarySort.Name
-                    is LibrarySort.Modified -> selected() is LibrarySort.Modified
-                    is LibrarySort.Added -> selected() is LibrarySort.Added
+                    is LibrarySort.Name -> selected() is LibrarySort.Name && enabled
+                    is LibrarySort.Modified -> selected() is LibrarySort.Modified && enabled
+                    is LibrarySort.Added -> selected() is LibrarySort.Added && enabled
                 }
             ) {
                 AnimatedContent(
@@ -126,7 +124,7 @@ private fun LibraryFilterPillDescendingPreview() {
     FlixclusiveTheme {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterPill(
-                selected = { LibrarySort.Modified(ascending = false) },
+                selected = { LibrarySort.Name(ascending = false) },
                 filter = LibrarySort.Modified(),
                 onToggleDirection = {},
             )

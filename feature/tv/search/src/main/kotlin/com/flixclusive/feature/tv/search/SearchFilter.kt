@@ -3,7 +3,6 @@ package com.flixclusive.feature.tv.search
 import androidx.annotation.StringRes
 import com.flixclusive.core.strings.R as LocaleR
 
-
 @Deprecated("Use SearchFilterSet")
 enum class SearchFilter(
     val type: String,
@@ -20,5 +19,5 @@ enum class SearchFilter(
     TV_SHOW(
         type = "tv",
         resId = LocaleR.string.tv_show
-    );
+    )
 }

@@ -1,5 +1,6 @@
 package com.flixclusive.core.presentation.player.ui.state
 
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -10,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.listen
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 
 @Stable
@@ -36,6 +38,7 @@ class SeekButtonState private constructor(
         player.seekForward()
     }
 
+    @OptIn(UnstableApi::class)
     private suspend fun observe() {
         isSeekBackEnabled = player.getSeekBackEnabled()
         isSeekForwardEnabled = player.getSeekForwardEnabled()
@@ -61,16 +64,16 @@ class SeekButtonState private constructor(
     }
 
     private fun Player.getSeekBackEnabled(): Boolean {
-        return isCommandAvailable(Player.COMMAND_SEEK_BACK)
-            && seekBackIncrement > 0L
-            && duration > 0L
+        return isCommandAvailable(Player.COMMAND_SEEK_BACK) &&
+            seekBackIncrement > 0L &&
+            duration > 0L
     }
 
     private fun Player.getSeekForwardEnabled(): Boolean {
-        return isCommandAvailable(Player.COMMAND_SEEK_FORWARD)
-            && seekForwardIncrement > 0L
-            && duration > 0L
-            && currentPosition < player.duration
+        return isCommandAvailable(Player.COMMAND_SEEK_FORWARD) &&
+            seekForwardIncrement > 0L &&
+            duration > 0L &&
+            currentPosition < player.duration
     }
 
     companion object {

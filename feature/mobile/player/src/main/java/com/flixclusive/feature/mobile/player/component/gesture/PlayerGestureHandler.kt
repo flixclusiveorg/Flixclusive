@@ -31,13 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.player.ui.state.VolumeManager
-import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.feature.mobile.player.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -59,8 +58,8 @@ internal fun PlayerGestureHandler(
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val configuration = LocalWindowInfo.current.containerSize
+    val screenWidth = configuration.width.dp
 
     var screenHeight by remember { mutableIntStateOf(0) }
     var dragStartBrightness by remember { mutableFloatStateOf(0f) }
@@ -117,8 +116,7 @@ internal fun PlayerGestureHandler(
                         gestureState.stopSpeedBoost()
                     }
                 }
-            }
-            .noIndicationClickable { onSingleTap() }
+            }.noIndicationClickable { onSingleTap() }
             .onSizeChanged { size ->
                 screenHeight = size.height
             }
@@ -157,7 +155,6 @@ internal fun PlayerGestureHandler(
                 val dragPercent = dragAmount * (DRAG_MULTIPLIER * brightnessManager.maxBrightness) / screenHeight
                 val newBrightness = dragStartBrightness - dragPercent
                 brightnessManager.setBrightness(maxOf(newBrightness, 0f))
-                infoLog("Drag start brightness: $dragStartBrightness, dragAmount: $dragAmount, dragPercent: $dragPercent, newBrightness: $newBrightness")
                 dragStartBrightness = brightnessManager.currentBrightness
             },
             modifier = Modifier.align(Alignment.CenterStart)
@@ -197,7 +194,6 @@ internal fun PlayerGestureHandler(
                 val dragPercent = dragAmount * (DRAG_MULTIPLIER * volumeManager.maxVolume) / screenHeight
                 val newVolume = dragStartVolume - dragPercent
                 volumeManager.setVolume(maxOf(newVolume, 0f))
-                infoLog("Drag start volume: $dragStartVolume, dragAmount: $dragAmount, dragPercent: $dragPercent, newVolume: $newVolume")
                 dragStartVolume = volumeManager.currentVolume
             },
             modifier = Modifier.align(Alignment.CenterEnd)
@@ -288,7 +284,9 @@ internal fun PlayerGestureHandler(
                         )
                     )
                 }
-            } else null
+            } else {
+                null
+            }
         )
     }
 }
@@ -311,14 +309,12 @@ private fun GestureBox(
             .indication(
                 interactionSource,
                 ripple(bounded = false, radius = screenWidth.div(2f))
-            )
-            .pointerInput(Unit) {
+            ).pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { onSingleTap() },
                     onDoubleTap = { offset -> onDoubleTap(offset) }
                 )
-            }
-            .pointerInput(Unit) {
+            }.pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragStart = { onDragStart() },
                     onDragEnd = { onDragEnd() },

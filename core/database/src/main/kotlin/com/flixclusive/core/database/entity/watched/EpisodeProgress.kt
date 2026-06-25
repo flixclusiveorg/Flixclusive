@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.user.User
 import java.util.Date
 
@@ -19,9 +19,9 @@ import java.util.Date
     tableName = "series_watch_history",
     foreignKeys = [
         ForeignKey(
-            entity = DBFilm::class,
+            entity = DBMedia::class,
             parentColumns = ["id"],
-            childColumns = ["filmId"],
+            childColumns = ["mediaId"],
         ),
         ForeignKey(
             entity = User::class,
@@ -31,15 +31,15 @@ import java.util.Date
         )
     ],
     indices = [
-        Index(value = ["filmId", "ownerId", "seasonNumber", "episodeNumber"], unique = true),
-        Index(value = ["filmId"]),
+        Index(value = ["mediaId", "ownerId", "seasonNumber", "episodeNumber"], unique = true),
+        Index(value = ["mediaId"]),
         Index(value = ["ownerId"]),
     ],
 )
 data class EpisodeProgress(
     @PrimaryKey(autoGenerate = true)
     override val id: Long = 0,
-    override val filmId: String,
+    override val mediaId: String,
     override val ownerId: String,
     override val progress: Long,
     override val status: WatchStatus,

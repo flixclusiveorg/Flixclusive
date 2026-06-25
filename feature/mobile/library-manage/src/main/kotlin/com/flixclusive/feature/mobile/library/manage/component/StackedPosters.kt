@@ -42,8 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -87,11 +86,10 @@ internal fun StackedPosters(
         // Right card
         Box(
             contentAlignment = Alignment.Center,
-            modifier =
-                Modifier
-                    .matchParentSize()
-                    .offset { IntOffset((positionX).roundToPx(), 0) }
-                    .graphicsLayer { rotationZ = 5f },
+            modifier = Modifier
+                .matchParentSize()
+                .offset { IntOffset((positionX).roundToPx(), 0) }
+                .graphicsLayer { rotationZ = 5f },
         ) {
             PreviewCard(
                 preview = previews.getOrNull(2),
@@ -102,11 +100,10 @@ internal fun StackedPosters(
         // Left card
         Box(
             contentAlignment = Alignment.Center,
-            modifier =
-                Modifier
-                    .matchParentSize()
-                    .offset { IntOffset(-(positionX).roundToPx(), 0) }
-                    .graphicsLayer { rotationZ = -5f },
+            modifier = Modifier
+                .matchParentSize()
+                .offset { IntOffset(-(positionX).roundToPx(), 0) }
+                .graphicsLayer { rotationZ = -5f },
         ) {
             PreviewCard(
                 preview = previews.getOrNull(1),
@@ -117,14 +114,77 @@ internal fun StackedPosters(
         // Main front card
         PreviewCard(
             preview = previews.getOrNull(0),
-            modifier =
-                Modifier
-                    .width(maxMainCardWidth)
-                    .boxShadow(
-                        color = MaterialTheme.colorScheme.surface.copy(0.8f),
-                        blurRadius = 6.dp,
-                        spreadRadius = 2.dp
-                    ),
+            modifier = Modifier
+                .width(maxMainCardWidth)
+                .boxShadow(
+                    color = MaterialTheme.colorScheme.surface.copy(0.8f),
+                    blurRadius = 6.dp,
+                    spreadRadius = 2.dp
+                ),
+        )
+    }
+}
+
+@Composable
+internal fun StackedPostersPlaceholder(
+    modifier: Modifier = Modifier,
+) {
+    val surface = MaterialTheme.colorScheme.surface
+    val maxMainCardWidth = getAdaptiveDp(MaxMainCardWidth)
+    val maxBackgroundCardWidth = maxMainCardWidth * 0.8f
+    val positionX = maxBackgroundCardWidth * 0.25f
+
+    val backgroundCardWidthModifier =
+        Modifier
+            .width(maxBackgroundCardWidth)
+            .graphicsLayer { shadowElevation = 24f }
+
+    Box(
+        modifier = modifier
+            .drawWithContent {
+                drawContent()
+                drawRect(surface.copy(0.1f))
+            },
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        // Right card
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .matchParentSize()
+                .offset { IntOffset((positionX).roundToPx(), 0) }
+                .graphicsLayer { rotationZ = 5f },
+        ) {
+            PreviewPlaceholder(
+                showAddButton = false,
+                modifier = backgroundCardWidthModifier.aspectRatio(MediaCover.Poster.ratio),
+            )
+        }
+
+        // Left card
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .matchParentSize()
+                .offset { IntOffset(-(positionX).roundToPx(), 0) }
+                .graphicsLayer { rotationZ = -5f },
+        ) {
+            PreviewPlaceholder(
+                showAddButton = false,
+                modifier = backgroundCardWidthModifier.aspectRatio(MediaCover.Poster.ratio),
+            )
+        }
+
+        // Main front card
+        PreviewPlaceholder(
+            showAddButton = false,
+            modifier = Modifier
+                .width(maxMainCardWidth)
+                .boxShadow(
+                    color = MaterialTheme.colorScheme.surface.copy(0.8f),
+                    blurRadius = 6.dp,
+                    spreadRadius = 2.dp
+                ),
         )
     }
 }
@@ -142,13 +202,9 @@ private fun PreviewCard(
         contentAlignment = Alignment.Center,
     ) {
         if (preview != null) {
-            val painter =
-                remember(preview.posterPath) {
-                    context.buildImageRequest(
-                        imagePath = preview.posterPath,
-                        imageSize = "w300",
-                    )
-                }
+            val painter = remember(preview.posterPath) {
+                context.buildImageRequest(imagePath = preview.posterPath)
+            }
 
             AsyncImage(
                 model = painter,
@@ -156,10 +212,9 @@ private fun PreviewCard(
                 contentScale = ContentScale.FillBounds,
                 contentDescription = preview.title,
                 onSuccess = { isHidingPlaceholder = true },
-                modifier =
-                    Modifier
-                        .aspectRatio(FilmCover.Poster.ratio)
-                        .clip(MaterialTheme.shapes.extraSmall),
+                modifier = Modifier
+                    .aspectRatio(MediaCover.Poster.ratio)
+                    .clip(MaterialTheme.shapes.extraSmall),
             )
         }
 
@@ -171,7 +226,7 @@ private fun PreviewCard(
         ) {
             PreviewPlaceholder(
                 title = preview?.title,
-                modifier = Modifier.aspectRatio(FilmCover.Poster.ratio),
+                modifier = Modifier.aspectRatio(MediaCover.Poster.ratio),
             )
         }
     }
@@ -179,8 +234,9 @@ private fun PreviewCard(
 
 @Composable
 private fun PreviewPlaceholder(
-    title: String?,
     modifier: Modifier = Modifier,
+    title: String? = null,
+    showAddButton: Boolean = true,
 ) {
     val contentColor = LocalContentColor.current.copy(0.6f)
 
@@ -242,7 +298,7 @@ private fun PreviewPlaceholder(
                         )
                     }
                 }
-            } else {
+            } else if (showAddButton) {
                 AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.round_add_24),
                     contentDescription = stringResource(LocaleR.string.add_to_list),
@@ -276,10 +332,11 @@ private fun StackedPostersBasePreview() {
                         StackedPosters(
                             previews =
                                 List(3) {
-                                    DummyDataForPreview.getFilm(
-                                        id = "$it",
-                                        title = "Film #$it",
-                                    ).toPreviewPoster()
+                                    DummyDataForPreview
+                                        .getMedia(
+                                            id = "$it",
+                                            title = "MediaMetadata #$it",
+                                        ).toPreviewPoster()
                                 },
                         )
                     }

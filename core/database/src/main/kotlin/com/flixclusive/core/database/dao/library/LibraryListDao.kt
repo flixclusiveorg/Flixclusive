@@ -24,20 +24,35 @@ interface LibraryListDao {
     suspend fun getAll(userId: String): List<LibraryListWithItems>
 
     @Query("SELECT * FROM library_lists WHERE id = :id")
-    fun getAsFlow(id: Int): Flow<LibraryList?>
+    fun getAsFlow(id: String): Flow<LibraryList?>
 
     @Query("SELECT * FROM library_lists WHERE ownerId = :ownerId AND listType = :listType")
     fun getByTypeAsFlow(ownerId: String, listType: String): Flow<List<LibraryList>>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT list.*
         FROM library_lists list
         INNER JOIN library_list_items listItem ON list.id = listItem.listId
-        WHERE listItem.filmId = :filmId AND list.ownerId = :ownerId
+        WHERE listItem.mediaId = :mediaId AND list.ownerId = :ownerId
         ORDER BY list.createdAt DESC
-    """)
-    fun getListsContainingFilmAsFlow(filmId: String, ownerId: String): Flow<List<LibraryList>>
+    """
+    )
+    fun getListsContainingMediaAsFlow(mediaId: String, ownerId: String): Flow<List<LibraryList>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1
+            FROM library_lists list
+            INNER JOIN library_list_items listItem ON list.id = listItem.listId
+            WHERE listItem.mediaId = :mediaId AND list.ownerId = :ownerId
+        )
+    """
+    )
+    suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean
 
     @Query("SELECT * FROM library_lists WHERE listType = 'WATCHED' AND ownerId = :ownerId")
     suspend fun getWatchedList(ownerId: String): LibraryList
@@ -67,13 +82,13 @@ interface LibraryListDao {
     }
 
     @Upsert
-    suspend fun insert(list: LibraryList): Long
+    suspend fun insert(list: LibraryList)
 
     @Update
     suspend fun update(list: LibraryList)
 
     @Query("SELECT * FROM library_lists WHERE id = :id")
-    suspend fun get(id: Int): LibraryList?
+    suspend fun get(id: String): LibraryList?
 
     /**
      * Guarded deletion — prevents deletion of system lists (WATCHLIST, CONTINUE_WATCHING).
@@ -81,7 +96,7 @@ interface LibraryListDao {
      * @throws SystemListDeletionException if the list is a system list.
      * */
     @Transaction
-    suspend fun deleteSafe(id: Int) {
+    suspend fun deleteSafe(id: String) {
         val list = get(id) ?: return
 
         if (list.listType == LibraryListType.WATCHED) {
@@ -92,7 +107,7 @@ interface LibraryListDao {
     }
 
     @Query("DELETE FROM library_lists WHERE id = :listId")
-    suspend fun deleteInternal(listId: Int)
+    suspend fun deleteInternal(listId: String)
 
     @Query("SELECT * FROM library_lists WHERE ownerId = :ownerId AND listType = :listType")
     suspend fun getByType(ownerId: String, listType: LibraryListType): List<LibraryList>

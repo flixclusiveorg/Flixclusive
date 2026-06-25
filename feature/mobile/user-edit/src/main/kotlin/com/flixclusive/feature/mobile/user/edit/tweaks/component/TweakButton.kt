@@ -23,10 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import com.flixclusive.core.strings.R as LocaleR
@@ -40,10 +40,8 @@ internal fun TweakButton(
     var showDialog by remember { mutableStateOf(false) }
 
     if (needsDialog && showDialog) {
-        if(tweak is ProfileTweakUI.Dialog) {
-            tweak.content(
-                /* onDismiss = */ { showDialog = false }
-            )
+        if (tweak is ProfileTweakUI.Dialog) {
+            tweak.content { showDialog = false }
         } else {
             TextAlertDialog(
                 title = stringResource(id = LocaleR.string.heads_up),
@@ -61,13 +59,14 @@ internal fun TweakButton(
             .background(
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
                 shape = DefaultShape
-            )
-            .clickable(
+            ).clickable(
                 onClick = if (needsDialog) {
                     fun() {
                         showDialog = true
                     }
-                } else tweak.onClick
+                } else {
+                    tweak.onClick
+                }
             )
     ) {
         val spacing = getAdaptiveDp(16.dp)

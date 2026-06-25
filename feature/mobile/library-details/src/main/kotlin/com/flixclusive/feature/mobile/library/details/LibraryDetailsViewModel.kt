@@ -1,45 +1,68 @@
 package com.flixclusive.feature.mobile.library.details
 
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.SavedStateHandle
+import androidx.compose.runtime.mutableStateSetOf
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.PagingState
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
+import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toDBMediaExternalIds
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
-import com.ramcosta.composedestinations.generated.librarydetails.navArgs
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListItemsUseCase
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.provider.tracker.TrackerList
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import java.util.Date
+import kotlin.time.Duration.Companion.milliseconds
+
+private const val PAGINATE_SIZE = 20
 
 @OptIn(FlowPreview::class)
-@HiltViewModel
-internal class LibraryDetailsViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = LibraryDetailsViewModel.Factory::class)
+class LibraryDetailsViewModel @AssistedInject constructor(
     private val libraryListRepository: LibraryListRepository,
     private val appDispatchers: AppDispatchers,
-    savedStateHandle: SavedStateHandle,
+    private val getTrackerListItems: GetTrackerListItemsUseCase,
+    private val getTrackerApi: GetTrackerApiUseCase,
+    @Assisted private val navArgs: LibraryDetailsNavArgs,
 ) : ViewModel() {
-    private val navArgs = savedStateHandle.navArgs<LibraryDetailsNavArgs>()
+    @AssistedFactory
+    interface Factory {
+        fun create(navArgs: LibraryDetailsNavArgs): LibraryDetailsViewModel
+    }
 
-    private var removeJob: Job? = null
     private var removeSelectionJob: Job? = null
+    private var paginateJob: Job? = null
 
     private val _uiState = MutableStateFlow(LibraryDetailsUiState())
     val uiState = _uiState.asStateFlow()
@@ -47,47 +70,158 @@ internal class LibraryDetailsViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _selectedItems = MutableStateFlow(persistentSetOf<LibraryListItemWithMetadata>())
-    val selectedItems = _selectedItems.asStateFlow()
+    private val _trackerError = MutableSharedFlow<UiText>()
+    val trackerError = _trackerError.asSharedFlow()
 
-    val library = libraryListRepository
-        .getList(navArgs.library.id)
-        .filterNotNull()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Lazily,
-            initialValue = navArgs.library,
-        )
+    val selectedItems = mutableStateSetOf<LibraryListItemWithMetadata>()
 
-    val items = _uiState
-        .map { it.selectedFilter }
-        .distinctUntilChanged()
-        .flatMapLatest { filter ->
-            libraryListRepository.getItems(
-                listId = navArgs.library.id,
-                sort = filter,
-            ).map { list -> list.toPersistentList() }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Lazily,
-            initialValue = persistentListOf(),
-        )
+    val items = mutableStateSetOf<LibraryListItemWithMetadata>()
+
+    private val _library = MutableStateFlow<LibraryList>(navArgs.library)
+    val library = _library.asStateFlow()
 
     val searchItems = searchQuery
-        .debounce(800) // Debounce to avoid excessive computations while typing
+        .debounce(800.milliseconds) // Debounce to avoid excessive computations while typing
         .distinctUntilChanged()
         .filter { it.isNotEmpty() }
         .flatMapLatest { query ->
-            libraryListRepository.searchItems(
-                query = query,
-                listId = navArgs.library.id,
-                sort = uiState.value.selectedFilter,
-            ).map { list -> list.toPersistentList() }
+            if (navArgs.tracker != null) {
+                val list = items.filter {
+                    it.metadata.title.contains(query, ignoreCase = true) &&
+                        it.metadata.overview?.contains(query, ignoreCase = true) == true
+                }
+
+                flowOf(list.toSet())
+            } else {
+                libraryListRepository
+                    .searchItems(
+                        query = query,
+                        listId = navArgs.library.id,
+                        sort = uiState.value.selectedFilter,
+                    ).mapLatest { it.toSet() }
+            }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = persistentListOf(),
+            initialValue = emptySet(),
         )
+
+    init {
+        paginate()
+
+        viewModelScope.launch {
+            if (navArgs.tracker != null) return@launch
+
+            libraryListRepository
+                .getList(navArgs.library.id)
+                .filterNotNull()
+                .collect {
+                    _library.value = it
+                }
+        }
+    }
+
+    private suspend fun paginateAppList() {
+        val results = libraryListRepository.paginateItems(
+            listId = navArgs.library.id,
+            page = uiState.value.currentPage,
+            sort = uiState.value.selectedFilter,
+            pageSize = PAGINATE_SIZE
+        )
+
+        if (results.size < PAGINATE_SIZE) {
+            _uiState.update { it.copy(pagingState = PagingState.Exhausted) }
+        } else {
+            _uiState.update {
+                it.copy(
+                    pagingState = PagingState.Idle,
+                    currentPage = it.currentPage + 1,
+                )
+            }
+        }
+
+        items.addAll(results)
+    }
+
+    private suspend fun paginateTrackerList() {
+        val trackerList = navArgs.library.toTrackerList(
+            providerId = navArgs.tracker!!.id,
+        )
+
+        getTrackerListItems(
+            list = trackerList,
+            page = uiState.value.currentPage,
+        ).collect { state ->
+            when (state) {
+                is Async.Loading -> {
+                    _uiState.update {
+                        it.copy(pagingState = PagingState.Loading)
+                    }
+                }
+
+                is Async.Failure -> {
+                    _uiState.update {
+                        it.copy(pagingState = PagingState.Error(error = state.message))
+                    }
+                }
+
+                is Async.Success -> {
+                    val list = state.data.results.fastMap {
+                        it.toLibraryListItemWithMetadata(navArgs.library.id)
+                    }
+
+                    items.addAll(list)
+                    _uiState.update {
+                        it.copy(
+                            pagingState = if (state.data.hasNextPage) PagingState.Idle else PagingState.Exhausted,
+                            currentPage = it.currentPage + 1,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun removeItem(item: LibraryListItemWithMetadata) {
+        if (navArgs.tracker != null) {
+            try {
+                val api = getTrackerApi(navArgs.tracker.id)
+                api.removeListItem(
+                    list = navArgs.library.toTrackerList(navArgs.tracker.id),
+                    item = item.toMediaMetadata(),
+                )
+
+                items.remove(item)
+                _library.value = _library.value.copy(
+                    updatedAt = Date(),
+                )
+            } catch (e: Throwable) {
+                errorLog("Failed to remove item from tracker list: ${e.message}")
+                e.printStackTrace()
+
+                _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
+            }
+        } else {
+            libraryListRepository
+                .deleteItem(itemId = item.itemId)
+
+            items.remove(item)
+        }
+    }
+
+    fun paginate() {
+        if (paginateJob?.isActive == true) return
+        if (uiState.value.pagingState.isExhausted) return
+
+        paginateJob = viewModelScope.launch {
+            _uiState.update { it.copy(pagingState = PagingState.Loading) }
+            if (navArgs.tracker != null) {
+                paginateTrackerList()
+            } else {
+                paginateAppList()
+            }
+        }
+    }
 
     fun onUpdateFilter(filter: LibrarySort) {
         _uiState.update {
@@ -99,26 +233,12 @@ internal class LibraryDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onRemoveLongClickedItem() {
-        if (removeJob?.isActive == true) return
-
-        val item = _uiState.value.longClickedItem
-        requireNotNull(item) {
-            "Long clicked item should not be null when trying to remove it."
-        }
-
-        removeJob = appDispatchers.ioScope.launch {
-            libraryListRepository
-                .deleteItem(itemId = item.itemId)
-        }
-    }
-
     fun onRemoveSelection() {
         if (removeSelectionJob?.isActive == true) return
 
         removeSelectionJob = appDispatchers.ioScope.launch {
-            selectedItems.value.forEach {
-                libraryListRepository.deleteItem(itemId = it.item.id)
+            selectedItems.forEach {
+                removeItem(it)
             }
         }
     }
@@ -128,19 +248,17 @@ internal class LibraryDetailsViewModel @Inject constructor(
     }
 
     fun onToggleSelect(item: LibraryListItemWithMetadata) {
-        _selectedItems.update {
-            val isSelected = it.contains(item)
+        val isSelected = selectedItems.contains(item)
 
-            if (isSelected) {
-                it.remove(item)
-            } else {
-                it.add(item)
-            }
+        if (isSelected) {
+            selectedItems.remove(item)
+        } else {
+            selectedItems.add(item)
         }
     }
 
     fun onUnselectAll() {
-        _selectedItems.update { persistentSetOf() }
+        selectedItems.clear()
         _uiState.update {
             it.copy(isMultiSelecting = false)
         }
@@ -153,17 +271,41 @@ internal class LibraryDetailsViewModel @Inject constructor(
     fun onToggleSearchBar(isVisible: Boolean) {
         _uiState.update { it.copy(isShowingSearchBar = isVisible) }
     }
+}
 
-    fun onLongClickItem(item: LibraryListItemWithMetadata?) {
-        _uiState.update { it.copy(longClickedItem = item) }
-    }
+private fun MediaMetadata.toLibraryListItemWithMetadata(
+    listId: String,
+): LibraryListItemWithMetadata {
+    return LibraryListItemWithMetadata(
+        item = LibraryListItem(
+            mediaId = id,
+            id = id,
+            listId = listId,
+        ),
+        metadata = toDBMedia(),
+        externalIds = toDBMediaExternalIds(),
+    )
+}
+
+fun LibraryList.toTrackerList(
+    providerId: String,
+): TrackerList {
+    return TrackerList(
+        id = id,
+        providerId = providerId,
+        name = name,
+        description = description,
+        createdAt = createdAt.time,
+        updatedAt = updatedAt.time,
+        images = emptyList(),
+    )
 }
 
 @Immutable
-internal data class LibraryDetailsUiState(
-    val isLoading: Boolean = false,
+data class LibraryDetailsUiState(
     val isShowingSearchBar: Boolean = false,
     val isMultiSelecting: Boolean = false,
-    val longClickedItem: LibraryListItemWithMetadata? = null,
     val selectedFilter: LibrarySort = LibrarySort.Added(ascending = false),
+    val currentPage: Int = 1,
+    val pagingState: PagingState = PagingState.Idle,
 )

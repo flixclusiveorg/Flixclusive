@@ -40,8 +40,12 @@ internal class ProviderBackupValidator @Inject constructor(
             }
 
             val matches = actual.repositoryUrl == expected.repositoryUrl &&
-                actual.sortOrder == expected.sortOrder &&
-                actual.isEnabled == expected.isEnabled &&
+                actual.isCatalogEnabled == expected.isCatalogEnabled &&
+                actual.isCrossMatchEnabled == expected.isCrossMatchEnabled &&
+                actual.isMediaLinkEnabled == expected.isMediaLinkEnabled &&
+                actual.isMetadataEnabled == expected.isMetadataEnabled &&
+                actual.isSearchEnabled == expected.isSearchEnabled &&
+                actual.isTrackerEnabled == expected.isTrackerEnabled &&
                 actual.createdAt == expected.createdAt.time &&
                 actual.updatedAt == expected.updatedAt.time
 
@@ -66,8 +70,12 @@ internal class ProviderBackupValidator @Inject constructor(
             }
 
             val matches = expected.repositoryUrl == actual.repositoryUrl &&
-                expected.sortOrder == actual.sortOrder &&
-                expected.isEnabled == actual.isEnabled &&
+                expected.isCatalogEnabled == actual.isCatalogEnabled &&
+                expected.isCrossMatchEnabled == actual.isCrossMatchEnabled &&
+                expected.isMediaLinkEnabled == actual.isMediaLinkEnabled &&
+                expected.isMetadataEnabled == actual.isMetadataEnabled &&
+                expected.isSearchEnabled == actual.isSearchEnabled &&
+                expected.isTrackerEnabled == actual.isTrackerEnabled &&
                 expected.createdAt == actual.createdAt.time &&
                 expected.updatedAt == actual.updatedAt.time
 

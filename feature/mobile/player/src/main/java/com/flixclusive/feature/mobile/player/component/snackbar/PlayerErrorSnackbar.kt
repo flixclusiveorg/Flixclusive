@@ -32,6 +32,7 @@ import com.flixclusive.core.presentation.mobile.components.GlassSurface
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.SnackbarError
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 private val ErrorAccentColor = Color(0xFFEF5350)
 private const val EXIT_ANIMATION_MS = 300L
@@ -68,10 +69,10 @@ private fun ErrorSnackbarItem(
         isVisible = true
     }
 
-    LaunchedEffect(error.key) {
-        delay(PlayerSnackbarState.ERROR_AUTO_DISMISS_MS)
+    LaunchedEffect(error.key, onDismiss) {
+        delay(PlayerSnackbarState.ERROR_AUTO_DISMISS_MS.milliseconds)
         isVisible = false
-        delay(EXIT_ANIMATION_MS)
+        delay(EXIT_ANIMATION_MS.milliseconds)
         onDismiss()
     }
 

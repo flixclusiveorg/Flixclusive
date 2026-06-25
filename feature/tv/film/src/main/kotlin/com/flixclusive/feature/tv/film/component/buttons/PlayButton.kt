@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTvMaterial3Api::class)
 
-package com.flixclusive.feature.tv.film.component.buttons
+package com.flixclusive.feature.tv.media.component.buttons
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -57,7 +57,7 @@ internal fun PlayButton(
     }
 
     val buttonSizeAsFloatState by animateFloatAsState(
-        targetValue = if(isButtonFocused) 1.1F else 1F,
+        targetValue = if (isButtonFocused) 1.1F else 1F,
         label = ""
     )
 
@@ -66,7 +66,8 @@ internal fun PlayButton(
         initialValue = -50F,
         targetValue = 300F,
         animationSpec = infiniteRepeatable(
-            animation = tween(3000), repeatMode = RepeatMode.Reverse
+            animation = tween(3000),
+            repeatMode = RepeatMode.Reverse
         ),
         label = ""
     )
@@ -110,13 +111,13 @@ internal fun PlayButton(
                 ),
                 ifFalseModifier = Modifier
                     .clip(shape)
-            )
-            .drawBehind {
+            ).drawBehind {
                 if (isButtonFocused) {
                     drawRect(buttonGradient)
-                } else drawRect(Color.Transparent)
-            }
-            .onFocusChanged {
+                } else {
+                    drawRect(Color.Transparent)
+                }
+            }.onFocusChanged {
                 isButtonFocused = it.isFocused
             }
     ) {
@@ -147,5 +148,4 @@ internal fun PlayButton(
 @Preview
 @Composable
 private fun PlayButtonPreview() {
-
 }

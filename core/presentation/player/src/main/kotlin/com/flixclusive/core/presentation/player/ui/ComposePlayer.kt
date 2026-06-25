@@ -1,6 +1,8 @@
 package com.flixclusive.core.presentation.player.ui
 
 import android.os.Build
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +31,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.SubtitleView
 import androidx.media3.ui.compose.PlayerSurface
@@ -42,6 +47,7 @@ import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.presentation.player.extensions.toContentScale
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.google.common.collect.ImmutableList
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
 /**
@@ -57,6 +63,28 @@ fun ComposePlayer(
 ) {
     val presentationState = rememberPresentationState(player)
     val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = LocalActivity.current
+    val scope = rememberCoroutineScope()
+
+    DisposableEffect(player, activity) {
+        val listener = scope.launch {
+            player.listenTo(Player.EVENT_IS_PLAYING_CHANGED) { events ->
+                if (!events.contains(Player.EVENT_IS_PLAYING_CHANGED)) return@listenTo
+                val window = activity?.window ?: return@listenTo
+
+                if (player.isPlaying) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+        }
+
+        onDispose {
+            listener.cancel()
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     Box(modifier = modifier) {
         PlayerSurface(
@@ -100,6 +128,7 @@ fun ComposePlayer(
                         player.releaseMediaSession()
                     }
                 }
+
                 Lifecycle.Event.ON_PAUSE -> {
                     if (Build.VERSION.SDK_INT <= 23) {
                         player.releaseMediaSession()
@@ -111,14 +140,17 @@ fun ComposePlayer(
                         player.release()
                     }
                 }
-                else -> Unit
+
+                else -> {
+                    Unit
+                }
             }
         }
 
         lifecycleOwner.lifecycle.addObserver(observer)
 
         onDispose {
-            if(!isInPipMode) {
+            if (!isInPipMode) {
                 player.release()
             }
             lifecycleOwner.lifecycle.removeObserver(observer)

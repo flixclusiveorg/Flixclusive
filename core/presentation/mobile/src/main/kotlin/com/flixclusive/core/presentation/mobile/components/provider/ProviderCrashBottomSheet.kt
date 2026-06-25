@@ -32,10 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -54,9 +54,8 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isExpanded
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -71,13 +70,11 @@ fun ProviderCrashBottomSheet(
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
 
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val screenWidth = LocalWindowInfo.current.containerSize.width.dp
     val maxWidth = when {
-        windowWidthSizeClass.isMedium -> screenWidth / 2.5f
-        windowWidthSizeClass.isExpanded -> screenWidth / 3
+        windowSizeClass.isWidthMedium -> screenWidth / 2.5f
+        !windowSizeClass.isWidthCompact -> screenWidth / 3
         else -> screenWidth
     }
 
@@ -109,7 +106,7 @@ fun ProviderCrashBottomSheet(
 
             itemsIndexed(
                 errors,
-                key = { _, (provider) -> provider.id },
+                key = { _, item -> item.provider.id + item.throwable.hashCode() },
             ) { i, error ->
                 Column(
                     modifier = Modifier.animateItem(),
@@ -120,7 +117,7 @@ fun ProviderCrashBottomSheet(
                         onClick = { detailedCrashLog = error },
                     )
 
-                    if (i < errors.lastIndex && windowWidthSizeClass.isCompact) {
+                    if (i < errors.lastIndex && windowSizeClass.isWidthCompact) {
                         HorizontalDivider(
                             thickness = 0.5.dp,
                             color = LocalContentColor.current.copy(0.4f),
@@ -128,7 +125,7 @@ fun ProviderCrashBottomSheet(
                                 .fillMaxWidth()
                                 .padding(vertical = 15.dp),
                         )
-                    } else if (!windowWidthSizeClass.isCompact) {
+                    } else if (!windowSizeClass.isWidthCompact) {
                         Spacer(modifier = Modifier.padding(vertical = 15.dp))
                     }
                 }
@@ -225,9 +222,7 @@ internal fun CrashItemTopContent(
 
     val repository = remember(provider) {
         val pair = provider.repositoryUrl.toOwnerAndRepository()
-        requireNotNull(pair) {
-            "Could not extract github info from link: ${provider.repositoryUrl}"
-        }
+            ?: return@remember null
 
         val (username, repository) = pair
 
@@ -258,17 +253,19 @@ internal fun CrashItemTopContent(
                 style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
             )
 
-            Text(
-                text = repository,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
-                color = LocalContentColor.current.copy(0.6f),
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.small)
-                    .clickable { uriHandler.openUri(provider.repositoryUrl) }
-                    .padding(vertical = 1.dp),
-            )
+            repository?.let {
+                Text(
+                    text = it,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
+                    color = LocalContentColor.current.copy(0.6f),
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable { uriHandler.openUri(provider.repositoryUrl) }
+                        .padding(vertical = 1.dp),
+                )
+            }
 
             Text(
                 text = version,
@@ -339,8 +336,7 @@ private fun StackTracePreview(
                 width = 0.5.dp,
                 color = LocalContentColor.current.copy(0.6f),
                 shape = MaterialTheme.shapes.extraSmall,
-            )
-            .background(
+            ).background(
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(1),
                 shape = MaterialTheme.shapes.extraSmall,
             ),

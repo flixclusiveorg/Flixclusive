@@ -12,4 +12,7 @@ package com.flixclusive.core.presentation.player.model.track
 sealed interface PlayerTrack {
     /** A user-friendly label for the track, such as "1080p" for servers or "English" for subtitles. */
     val label: String
+
+    /** A flag to indicate that this track's URL is dead */
+    val isDead: Boolean
 }

@@ -41,7 +41,7 @@ fun IconAlertDialog(
     tint: Color = MaterialTheme.colorScheme.primary,
     dialogProperties: DialogProperties = DialogProperties(),
     confirmButtonLabel: String = stringResource(id = LocaleR.string.ok),
-    dismissButtonLabel: String? = stringResource(id = LocaleR.string.cancel),
+    dismissButtonLabel: String? = stringResource(id = LocaleR.string.label_cancel),
     dismissOnConfirm: Boolean = true,
     onDismiss: () -> Unit = {},
 ) {
@@ -62,8 +62,9 @@ fun IconAlertDialog(
                     onClick = {
                         onConfirm()
 
-                        if (dismissOnConfirm)
+                        if (dismissOnConfirm) {
                             onDismiss()
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -125,7 +126,6 @@ fun IconAlertDialog(
     }
 }
 
-
 @Preview(device = "spec:width=1344px,height=2992px,dpi=640")
 @Composable
 private fun CommonNoticeDialogPreview() {
@@ -134,13 +134,15 @@ private fun CommonNoticeDialogPreview() {
             modifier = Modifier
                 .fillMaxSize()
         ) {
+            @Suppress("ktlint:standard:max-line-length")
             IconAlertDialog(
                 painter = painterResource(id = R.drawable.warning),
                 contentDescription = stringResource(
                     id = LocaleR.string.warning_content_description
                 ),
                 dismissButtonLabel = null,
-                description = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum elit, vitae luctus libero feugiat quis. Praesent vel finibus nisl. Ut quis libero mi. Proin molestie eros elit, in condimentum justo aliquam ut. Suspendisse gravida luctus ornare. Morbi nulla est, pretium a vestibulum nec, lobortis ac mauris. Sed viverra ipsum quis scelerisque cursus. Praesent sed libero enim. Aenean eleifend ut urna in commodo. Pellentesque pretium tempor magna, nec tempor arcu venenatis vitae. Aliquam lacinia faucibus leo, facilisis viverra sapien ullamcorper eu.\n" +
+                description =
+                    " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum elit, vitae luctus libero feugiat quis. Praesent vel finibus nisl. Ut quis libero mi. Proin molestie eros elit, in condimentum justo aliquam ut. Suspendisse gravida luctus ornare. Morbi nulla est, pretium a vestibulum nec, lobortis ac mauris. Sed viverra ipsum quis scelerisque cursus. Praesent sed libero enim. Aenean eleifend ut urna in commodo. Pellentesque pretium tempor magna, nec tempor arcu venenatis vitae. Aliquam lacinia faucibus leo, facilisis viverra sapien ullamcorper eu.\n" +
                         "\n" +
                         "Integer ullamcorper libero vel efficitur vulputate. Sed aliquam mauris eu sollicitudin fringilla. Proin accumsan, sem non pulvinar tristique, lacus turpis vehicula ante, id feugiat nisl risus in ex. Aenean lacus sem, dapibus eget vestibulum sed, condimentum eu nulla. Praesent fringilla eros vel libero fermentum, non varius quam pharetra. Mauris nec ligula nibh. Pellentesque vel orci ut libero rutrum tempor. Maecenas fermentum lorem enim, quis commodo ante bibendum et. Integer aliquam mi id magna porta, ut viverra lacus ultrices. Nunc aliquet ut ante at ornare. Proin placerat egestas est, sed suscipit metus porta malesuada. Sed ligula lectus, iaculis nec lacinia in, commodo sed orci. Integer maximus, justo ut rutrum dignissim, ex eros maximus lacus, ut finibus massa neque vel velit. Proin sodales turpis ac ipsum lacinia volutpat.\n" +
                         "\n" +
@@ -152,6 +154,7 @@ private fun CommonNoticeDialogPreview() {
     }
 }
 
+@Suppress("ktlint:standard:max-line-length")
 @Preview(device = "spec:width=1344px,height=2992px,dpi=640")
 @Composable
 private fun CommonNoticeDialogPreviewPart2() {

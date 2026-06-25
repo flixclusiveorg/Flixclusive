@@ -91,7 +91,6 @@ private val lightColors = lightColorScheme(
     scrim = md_theme_light_scrim,
 )
 
-
 @OptIn(ExperimentalTvMaterial3Api::class)
 val darkTvColors = darkColorScheme(
     primary = md_theme_dark_primary,

@@ -4,11 +4,13 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
 
-class ProgressInterceptor(
-    private val listener: ProgressListener,
-) : Interceptor {
+class ProgressInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalResponse = chain.proceed(chain.request())
+        val request = chain.request()
+        val listener = request.tag(ProgressListener::class.java)
+            ?: return chain.proceed(request)
+
+        val originalResponse = chain.proceed(request)
         return originalResponse
             .newBuilder()
             .body(ProgressResponseBody(originalResponse.body, listener))
@@ -16,9 +18,9 @@ class ProgressInterceptor(
     }
 
     companion object {
-        fun OkHttpClient.addProgressListener(listener: ProgressListener): OkHttpClient {
+        fun OkHttpClient.addProgressListener(): OkHttpClient {
             return newBuilder()
-                .addNetworkInterceptor(ProgressInterceptor(listener))
+                .addNetworkInterceptor(ProgressInterceptor())
                 .build()
         }
     }

@@ -24,19 +24,30 @@ interface CheckOutdatedProviderUseCase {
  *
  * @property metadata The metadata of the provider that was checked.
  * */
-sealed class CheckOutdatedProviderResult(val metadata: ProviderMetadata) {
+sealed class CheckOutdatedProviderResult(
+    val metadata: ProviderMetadata
+) {
     /**
      * Indicates that the provider is outdated.
      * */
-    class Outdated(metadata: ProviderMetadata) : CheckOutdatedProviderResult(metadata)
+    class Outdated(
+        metadata: ProviderMetadata
+    ) : CheckOutdatedProviderResult(metadata)
+
     /**
      * Indicates that the provider is up to date.
      * */
-    class UpToDate(metadata: ProviderMetadata) : CheckOutdatedProviderResult(metadata)
+    class UpToDate(
+        metadata: ProviderMetadata
+    ) : CheckOutdatedProviderResult(metadata)
+
     /**
      * Indicates that an error occurred while checking the provider.
      *
      * @param error The error that occurred.
      * */
-    class Error(val error: Throwable, metadata: ProviderMetadata) : CheckOutdatedProviderResult(metadata)
+    class Error(
+        val error: Throwable,
+        metadata: ProviderMetadata
+    ) : CheckOutdatedProviderResult(metadata)
 }

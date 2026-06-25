@@ -146,46 +146,22 @@ sealed class LoadLinksState(
                 ?: UiText.from(defaultUnavailableMessageId),
         ) {
         override val ordinal = 4
-
-        /**
-         * Constructor with a string resource ID for the error message.
-         *
-         * @param errorMessageId The string resource ID for the error message.
-         */
-        constructor(
-            @StringRes errorMessageId: Int,
-        ) : this(
-            errorMessage = UiText.from(errorMessageId),
-        )
     }
 
     /**
      * The state when the resource has been successfully fetched and extracted.
-     *
-     * @property providerId The ID of the provider that provided the links.
      */
     @Stable
-    data class Success(val providerId: String) : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
+    data object Success : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
         override val ordinal = 5
-    }
-
-    /**
-     * The state when the resource has been successfully fetched and extracted from trusted providers.
-     */
-    @Stable
-    data object SuccessWithTrustedProviders : LoadLinksState(
-        message = UiText.from(R.string.source_data_dialog_state_success_with_trusted_providers),
-    ) {
-        override val ordinal = 6
     }
 
     val isIdle get() = this is Idle
     val isSuccess get() = this is Success
-    val isSuccessWithTrustedProviders get() = this is SuccessWithTrustedProviders
     val isUnavailable get() = this is Unavailable
     val isExtracting get() = this is Extracting
     val isFetching get() = this is Fetching
-    val isLoading get() = isFetching || isExtracting || isSuccess
+    val isLoading get() = isFetching || isExtracting
     val isError get() = this is Error || isUnavailable
 
     operator fun compareTo(other: LoadLinksState): Int {

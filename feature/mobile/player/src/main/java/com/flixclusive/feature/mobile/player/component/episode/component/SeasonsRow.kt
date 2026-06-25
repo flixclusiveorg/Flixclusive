@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.media.common.tv.Season
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -34,7 +35,7 @@ internal fun SeasonsRow(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentSeason) {
         currentSeason()?.number?.let {
             safeCall { listState.animateScrollToItem(max(0, it - 1)) }
         }
@@ -75,6 +76,16 @@ internal fun SeasonsRow(
 )
 @Composable
 private fun SeasonsRowPreview() {
+    val list = remember {
+        List(5) {
+            Season.Full(
+                number = it + 1,
+                isReleased = true,
+                id = "season-${it + 1}",
+                episodes = emptyList(),
+            )
+        }
+    }
     FlixclusiveTheme {
         Surface {
             Box(
@@ -82,18 +93,8 @@ private fun SeasonsRowPreview() {
                 contentAlignment = Alignment.Center
             ) {
                 SeasonsRow(
-                    seasons = List(5) {
-                        Season(
-                            number = it + 1,
-                            episodeCount = 10,
-                        )
-                    },
-                    currentSeason = {
-                        Season(
-                            number = 2,
-                            episodeCount = 10,
-                        )
-                    },
+                    seasons = list,
+                    currentSeason = { list[2] },
                     onSeasonChange = {}
                 )
             }

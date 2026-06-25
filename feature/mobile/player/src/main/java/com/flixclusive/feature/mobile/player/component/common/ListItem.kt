@@ -38,11 +38,11 @@ internal val FailedListItemColor = Color(0xFFEF5350)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ListItem(
-    modifier: Modifier = Modifier,
     name: String,
     isSelected: Boolean,
-    isFailed: Boolean = false,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isFailed: Boolean = false,
     onLongClick: () -> Unit = {}
 ) {
     val baseStyle = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle()
@@ -50,22 +50,37 @@ internal fun ListItem(
 
     val style = remember(isSelected, isFailed) {
         when {
-            isFailed && isSelected -> baseStyle.copy(
-                fontWeight = FontWeight.Bold,
-                color = FailedListItemColor
-            ).dropShadow()
-            isFailed -> baseStyle.copy(
-                fontWeight = FontWeight.Bold,
-                color = FailedListItemColor.copy(alpha = 0.6f)
-            ).dropShadow()
-            isSelected -> baseStyle.copy(
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            ).dropShadow()
-            else -> baseStyle.copy(
-                fontWeight = FontWeight.Bold,
-                color = unselectedColor
-            ).dropShadow()
+            isFailed && isSelected -> {
+                baseStyle
+                    .copy(
+                        fontWeight = FontWeight.Bold,
+                        color = FailedListItemColor
+                    ).dropShadow()
+            }
+
+            isFailed -> {
+                baseStyle
+                    .copy(
+                        fontWeight = FontWeight.Bold,
+                        color = FailedListItemColor.copy(alpha = 0.6f)
+                    ).dropShadow()
+            }
+
+            isSelected -> {
+                baseStyle
+                    .copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    ).dropShadow()
+            }
+
+            else -> {
+                baseStyle
+                    .copy(
+                        fontWeight = FontWeight.Bold,
+                        color = unselectedColor
+                    ).dropShadow()
+            }
         }
     }
 
@@ -110,7 +125,6 @@ internal fun ListItem(
             )
         }
     }
-
 }
 
 @Preview

@@ -27,7 +27,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.tv.component.FilmCardShape
+import com.flixclusive.core.ui.tv.component.MediaCardShape
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -46,7 +46,8 @@ internal fun SuggestionBlock(
         animationSpec = infiniteRepeatable(
             animation = tween(1500),
             repeatMode = RepeatMode.Reverse
-        ), label = ""
+        ),
+        label = ""
     )
 
     Surface(
@@ -59,7 +60,7 @@ internal fun SuggestionBlock(
                     width = borderDp,
                     color = MaterialTheme.colorScheme.onSurface
                 ),
-                shape = FilmCardShape
+                shape = MediaCardShape
             )
         ),
         shape = ClickableSurfaceDefaults.shape(RectangleShape),

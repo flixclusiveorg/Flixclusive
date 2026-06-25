@@ -1,0 +1,108 @@
+package com.flixclusive.feature.mobile.search.util
+
+import android.content.Context
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.ui.util.fastAll
+import androidx.compose.ui.util.fastForEach
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.provider.filter.Filter
+import com.flixclusive.provider.filter.FilterGroup
+
+internal object FilterHelper {
+    private const val SELECTED_FILTER_BUTTON_ALPHA = 0.05F
+
+    @Stable
+    fun FilterGroup.isBeingUsed(): Boolean {
+        fastForEach { filter ->
+            if (filter is Filter.CheckBox && filter.state) {
+                return true
+            }
+
+            if (filter.state != null) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    @Stable
+    fun FilterGroup.getFormattedName(context: Context): String {
+        if (isEmpty() || !hasOneTypeOnly()) {
+            return name
+        }
+
+        val firstFilter = first()
+
+        if (firstFilter.state == null) {
+            return name
+        }
+
+        return when (firstFilter) {
+            is Filter.CheckBox -> {
+                val selected = count {
+                    it is Filter.CheckBox && it.state
+                }
+
+                var groupName = firstFilter.name
+                if (selected > 0) {
+                    groupName += ", +$selected"
+                }
+
+                return groupName
+            }
+
+            is Filter.Select<*>, is Filter.Sort<*> -> {
+                return firstFilter.getFilterDisplayValue(context)
+            }
+
+            else -> {
+                name
+            }
+        }
+    }
+
+    @Stable
+    private fun FilterGroup.hasOneTypeOnly(): Boolean {
+        if (isEmpty()) {
+            return true
+        }
+
+        val firstType = first()::class
+        return fastAll { it::class == firstType }
+    }
+
+    @Stable
+    @Composable
+    fun getButtonColors(isBeingUsed: Boolean): ButtonColors {
+        return if (isBeingUsed) {
+            ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary,
+                containerColor = MaterialTheme.colorScheme.primary.copy(SELECTED_FILTER_BUTTON_ALPHA)
+            )
+        } else {
+            ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F),
+            )
+        }
+    }
+
+    @Stable
+    private fun Filter<*>.getFilterDisplayValue(context: Context): String {
+        val selectedFilter = when (this) {
+            is Filter.Select<*> -> options.getOrNull(state)
+            is Filter.Sort<*> -> options.getOrNull(state!!.index)
+            else -> null
+        }
+
+        return when (selectedFilter) {
+            is UiText -> selectedFilter.asString(context)
+            null -> name
+            else -> selectedFilter.toString()
+        }
+    }
+}

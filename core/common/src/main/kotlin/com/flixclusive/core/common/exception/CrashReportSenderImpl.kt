@@ -11,39 +11,37 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
-const val REMOTE_FORM_URL =
+const val URL_CRASH_REPORT_FORM =
     "https://docs.google.com/forms/u/0/d/e/1FAIpQLSfTVmgiOeF7RlDbjBR10RQG6C6uKioSk-toqKecPvpkAe9ffw/formResponse?pli=1"
 
-internal class CrashReportSenderImpl
-    @Inject
-    constructor(
-        private val client: OkHttpClient,
-        private val dispatchers: AppDispatchers,
-        @ApplicationContext private val context: Context,
-    ) : CrashReportSender {
-        override suspend fun send(errorLog: String) {
-            withContext(dispatchers.io) {
-                val response = client
-                    .formRequest(
-                        url = REMOTE_FORM_URL,
-                        method = HttpMethod.POST,
-                        body = mapOf("entry.1687138646" to errorLog),
-                    ).execute()
+internal class CrashReportSenderImpl @Inject constructor(
+    private val client: OkHttpClient,
+    private val dispatchers: AppDispatchers,
+    @param:ApplicationContext private val context: Context,
+) : CrashReportSender {
+    override suspend fun send(errorLog: String) {
+        withContext(dispatchers.io) {
+            val response = client
+                .formRequest(
+                    url = URL_CRASH_REPORT_FORM,
+                    method = HttpMethod.POST,
+                    body = mapOf("entry.1687138646" to errorLog),
+                ).execute()
 
-                val responseString = response.body.string()
+            val responseString = response.body.string()
 
-                val isSent = response.isSuccessful &&
-                    (
-                        responseString.contains("form_confirm", true) ||
-                            responseString.contains("submit another response", true)
-                    )
+            val isSent = response.isSuccessful &&
+                (
+                    responseString.contains("form_confirm", true) ||
+                        responseString.contains("submit another response", true)
+                )
 
-                if (!isSent) {
-                    withContext(dispatchers.main) {
-                        val errorMessage = context.getString(R.string.failed_to_send_crash_report)
-                        context.showToast(errorMessage)
-                    }
+            if (!isSent) {
+                withContext(dispatchers.main) {
+                    val errorMessage = context.getString(R.string.failed_to_send_crash_report)
+                    context.showToast(errorMessage)
                 }
             }
         }
     }
+}

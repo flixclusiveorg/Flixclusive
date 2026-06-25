@@ -26,9 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
-import com.flixclusive.core.strings.R
-import com.flixclusive.model.film.common.tv.Season
-import kotlin.text.ifEmpty
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -38,23 +36,33 @@ internal fun SeasonPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val contentColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.surface else LocalContentColor.current.copy(0.6f))
-    val containerColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.onSurface else Color.Transparent)
-    val scale = animateFloatAsState(targetValue = if (selected()) 1.1F else 1F)
-    val alpha = animateFloatAsState(targetValue = if (selected()) 1F else 0.8F)
+    val contentColor by animateColorAsState(
+        targetValue = if (selected()) {
+            MaterialTheme.colorScheme.surface
+        } else {
+            LocalContentColor.current.copy(
+                0.6f
+            )
+        }
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (selected()) MaterialTheme.colorScheme.onSurface else Color.Transparent
+    )
+    val scale by animateFloatAsState(targetValue = if (selected()) 1.1F else 1F)
+    val alpha by animateFloatAsState(targetValue = if (selected()) 1F else 0.8F)
 
     Box(
         modifier = modifier
             .graphicsLayer {
-                this.scaleX = scale.value
-                this.scaleY = scale.value
+                this.scaleX = scale
+                this.scaleY = scale
 
-                this.alpha = alpha.value
+                this.alpha = alpha
             },
         contentAlignment = Alignment.Center
     ) {
         OutlinedButton(
-            enabled = !selected(),
+            enabled = !selected() && season.isReleased,
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = containerColor,
                 disabledContainerColor = containerColor,
@@ -75,9 +83,7 @@ internal fun SeasonPill(
                 )
         ) {
             Text(
-                text = season.name.ifEmpty {
-                    stringResource(LocaleR.string.untitled_season, season.number)
-                },
+                text = season.title ?: stringResource(LocaleR.string.label_format_untitled_season, season.number),
                 style = MaterialTheme.typography.labelMedium
             )
         }
@@ -95,8 +101,10 @@ private fun SeasonPillPreview() {
                 items(10) { index ->
                     SeasonPill(
                         season = remember {
-                            DummyDataForPreview.getTvShow()
-                                .seasons.first()
+                            DummyDataForPreview
+                                .getShow()
+                                .seasons
+                                .first()
                         },
                         selected = { index == 2 },
                         onClick = {}

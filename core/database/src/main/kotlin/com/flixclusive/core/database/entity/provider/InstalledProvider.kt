@@ -23,8 +23,6 @@ import java.util.Date
         Index(value = ["repositoryUrl"]),
         Index(value = ["ownerId"]),
         Index(value = ["repositoryUrl", "ownerId"]),
-        Index(value = ["sortOrder"]),
-        Index(value = ["isEnabled"]),
     ],
 )
 data class InstalledProvider(
@@ -32,8 +30,12 @@ data class InstalledProvider(
     val ownerId: String,
     val repositoryUrl: String,
     val filePath: String,
-    val sortOrder: Double,
-    val isEnabled: Boolean = true,
+    val isCatalogEnabled: Boolean = true,
+    val isCrossMatchEnabled: Boolean = true,
+    val isMediaLinkEnabled: Boolean = true,
+    val isMetadataEnabled: Boolean = true,
+    val isSearchEnabled: Boolean = true,
+    val isTrackerEnabled: Boolean = true,
     val isDebug: Boolean = false,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),

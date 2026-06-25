@@ -40,14 +40,15 @@ internal fun LibraryDetailsTopBar(
     onGoBack: () -> Unit = {},
     expandedHeight: Dp = TopAppBarDefaults.TopAppBarExpandedHeight,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
-    colors: TopAppBarColors = TopAppBarDefaults.largeTopAppBarColors(),
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
     scrollBehavior: EnterOnlyNearTopScrollBehavior? = null,
 ) {
     val hideSearchButton =
         (
             topBarState != LibraryTopBarState.DefaultSubScreen &&
                 topBarState != LibraryTopBarState.DefaultMainScreen
-        ) || isListEmpty
+        ) ||
+            isListEmpty
 
     BackHandler(enabled = topBarState == LibraryTopBarState.Selecting) {
         onUnselectAll()
@@ -62,11 +63,11 @@ internal fun LibraryDetailsTopBar(
                 targetState = topBarState,
             ) { state ->
                 if (state == LibraryTopBarState.Selecting) {
-                    PlainTooltipBox(description = stringResource(R.string.cancel)) {
+                    PlainTooltipBox(description = stringResource(R.string.label_cancel)) {
                         ActionButton(onClick = onUnselectAll) {
                             AdaptiveIcon(
                                 painter = painterResource(UiCommonR.drawable.round_close_24),
-                                contentDescription = stringResource(R.string.cancel),
+                                contentDescription = stringResource(R.string.label_cancel),
                             )
                         }
                     }

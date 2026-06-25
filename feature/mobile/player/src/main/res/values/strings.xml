@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="null_cache_links_message">Cannot switch to provider due to missing cached links</string>
     <string name="unlock">Unlock</string>
     <string name="lock">Lock</string>
-    <string name="no_servers_error">Player found no streamable sources, returning to previous screen…</string>
+    <string name="error_no_providers">Can\'t find selected provider, returning to previous screen…</string>
+    <string name="error_no_servers">Player found no streamable sources</string>
+    <string name="error_no_servers_go_back">Player found no streamable sources, returning to previous screen…</string>
+    <string name="error_on_server_change_fail">Server doesn\'t belong to any cache</string>
+    <string name="error_no_provider_selected">No provider selected for this player</string>
+    <string name="error_no_valid_servers_found">No valid servers found for this media.</string>
 </resources>

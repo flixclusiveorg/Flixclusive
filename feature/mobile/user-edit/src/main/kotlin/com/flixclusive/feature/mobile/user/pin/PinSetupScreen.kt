@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.isHeightCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -80,7 +80,7 @@ private enum class PinSetupStep {
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResult>) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val newPin = rememberSaveable { mutableStateOf("") }
     val pinHint = rememberSaveable { mutableStateOf("") }
@@ -160,7 +160,7 @@ internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResu
                     )
                 },
             )
-        } else if (windowSizeClass.isCompact) {
+        } else if (windowSizeClass.isHeightCompact) {
             PinSetupScreenCompactLandscape(
                 pin = newPin,
                 isTyping = isTyping,
@@ -417,7 +417,9 @@ private fun PinSetupScreenBasePreview() {
                 resultNavigator =
                     object : ResultBackNavigator<PinWithHintResult> {
                         override fun navigateBack(result: PinWithHintResult) = Unit
+
                         override fun navigateBack() = Unit
+
                         override fun setResult(result: PinWithHintResult) = Unit
                     },
             )

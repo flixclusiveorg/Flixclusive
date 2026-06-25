@@ -1,7 +1,7 @@
 package com.flixclusive.data.database.di
 
-import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.database.session.impl.UserSessionManagerImpl
+import com.flixclusive.data.database.repository.UserAuthRepository
+import com.flixclusive.data.database.repository.impl.UserAuthRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -13,5 +13,5 @@ import javax.inject.Singleton
 internal abstract class UserSessionModule {
     @Singleton
     @Binds
-    abstract fun bindsUserSessionManager(userSessionManager: UserSessionManagerImpl): UserSessionManager
+    abstract fun bindsUserSessionManager(userSessionManager: UserAuthRepositoryImpl): UserAuthRepository
 }

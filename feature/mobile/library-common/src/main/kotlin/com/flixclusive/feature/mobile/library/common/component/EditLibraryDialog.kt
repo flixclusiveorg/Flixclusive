@@ -16,17 +16,18 @@ fun EditLibraryDialog(
     onCancel: () -> Unit,
 ) {
     var name by remember { mutableStateOf(library.name) }
-    var description by remember { mutableStateOf<String?>(library.description) }
+    var description by remember { mutableStateOf(library.description) }
 
     BaseLibraryModificationDialog(
         label = stringResource(LocaleR.string.edit_library),
-        name = name,
+        name = { name },
+        isEditing = true,
         description = description,
         onNameChange = { name = it },
         confirmLabel = stringResource(LocaleR.string.save),
         onDescriptionChange = { description = it },
         onConfirm = {
-            val newName = if (name.isEmpty()) library.name else name
+            val newName = name.ifEmpty { library.name }
 
             onSave(library.copy(name = newName, description = description))
         },

@@ -8,9 +8,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isExpanded
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.extensions.isHeightCompact
+import com.flixclusive.core.presentation.mobile.extensions.isHeightMedium
+import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
+import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 
 object AdaptiveSizeUtil {
     /**
@@ -31,14 +32,10 @@ object AdaptiveSizeUtil {
         expanded: Dp,
         windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass,
     ): Dp {
-        val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
-        val windowHeightSizeClass = windowSizeClass.windowHeightSizeClass
-
         return when {
-            windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact -> compact
-            windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
-            windowWidthSizeClass.isExpanded -> expanded
-            else -> compact
+            windowSizeClass.isWidthCompact || windowSizeClass.isHeightCompact -> compact
+            windowSizeClass.isWidthMedium || windowSizeClass.isHeightMedium -> medium
+            else -> expanded
         }
     }
 
@@ -60,14 +57,10 @@ object AdaptiveSizeUtil {
         expanded: TextUnit,
         windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass,
     ): TextUnit {
-        val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
-        val windowHeightSizeClass = windowSizeClass.windowHeightSizeClass
-
         return when {
-            windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact -> compact
-            windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
-            windowWidthSizeClass.isExpanded -> expanded
-            else -> compact
+            windowSizeClass.isWidthCompact || windowSizeClass.isHeightCompact -> compact
+            windowSizeClass.isWidthMedium || windowSizeClass.isHeightMedium -> medium
+            else -> expanded
         }
     }
 
@@ -135,13 +128,11 @@ object AdaptiveSizeUtil {
         medium: Int = 2,
         expanded: Int = 3,
     ): GridCells.Fixed {
-        val windowWidthSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
-
+        val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
         val columns = when {
-            windowWidthSizeClass.isCompact -> compact
-            windowWidthSizeClass.isMedium -> medium
-            windowWidthSizeClass.isExpanded -> expanded
-            else -> compact
+            windowSizeClass.isWidthCompact -> compact
+            windowSizeClass.isWidthMedium -> medium
+            else -> expanded
         }
 
         return GridCells.Fixed(columns)

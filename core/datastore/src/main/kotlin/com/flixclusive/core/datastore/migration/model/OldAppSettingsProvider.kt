@@ -4,7 +4,6 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.model.provider.Repository
 import kotlinx.serialization.Serializable
 
-
 @Deprecated("Provider preferences have been migrated to Room. Only preference flags remain in DataStore.")
 @Serializable
 internal data class OldAppSettingsProvider(
@@ -23,7 +22,6 @@ internal data class ProviderPreferencesV213(
     val repositories: List<Repository> = listOf(),
     val providers: List<OldProviderFromPreferences> = emptyList(),
 ) : UserPreferences
-
 
 @Deprecated("Provider preferences have been migrated to Room. Only preference flags remain in DataStore.")
 @Serializable
@@ -51,4 +49,3 @@ data class OldProviderFromPreferences(
         return result
     }
 }
-

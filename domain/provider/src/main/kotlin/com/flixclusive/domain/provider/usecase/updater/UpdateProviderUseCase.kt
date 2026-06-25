@@ -1,6 +1,8 @@
 package com.flixclusive.domain.provider.usecase.updater
 
+import com.flixclusive.domain.provider.usecase.manage.DownloadProviderResult
 import com.flixclusive.model.provider.ProviderMetadata
+import kotlinx.coroutines.flow.Flow
 
 /**
  * A use case for making providers up to date.
@@ -13,7 +15,7 @@ interface UpdateProviderUseCase {
      *
      * @return A boolean indicating whether the update was successful or not.
      * */
-    suspend operator fun invoke(provider: ProviderMetadata)
+    operator fun invoke(provider: ProviderMetadata): Flow<DownloadProviderResult>
 
     /**
      * Updates the given list of providers to the latest version.

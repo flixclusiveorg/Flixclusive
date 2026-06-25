@@ -8,7 +8,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.file.rmrf
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
@@ -72,7 +71,8 @@ internal class DataStoreManagerImpl @Inject constructor(
                 if (it != null) {
                     val legacyCurrentUserId = userSessionDataStore.legacyCurrentUserId.filterNotNull().first()
                     usePreferencesByUserId(
-                        userId = it, legacyUserId = legacyCurrentUserId
+                        userId = it,
+                        legacyUserId = legacyCurrentUserId
                     )
                 }
             }
@@ -104,7 +104,7 @@ internal class DataStoreManagerImpl @Inject constructor(
         }
     }
 
-    override fun <T : UserPreferences> getUserPrefs(
+    override fun <T : UserPreferences> getUserPrefsAsFlow(
         key: Preferences.Key<String>,
         type: KClass<T>
     ): Flow<T> {
@@ -158,8 +158,8 @@ internal class DataStoreManagerImpl @Inject constructor(
             val providersFolder = context.getProvidersPath(userId)
             val providersSettingsFolder = context.getProvidersSettingsPath(userId)
 
-            rmrf(File(providersFolder))
-            rmrf(File(providersSettingsFolder))
+            File(providersFolder).deleteRecursively()
+            File(providersSettingsFolder).deleteRecursively()
             datastoreFile.delete()
         }
     }

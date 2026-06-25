@@ -2,10 +2,10 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.file.rmrf
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.util.log.infoLog
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
@@ -23,28 +23,28 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
         provider: InstalledProvider,
         uninstall: Boolean,
     ) {
-        val metadata = providerRepository.getMetadata(provider.id)
+        val providerWrapper = providerRepository.getProvider(id = provider.id, ownerId = provider.ownerId)
             ?: error(context.getString(R.string.provider_not_even_installed, provider.id))
 
         val file = provider.file
         if (!file.exists()) {
-            error(context.getString(R.string.provider_not_found, metadata.name, metadata.id))
+            warnLog("Provider file not found for provider: ${providerWrapper.name} at path: ${file.absolutePath}")
         }
 
-        infoLog("Unloading provider: ${metadata.name}")
+        infoLog("Unloading provider: ${providerWrapper.name}")
         try {
             if (uninstall) {
                 providerRepository.uninstall(provider = provider)
             } else {
-                providerRepository.unload(id = metadata.id)
+                providerWrapper.plugin?.onUnload(context)
             }
         } catch (e: Throwable) {
             throw Throwable(
                 cause = e,
                 message = context.getString(
                     R.string.unload_exception_message,
-                    metadata.name,
-                    metadata.id,
+                    providerWrapper.name,
+                    providerWrapper.id,
                     e.localizedMessage,
                 ),
             )
@@ -64,7 +64,7 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
             val lastRemainingFile = parentDirectory.listFiles()!![0]
 
             if (lastRemainingFile.name.equals(ProviderConstants.UPDATER_JSON_FILE, true)) {
-                rmrf(parentDirectory)
+                parentDirectory.deleteRecursively()
             }
         }
     }

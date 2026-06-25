@@ -19,8 +19,8 @@ data class BackupLibraryList(
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class BackupLibraryListItem(
-    @ProtoNumber(1) val listId: Int,
-    @ProtoNumber(2) val film: BackupDbFilm,
+    @ProtoNumber(1) val listId: String,
+    @ProtoNumber(2) val media: BackupDbMedia,
     @ProtoNumber(3) val createdAt: Long,
     @ProtoNumber(4) val updatedAt: Long,
 )

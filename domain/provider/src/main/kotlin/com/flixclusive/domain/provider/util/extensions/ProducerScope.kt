@@ -7,39 +7,27 @@ import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.channels.ProducerScope
 
 /**
- * Sends a message on the [ProducerScope] indicating that the film is being fetched from a specific provider.
- * */
-fun ProducerScope<LoadLinksState>.sendFetchingFilmMessage(provider: String) =
-    trySend(
-        LoadLinksState.Fetching(
-            UiText.StringResource(
-                R.string.fetching_from_provider_format,
-                provider,
-            ),
-        ),
-    )
-
-/**
  * Sends a message on the [ProducerScope] indicating that links are being extracted from a specific provider.
  *
  * @param provider the name of the provider from which links are being extracted
- * @param isOnWebView indicates whether the extraction is happening on a web view
  * */
-fun ProducerScope<LoadLinksState>.sendExtractingLinksMessage(
-    provider: ProviderMetadata,
-    isOnWebView: Boolean = false,
-) {
-    val messageFormat =
-        if (isOnWebView) {
-            R.string.extracting_from_web_view_provider_format
-        } else {
-            R.string.extracting_from_provider_format
-        }
-
+fun ProducerScope<LoadLinksState>.sendExtractingLinksMessage(provider: ProviderMetadata) {
     trySend(
         LoadLinksState.Extracting(
             providerId = provider.id,
-            message = UiText.StringResource(messageFormat, provider.name),
+            message = UiText.StringResource(R.string.get_media_links_extracting_from_provider, provider.name),
+        ),
+    )
+}
+
+fun ProducerScope<LoadLinksState>.sendCrossMatchingMessage(provider: ProviderMetadata) {
+    trySend(
+        LoadLinksState.Extracting(
+            providerId = provider.id,
+            message = UiText.from(
+                R.string.get_media_links_cross_matching_provider,
+                provider.name,
+            ),
         ),
     )
 }

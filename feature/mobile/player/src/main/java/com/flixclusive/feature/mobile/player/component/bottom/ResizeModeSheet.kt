@@ -24,11 +24,6 @@ import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import com.flixclusive.core.presentation.mobile.components.GlassSurface
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import java.util.Locale
-
-
-private val Float.toPlayerSpeed: String
-    get() = String.format(Locale.ROOT, "%.2fx", this)
 
 @Composable
 internal fun ResizeModeSheet(
@@ -78,10 +73,13 @@ internal fun ResizeModeSheet(
                         modifier = Modifier
                             .defaultMinSize(minWidth = 1.dp, minHeight = 30.dp)
                             .weight(1f),
-                        border = if (mode == currentResizeMode)
+                        border = if (mode == currentResizeMode) {
                             ButtonDefaults.outlinedButtonBorder().copy(
                                 width = 0.5.dp
-                            ) else null,
+                            )
+                        } else {
+                            null
+                        },
                     ) {
                         Text(
                             text = stringResource(mode.getStringId()),
@@ -105,10 +103,13 @@ internal fun ResizeModeSheet(
                         modifier = Modifier
                             .defaultMinSize(minWidth = 1.dp, minHeight = 30.dp)
                             .weight(1f),
-                        border = if (mode == currentResizeMode)
+                        border = if (mode == currentResizeMode) {
                             ButtonDefaults.outlinedButtonBorder().copy(
                                 width = 0.5.dp
-                            ) else null,
+                            )
+                        } else {
+                            null
+                        },
                     ) {
                         Text(
                             text = stringResource(mode.getStringId()),

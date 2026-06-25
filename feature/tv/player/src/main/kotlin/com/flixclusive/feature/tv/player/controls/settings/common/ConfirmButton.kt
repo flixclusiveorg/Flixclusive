@@ -28,7 +28,7 @@ internal fun ConfirmButton(
     isEmphasis: Boolean,
     onClick: () -> Unit
 ) {
-    val (containerColor, contentColor) = when(isEmphasis) {
+    val (containerColor, contentColor) = when (isEmphasis) {
         true -> MaterialTheme.colorScheme.onSurface to MaterialTheme.colorScheme.surface.copy(0.8F)
         false -> Color(0xFF5F5F5F) to Color(0xFFFFFFFF).copy(0.6f)
     }

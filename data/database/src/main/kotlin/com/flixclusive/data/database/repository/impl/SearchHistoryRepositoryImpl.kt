@@ -14,7 +14,16 @@ internal class SearchHistoryRepositoryImpl @Inject constructor(
 ) : SearchHistoryRepository {
     override suspend fun insert(item: SearchHistory): Int {
         return withContext(appDispatchers.io) {
-            searchHistoryDao.insert(item).toInt()
+            val existing = searchHistoryDao.get(item.ownerId, item.query)
+
+            searchHistoryDao
+                .insert(
+                    item.copy(
+                        id = existing?.id ?: 0,
+                        createdAt = existing?.createdAt ?: item.createdAt,
+                        updatedAt = item.updatedAt,
+                    )
+                ).toInt()
         }
     }
 
@@ -30,7 +39,7 @@ internal class SearchHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun clearAll(ownerId: String) {
         return withContext(appDispatchers.io) {
-                searchHistoryDao.deleteAll(ownerId)
+            searchHistoryDao.deleteAll(ownerId)
         }
     }
 }

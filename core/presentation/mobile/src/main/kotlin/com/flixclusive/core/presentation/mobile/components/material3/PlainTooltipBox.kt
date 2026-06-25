@@ -3,6 +3,7 @@ package com.flixclusive.core.presentation.mobile.components.material3
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TooltipState
@@ -16,7 +17,9 @@ import androidx.compose.ui.window.PopupPositionProvider
 fun PlainTooltipBox(
     description: String,
     modifier: Modifier = Modifier,
-    positionProvider: PopupPositionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+    positionProvider: PopupPositionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+        TooltipAnchorPosition.Below
+    ),
     state: TooltipState = rememberTooltipState(isPersistent = true),
     focusable: Boolean = true,
     enableUserInput: Boolean = true,

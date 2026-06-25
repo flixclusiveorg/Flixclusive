@@ -43,11 +43,11 @@ internal fun AddProviderTopBar(
         onNavigate = onNavigate,
         navigationIcon = {
             if (selectCount > 0) {
-                PlainTooltipBox(description = stringResource(LocaleR.string.cancel)) {
+                PlainTooltipBox(description = stringResource(LocaleR.string.label_cancel)) {
                     ActionButton(onClick = onUnselectAll) {
                         AdaptiveIcon(
                             painter = painterResource(UiCommonR.drawable.round_close_24),
-                            contentDescription = stringResource(LocaleR.string.cancel),
+                            contentDescription = stringResource(LocaleR.string.label_cancel),
                         )
                     }
                 }
@@ -69,11 +69,11 @@ internal fun AddProviderTopBar(
         scrollBehavior = scrollBehavior,
         extraActions = {
             if (selectCount > 0 && !isLoading) {
-                PlainTooltipBox(description = stringResource(LocaleR.string.install_all)) {
+                PlainTooltipBox(description = stringResource(LocaleR.string.label_install_all)) {
                     ActionButton(onClick = onInstallSelection) {
                         AdaptiveIcon(
                             painter = painterResource(UiCommonR.drawable.download),
-                            contentDescription = stringResource(LocaleR.string.install_all),
+                            contentDescription = stringResource(LocaleR.string.label_install_all),
                             dp = 24.dp,
                         )
                     }

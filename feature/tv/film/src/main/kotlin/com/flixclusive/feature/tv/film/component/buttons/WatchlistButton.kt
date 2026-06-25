@@ -1,5 +1,4 @@
-package com.flixclusive.feature.tv.film.component.buttons
-
+package com.flixclusive.feature.tv.media.component.buttons
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -64,14 +63,17 @@ internal fun WatchlistButton(
                 IconResource.fromImageVector(Icons.Rounded.Close),
                 LocaleR.string.remove_from_watchlist
             )
+
             isInWatchlist -> Pair(
                 IconResource.fromImageVector(Icons.Rounded.Check),
                 LocaleR.string.remove_from_watchlist
             )
+
             !isInWatchlist -> Pair(
                 IconResource.fromDrawableResource(UiCommonR.drawable.round_add_24),
                 LocaleR.string.add_to_watchlist
             )
+
             else -> throw IllegalStateException("Invalid state for watchlist button.")
         }
     }

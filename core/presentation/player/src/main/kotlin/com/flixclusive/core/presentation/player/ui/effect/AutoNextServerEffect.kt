@@ -1,5 +1,6 @@
 package com.flixclusive.core.presentation.player.ui.effect
 
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -7,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.media3.common.Player
 import androidx.media3.common.listen
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.AppPlayer.Companion.isPrepareNeeded
 import com.flixclusive.core.presentation.player.R
@@ -14,13 +16,14 @@ import com.flixclusive.core.presentation.player.extensions.getDisplayMessage
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 
+@OptIn(UnstableApi::class)
 @Composable
 fun AutoNextServerEffect(
     key: () -> String,
     currentServer: () -> Int,
     availableServers: () -> List<PlayerServer>,
     onServerChange: (Int) -> Unit,
-    onServerFail: (Int) -> Unit,
+    onServerFail: (String) -> Unit,
     player: AppPlayer,
     snackbarState: PlayerSnackbarState
 ) {
@@ -28,7 +31,7 @@ fun AutoNextServerEffect(
     val resources = LocalResources.current
     val failedServers = remember { mutableSetOf<Int>() }
 
-    LaunchedEffect(player, key()) {
+    LaunchedEffect(player, key(), currentServer, availableServers, onServerChange, onServerFail) {
         failedServers.clear()
 
         player.listen { events ->
@@ -41,12 +44,18 @@ fun AutoNextServerEffect(
             snackbarState.showError("ERR [${error.errorCode}]: $message")
             val currentIndex = currentServer()
             failedServers += currentIndex
-            onServerFail(currentIndex)
 
-            val nextIndex = availableServers().getNextAvailableServerIndex(
+            val servers = availableServers()
+            val deadUrl = servers.getOrNull(currentIndex)?.url
+            if (deadUrl != null) {
+                onServerFail(deadUrl)
+            }
+
+            val nextIndex = servers.getNextAvailableServerIndex(
                 currentServer = currentIndex,
                 failedStreamIndices = failedServers
             )
+
             if (nextIndex == null) {
                 pause()
                 snackbarState.showMessage(resources.getString(R.string.all_servers_failed))
@@ -63,11 +72,12 @@ private fun List<PlayerServer>.getNextAvailableServerIndex(
     currentServer: Int,
     failedStreamIndices: Set<Int> = emptySet(),
 ): Int? {
-    if (currentServer + 1 in indices) {
-        return currentServer + 1
+    for (offset in 1 until size) {
+        val index = (currentServer + offset).mod(size)
+        if (index !in failedStreamIndices && !this[index].isDead) {
+            return index
+        }
     }
 
-    return indices.firstOrNull {
-        it !in failedStreamIndices
-    }
+    return null
 }

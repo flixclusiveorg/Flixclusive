@@ -3,8 +3,8 @@ package com.flixclusive.data.database.repository
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
-import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.common.MediaType
 import kotlinx.coroutines.flow.Flow
 
 interface WatchProgressRepository {
@@ -15,24 +15,24 @@ interface WatchProgressRepository {
 
     suspend fun get(
         id: Long,
-        type: FilmType,
+        type: MediaType,
     ): WatchProgressWithMetadata?
 
     suspend fun get(
         id: String,
         ownerId: String,
-        type: FilmType,
+        type: MediaType,
     ): WatchProgressWithMetadata?
 
     fun getAsFlow(
         id: Long,
-        type: FilmType,
+        type: MediaType,
     ): Flow<WatchProgressWithMetadata?>
 
     fun getAsFlow(
         id: String,
         ownerId: String,
-        type: FilmType,
+        type: MediaType,
     ): Flow<WatchProgressWithMetadata?>
 
     suspend fun getSeasonProgress(
@@ -54,14 +54,9 @@ interface WatchProgressRepository {
         ownerId: String,
     ): Flow<List<EpisodeProgress>>
 
-    suspend fun getRandoms(
-        ownerId: String,
-        count: Int,
-    ): Flow<List<WatchProgressWithMetadata>>
+    suspend fun insert(item: WatchProgress, media: MediaMetadata? = null): Long
 
-    suspend fun insert(item: WatchProgress, film: Film? = null): Long
-
-    suspend fun delete(item: Long, type: FilmType)
+    suspend fun delete(item: Long, type: MediaType)
 
     suspend fun deleteAll(ownerId: String)
 }

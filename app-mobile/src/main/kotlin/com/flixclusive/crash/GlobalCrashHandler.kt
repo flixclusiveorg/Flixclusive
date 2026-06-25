@@ -13,7 +13,7 @@ const val ERROR_MESSAGE = "error_message"
 const val SOFTWARE_INFO = "software_info"
 
 class GlobalCrashHandler @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : Thread.UncaughtExceptionHandler {
     override fun uncaughtException(thread: Thread, exception: Throwable) {
         try {

@@ -31,7 +31,7 @@ import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewMediaAction
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
@@ -41,20 +41,22 @@ import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.feature.tv.home.component.HOME_FOCUS_KEY_FORMAT
-import com.flixclusive.feature.tv.home.component.HomeFilmsRow
+import com.flixclusive.feature.tv.home.component.HomeMediasRow
 import com.flixclusive.feature.tv.home.component.ImmersiveHomeBackground
 import com.flixclusive.feature.tv.home.component.util.LocalImmersiveBackgroundColorProvider
 import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroundColor
 import com.flixclusive.feature.tv.home.component.watched.HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.home.component.watched.HomeContinueWatchingRow
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
 import java.util.Locale
 
-interface HomeScreenTvNavigator : ViewFilmAction, GoBackAction {
-    fun openPlayerScreen(film: Film)
+interface HomeScreenTvNavigator :
+    ViewMediaAction,
+    GoBackAction {
+    fun openPlayerScreen(media: MediaMetadata)
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -62,9 +64,7 @@ interface HomeScreenTvNavigator : ViewFilmAction, GoBackAction {
 @Composable
 internal fun HomeScreen(
     navigator: HomeScreenTvNavigator
-) {
-    val viewModel: HomeScreenViewModel = hiltViewModel()
-
+,viewModel: HomeScreenViewModel = hiltViewModel()) {
     val currentRoute = useLocalCurrentRoute()
     val lastItemFocused = useLocalLastFocusedItemPerDestination()
 
@@ -77,11 +77,11 @@ internal fun HomeScreen(
     val homeRowItems = uiState.rowItems
     val continueWatchingList by viewModel.continueWatchingList.collectAsStateWithLifecycle()
 
-    var focusedFilm: Film? by remember { mutableStateOf(null) }
-    var focusedOnWatchedFilms by rememberSaveable { mutableStateOf(continueWatchingList.isNotEmpty()) }
+    var focusedMedia: MediaMetadata? by remember { mutableStateOf(null) }
+    var focusedOnWatchedMedias by rememberSaveable { mutableStateOf(continueWatchingList.isNotEmpty()) }
 
     val fadeFloat by animateFloatAsState(
-        targetValue = if (focusedOnWatchedFilms) 0F else 0.5F,
+        targetValue = if (focusedOnWatchedMedias) 0F else 0.5F,
         label = ""
     )
     val surface = MaterialTheme.colorScheme.surface
@@ -95,21 +95,22 @@ internal fun HomeScreen(
         }
 
         lastItemFocused.getOrPut(currentRoute) {
-            // Pre-load the focused film if there's no watched films.
-            homeRowItems.getOrNull(0)
+            // Pre-load the focused media if there's no watched medias.
+            homeRowItems
+                .getOrNull(0)
                 ?.getOrNull(0)
                 ?.let {
-                    viewModel.loadFocusedFilm(it)
+                    viewModel.loadFocusedMedia(it)
                 }
 
             defaultValue
         }
     }
 
-    LaunchedEffect(focusedFilm) {
+    LaunchedEffect(focusedMedia) {
         delay(800)
-        focusedFilm?.let {
-            viewModel.loadFocusedFilm(it)
+        focusedMedia?.let {
+            viewModel.loadFocusedMedia(it)
         }
     }
 
@@ -117,16 +118,16 @@ internal fun HomeScreen(
         LocalImmersiveBackgroundColorProvider {
             val backgroundColor = useLocalImmersiveBackgroundColor()
 
-            LaunchedEffect(focusedOnWatchedFilms, lastItemFocused[currentRoute]) {
+            LaunchedEffect(focusedOnWatchedMedias, lastItemFocused[currentRoute]) {
                 // Check if there's a `watched` term on the last
                 // Focused item before the screen got unfocused.
                 // If true, then don't show the immersive background yet.
                 // See [HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT]
-                focusedOnWatchedFilms = focusedOnWatchedFilms
-                        || lastItemFocused[currentRoute]?.contains("watched", true) == true
+                focusedOnWatchedMedias = focusedOnWatchedMedias ||
+                    lastItemFocused[currentRoute]?.contains("watched", true) == true
 
-                // Remove the custom color if watched films aren't focused anymore
-                if (!focusedOnWatchedFilms) {
+                // Remove the custom color if watched medias aren't focused anymore
+                if (!focusedOnWatchedMedias) {
                     backgroundColor.value = null
                 }
             }
@@ -158,7 +159,7 @@ internal fun HomeScreen(
                     }
             ) {
                 AnimatedVisibility(
-                    visible = !focusedOnWatchedFilms,
+                    visible = !focusedOnWatchedMedias,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -178,7 +179,7 @@ internal fun HomeScreen(
                             )
                         )
                 ) {
-                    if(!uiState.status.isLoading) {
+                    if (!uiState.status.isLoading) {
                         val shouldStartPaginate by remember {
                             derivedStateOf {
                                 listState.shouldPaginate()
@@ -186,13 +187,13 @@ internal fun HomeScreen(
                         }
 
                         LaunchedEffect(shouldStartPaginate) {
-                            if(shouldStartPaginate) {
+                            if (shouldStartPaginate) {
                                 viewModel.onPaginateCatalogs()
                             }
                         }
 
                         TvLazyColumn(
-                            pivotOffsets = PivotOffsets(if (focusedOnWatchedFilms) 0.15F else 0.55F),
+                            pivotOffsets = PivotOffsets(if (focusedOnWatchedMedias) 0.15F else 0.55F),
                             state = listState,
                         ) {
                             if (continueWatchingList.isNotEmpty()) {
@@ -203,7 +204,7 @@ internal fun HomeScreen(
                                         modifier = Modifier
                                             .padding(bottom = 20.dp)
                                             .onFocusChanged {
-                                                focusedOnWatchedFilms = it.hasFocus
+                                                focusedOnWatchedMedias = it.hasFocus
                                             }
                                     )
                                 }
@@ -220,17 +221,17 @@ internal fun HomeScreen(
                                 val rowIndex = i % homeCategories.size
                                 val catalog = homeCategories[rowIndex]
 
-                                HomeFilmsRow(
+                                HomeMediasRow(
                                     catalogItem = catalog,
                                     paginationState = homeRowItemsPagingState[rowIndex],
-                                    films = homeRowItems[rowIndex],
+                                    medias = homeRowItems[rowIndex],
                                     rowIndex = i + if (continueWatchingList.isNotEmpty()) 1 else 0,
-                                    onFilmClick = navigator::openFilmScreen,
-                                    onFocusedFilmChange = { film ->
-                                        focusedFilm = film
+                                    onMediaClick = navigator::openMediaScreen,
+                                    onFocusedMediaChange = { media ->
+                                        focusedMedia = media
                                     },
                                     paginate = { page ->
-                                        viewModel.onPaginateFilms(
+                                        viewModel.onPaginateMedias(
                                             catalog = catalog,
                                             page = page,
                                             index = i

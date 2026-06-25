@@ -1,11 +1,7 @@
 package com.flixclusive.domain.provider.util.extensions
 
 import com.flixclusive.core.util.network.json.fromJson
-import com.flixclusive.model.provider.ProviderManifest
-import com.flixclusive.provider.Provider
-import com.flixclusive.provider.settings.ProviderSettings
 import dalvik.system.PathClassLoader
-import java.io.File
 import java.io.InputStreamReader
 
 internal inline fun <reified T> PathClassLoader.getFileFromPath(file: String): T {
@@ -22,27 +18,4 @@ internal inline fun <reified T> PathClassLoader.getFileFromPath(file: String): T
     }
 
     return manifest
-}
-
-@Suppress("UNCHECKED_CAST")
-internal fun PathClassLoader.getProviderInstance(
-    id: String, // TODO: Remove this in the future
-    file: File,
-    settingsDirPath: String,
-    manifest: ProviderManifest,
-): Provider {
-    val providerClass: Class<out Provider?> =
-        loadClass(manifest.providerClassName) as Class<out Provider>
-
-    val provider = providerClass.getDeclaredConstructor().newInstance() as Provider
-
-    provider.__filename = file.name
-    provider.manifest = manifest
-    provider.settings =
-        ProviderSettings(
-            fileDirectory = settingsDirPath,
-            providerId = id,
-        )
-
-    return provider
 }

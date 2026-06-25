@@ -14,10 +14,10 @@ dependencies {
 
     implementation(libs.conscrypt)
     implementation(libs.mockk)
-    implementation(libs.retrofit.gson)
+    implementation(libs.retrofit.kotlinx.serialization)
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
     implementation(projects.coreStrings)
     implementation(libs.stubs.util)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 }

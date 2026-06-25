@@ -85,8 +85,7 @@ internal fun PlayerVerticalSlider(
                     .graphicsLayer {
                         rotationZ = 270f
                         transformOrigin = TransformOrigin(0f, 0f)
-                    }
-                    .layout { measurable, constraints ->
+                    }.layout { measurable, constraints ->
                         val placeable = measurable.measure(
                             Constraints(
                                 minWidth = constraints.minHeight,
@@ -99,8 +98,7 @@ internal fun PlayerVerticalSlider(
                         layout(placeable.height, placeable.width) {
                             placeable.place(-placeable.width, 0)
                         }
-                    }
-                    .width(120.dp),
+                    }.width(120.dp),
                 valueRange = valueRange,
                 value = value,
                 onValueChange = onValueChange,
@@ -167,7 +165,6 @@ internal fun VolumeBoostedGradientTrack(
     }
 }
 
-
 @Preview(
     device = "spec:parent=pixel_5,orientation=landscape",
     showSystemUi = true,
@@ -193,8 +190,7 @@ private fun VerticalSliderPreview() {
                                 0F to MaterialTheme.colorScheme.onSurface.copy(0.6F),
                                 0.9F to Color.Transparent,
                             )
-                        )
-                        .padding(end = 150.dp)
+                        ).padding(end = 150.dp)
                         .align(Alignment.CenterStart),
                     isVisible = true,
                     iconPainter = { painterResource(sliderIconId) },
@@ -210,8 +206,7 @@ private fun VerticalSliderPreview() {
                                 0F to Color.Transparent,
                                 0.9F to MaterialTheme.colorScheme.onSurface.copy(0.6F),
                             )
-                        )
-                        .padding(start = 150.dp)
+                        ).padding(start = 150.dp)
                         .align(Alignment.CenterEnd),
                     isVisible = true,
                     iconPainter = { painterResource(sliderIconId) },

@@ -30,12 +30,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.imageLoader
-import com.flixclusive.core.navigation.navigator.GoBackAction
+import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -43,11 +45,13 @@ private fun isValidUrl(url: String): Boolean {
     return Patterns.WEB_URL.matcher(url).matches()
 }
 
+@Destination<ExternalModuleGraph>
 @Composable
-fun MarkdownScreen(
-    navigator: GoBackAction,
+internal fun MarkdownScreen(
+    navigator: NavigateBack,
     title: String,
     description: String,
+    modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
     var linkToOpen by rememberSaveable { mutableStateOf<String?>(null) }
@@ -55,19 +59,19 @@ fun MarkdownScreen(
     val enterAlwaysScrollBehavior = rememberEnterAlwaysScrollBehavior()
 
     Scaffold(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .nestedScroll(enterAlwaysScrollBehavior.nestedScrollConnection),
         topBar = {
             CommonTopBar(
                 title = title,
-                onNavigate = navigator::goBack,
+                onNavigate = navigator::navigateBack,
             )
         },
-    ) {
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
             MarkdownText(
@@ -118,8 +122,8 @@ private fun MarkdownScreenPreview() {
     FlixclusiveTheme {
         Surface {
             MarkdownScreen(
-                navigator = object : GoBackAction {
-                    override fun goBack() = Unit
+                navigator = object : NavigateBack {
+                    override fun navigateBack() = Unit
                 },
                 title = "2.0.0",
                 description =

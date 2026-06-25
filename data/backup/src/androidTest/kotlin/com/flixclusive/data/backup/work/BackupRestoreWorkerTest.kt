@@ -13,11 +13,11 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.data.backup.model.Backup
-import com.flixclusive.data.backup.model.BackupDbFilm
+import com.flixclusive.data.backup.model.BackupDbMedia
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.model.BackupLibraryListItem
 import com.flixclusive.data.backup.repository.BackupResult
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.media.common.MediaType
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
@@ -88,11 +88,11 @@ class BackupRestoreWorkerTest {
             userSessionDataStore.saveCurrentUserId(userId, 1)
 
             val listName = "Test List"
-            val filmId = "film-1"
+            val mediaId = "media-1"
             val backupFile = createLibraryOnlyBackupFile(
                 context = context,
                 listName = listName,
-                filmId = filmId,
+                mediaId = mediaId,
             )
 
             try {
@@ -117,7 +117,13 @@ class BackupRestoreWorkerTest {
                 expectThat(restoredLists.first().name).isEqualTo(listName)
                 expectThat(restoredLists.first().list.listType).isEqualTo(LibraryListType.CUSTOM)
                 expectThat(restoredLists.first().items).hasSize(1)
-                expectThat(restoredLists.first().items.first().filmId).isEqualTo(filmId)
+                expectThat(
+                    restoredLists
+                        .first()
+                        .items
+                        .first()
+                        .mediaId
+                ).isEqualTo(mediaId)
             } finally {
                 backupFile.delete()
             }
@@ -150,7 +156,7 @@ class BackupRestoreWorkerTest {
     private fun createLibraryOnlyBackupFile(
         context: Context,
         listName: String,
-        filmId: String,
+        mediaId: String,
     ): File {
         val timestamp = 1_700_000_000_000L
 
@@ -162,20 +168,19 @@ class BackupRestoreWorkerTest {
                     listType = LibraryListType.CUSTOM,
                     items = listOf(
                         BackupLibraryListItem(
-                            listId = 0,
-                            film = BackupDbFilm(
-                                id = filmId,
-                                title = "Test Film",
+                            listId = "list-1",
+                            media = BackupDbMedia(
+                                id = mediaId,
+                                title = "Test Media",
                                 providerId = "test-provider",
                                 adult = false,
-                                filmType = FilmType.MOVIE,
+                                mediaType = MediaType.MOVIE,
                                 overview = null,
                                 posterImage = null,
                                 language = null,
                                 rating = null,
                                 backdropImage = null,
                                 releaseDate = null,
-                                year = null,
                                 createdAt = timestamp,
                                 updatedAt = timestamp,
                             ),

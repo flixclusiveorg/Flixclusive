@@ -35,11 +35,11 @@ internal class WatchProgressBackupValidator @Inject constructor(
     }
 
     private fun BackupWatchEpisodeProgress.key(): String {
-        return "${filmId}:${seasonNumber}:${episodeNumber}"
+        return "$mediaId:$seasonNumber:$episodeNumber"
     }
 
     private fun EpisodeProgressWithMetadata.key(): String {
-        return "${watchData.filmId}:${watchData.seasonNumber}:${watchData.episodeNumber}"
+        return "${watchData.mediaId}:${watchData.seasonNumber}:${watchData.episodeNumber}"
     }
 
     private fun BackupWatchProgress.toRestoredStatus(): WatchStatus {
@@ -70,9 +70,9 @@ internal class WatchProgressBackupValidator @Inject constructor(
         val expectedMovies = movieProgressDao.getAll(ownerId)
         val expectedEpisodes = episodeProgressDao.getAll(ownerId)
 
-        val backupMoviesByFilmId = backup
+        val backupMoviesByMediaId = backup
             .filterIsInstance<BackupWatchMovieProgress>()
-            .associateBy { it.filmId }
+            .associateBy { it.mediaId }
 
         val backupEpisodesByKey = backup
             .filterIsInstance<BackupWatchEpisodeProgress>()
@@ -80,9 +80,9 @@ internal class WatchProgressBackupValidator @Inject constructor(
 
         val missing = linkedSetOf<String>()
         expectedMovies.forEach { expected ->
-            val actual = backupMoviesByFilmId[expected.watchData.filmId]
+            val actual = backupMoviesByMediaId[expected.watchData.mediaId]
             if (actual == null || !expected.matches(actual)) {
-                missing.add(expected.watchData.filmId)
+                missing.add(expected.watchData.mediaId)
             }
         }
 
@@ -103,14 +103,14 @@ internal class WatchProgressBackupValidator @Inject constructor(
 
         if (expectedMovies.isEmpty() && expectedEpisodes.isEmpty()) return emptySet()
 
-        val actualMoviesByFilmId = movieProgressDao.getAll(ownerId).associateBy { it.watchData.filmId }
+        val actualMoviesByMediaId = movieProgressDao.getAll(ownerId).associateBy { it.watchData.mediaId }
         val actualEpisodesByKey = episodeProgressDao.getAll(ownerId).associateBy { it.key() }
 
         val missing = linkedSetOf<String>()
         expectedMovies.forEach { expected ->
-            val actual = actualMoviesByFilmId[expected.filmId]
+            val actual = actualMoviesByMediaId[expected.mediaId]
             if (actual == null) {
-                missing.add(expected.filmId)
+                missing.add(expected.mediaId)
                 return@forEach
             }
 
@@ -120,7 +120,7 @@ internal class WatchProgressBackupValidator @Inject constructor(
                 actual.watchData.createdAt.time == expected.createdAt &&
                 actual.watchData.updatedAt.time == expected.updatedAt
 
-            if (!matches) missing.add(expected.filmId)
+            if (!matches) missing.add(expected.mediaId)
         }
 
         expectedEpisodes.forEach { expected ->

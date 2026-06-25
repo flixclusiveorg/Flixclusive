@@ -20,22 +20,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.extensions.getAvatarResource
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.feature.mobile.user.add.NavigatorAddUserScreenNavigateTo
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 internal class AvatarScreen(
-    private val navigator: AddUserScreenNavigator,
+    private val navigator: NavigatorAddUserScreenNavigateTo,
 ) : OnBoardingScreen {
     override val index: Int = 0
     override val title: UiText = UiText.StringResource(LocaleR.string.onboarding_profile_avatar_title)
@@ -44,9 +43,8 @@ internal class AvatarScreen(
     @Composable
     override fun Content() {
         val user = LocalUserToAdd.current.value
-        val context = LocalContext.current
         val avatarId = remember(user.image) {
-            context.getAvatarResource(user.image)
+            getAvatarResource(user.image)
         }
 
         val surface = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
@@ -69,7 +67,7 @@ internal class AvatarScreen(
                     clip = true
                     this.shape = shape
                 }.clickable {
-                    navigator.openUserAvatarSelectScreen(user.image)
+                    navigator.navigateToUserAvatarSelectScreen(user.image)
                 },
         ) {
             Box(

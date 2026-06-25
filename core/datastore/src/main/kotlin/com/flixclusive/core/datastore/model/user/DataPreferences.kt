@@ -5,7 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DataPreferences(
     val isIncognito: Boolean = false,
-
     /**
      * Auto-backup frequency in days.
      *
@@ -13,17 +12,22 @@ data class DataPreferences(
      * - Values are clamped by the scheduler/worker.
      */
     val autoBackupFrequencyDays: Int = DEFAULT_AUTO_BACKUP_FREQUENCY_DAYS,
-
     /**
      * Max backups to keep per user. When exceeded, the oldest backup is replaced.
      */
     val maxBackups: Int = DEFAULT_MAX_BACKUPS,
-
     /**
      * Which parts to include for auto-backups.
      */
     val autoBackupOptions: BackupOptions = BackupOptions(),
+    /**
+     * How many days a dead (failed) cached stream is kept before the cleanup worker removes it.
+     *
+     * - `0` means dead streams are removed immediately on the next cleanup run.
+     */
+    val deadLinkRetentionDays: Int = DEFAULT_DEAD_LINK_RETENTION_DAYS,
 ) : UserPreferences
 
 private const val DEFAULT_AUTO_BACKUP_FREQUENCY_DAYS = 7
 private const val DEFAULT_MAX_BACKUPS = 5
+private const val DEFAULT_DEAD_LINK_RETENTION_DAYS = 1

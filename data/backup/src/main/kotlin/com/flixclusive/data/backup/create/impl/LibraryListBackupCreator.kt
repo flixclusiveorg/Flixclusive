@@ -1,13 +1,13 @@
 package com.flixclusive.data.backup.create.impl
 
 import com.flixclusive.core.database.dao.library.LibraryListDao
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.film.DBFilmExternalId
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.media.DBMediaExternalId
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.backup.create.BackupCreator
-import com.flixclusive.data.backup.model.BackupDbFilm
-import com.flixclusive.data.backup.model.BackupDbFilmExternalId
+import com.flixclusive.data.backup.model.BackupDbMedia
+import com.flixclusive.data.backup.model.BackupDbMediaExternalId
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.model.BackupLibraryListItem
 import kotlinx.coroutines.flow.filterNotNull
@@ -40,18 +40,18 @@ internal class LibraryListBackupCreator @Inject constructor(
 
     private fun LibraryListItemWithMetadata.toBackupItem(): BackupLibraryListItem {
         val externalIds = externalIds.map { it.toBackupItem() }
-        val film = metadata.toBackupItem(externalIds)
+        val media = metadata.toBackupItem(externalIds)
         return BackupLibraryListItem(
             listId = item.listId,
-            film = film,
+            media = media,
             createdAt = item.createdAt.time,
             updatedAt = item.updatedAt.time,
         )
     }
 
-    private fun DBFilmExternalId.toBackupItem(): BackupDbFilmExternalId {
-        return BackupDbFilmExternalId(
-            filmId = filmId,
+    private fun DBMediaExternalId.toBackupItem(): BackupDbMediaExternalId {
+        return BackupDbMediaExternalId(
+            mediaId = mediaId,
             providerId = providerId,
             source = source,
             externalId = externalId,
@@ -60,20 +60,19 @@ internal class LibraryListBackupCreator @Inject constructor(
         )
     }
 
-    private fun DBFilm.toBackupItem(externalIds: List<BackupDbFilmExternalId>): BackupDbFilm {
-        return BackupDbFilm(
+    private fun DBMedia.toBackupItem(externalIds: List<BackupDbMediaExternalId>): BackupDbMedia {
+        return BackupDbMedia(
             id = id,
             title = title,
             overview = overview,
             releaseDate = releaseDate,
             providerId = providerId,
             adult = adult,
-            filmType = filmType,
+            mediaType = type,
             posterImage = posterImage,
             language = language,
             rating = rating,
             backdropImage = backdropImage,
-            year = year,
             externalIds = externalIds,
             createdAt = createdAt.time,
             updatedAt = updatedAt.time,

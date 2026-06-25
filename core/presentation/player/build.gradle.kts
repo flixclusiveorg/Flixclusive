@@ -15,12 +15,13 @@ dependencies {
     implementation(projects.coreStrings)
     implementation(projects.coreDatastore)
 
+    implementation(libs.compose.activity)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
-    implementation(libs.compose.ui.util)
     implementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.ui.util)
     implementation(libs.compose.viewbinding)
     implementation(libs.lifecycle.viewModelKtx)
     implementation(libs.media3.ffmpeg)
@@ -41,7 +42,4 @@ dependencies {
     compileOnly(libs.checkerframework)
     compileOnly(libs.google.errorProne.annotations)
     implementation(libs.media3.ui.compose)
-
-    androidTestImplementation(projects.coreTesting)
-    androidTestImplementation(libs.media3.test.utils)
 }

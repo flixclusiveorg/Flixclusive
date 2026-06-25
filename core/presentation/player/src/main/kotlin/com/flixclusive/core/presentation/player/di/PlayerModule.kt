@@ -40,10 +40,11 @@ internal object PlayerModule {
         appDispatchers: AppDispatchers
     ): AppDataSourceFactory {
         val playerPreferences = runBlocking(appDispatchers.io) {
-            dataStoreManager.getUserPrefs(
-                key = UserPreferences.PLAYER_PREFS_KEY,
-                type = PlayerPreferences::class
-            ).first()
+            dataStoreManager
+                .getUserPrefsAsFlow(
+                    key = UserPreferences.PLAYER_PREFS_KEY,
+                    type = PlayerPreferences::class
+                ).first()
         }
 
         val preferredCacheSize = playerPreferences.diskCacheSize

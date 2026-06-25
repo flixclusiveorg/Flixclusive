@@ -5,6 +5,7 @@ import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import kotlin.random.Random
 
+@Suppress("ktlint:standard:max-line-length")
 internal object PreviewPlayerData {
     fun getTestMediaServers(): List<PlayerServer> {
         val videos = listOf(
@@ -26,10 +27,15 @@ internal object PreviewPlayerData {
         return videos.mapIndexed { index, url ->
             val loremIpsum = generateLoremIpsum(length = (5..15).random())
             PlayerServer(
-                label = "Server ${index + 1}" + Random.nextBoolean().takeIf { it }?.let { " - $loremIpsum" }.orEmpty(),
+                label = "Server ${index + 1}" + Random
+                    .nextBoolean()
+                    .takeIf { it }
+                    ?.let { " - $loremIpsum" }
+                    .orEmpty(),
                 url = url,
                 headers = null,
                 source = TrackSource.REMOTE,
+                isDead = false
             )
         }
     }
@@ -39,25 +45,45 @@ internal object PreviewPlayerData {
             PlayerSubtitle(
                 label = "Portuguese",
                 url = "https://cdmdemo.contentdm.oclc.org/utils/getfile/collection/p15700coll2/id/18/filename/video2.vtt",
-                source = TrackSource.REMOTE
+                source = TrackSource.REMOTE,
+                isDead = false
             ),
             PlayerSubtitle(
                 label = "English",
                 url = "https://commons.wikimedia.org/w/api.php?action=timedtext&title=File%3ABig_Buck_Bunny_4K.webm&lang=en&trackformat=vtt",
-                source = TrackSource.REMOTE
+                source = TrackSource.REMOTE,
+                isDead = false
             ),
         )
     }
 
     private fun generateLoremIpsum(length: Int): String {
         val words = listOf(
-            "Lorem", "ipsum", "dolor", "sit", "amet,", "consectetur", "adipiscing", "elit.",
-            "Sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et",
-            "dolore", "magna", "aliqua."
+            "Lorem",
+            "ipsum",
+            "dolor",
+            "sit",
+            "amet,",
+            "consectetur",
+            "adipiscing",
+            "elit.",
+            "Sed",
+            "do",
+            "eiusmod",
+            "tempor",
+            "incididunt",
+            "ut",
+            "labore",
+            "et",
+            "dolore",
+            "magna",
+            "aliqua."
         )
 
         // Add line break per 4 words to simulate longer labels
-        return (1..length).map { words.random() }.chunked(4)
+        return (1..length)
+            .map { words.random() }
+            .chunked(4)
             .joinToString("\n") { it.joinToString(" ") }
     }
 }

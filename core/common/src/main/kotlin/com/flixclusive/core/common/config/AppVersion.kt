@@ -12,14 +12,20 @@ class AppVersion private constructor(
     private val version: Comparable<*>,
 ) : Comparable<AppVersion> {
     override fun compareTo(other: AppVersion): Int {
-        return if (version is Int && other.version is Int) {
-            version.compareTo(other.version)
-        } else if (version is SemVer && other.version is SemVer) {
-            version.compareTo(other.version)
-        } else {
-            throw IllegalArgumentException(
-                "Cannot compare different versions from different build types: $version and ${other.version}",
-            )
+        return when (version) {
+            is Int if other.version is Int -> {
+                version.compareTo(other.version)
+            }
+
+            is SemVer if other.version is SemVer -> {
+                version.compareTo(other.version)
+            }
+
+            else -> {
+                throw IllegalArgumentException(
+                    "Cannot compare different versions from different build types: $version and ${other.version}",
+                )
+            }
         }
     }
 
@@ -36,6 +42,7 @@ class AppVersion private constructor(
         return when (buildType) {
             BuildType.PREVIEW -> "p$version"
             BuildType.DEBUG -> "d$version"
+            BuildType.BENCHMARK -> "b$version"
             BuildType.STABLE -> version.toString()
         }
     }
@@ -58,19 +65,23 @@ class AppVersion private constructor(
             version: String,
         ): AppVersion {
             return when (buildType) {
-                BuildType.PREVIEW, BuildType.DEBUG -> {
-                    val commitCount = version.trimStart { it == 'p' || it == 'd' }
+                BuildType.STABLE -> {
+                    AppVersion(
+                        buildType = buildType,
+                        version = SemVer.from(version),
+                    )
+                }
+
+                else -> {
+                    val commitCount = version.trimStart {
+                        it == 'p' || it == 'd' || it == 'b'
+                    }
 
                     AppVersion(
                         buildType = buildType,
                         version = commitCount.toInt(),
                     )
                 }
-
-                BuildType.STABLE -> AppVersion(
-                    buildType = buildType,
-                    version = SemVer.from(version),
-                )
             }
         }
     }

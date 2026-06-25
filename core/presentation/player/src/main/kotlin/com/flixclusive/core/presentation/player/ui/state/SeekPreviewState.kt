@@ -16,7 +16,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.C
 import androidx.media3.common.Player
-import androidx.media3.common.listen
+import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.inspector.FrameExtractor
@@ -42,7 +42,8 @@ class SeekPreviewState(
         get() {
             if (field == null || field?.released?.get() == true) {
                 val mediaItem = player.currentMediaItem ?: return null
-                field = FrameExtractor.Builder(context, mediaItem)
+                field = FrameExtractor
+                    .Builder(context, mediaItem)
                     .setDataSourceFactory(player.dataSourceFactory.remote)
                     .build()
             }
@@ -80,9 +81,7 @@ class SeekPreviewState(
         private set
 
     private suspend fun observe() {
-        player.listen { events ->
-            if (!events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) return@listen
-
+        player.listenTo(Player.EVENT_MEDIA_ITEM_TRANSITION) {
             onScrubEnd()
             frameExtractor?.close()
             frameExtractor = null
@@ -153,7 +152,7 @@ class SeekPreviewState(
 
             LaunchedEffect(player) { state.observe() }
 
-            LaunchedEffect(player) {
+            LaunchedEffect(player, key) {
                 var previousKey: String? = null
 
                 snapshotFlow(key)

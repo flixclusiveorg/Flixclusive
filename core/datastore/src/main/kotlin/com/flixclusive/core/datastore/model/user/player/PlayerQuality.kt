@@ -45,5 +45,5 @@ enum class PlayerQuality(
     QualityAuto(
         qualityStringResId = R.string.quality_auto,
         regex = Regex("auto|hls|dash", RegexOption.IGNORE_CASE)
-    );
+    )
 }

@@ -105,19 +105,21 @@ internal fun ProviderLoadingDialog(
                             currentState.message.asString().trim()
                         },
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            color = Color.White,
-                            fontWeight = if (currentState.isError) FontWeight.Bold else FontWeight.Normal,
-                        ).asAdaptiveTextStyle(14.sp),
+                        style = MaterialTheme.typography.labelLarge
+                            .copy(
+                                color = Color.White,
+                                fontWeight = if (currentState.isError) FontWeight.Bold else FontWeight.Normal,
+                            ).asAdaptiveTextStyle(14.sp),
                     )
 
                     if (currentState.isError) {
                         Text(
                             text = currentState.message.asString().trim(),
                             textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color.White.copy(alpha = 0.6f),
-                            ).asAdaptiveTextStyle(12.sp),
+                            style = MaterialTheme.typography.bodySmall
+                                .copy(
+                                    color = Color.White.copy(alpha = 0.6f),
+                                ).asAdaptiveTextStyle(12.sp),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -140,7 +142,7 @@ internal fun ProviderLoadingDialog(
                             modifier = Modifier.height(30.dp),
                         ) {
                             Text(
-                                text = stringResource(id = LocaleR.string.skip_loading_message),
+                                text = stringResource(id = LocaleR.string.label_skip_loading),
                                 style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                             )
                         }

@@ -11,7 +11,7 @@ import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
-import com.flixclusive.model.film.Film
+import com.flixclusive.model.media.MediaMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -29,13 +29,15 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         return listDao.getAllAsFlow(userId)
     }
 
-    override fun getList(listId: Int): Flow<LibraryList?> {
+    override fun getList(listId: String): Flow<LibraryList?> {
         return listDao.getAsFlow(listId)
     }
 
-    override suspend fun insertList(list: LibraryList): Int {
+    override suspend fun insertList(list: LibraryList): String {
         return withContext(appDispatchers.io) {
-            listDao.insert(list.copy(updatedAt = Date())).toInt()
+            val updatedList = list.copy(updatedAt = Date())
+            listDao.insert(updatedList)
+            updatedList.id
         }
     }
 
@@ -45,17 +47,17 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteListById(listId: Int) {
+    override suspend fun deleteListById(listId: String) {
         return withContext(appDispatchers.io) {
             listDao.deleteSafe(listId)
         }
     }
 
-    override fun getItemAsFlow(itemId: Long): Flow<LibraryListItemWithMetadata?> {
+    override fun getItemAsFlow(itemId: String): Flow<LibraryListItemWithMetadata?> {
         return itemDao.getAsFlow(itemId)
     }
 
-    override suspend fun getItem(itemId: Long): LibraryListItemWithMetadata? {
+    override suspend fun getItem(itemId: String): LibraryListItemWithMetadata? {
         return withContext(appDispatchers.io) {
             itemDao.get(itemId)
         }
@@ -63,29 +65,35 @@ internal class LibraryListRepositoryImpl @Inject constructor(
 
     override suspend fun insertItem(
         item: LibraryListItem,
-        film: Film?,
-    ): Long {
+        media: MediaMetadata?,
+    ): String {
         return withContext(appDispatchers.io) {
             val list = listDao.get(item.listId)
             if (list != null) {
                 listDao.update(list.copy(updatedAt = Date()))
             }
 
-            itemDao.insert(item, film)
+            itemDao.insert(item, media)
         }
     }
 
-    override fun getListsContainingFilm(
-        filmId: String,
+    override fun getListsContainingMedia(
+        mediaId: String,
         ownerId: String,
     ): Flow<List<LibraryList>> {
-        return listDao.getListsContainingFilmAsFlow(filmId, ownerId)
+        return listDao.getListsContainingMediaAsFlow(mediaId, ownerId)
     }
 
-    override suspend fun deleteItem(itemId: Long) {
+    override suspend fun isInLibrary(mediaId: String, ownerId: String): Boolean {
+        return withContext(appDispatchers.io) {
+            listDao.isInLibrary(mediaId, ownerId)
+        }
+    }
+
+    override suspend fun deleteItem(itemId: String) {
         return withContext(appDispatchers.io) {
             val item = itemDao.get(itemId) ?: return@withContext
-            
+
             val list = listDao.get(item.item.listId)
             if (list != null) {
                 listDao.update(list.copy(updatedAt = Date()))
@@ -97,13 +105,13 @@ internal class LibraryListRepositoryImpl @Inject constructor(
 
     override fun searchItems(
         query: String,
-        listId: Int,
+        listId: String,
         sort: LibrarySort
     ): Flow<List<LibraryListItemWithMetadata>> {
         val column = when (sort) {
             is LibrarySort.Added -> "item_createdAt"
             is LibrarySort.Modified -> "item_updatedAt"
-            is LibrarySort.Name -> "film_title"
+            is LibrarySort.Name -> "media_title"
         }
 
         return itemDao.searchItems(
@@ -114,17 +122,24 @@ internal class LibraryListRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun getItems(listId: Int, sort: LibrarySort): Flow<List<LibraryListItemWithMetadata>> {
+    override suspend fun paginateItems(
+        listId: String,
+        sort: LibrarySort,
+        pageSize: Int,
+        page: Int,
+    ): List<LibraryListItemWithMetadata> {
         val column = when (sort) {
             is LibrarySort.Added -> "item_createdAt"
             is LibrarySort.Modified -> "item_updatedAt"
-            is LibrarySort.Name -> "film_title"
+            is LibrarySort.Name -> "media_title"
         }
 
-        return itemDao.getByListId(
+        return itemDao.paginateByListId(
             listId = listId,
             columnSort = column,
             ascending = sort.ascending,
+            pageSize = pageSize,
+            page = page,
         )
     }
 

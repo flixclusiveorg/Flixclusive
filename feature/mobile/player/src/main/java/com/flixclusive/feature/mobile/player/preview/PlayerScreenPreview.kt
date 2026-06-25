@@ -25,6 +25,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
+import com.flixclusive.model.media.common.tv.Season
 import kotlinx.coroutines.delay
 
 @Preview
@@ -42,14 +43,15 @@ private fun PlayerScreenBasePreview() {
     var currentServer by remember { mutableIntStateOf(0) }
 
     val tvShow = remember {
-        DummyDataForPreview.getTvShow(
+        DummyDataForPreview.getShow(
             providerId = currentProvider.id,
         )
     }
     val currentSeason = remember {
+        val season = tvShow.seasons.first() as Season.Full
         SeasonWithProgress(
-            season = tvShow.seasons.first(),
-            episodes = tvShow.seasons.first().episodes.map {
+            season = season,
+            episodes = season.episodes.map {
                 EpisodeWithProgress(
                     episode = it,
                     watchProgress = null
@@ -98,14 +100,20 @@ private fun PlayerScreenBasePreview() {
         loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id)
         delay(1500)
         canSkipLoading = true
-        loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id, message = "Extracting from ${currentProvider.name}...")
+        loadLinksState = LoadLinksState.Extracting(
+            providerId = currentProvider.id,
+            message = "Extracting from ${currentProvider.name}..."
+        )
         delay(1500)
         canSkipLoading = false
-        loadLinksState = LoadLinksState.Error(UiText.from("Connection timed out. The remote server did not respond within the expected timeframe."))
+        loadLinksState =
+            LoadLinksState.Error(
+                UiText.from("Connection timed out. The remote server did not respond within the expected timeframe.")
+            )
         delay(3000)
         loadLinksState = LoadLinksState.Unavailable()
         delay(3000)
-        loadLinksState = LoadLinksState.Success(providerId = currentProvider.id)
+        loadLinksState = LoadLinksState.Success
         delay(1500)
         loadLinksState = LoadLinksState.Idle
     }
@@ -145,18 +153,17 @@ private fun PlayerScreenBasePreview() {
                 playerPreferences = playerPrefs,
                 subtitlesPreferences = subtitlePrefs,
                 servers = { servers },
-                failedStreamUrls = { setOf(servers[1].url) },
                 currentServer = { currentServer },
                 onServerChange = { onServerChange(it) },
                 onBack = { player.release() },
-                film = tvShow,
+                media = tvShow,
                 currentSeason = { currentSeason },
                 currentEpisode = currentEpisode,
                 onEpisodeChange = {},
                 onSeasonChange = {},
                 onNext = {},
-                providers = providers,
-                currentProvider = currentProvider,
+                providers = { providers },
+                currentProvider = { currentProvider },
                 onProviderChange = { currentProvider = it },
                 snackbarState = snackbarState,
                 onUpdateWatchProgress = {},

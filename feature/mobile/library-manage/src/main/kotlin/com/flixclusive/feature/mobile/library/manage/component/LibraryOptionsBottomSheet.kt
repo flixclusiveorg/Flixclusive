@@ -96,7 +96,7 @@ private fun getButtons(
 
 @Immutable
 private data class ModifySheetItem(
-    @DrawableRes val drawableId: Int,
-    @StringRes val stringId: Int,
+    @param:DrawableRes val drawableId: Int,
+    @param:StringRes val stringId: Int,
     val action: () -> Unit,
 )

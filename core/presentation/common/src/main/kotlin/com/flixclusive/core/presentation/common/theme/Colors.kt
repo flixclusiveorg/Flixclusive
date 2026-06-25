@@ -41,7 +41,8 @@ object Colors {
     val lightInverseOnSurface = Color(0xFFF0F1F3)
     val lightInverseSurface = Color(0xFF2E3133)
     val lightInversePrimary = Color(0xFF78D1FF)
-    //val lightShadow = Color(0xFF000000)
+
+    // val lightShadow = Color(0xFF000000)
     val lightSurfaceTint = Color(0xFF006689)
     val lightOutlineVariant = Color(0xFFC0C7CD)
     val lightScrim = Color(0xFF000000)
@@ -78,8 +79,7 @@ object Colors {
     internal val tv_darkSurfaceVariant = Color(0xFF121212)
     internal val tv_darkOnSurfaceVariant = Color(0xFFFFFFFF)
 
-    fun getAvailableSubtitleColors(context: Context)
-        = mapOf(
+    fun getAvailableSubtitleColors(context: Context) = mapOf(
         Color(0xFFFFFFFF) to context.getString(LocaleR.string.white),
         Color(0xFFFFFF00) to context.getString(LocaleR.string.yellow),
         Color(0xFF00FFFF) to context.getString(LocaleR.string.cyan),
@@ -93,4 +93,3 @@ object Colors {
         "Cyan" to Color(0xFF00FFFF),
     )
 }
-

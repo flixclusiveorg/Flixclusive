@@ -12,16 +12,20 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -33,9 +37,13 @@ import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativePaint
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A composable that displays a circular progress indicator with a gradient colors.
@@ -45,6 +53,7 @@ fun GradientCircularProgressIndicator(
     colors: List<Color>,
     modifier: Modifier = Modifier,
     size: Dp = 60.dp,
+    thickness: Dp = 6.dp,
 ) {
     val gradientColors = remember { listOf(Color.Transparent) + colors }
     val infiniteTransition = rememberInfiniteTransition(label = "")
@@ -63,9 +72,10 @@ fun GradientCircularProgressIndicator(
     CircularProgressIndicator(
         modifier = modifier
             .size(size)
-            .rotate(angle)
-            .border(
-                6.dp,
+            .graphicsLayer {
+                rotationZ = angle
+            }.border(
+                thickness,
                 brush = Brush.sweepGradient(colors = gradientColors),
                 shape = CircleShape,
             ),
@@ -163,7 +173,7 @@ fun GradientLinearProgressIndicator(
 
         // Handle optional glow effect
         glowRadius?.let { radius ->
-            paint.asFrameworkPaint().apply {
+            paint.nativePaint.apply {
                 setShadowLayer(radius.toPx(), 0f, 0f, android.graphics.Color.WHITE)
             }
         }
@@ -181,17 +191,33 @@ fun GradientLinearProgressIndicator(
     }
 }
 
+@Composable
+fun isLoadingWithDelay(delayMs: Long = 600L): Boolean {
+    var delayLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(true) {
+        delay(delayMs.milliseconds)
+        delayLoading = true
+    }
+
+    return delayLoading
+}
+
 @Preview
 @Composable
 private fun GradientProgressIndicatorPreview() {
     MaterialTheme {
         Surface {
-            GradientLinearProgressIndicator(
-                colors = listOf(
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.tertiary,
-                ),
-            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                GradientCircularProgressIndicator(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary,
+                    ),
+                )
+            }
         }
     }
 }

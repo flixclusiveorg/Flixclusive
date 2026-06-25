@@ -20,7 +20,7 @@ dependencies {
     implementation(projects.coreNetwork)
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
-    implementation(projects.dataTmdb)
+    implementation(projects.dataProvider)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
@@ -32,7 +32,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.kotlinx.immutables)
     implementation(libs.palette)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 
     testImplementation(projects.coreTesting)
 }

@@ -1,7 +1,11 @@
 package com.flixclusive.core.presentation.mobile.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.strings.R as LocaleR
@@ -21,28 +26,36 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 fun LoadingScreen(
     modifier: Modifier = Modifier,
-    progressSize: Dp = getAdaptiveDp(40.dp)
+    delay: Long = 600L,
+    progressSize: Dp = getAdaptiveDp(40.dp),
+    label: String = stringResource(LocaleR.string.label_loading),
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.CenterVertically),
+    AnimatedVisibility(
+        visible = isLoadingWithDelay(delay),
+        modifier = modifier.fillMaxSize(),
+        enter = fadeIn(),
+        exit = fadeOut(),
     ) {
-        GradientCircularProgressIndicator(
-            size = progressSize,
-            colors = listOf(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.tertiary,
-            ),
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.CenterVertically),
+        ) {
+            GradientCircularProgressIndicator(
+                size = progressSize,
+                colors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.tertiary,
+                ),
+            )
 
-        Text(
-            text = stringResource(LocaleR.string.loading),
-            style = MaterialTheme.typography.labelLarge
-                .copy(fontWeight = FontWeight.Medium)
-                .asAdaptiveTextStyle(increaseBy = 5.sp),
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-        )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge
+                    .copy(fontWeight = FontWeight.Medium)
+                    .asAdaptiveTextStyle(increaseBy = 5.sp),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
+        }
     }
 }

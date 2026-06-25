@@ -15,6 +15,7 @@ import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.provider.ProviderTestDefaults
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.provider.repository.ProviderResponseWrapper
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import io.mockk.coEvery
@@ -82,7 +83,7 @@ class InitializeProvidersUseCaseImplTest {
 
         // Setup default mock behavior
         coEvery {
-            mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            mockDataStoreManager.getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
         } returns flowOf(ProviderPreferences())
 
         coEvery {
@@ -114,8 +115,14 @@ class InitializeProvidersUseCaseImplTest {
             } returns true
 
             coEvery {
-                mockProviderRepository.getInstalledProviders(testInstalledProvider.ownerId)
-            } returns listOf(testInstalledProvider)
+                mockProviderRepository.getProviders(testInstalledProvider.ownerId)
+            } returns listOf(
+                ProviderResponseWrapper(
+                    provider = testInstalledProvider,
+                    metadata = testProviderMetadata,
+                    plugin = null
+                )
+            )
 
             coEvery {
                 mockLoadProviderUseCase(testInstalledProvider)
@@ -166,7 +173,7 @@ class InitializeProvidersUseCaseImplTest {
             )
 
             coEvery {
-                mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+                mockDataStoreManager.getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
             } returns flowOf(preferencesWithDebugProvider)
 
             val expectedDebugMetadata = debugMetadata.copy(
@@ -174,7 +181,14 @@ class InitializeProvidersUseCaseImplTest {
                 name = "${debugMetadata.name}-debug",
             )
 
-            coEvery { mockProviderRepository.getInstalledProviders(debugProvider.ownerId) } returns listOf(debugProvider)
+            coEvery { mockProviderRepository.getProviders(debugProvider.ownerId) } returns
+                listOf(
+                    ProviderResponseWrapper(
+                        provider = debugProvider,
+                        metadata = debugMetadata,
+                        plugin = null
+                    )
+                )
 
             coEvery {
                 mockLoadProviderUseCase(debugProvider)

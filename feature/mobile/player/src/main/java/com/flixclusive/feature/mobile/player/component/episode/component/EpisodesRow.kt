@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -16,35 +17,40 @@ import androidx.compose.ui.util.fastAny
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.provider.model.SeasonWithProgress
-import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Episode
 
 @Composable
 internal fun EpisodesRow(
-    modifier: Modifier = Modifier,
     seasonData: () -> SeasonWithProgress?,
     currentEpisodeSelected: Episode,
     onEpisodeClick: (Episode) -> Unit,
     onClose: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
 
-    LaunchedEffect(seasonData()) {
-        safeCall {
-            if (seasonData()?.episodes?.fastAny { it == currentEpisodeSelected } == true) {
-                listState.animateScrollToItem(
-                    index = currentEpisodeSelected.number - 1
-                )
-            } else listState.animateScrollToItem(0)
-        }
+    LaunchedEffect(seasonData) {
+        snapshotFlow { seasonData() }
+            .collect { data ->
+                safeCall {
+                    if (data?.episodes?.fastAny { it == currentEpisodeSelected } == true) {
+                        listState.animateScrollToItem(
+                            index = currentEpisodeSelected.number - 1
+                        )
+                    } else {
+                        listState.animateScrollToItem(0)
+                    }
+                }
+            }
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
     ) {
         LazyRow(
             state = listState,
-            modifier = modifier
+            modifier = Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxWidth()
                 .fadingEdge(

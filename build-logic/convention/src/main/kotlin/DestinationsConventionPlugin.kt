@@ -1,4 +1,3 @@
-
 import com.flixclusive.libs
 import com.google.devtools.ksp.gradle.KspExtension
 import org.gradle.api.Plugin
@@ -29,7 +28,6 @@ class DestinationsConventionPlugin : Plugin<Project> {
             dependencies {
                 add("implementation", libs.findLibrary("destinations-core").get())
                 add("ksp", libs.findLibrary("destinations-ksp").get())
-//                add("implementation", libs.findLibrary("destinations-animations").get())
             }
         }
     }

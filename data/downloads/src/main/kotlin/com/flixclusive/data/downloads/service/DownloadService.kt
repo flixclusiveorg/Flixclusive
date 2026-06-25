@@ -21,9 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -38,7 +36,10 @@ class DownloadService : Service() {
 
     private lateinit var wakeLock: PowerManager.WakeLock
     internal val activeDownloads = mutableMapOf<String, Job>() // Internal for testing
+
+    // Do not cancel this scope directly - use stopServiceJob to manage service stopping logic
     private val serviceScope by lazy { CoroutineScope(appDispatchers.io + SupervisorJob()) }
+    private var stopServiceJob: Job? = null
 
     /**
      * Binder for testing purposes - allows tests to access service internals
@@ -162,6 +163,8 @@ class DownloadService : Service() {
         // If the download is already active, ignore the request
         if (activeDownloads[downloadId]?.isActive == true) return
 
+        stopServiceJob?.cancel()
+
         val notificationId = downloadId.hashCode()
         startForeground(notificationId, createNotification(fileName))
 
@@ -170,22 +173,18 @@ class DownloadService : Service() {
                 val file = File(filePath, fileName)
 
                 downloadRepository.executeDownload(downloadId, url, file)
-                downloadRepository.getDownloadState(downloadId).takeWhile { state ->
+                downloadRepository.getDownloadState(downloadId).collect { state ->
                     updateNotification(notificationId, fileName, state.progress, state.status)
 
                     if (state.status.isFinished) {
                         activeDownloads.remove(downloadId)
-
-                        if (activeDownloads.isEmpty()) {
-                            stopForeground()
-                            releaseWakeLockIfNeeded()
-                            stopSelf()
-                        }
                     }
 
-                    !state.status.isFinished
-                }.collect()
-            } catch (e: Exception) {
+                    if (activeDownloads.isEmpty()) {
+                        scheduleServiceStop()
+                    }
+                }
+            } catch (e: Throwable) {
                 e.printStackTrace()
                 activeDownloads.remove(downloadId)
                 if (activeDownloads.isEmpty()) {
@@ -208,6 +207,18 @@ class DownloadService : Service() {
             stopForeground()
             releaseWakeLockIfNeeded()
             stopSelf()
+        }
+    }
+
+    private fun scheduleServiceStop(delay: Long = 5000L) {
+        stopServiceJob?.cancel() // Cancel any existing stop job
+        stopServiceJob = serviceScope.launch {
+            delay(delay) // Wait for 5 seconds before stopping the service
+            if (activeDownloads.isEmpty()) {
+                stopForeground()
+                releaseWakeLockIfNeeded()
+                stopSelf()
+            }
         }
     }
 
@@ -248,7 +259,7 @@ class DownloadService : Service() {
     private fun updateNotification(
         notificationId: Int,
         fileName: String,
-        progress: Int,
+        progress: Float,
         status: DownloadStatus,
     ) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -260,7 +271,7 @@ class DownloadService : Service() {
                     .setContentTitle("Downloading ${fileName.substringBeforeLast(".")}")
                     .setContentText("$progress%")
                     .setSmallIcon(android.R.drawable.stat_sys_download)
-                    .setProgress(100, progress, false)
+                    .setProgress(100, progress.toInt(), false)
                     .setOngoing(true)
                     .build()
             }
@@ -287,7 +298,9 @@ class DownloadService : Service() {
                     .build()
             }
 
-            else -> return
+            else -> {
+                return
+            }
         }
 
         notificationManager.notify(notificationId, notification)
@@ -299,9 +312,9 @@ class DownloadService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        serviceScope.cancel()
+        stopServiceJob?.cancel()
+        activeDownloads.forEach { (_, job) -> job.cancel() }
 
-        // Clean up wake lock on service destruction
         if (::wakeLock.isInitialized && wakeLock.isHeld) {
             wakeLock.release()
         }

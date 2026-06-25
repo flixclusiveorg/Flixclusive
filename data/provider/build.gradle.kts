@@ -11,10 +11,12 @@ android {
 dependencies {
     implementation(libs.stubs.util)
     implementation(libs.stubs.provider)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
+    implementation(libs.okhttp)
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
     implementation(projects.coreDatabase)
+    implementation(libs.work.runtime.ktx)
 
     testImplementation(libs.stubs.model.provider)
     testImplementation(projects.coreTesting)

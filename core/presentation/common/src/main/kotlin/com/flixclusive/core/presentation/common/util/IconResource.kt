@@ -13,7 +13,7 @@ import androidx.compose.ui.res.painterResource
  * @param imageVector The image vector. Defaults to null.
  */
 class IconResource private constructor(
-    @DrawableRes private val drawableId: Int? = null,
+    @param:DrawableRes private val drawableId: Int? = null,
     private val imageVector: ImageVector? = null
 ) {
     /**
@@ -38,7 +38,9 @@ class IconResource private constructor(
          * @param drawableId The drawable resource ID.
          * @return The created IconResource.
          */
-        fun from(@DrawableRes drawableId: Int): IconResource {
+        fun from(
+            @DrawableRes drawableId: Int
+        ): IconResource {
             return IconResource(drawableId = drawableId)
         }
 

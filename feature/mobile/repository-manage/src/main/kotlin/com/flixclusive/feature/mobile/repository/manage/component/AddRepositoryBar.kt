@@ -31,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -41,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
+import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.CustomOutlinedTextField
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -63,7 +63,7 @@ internal fun AddRepositoryBar(
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val clipboardManager = LocalClipboardManager.current
+    val clipboardManager = rememberClipboardManager()
 
     var textFieldValue by remember { mutableStateOf(urlQuery().toTextFieldValue()) }
 
@@ -76,7 +76,6 @@ internal fun AddRepositoryBar(
         if (!isClipboardParsed) {
             val parsedClipboard = clipboardManager
                 .getText()
-                ?.text
                 ?.toGithubUrl()
                 ?.toTextFieldValue()
 

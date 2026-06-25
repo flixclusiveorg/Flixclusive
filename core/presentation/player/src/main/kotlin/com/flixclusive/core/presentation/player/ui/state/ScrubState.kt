@@ -12,7 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.view.isVisible
 import androidx.media3.common.Player
-import androidx.media3.common.listen
+import androidx.media3.common.listenTo
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +30,7 @@ class ScrubState private constructor(
 
     val progress @FrequentlyChangingValue get() = progressState
 
-    var duration by mutableLongStateOf(max(0, player.duration))
+    var duration by mutableLongStateOf(player.duration.coerceAtLeast(0))
         private set
 
     var buffered by mutableLongStateOf(player.bufferedPosition)
@@ -64,19 +64,22 @@ class ScrubState private constructor(
         }
     }
 
+    @OptIn(UnstableApi::class)
     private suspend fun observe(scope: CoroutineScope) {
-        player.listen { events ->
-            if (events.containsAny(Player.EVENT_IS_PLAYING_CHANGED, Player.EVENT_POSITION_DISCONTINUITY)) {
-                observeJob?.cancel()
-                observeJob = scope.launch {
-                    do {
-                        progressState = player.currentPosition
-                        this@ScrubState.duration = max(0, player.duration)
-                        buffered = player.bufferedPosition
+        player.listenTo(
+            Player.EVENT_IS_PLAYING_CHANGED,
+            Player.EVENT_POSITION_DISCONTINUITY,
+        ) {
+            observeJob?.cancel()
+            observeJob = scope.launch {
+                do {
+                    progressState = currentPosition
+                    buffered = bufferedPosition
+                    this@ScrubState.duration = max(this@ScrubState.duration, duration)
+                        .coerceAtLeast(0)
 
-                        delay(1.seconds / 30)
-                    } while (player.isPlaying)
-                }
+                    delay(1.seconds / 30)
+                } while (isPlaying)
             }
         }
     }

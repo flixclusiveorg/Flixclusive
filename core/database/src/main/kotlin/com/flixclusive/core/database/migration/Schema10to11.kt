@@ -17,7 +17,9 @@ import java.util.UUID
  *   - `installed_providers` primary key becomes (`id`, `ownerId`).
  *   - FK from `installed_providers` → `repositories` becomes (`repositoryUrl`, `ownerId`) → (`url`, `userId`).
  */
-internal class Schema10to11(private val context: Context) : Migration(startVersion = 10, endVersion = 11) {
+internal class Schema10to11(
+    private val context: Context
+) : Migration(startVersion = 10, endVersion = 11) {
     private companion object {
         const val USER_PREFERENCE_FILE_PREFIX = "user-preferences-"
         const val USER_PREFERENCE_FILE_SUFFIX = ".preferences_pb"

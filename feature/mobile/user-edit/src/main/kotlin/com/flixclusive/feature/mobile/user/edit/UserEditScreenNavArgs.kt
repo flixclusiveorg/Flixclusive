@@ -1,3 +1,5 @@
 package com.flixclusive.feature.mobile.user.edit
 
-data class UserEditScreenNavArgs(val userId: String)
+data class UserEditScreenNavArgs(
+    val userId: String
+)

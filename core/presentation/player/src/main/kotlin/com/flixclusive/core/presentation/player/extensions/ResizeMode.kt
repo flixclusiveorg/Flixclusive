@@ -5,8 +5,7 @@ import androidx.compose.ui.layout.ContentScale
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
 
 @Stable
-internal fun ResizeMode.toContentScale(): ContentScale
-    = when (this) {
+internal fun ResizeMode.toContentScale(): ContentScale = when (this) {
     ResizeMode.Fit -> ContentScale.Fit
     ResizeMode.Crop -> ContentScale.Crop
     ResizeMode.None -> ContentScale.None

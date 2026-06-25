@@ -62,7 +62,7 @@ import com.flixclusive.core.strings.R as LocaleR
 )
 @Composable
 internal fun UserEditScreen(
-    navigator: UserEditScreenNavigator,
+    navigator: NavigatorUserEditScreen,
     avatarResultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
     pinSetupResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
     pinRemoveResultRecipient: ResultRecipient<PinVerifyScreenDestination, PinVerificationResult>,
@@ -74,8 +74,8 @@ internal fun UserEditScreen(
         viewModel.onRemoveNavigationState
             .collect {
                 when (it) {
-                    OnRemoveNavigationState.PopToRoot -> navigator.openProfilesScreen(true)
-                    else -> navigator.goBack()
+                    OnRemoveNavigationState.PopToRoot -> navigator.navigateToUserProfilesScreen(true)
+                    else -> navigator.navigateBack()
                 }
             }
     }
@@ -86,9 +86,9 @@ internal fun UserEditScreen(
         onRemoveUser = viewModel::onRemoveUser,
         onClearSearchHistory = viewModel::onClearSearchHistory,
         onClearLibraries = viewModel::onClearLibraries,
-        openUserAvatarSelectScreen = navigator::openUserAvatarSelectScreen,
-        goBack = navigator::goBack,
-        openUserPinScreen = navigator::openUserPinScreen,
+        openUserAvatarSelectScreen = navigator::navigateToUserAvatarSelectScreen,
+        goBack = navigator::navigateBack,
+        openUserPinScreen = navigator::navigateToUserPinScreen,
         avatarResultRecipient = avatarResultRecipient,
         pinSetupResultRecipient = pinSetupResultRecipient,
         pinRemoveResultRecipient = pinRemoveResultRecipient,
@@ -204,8 +204,7 @@ private fun UserEditScreenContent(
                                             dp = (DefaultAvatarSize.value * 1.2).dp,
                                             increaseBy = 80.dp,
                                         ),
-                                    )
-                                    .aspectRatio(1F),
+                                    ).aspectRatio(1F),
                             )
                         }
 
@@ -239,8 +238,7 @@ private fun ChangeImageButton(
                 .background(
                     color = MaterialTheme.colorScheme.onSurface,
                     shape = CircleShape,
-                )
-                .clickable(
+                ).clickable(
                     indication =
                         ripple(
                             bounded = false,

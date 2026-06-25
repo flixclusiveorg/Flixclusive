@@ -1,25 +1,25 @@
 package com.flixclusive.domain.provider.usecase.get
 
-import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.domain.provider.model.SeasonWithProgress
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Season
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Use case for fetching a specific season of a TV show from TMDB.
+ * Use case for fetching a specific season of a TV show
  * */
 interface GetSeasonWithWatchProgressUseCase {
     /**
-     * Fetches a specific season of a TV show from TMDB.
+     * Fetches a specific season of a TV show
      *
-     * @param tvShow The TV show for which the season is to be fetched.
+     * @param show The TV show for which the season is to be fetched.
      * @param number The season number to fetch.
      *
-     * @return A [Flow] emitting [Resource] containing the fetched [Season] or an error.
+     * @return A [Flow] emitting [Async] containing the fetched [Season] or an error.
      * */
     operator fun invoke(
-        tvShow: TvShow,
+        show: Show,
         number: Int,
-    ): Flow<Resource<SeasonWithProgress>>
+    ): Flow<Async<SeasonWithProgress>>
 }

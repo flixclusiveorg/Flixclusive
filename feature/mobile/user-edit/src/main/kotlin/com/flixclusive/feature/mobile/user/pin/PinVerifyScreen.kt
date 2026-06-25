@@ -17,7 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.isHeightCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
@@ -37,9 +37,9 @@ internal fun PinVerifyScreen(
     actualPin: String,
     resultNavigator: ResultBackNavigator<PinVerificationResult>,
 ) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
-    val pinToVerify = rememberSaveable { mutableStateOf<String>("") }
+    val pinToVerify = rememberSaveable { mutableStateOf("") }
 
     val isTyping = rememberSaveable { mutableStateOf(false) }
     val hasErrors = rememberSaveable { mutableStateOf(false) }
@@ -72,7 +72,7 @@ internal fun PinVerifyScreen(
                 .fillMaxSize()
                 .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp)),
     ) {
-        if (windowSizeClass.isCompact) {
+        if (windowSizeClass.isHeightCompact) {
             PinVerifyScreenCompactLandscape(
                 pin = pinToVerify,
                 isTyping = isTyping,

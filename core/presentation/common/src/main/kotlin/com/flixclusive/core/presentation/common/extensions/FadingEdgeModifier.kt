@@ -34,9 +34,9 @@ import kotlin.math.min
 
 /**
  * https://github.com/nikonovmi/compose-fading-edges
+ *
+ * Vertical shaders (top/bottom) - with alpha uniform for smooth blending
  */
-
-// Vertical shaders (top/bottom) - with alpha uniform for smooth blending
 @Language(value = "AGSL")
 private val bottomFadingEdgeShader = """
     const half4 BLACK_COLOR = half4(0, 0, 0, 1);
@@ -185,8 +185,9 @@ private class FadingEdgeNode(
     var orientation: Orientation,
     var startEdge: Dp,
     var endEdge: Dp,
-) : Modifier.Node(), LayoutAwareModifierNode, DrawModifierNode {
-
+) : Modifier.Node(),
+    LayoutAwareModifierNode,
+    DrawModifierNode {
     private var size = Size.Zero
     private var layoutDirection = LayoutDirection.Ltr
 
@@ -258,7 +259,10 @@ private class FadingEdgeNode(
      */
     private fun getStartScrollOffset(): Float {
         return when (val state = scrollableState) {
-            is ScrollState -> state.value.toFloat()
+            is ScrollState -> {
+                state.value.toFloat()
+            }
+
             is LazyListState -> {
                 if (state.firstVisibleItemIndex == 0) {
                     state.firstVisibleItemScrollOffset.toFloat()
@@ -267,6 +271,7 @@ private class FadingEdgeNode(
                     Float.MAX_VALUE
                 }
             }
+
             is LazyGridState -> {
                 if (state.firstVisibleItemIndex == 0) {
                     state.firstVisibleItemScrollOffset.toFloat()
@@ -274,6 +279,7 @@ private class FadingEdgeNode(
                     Float.MAX_VALUE
                 }
             }
+
             is LazyStaggeredGridState -> {
                 if (state.firstVisibleItemIndex == 0) {
                     state.firstVisibleItemScrollOffset.toFloat()
@@ -281,7 +287,10 @@ private class FadingEdgeNode(
                     Float.MAX_VALUE
                 }
             }
-            else -> if (state.canScrollBackward) Float.MAX_VALUE else 0f
+
+            else -> {
+                if (state.canScrollBackward) Float.MAX_VALUE else 0f
+            }
         }
     }
 
@@ -291,7 +300,10 @@ private class FadingEdgeNode(
      */
     private fun getEndScrollOffset(containerSize: Float): Float {
         return when (val state = scrollableState) {
-            is ScrollState -> (state.maxValue - state.value).toFloat().coerceAtLeast(0f)
+            is ScrollState -> {
+                (state.maxValue - state.value).toFloat().coerceAtLeast(0f)
+            }
+
             is LazyListState -> {
                 val layoutInfo = state.layoutInfo
                 val totalItems = layoutInfo.totalItemsCount
@@ -310,6 +322,7 @@ private class FadingEdgeNode(
                     Float.MAX_VALUE
                 }
             }
+
             is LazyGridState -> {
                 val layoutInfo = state.layoutInfo
                 val totalItems = layoutInfo.totalItemsCount
@@ -330,6 +343,7 @@ private class FadingEdgeNode(
                     Float.MAX_VALUE
                 }
             }
+
             is LazyStaggeredGridState -> {
                 val layoutInfo = state.layoutInfo
                 val totalItems = layoutInfo.totalItemsCount
@@ -350,7 +364,10 @@ private class FadingEdgeNode(
                     Float.MAX_VALUE
                 }
             }
-            else -> if (state.canScrollForward) Float.MAX_VALUE else 0f
+
+            else -> {
+                if (state.canScrollForward) Float.MAX_VALUE else 0f
+            }
         }
     }
 

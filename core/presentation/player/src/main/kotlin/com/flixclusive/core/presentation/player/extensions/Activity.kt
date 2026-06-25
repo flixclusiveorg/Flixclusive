@@ -110,8 +110,8 @@ fun Activity.createPiPParams(
         ),
     )
 
-
-    return PictureInPictureParams.Builder()
+    return PictureInPictureParams
+        .Builder()
         .setAspectRatio(Rational(width, height))
         .setActions(actions)
 }

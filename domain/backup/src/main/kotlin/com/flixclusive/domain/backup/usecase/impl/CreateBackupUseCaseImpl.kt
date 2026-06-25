@@ -50,18 +50,17 @@ internal class CreateBackupUseCaseImpl @Inject constructor(
         val uniqueWorkName = enqueue(userId)
 
         emitAll(
-            backupWorkManager.observeUniqueWork(uniqueWorkName)
+            backupWorkManager
+                .observeUniqueWork(uniqueWorkName)
                 .distinctUntilChangedBy { it?.state }
                 .mapLatest { info ->
                     info.toBackupState(
                         userId = userId,
                         readResult = { backupWorkManager.readLastCreateResult(userId) },
                     )
-                }
-                .distinctUntilChanged(),
+                }.distinctUntilChanged(),
         )
-    }
-        .catch { emit(BackupState.Error(it)) }
+    }.catch { emit(BackupState.Error(it)) }
         .flowOn(appDispatchers.io)
 
     private suspend fun WorkInfo?.toBackupState(
@@ -74,7 +73,9 @@ internal class CreateBackupUseCaseImpl @Inject constructor(
             WorkInfo.State.ENQUEUED,
             WorkInfo.State.RUNNING,
             WorkInfo.State.BLOCKED,
-            -> BackupState.Loading
+            -> {
+                BackupState.Loading
+            }
 
             WorkInfo.State.SUCCEEDED -> {
                 BackupState.Success(readResult())

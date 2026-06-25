@@ -65,7 +65,6 @@ class LoadProviderUseCaseImplTest {
         loadProviderUseCase = LoadProviderUseCaseImpl(
             context = context,
             userSessionDataStore = mockUserSessionDataStore,
-            dataStoreManager = mockDataStoreManager,
             providerRepository = mockProviderRepository,
             appDispatchers = appDispatchers,
         )
@@ -73,10 +72,10 @@ class LoadProviderUseCaseImplTest {
         every { mockUserSessionDataStore.currentUserId } returns flowOf(testUserId)
 
         coEvery {
-            mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            mockDataStoreManager.getUserPrefsAsFlow(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
         } returns flowOf(ProviderPreferences())
 
-        every { mockProviderRepository.getPlugin(any()) } returns null
+        coEvery { mockProviderRepository.getProvider(any(), any()) } returns null
     }
 
     @After
@@ -87,25 +86,15 @@ class LoadProviderUseCaseImplTest {
     }
 
     @Test
-    fun shouldSkipLoadingWhenProviderAlreadyExists() =
-        runTest(testDispatcher) {
-            every { mockProviderRepository.getMetadata(testProviderMetadata.id) } returns testProviderMetadata
-            every { mockProviderRepository.getPlugin(testProviderMetadata.id) } returns mockk()
-
-            loadProviderUseCase(testInstalledProvider).test {
-                expectThat(awaitItem()).isA<ProviderResult.Failure>().and {
-                    get { provider.id }.isEqualTo(testProviderMetadata.id)
-                    get { error }.isA<IllegalStateException>()
-                }
-
-                awaitComplete()
-            }
-        }
-
-    @Test
     fun shouldLoadProvider() =
         runTest(testDispatcher) {
-            every { mockProviderRepository.getMetadata(testProviderMetadata.id) } returns testProviderMetadata
+            coEvery {
+                mockProviderRepository
+                    .getProvider(
+                        testProviderMetadata.id,
+                        testUserId
+                    )?.metadata
+            } returns testProviderMetadata
             loadProviderUseCase(testInstalledProvider).test {
                 val result = awaitItem()
                 expectThat(result).isA<ProviderResult.Success>().and {
@@ -123,7 +112,13 @@ class LoadProviderUseCaseImplTest {
                 filePath = nonExistentFilePath,
             )
 
-            every { mockProviderRepository.getMetadata(testProviderMetadata.id) } returns testProviderMetadata
+            coEvery {
+                mockProviderRepository
+                    .getProvider(
+                        testProviderMetadata.id,
+                        testUserId
+                    )?.metadata
+            } returns testProviderMetadata
             loadProviderUseCase(tempProvider).test {
                 expectThat(awaitItem()).isA<ProviderResult.Failure>().and {
                     get { provider.id }.isEqualTo(testProviderMetadata.id)

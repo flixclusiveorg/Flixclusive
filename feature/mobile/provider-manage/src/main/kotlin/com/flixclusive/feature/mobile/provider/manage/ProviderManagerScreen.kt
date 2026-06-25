@@ -1,13 +1,11 @@
 package com.flixclusive.feature.mobile.provider.manage
 
 import android.content.Context
-import android.os.Build
-import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -57,10 +54,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.ProviderWithThrowable
+import com.flixclusive.core.presentation.common.components.isLoadingWithDelay
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
@@ -68,17 +66,14 @@ import com.flixclusive.core.presentation.mobile.components.provider.ProviderCras
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.data.provider.util.extensions.isNotUsable
-import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard
+import com.flixclusive.feature.mobile.provider.manage.component.ProviderCard
 import com.flixclusive.feature.mobile.provider.manage.component.ProviderManagerTopBar
-import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableItem
-import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyGridState
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -89,8 +84,8 @@ private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun ProviderManagerScreen(
-    navigator: ProviderManagerScreenNavigator,
-    viewModel: ProviderManagerViewModel = hiltViewModel(),
+    navigator: NavigatorProviderManagerScreen,
+    viewModel: ProviderManagerViewModel = activityHiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -103,31 +98,27 @@ internal fun ProviderManagerScreen(
         isFirstTimeOnProvidersScreen = isFirstTimeOnProvidersScreen,
         searchQuery = { searchQuery },
         onQueryChange = viewModel::onQueryChange,
-        onMove = viewModel::onMove,
-        goBack = navigator::goBack,
-        toggleProvider = { id -> viewModel.toggleProvider(id) },
-        openProviderSettings = navigator::openProviderSettings,
+        goBack = navigator::navigateBack,
+        openProviderSettings = navigator::navigateToProviderSettings,
         onConsumeError = viewModel::onConsumeError,
-        openProviderDetails = navigator::openProviderDetails,
-        openAddProviderScreen = navigator::openAddProviderScreen,
+        openProviderDetails = navigator::showProviderDetailsSheet,
+        openAddProviderScreen = navigator::navigateToAddProviderScreen,
         uninstallProvider = viewModel::uninstallProvider,
         setFirstTimeOnProvidersScreen = viewModel::setFirstTimeOnProvidersScreen,
-        openMarkdownScreen = navigator::openMarkdownScreen,
+        openMarkdownScreen = navigator::navigateToMarkdownScreen,
         onToggleSearchBar = viewModel::onToggleSearchBar,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ProviderManagerScreenContent(
+private fun ProviderManagerScreenContent(
     uiState: ProviderManageUiState,
     isFirstTimeOnProvidersScreen: Boolean,
-    providers: () -> List<EnabledProvider>,
+    providers: () -> List<ProviderWithCapabilities>,
     searchQuery: () -> String,
     onQueryChange: (String) -> Unit,
-    onMove: suspend (Int, Int) -> Unit,
     goBack: () -> Unit,
-    toggleProvider: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     openProviderSettings: (ProviderMetadata) -> Unit,
     openProviderDetails: (ProviderMetadata) -> Unit,
@@ -141,23 +132,9 @@ internal fun ProviderManagerScreenContent(
     val resources = LocalResources.current
     var providerToUninstall by rememberSaveable { mutableStateOf<ProviderMetadata?>(null) }
 
-    val view = LocalView.current
     val helpTooltipState = rememberTooltipState(isPersistent = true)
     val scope = rememberCoroutineScope()
     val lazyGridState = rememberLazyGridState()
-    val reorderableLazyListState = rememberReorderableLazyGridState(
-        lazyGridState = lazyGridState,
-        onMove = { from, to ->
-            if (!uiState.isSearching) {
-                onMove(from.index, to.index)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_FREQUENT_TICK)
-                } else {
-                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                }
-            }
-        },
-    )
 
     val onNeedHelp = {
         val (title, description) = context.getHelpGuideTexts()
@@ -172,7 +149,7 @@ internal fun ProviderManagerScreenContent(
     }
 
     LaunchedEffect(scrollBehavior.state.heightOffset) {
-        delay(800)
+        delay(800.milliseconds)
         isFabExpanded = scrollBehavior.state.heightOffset < 0f
     }
 
@@ -224,22 +201,26 @@ internal fun ProviderManagerScreenContent(
                 modifier = Modifier.fillMaxSize(),
             ) { state ->
                 if (state) {
-                    EmptyDataMessage(
-                        description = stringResource(LocaleR.string.empty_providers_list_message),
+                    AnimatedVisibility(
+                        visible = isLoadingWithDelay(600L + 300L),
+                        enter = fadeIn(),
+                        exit = fadeOut(),
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier =
-                                Modifier
-                                    .padding(bottom = 12.dp),
+                        EmptyDataMessage(
+                            description = stringResource(LocaleR.string.empty_providers_list_message),
                         ) {
-                            MissingProvidersLogo()
-                            OutlinedButton(
-                                onClick = openAddProviderScreen,
-                                modifier = Modifier,
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(5.dp),
+                                modifier = Modifier.padding(bottom = 12.dp),
                             ) {
-                                Text(text = stringResource(LocaleR.string.add_providers))
+                                MissingProvidersLogo()
+                                OutlinedButton(
+                                    onClick = openAddProviderScreen,
+                                    modifier = Modifier,
+                                ) {
+                                    Text(text = stringResource(LocaleR.string.add_providers))
+                                }
                             }
                         }
                     }
@@ -259,37 +240,13 @@ internal fun ProviderManagerScreenContent(
                             items = providers(),
                             key = { item -> item.id },
                         ) { provider ->
-                            val metadata = provider.metadata
-
-                            ReorderableItem(reorderableLazyListState, metadata.id) { isDragging ->
-                                val interactionSource = remember { MutableInteractionSource() }
-
-                                InstalledProviderCard(
-                                    providerMetadata = metadata,
-                                    interactionSource = interactionSource,
-                                    isDraggable = !uiState.isSearching,
-                                    openSettings = { openProviderSettings(metadata) },
-                                    onClick = { openProviderDetails(metadata) },
-                                    uninstallProvider = { providerToUninstall = metadata },
-                                    onToggleProvider = { toggleProvider(metadata.id) },
-                                    enabledProvider = { !metadata.isNotUsable && provider.isEnabled },
-                                    isDraggingProvider = { isDragging },
-                                    dragModifier =
-                                        Modifier.draggableHandle(
-                                            onDragStarted = {
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                                }
-                                            },
-                                            onDragStopped = {
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
-                                                }
-                                            },
-                                            interactionSource = interactionSource,
-                                        ),
-                                )
-                            }
+                            ProviderCard(
+                                provider = provider,
+                                openSettings = { openProviderSettings(provider.metadata) },
+                                onClick = { openProviderDetails(provider.metadata) },
+                                onUninstall = { providerToUninstall = provider.metadata },
+                                // modifier = Modifier.animateItem() // TODO: Re-enable when `weight` + `animateItem` bug has been fixed
+                            )
                         }
                     }
                 }
@@ -339,10 +296,10 @@ internal fun ProviderManagerScreenContent(
         )
     }
 
-    if (uiState.error != null) {
+    if (uiState.errors.isNotEmpty()) {
         ProviderCrashBottomSheet(
             isLoading = false,
-            errors = listOf(uiState.error),
+            errors = uiState.errors,
             onDismissRequest = onConsumeError,
         )
     }
@@ -381,18 +338,19 @@ private fun MissingProvidersLogo() {
 private fun ProviderManagerScreenBasePreview() {
     var query by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<ProviderWithThrowable?>(null) }
-    var uiState by remember(error) { mutableStateOf(ProviderManageUiState(error = error)) }
+    var uiState by remember(error) {
+        mutableStateOf(ProviderManageUiState(errors = listOfNotNull(error)))
+    }
 
     val list = remember {
-        mutableStateListOf<EnabledProvider>().also {
+        mutableStateListOf<ProviderWithCapabilities>().also {
             it.addAll(
-                List(20) {
-                    EnabledProvider(
+                List(20) { i ->
+                    ProviderWithCapabilities(
                         metadata = DummyDataForPreview.getProviderMetadata(
-                            id = it.toString(),
-                            name = "Provider #$it",
+                            id = i.toString(),
+                            name = "Provider #$i",
                         ),
-                        isEnabled = it % 3 == 0,
                     )
                 },
             )
@@ -413,24 +371,7 @@ private fun ProviderManagerScreenBasePreview() {
                 },
                 searchQuery = { query },
                 onQueryChange = { query = it },
-                onMove = { from, to ->
-                    list.add(to, list.removeAt(from))
-                },
                 goBack = {},
-                toggleProvider = { id ->
-                    val index = list.indexOfFirst { it.id == id }
-
-                    if (index > -1) {
-                        if (Random.nextBoolean()) {
-                            error = ProviderWithThrowable(
-                                provider = list[index].metadata,
-                                throwable = Throwable("This is a dummy error for $id"),
-                            )
-
-                            return@ProviderManagerScreenContent
-                        }
-                    }
-                },
                 onConsumeError = { error = null },
                 openProviderSettings = {},
                 openProviderDetails = {},

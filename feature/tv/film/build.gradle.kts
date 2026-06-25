@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.tv.film"
+    namespace = "com.flixclusive.feature.tv.media"
 }
 
 dependencies {
-    // implementation(projects.core.ui.film)
+    // implementation(projects.core.ui.media)
     // implementation(projects.core.ui.player)
     // implementation(projects.core.ui.tv)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
     implementation(projects.feature.tv.player)
 
     implementation(libs.coil.compose)

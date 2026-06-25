@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import android.widget.Toast
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import coil3.size.Size
 
 /**
  * Extension function to show a toast message.
@@ -19,48 +20,28 @@ fun Context.showToast(
     Toast.makeText(applicationContext, message, duration).show()
 }
 
-private const val TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/"
-
 /**
- * Extension function to build TMDB or non-TMDB image URL to an [ImageRequest] for coil.
+ * Extension function to build an [ImageRequest] for loading an image using Coil.
  *
  * @param imagePath The path/file suffix of the image URL
- * @param imageSize The image size you want TMDB to fetch for the image output
  *
  * @return Returns an [ImageRequest] if [imagePath] is valid, otherwise null.
  * */
 fun Context.buildImageRequest(
     imagePath: String?,
-    imageSize: String = "w500", // TODO: Convert to object
+    imageSize: Size = Size.ORIGINAL,
 ): ImageRequest? {
     if (imagePath == null) {
         return null
     }
 
-    val imageRequest = ImageRequest.Builder(this)
-    val pattern = "(https?://.+?/p/)([^/]+)(/.+)".toRegex()
-
-    imageRequest.apply {
-        data(
-            if (imagePath.isEmpty()) {
-                null
-            } else if (pattern.matches(imagePath)) {
-                val replacedUrl = pattern.replace(imagePath) { matchResult ->
-                    val originalString = matchResult.groupValues[2]
-                    matchResult.value.replace(originalString, imageSize)
-                }
-                replacedUrl
-            } else if (imagePath.startsWith("/")) {
-                "$TMDB_IMAGE_BASE_URL$imageSize$imagePath"
-            } else {
-                imagePath
-            },
-        )
+    val imageRequest = ImageRequest.Builder(this).apply {
+        data(imagePath.ifEmpty { null })
+        size(imageSize)
+        crossfade(true)
     }
 
-    return imageRequest
-        .crossfade(true)
-        .build()
+    return imageRequest.build()
 }
 
 /**
@@ -75,7 +56,10 @@ fun Context.buildImageRequest(
  */
 inline fun <reified Activity : android.app.Activity> Context.getActivity(): Activity {
     val activity = when (this) {
-        is Activity -> this
+        is Activity -> {
+            this
+        }
+
         else -> {
             var context = this
             while (context is ContextWrapper) {

@@ -1,19 +1,29 @@
 package com.flixclusive.domain.provider.di
 
-import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
+import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
+import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.get.GetRepositoryUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.domain.provider.usecase.get.impl.GetFilmMetadataUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
+import com.flixclusive.domain.provider.usecase.get.impl.GetCatalogProvidersUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.impl.GetCrossMatchedMediaMetadataUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.impl.GetInstalledProviderUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetMediaLinksUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.impl.GetMediaMetadataUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetNextEpisodeUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetProviderFromRemoteUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.impl.GetProviderMetadataUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.impl.GetProviderPluginUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetRepositoryUseCaseImpl
-import com.flixclusive.domain.provider.usecase.get.impl.GetSeasonUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.impl.GetSeasonWithWatchProgressUseCaseImpl
+import com.flixclusive.domain.provider.usecase.get.impl.GetTrackerProvidersUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,7 +48,7 @@ internal abstract class GetUseCasesModule {
     abstract fun bindGetEpisodeUseCase(impl: GetNextEpisodeUseCaseImpl): GetNextEpisodeUseCase
 
     @Binds
-    abstract fun bindGetFilmMetadataUseCase(impl: GetFilmMetadataUseCaseImpl): GetFilmMetadataUseCase
+    abstract fun bindGetMediaMetadataUseCase(impl: GetMediaMetadataUseCaseImpl): GetMediaMetadataUseCase
 
     @Binds
     abstract fun bindGetSeasonWithWatchProgressUseCase(
@@ -46,5 +56,22 @@ internal abstract class GetUseCasesModule {
     ): GetSeasonWithWatchProgressUseCase
 
     @Binds
-    abstract fun bindGetSeasonUseCase(impl: GetSeasonUseCaseImpl): GetSeasonUseCase
+    abstract fun bindGetCatalogProvidersUseCase(impl: GetCatalogProvidersUseCaseImpl): GetCatalogProvidersUseCase
+
+    @Binds
+    abstract fun bindGetTrackerProvidersUseCase(impl: GetTrackerProvidersUseCaseImpl): GetTrackerProvidersUseCase
+
+    @Binds
+    abstract fun bindGetProviderPluginUseCase(impl: GetProviderPluginUseCaseImpl): GetProviderPluginUseCase
+
+    @Binds
+    abstract fun bindGetProviderMetadataUseCase(impl: GetProviderMetadataUseCaseImpl): GetProviderMetadataUseCase
+
+    @Binds
+    abstract fun bindGetInstalledProviderUseCase(impl: GetInstalledProviderUseCaseImpl): GetInstalledProviderUseCase
+
+    @Binds
+    abstract fun bindGetCrossMatchedMediaMetadataUseCase(
+        impl: GetCrossMatchedMediaMetadataUseCaseImpl,
+    ): GetCrossMatchedMediaMetadataUseCase
 }

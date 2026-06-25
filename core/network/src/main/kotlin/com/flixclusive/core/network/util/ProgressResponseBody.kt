@@ -40,10 +40,11 @@ internal class ProgressResponseBody(
                 totalBytesRead += if (bytesRead != -1L) bytesRead else 0
 
                 progressListener.update(
-                    totalBytesRead,
-                    responseBody.contentLength(),
-                    bytesRead == -1L,
+                    bytesRead = totalBytesRead,
+                    contentLength = responseBody.contentLength(),
+                    done = bytesRead == -1L,
                 )
+
                 return bytesRead
             }
         }

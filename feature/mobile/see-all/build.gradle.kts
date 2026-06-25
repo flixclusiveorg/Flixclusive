@@ -16,7 +16,6 @@ dependencies {
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
     implementation(projects.coreStrings)
-    implementation(projects.dataTmdb)
     implementation(projects.domainCatalog)
 
     implementation(libs.compose.foundation)
@@ -27,5 +26,5 @@ dependencies {
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.kotlinx.immutables)
     implementation(libs.stubs.model.provider)
-    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.media)
 }

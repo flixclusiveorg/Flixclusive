@@ -90,7 +90,9 @@ internal class MigrationV220(
             val filePath = preference.filePath.replaceLegacyUserId()
             val metadata = findProviderFromUpdaterJson(preference, filePath)
             if (metadata == null) {
-                warnLog("Warning: Could not find metadata for provider with id ${preference.id} and file path $filePath. Skipping this provider...")
+                warnLog(
+                    "Warning: Could not find metadata for provider with id ${preference.id} and file path $filePath. Skipping this provider..."
+                )
             }
 
             metadata
@@ -105,7 +107,9 @@ internal class MigrationV220(
                 }
             }
             if (correspondingPreference == null) {
-                warnLog("Warning: Could not find corresponding preference for provider with id ${metadata.id}. Skipping this provider...")
+                warnLog(
+                    "Warning: Could not find corresponding preference for provider with id ${metadata.id}. Skipping this provider..."
+                )
                 return@mapIndexedNotNull null
             }
 
@@ -125,8 +129,6 @@ internal class MigrationV220(
         return InstalledProvider(
             id = metadata.id,
             repositoryUrl = metadata.repositoryUrl,
-            isEnabled = !preference.isDisabled,
-            sortOrder = index.toDouble(),
             isDebug = preference.isDebug,
             filePath = updatedFilePath,
             ownerId = userId
