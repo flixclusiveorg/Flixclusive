@@ -94,111 +94,117 @@ internal class ManageLibraryViewModel @Inject constructor(
         }
 
         loadListsJob = viewModelScope.launch {
-            combine(
-                userSessionDataStore.currentUserId.filterNotNull(),
-                uiState.map { it.selectedFilter }.distinctUntilChanged(),
-            ) { userId, filter ->
-                userId to filter
-            }.flatMapLatest { (userId, filter) ->
-                val appLists = libraryListRepository
-                    .getListsAndItems(userId = userId, sort = filter)
-                    .mapLatest { data ->
-                        val list = data.fastMap { it.toPreview() }
-                        Async.Success(list) as Async<List<LibraryListWithPreview>>
-                    }.onStart { emit(Async.Loading) }
-                    .catch {
-                        errorLog("Failed to fetch library lists for user $userId with filter $filter")
-                        errorLog(it)
-                        emit(Async.Failure(it))
+            userSessionDataStore.currentUserId
+                .filterNotNull()
+                .flatMapLatest { userId ->
+                    val initialFilter = _uiState.value.selectedFilter
+                    val appLists = libraryListRepository
+                        .getListsAndItems(userId = userId, sort = initialFilter)
+                        .mapLatest { data ->
+                            val list = data.fastMap { it.toPreview() }
+                            Async.Success(list) as Async<List<LibraryListWithPreview>>
+                        }.onStart { emit(Async.Loading) }
+                        .catch {
+                            errorLog("Failed to fetch library lists for user $userId with filter $initialFilter")
+                            errorLog(it)
+                            emit(Async.Failure(it))
+                        }
+
+                    val trackerLists = getTrackerProviders().mapLatest { state ->
+                        if (state is Async.Loading) return@mapLatest Async.Loading
+                        if (state !is Async.Success) return@mapLatest Async.Success(emptyList())
+
+                        val providers = state.data
+                        val errors = mutableListOf<ProviderWithThrowable>()
+                        val lists = providers.flatMap { provider ->
+                            val metadata = provider.metadata ?: return@flatMap emptyList()
+                            runCatching {
+                                getTrackerLists(listOf(provider)).map { list ->
+                                    list.toPreview(provider = metadata, ownerId = userId)
+                                }
+                            }.getOrElse { e ->
+                                errorLog("Failed to fetch tracker lists for provider ${metadata.name}")
+                                errorLog(e)
+                                errors.add(ProviderWithThrowable(provider = metadata, throwable = e))
+                                emptyList()
+                            }
+                        }
+
+                        if (errors.isNotEmpty()) {
+                            _uiState.update { it.copy(trackerErrors = errors.toList()) }
+                        }
+
+                        Async.Success(lists)
                     }
 
-                val trackerLists = getTrackerProviders().mapLatest { state ->
-                    if (state is Async.Loading) return@mapLatest Async.Loading
-                    if (state !is Async.Success) return@mapLatest Async.Success(emptyList())
+                    combine(
+                        appLists,
+                        trackerLists,
+                        uiState.map { it.selectedFilter }.distinctUntilChanged(),
+                        searchQuery
+                            .map { it.trim() }
+                            .debounce { if (it.isEmpty()) 0L else 800L }
+                            .distinctUntilChanged(),
+                    ) { app, tracker, filter, query ->
+                        val isTrackerLoading = tracker is Async.Loading
+                        if (isTrackerLoading && isRefreshing) {
+                            _uiState.update { it.copy(isLoadingTrackers = true) }
+                            return@combine _lists.value
+                        }
 
-                    val providers = state.data
-                    val errors = mutableListOf<ProviderWithThrowable>()
-                    val lists = providers.flatMap { provider ->
-                        val metadata = provider.metadata ?: return@flatMap emptyList()
-                        runCatching {
-                            getTrackerLists(listOf(provider)).map { list ->
-                                list.toPreview(provider = metadata, ownerId = userId)
+                        when (app) {
+                            is Async.Loading -> {
+                                Async.Loading
                             }
-                        }.getOrElse { e ->
-                            errorLog("Failed to fetch tracker lists for provider ${metadata.name}")
-                            errorLog(e)
-                            errors.add(ProviderWithThrowable(provider = metadata, throwable = e))
-                            emptyList()
+
+                            is Async.Failure -> {
+                                _uiState.update { it.copy(isLoadingTrackers = false) }
+                                Async.Failure(app.message, app.cause)
+                            }
+
+                            else -> {
+                                val comparator = when (filter) {
+                                    is LibrarySort.Added -> compareBy<LibraryListWithPreview> { it.list.id }
+                                    is LibrarySort.Name -> compareBy { it.name }
+                                    is LibrarySort.Modified -> compareBy { it.list.updatedAt }
+                                }.run { takeIf { filter.ascending } ?: reversed() }
+
+                                val appData = (app as? Async.Success)?.data ?: emptyList()
+                                val trackerData =
+                                    (tracker as? Async.Success)?.data?.sortedWith(comparator) ?: emptyList()
+                                val all = appData + trackerData
+
+                                val result = if (query.isEmpty()) {
+                                    Async.Success(all)
+                                } else {
+                                    Async.Success(
+                                        all
+                                            .fastFilter { library ->
+                                                library.name.contains(query, ignoreCase = true) ||
+                                                    library.description?.contains(query, ignoreCase = true) == true
+                                            }.sortedWith(comparator)
+                                    )
+                                }
+
+                                _uiState.update {
+                                    it.copy(
+                                        isLoadingTrackers = isTrackerLoading,
+                                        isRefreshing = if (!isTrackerLoading &&
+                                            isRefreshing
+                                        ) {
+                                            false
+                                        } else {
+                                            it.isRefreshing
+                                        },
+                                    )
+                                }
+                                result
+                            }
                         }
                     }
-
-                    if (errors.isNotEmpty()) {
-                        _uiState.update { it.copy(trackerErrors = errors.toList()) }
-                    }
-
-                    Async.Success(lists)
+                }.collectLatest {
+                    _lists.value = it
                 }
-
-                combine(
-                    appLists,
-                    trackerLists,
-                    searchQuery
-                        .map { it.trim() }
-                        .debounce { if (it.isEmpty()) 0L else 800L }
-                        .distinctUntilChanged(),
-                ) { app, tracker, query ->
-                    val isTrackerLoading = tracker is Async.Loading
-                    if (isTrackerLoading && isRefreshing) {
-                        _uiState.update { it.copy(isLoadingTrackers = true) }
-                        return@combine _lists.value
-                    }
-
-                    when (app) {
-                        is Async.Loading -> {
-                            Async.Loading
-                        }
-
-                        is Async.Failure -> {
-                            _uiState.update { it.copy(isLoadingTrackers = false) }
-                            Async.Failure(app.message, app.cause)
-                        }
-
-                        else -> {
-                            val comparator = when (filter) {
-                                is LibrarySort.Added -> compareBy<LibraryListWithPreview> { it.list.id }
-                                is LibrarySort.Name -> compareBy { it.name }
-                                is LibrarySort.Modified -> compareBy { it.list.updatedAt }
-                            }.run { takeIf { filter.ascending } ?: reversed() }
-
-                            val appData = (app as? Async.Success)?.data ?: emptyList()
-                            val trackerData = (tracker as? Async.Success)?.data?.sortedWith(comparator) ?: emptyList()
-                            val all = appData + trackerData
-
-                            val result = if (query.isEmpty()) {
-                                Async.Success(all)
-                            } else {
-                                Async.Success(
-                                    all
-                                        .fastFilter { library ->
-                                            library.name.contains(query, ignoreCase = true) ||
-                                                library.description?.contains(query, ignoreCase = true) == true
-                                        }.sortedWith(comparator)
-                                )
-                            }
-
-                            _uiState.update {
-                                it.copy(
-                                    isLoadingTrackers = isTrackerLoading,
-                                    isRefreshing = if (!isTrackerLoading && isRefreshing) false else it.isRefreshing,
-                                )
-                            }
-                            result
-                        }
-                    }
-                }
-            }.collectLatest {
-                _lists.value = it
-            }
         }
     }
 
