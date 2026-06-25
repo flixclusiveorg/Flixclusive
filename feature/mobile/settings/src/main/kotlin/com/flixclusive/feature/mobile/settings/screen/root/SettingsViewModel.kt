@@ -24,7 +24,8 @@ internal class SettingsViewModel @Inject constructor(
     val currentUser = userSessionDataStore.currentUserId
         .filterNotNull()
         .flatMapLatest { userId ->
-            userRepository.observeUser(id = userId)
+            userRepository
+                .observeUser(id = userId)
                 .filterNotNull()
         }.stateIn(
             scope = viewModelScope,

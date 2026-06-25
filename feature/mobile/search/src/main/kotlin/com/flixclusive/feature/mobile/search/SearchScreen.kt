@@ -177,11 +177,12 @@ private fun SearchScreenContent(
                         return@SearchBarInput
                     }
 
-                    scope.launch {
-                        safeCall { listState.scrollToItem(0) }
-                    }.invokeOnCompletion {
-                        onSearch()
-                    }
+                    scope
+                        .launch {
+                            safeCall { listState.scrollToItem(0) }
+                        }.invokeOnCompletion {
+                            onSearch()
+                        }
                 },
             )
         },

@@ -98,11 +98,17 @@ internal object Schema18to19 : Migration(18, 19) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_streams_ownerId` ON `cached_streams` (`ownerId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_streams_mediaId` ON `cached_streams` (`mediaId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_streams_providerId` ON `cached_streams` (`providerId`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_streams_composite` ON `cached_streams` (`mediaId`, `seasonNumber`, `episodeNumber`)")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_cached_streams_composite` ON `cached_streams` (`mediaId`, `seasonNumber`, `episodeNumber`)"
+        )
 
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_subtitles_ownerId` ON `cached_subtitles` (`ownerId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_subtitles_mediaId` ON `cached_subtitles` (`mediaId`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_subtitles_providerId` ON `cached_subtitles` (`providerId`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_cached_subtitles_composite` ON `cached_subtitles` (`mediaId`, `seasonNumber`, `episodeNumber`)")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_cached_subtitles_providerId` ON `cached_subtitles` (`providerId`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_cached_subtitles_composite` ON `cached_subtitles` (`mediaId`, `seasonNumber`, `episodeNumber`)"
+        )
     }
 }

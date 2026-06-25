@@ -98,8 +98,7 @@ internal fun <T> ListRadioComponent(
                                     .selectable(
                                         selected = isSelected,
                                         onClick = { selected = option },
-                                    )
-                                    .fillMaxWidth()
+                                    ).fillMaxWidth()
                                     .minimumInteractiveComponentSize(),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {

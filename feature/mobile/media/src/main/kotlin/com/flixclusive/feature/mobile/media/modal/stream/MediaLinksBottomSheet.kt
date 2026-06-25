@@ -157,10 +157,10 @@ internal fun MediaLinksBottomSheet(
             viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
             viewModel.links
         ) { state, links ->
-            playerPrefs.isAutoSelectingServer
-                && !state.isLoading
-                && links.hasPlayableLinks
-                && state.isSuccess
+            playerPrefs.isAutoSelectingServer &&
+                !state.isLoading &&
+                links.hasPlayableLinks &&
+                state.isSuccess
         }.filter { it }
             .distinctUntilChanged()
             .debounce(1000L.milliseconds) // Debounce to prevent rapid navigation if links change quickly
@@ -438,7 +438,8 @@ private fun ErrorMessage(
     var description by remember { mutableStateOf(getDescription()) }
 
     LaunchedEffect(state) {
-        delay(800L.milliseconds) // Small delay to ensure the error message doesn't flash too quickly for fast operations
+        // Small delay to ensure the error message doesn't flash too quickly for fast operations
+        delay(800L.milliseconds)
 
         title = getTitle()
         description = getDescription()

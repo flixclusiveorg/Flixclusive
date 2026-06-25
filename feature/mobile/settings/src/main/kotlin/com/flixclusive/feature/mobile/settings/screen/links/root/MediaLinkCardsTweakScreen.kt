@@ -52,7 +52,9 @@ import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import com.flixclusive.core.strings.R as LocaleR
 
-interface NavigatorMediaLinkCardsTweakScreen : NavigateBack, NavigateToMediaPreviewBottomSheet,
+interface NavigatorMediaLinkCardsTweakScreen :
+    NavigateBack,
+    NavigateToMediaPreviewBottomSheet,
     NavigateToManageMediaLinksScreen {
     fun navigateToManageShowLinksScreen(media: MediaMetadata)
 }

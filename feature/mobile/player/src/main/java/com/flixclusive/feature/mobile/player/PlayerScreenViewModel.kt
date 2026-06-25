@@ -202,8 +202,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         .mapNotNull {
             if (media !is Show) return@mapNotNull null
             it.currentSeason
-        }
-        .distinctUntilChanged()
+        }.distinctUntilChanged()
         .flatMapLatest { selectedSeason ->
             val metadata = media as Show
             getSeasonWithWatchProgress(metadata, selectedSeason)
@@ -820,7 +819,8 @@ internal class PlayerScreenViewModel @Inject constructor(
                 combine(
                     userSessionDataStore.currentUserId.filterNotNull(),
                     selectedEpisode.debounce(600.milliseconds),
-                    _uiState.mapNotNull { state -> state.currentProvider.takeIf { it.isNotEmpty() } }
+                    _uiState
+                        .mapNotNull { state -> state.currentProvider.takeIf { it.isNotEmpty() } }
                         .distinctUntilChanged()
                 ) { userId, episode, providerId ->
                     Triple(userId, episode, providerId)

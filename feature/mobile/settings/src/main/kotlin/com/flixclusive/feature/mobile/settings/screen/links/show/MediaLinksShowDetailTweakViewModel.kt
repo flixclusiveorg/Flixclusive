@@ -33,7 +33,8 @@ internal class MediaLinksShowDetailTweakViewModel @Inject constructor(
     private val _selectedSeason = MutableStateFlow<Int?>(null)
     val selectedSeason = _selectedSeason.asStateFlow()
 
-    val availableSeasons = userSessionDataStore.currentUserId.filterNotNull()
+    val availableSeasons = userSessionDataStore.currentUserId
+        .filterNotNull()
         .flatMapLatest { userId ->
             mediaLinksRepository.observeCachedSeasons(show.id, userId)
         }.map { it.sortedBy { s -> s.number } }

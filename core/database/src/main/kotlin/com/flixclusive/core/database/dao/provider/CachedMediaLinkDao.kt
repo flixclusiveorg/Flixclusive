@@ -72,10 +72,14 @@ interface CachedMediaLinkDao {
         deleteSubtitlesByMedia(ownerId, mediaId)
     }
 
-    @Query("DELETE FROM cached_streams WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber")
+    @Query(
+        "DELETE FROM cached_streams WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber"
+    )
     suspend fun deleteStreamsBySeason(ownerId: String, mediaId: String, seasonNumber: Int)
 
-    @Query("DELETE FROM cached_subtitles WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber")
+    @Query(
+        "DELETE FROM cached_subtitles WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber"
+    )
     suspend fun deleteSubtitlesBySeason(ownerId: String, mediaId: String, seasonNumber: Int)
 
     @Transaction
@@ -84,10 +88,14 @@ interface CachedMediaLinkDao {
         deleteSubtitlesBySeason(ownerId, mediaId, seasonNumber)
     }
 
-    @Query("DELETE FROM cached_streams WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber AND episodeNumber = :episodeNumber")
+    @Query(
+        "DELETE FROM cached_streams WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber AND episodeNumber = :episodeNumber"
+    )
     suspend fun deleteStreamsByEpisode(ownerId: String, mediaId: String, seasonNumber: Int, episodeNumber: Int)
 
-    @Query("DELETE FROM cached_subtitles WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber AND episodeNumber = :episodeNumber")
+    @Query(
+        "DELETE FROM cached_subtitles WHERE ownerId = :ownerId AND mediaId = :mediaId AND seasonNumber = :seasonNumber AND episodeNumber = :episodeNumber"
+    )
     suspend fun deleteSubtitlesByEpisode(ownerId: String, mediaId: String, seasonNumber: Int, episodeNumber: Int)
 
     @Transaction
@@ -120,7 +128,8 @@ interface CachedMediaLinkDao {
         deleteExpiredDeadSubtitles(ownerId, cutoffTimestamp)
     }
 
-    @Query("""
+    @Query(
+        """
         DELETE FROM cached_streams
         WHERE ownerId = :ownerId
           AND isThirdPartyGateway = 1
@@ -133,10 +142,12 @@ interface CachedMediaLinkDao {
                 AND (s2.episodeNumber IS cached_streams.episodeNumber)
                 AND s2.isThirdPartyGateway = 0
           )
-    """)
+    """
+    )
     suspend fun deleteThirdPartyOnlyStreams(ownerId: String)
 
-    @Query("""
+    @Query(
+        """
         DELETE FROM cached_subtitles
         WHERE ownerId = :ownerId
           AND EXISTS (
@@ -157,7 +168,8 @@ interface CachedMediaLinkDao {
                 AND (s2.episodeNumber IS cached_subtitles.episodeNumber)
                 AND s2.isThirdPartyGateway = 0
           )
-    """)
+    """
+    )
     suspend fun deleteSubtitlesWithOnlyThirdPartyStreams(ownerId: String)
 
     @Transaction

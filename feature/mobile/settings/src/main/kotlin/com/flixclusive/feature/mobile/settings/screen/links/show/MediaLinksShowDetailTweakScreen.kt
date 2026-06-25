@@ -59,7 +59,9 @@ import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-interface NavigatorMediaLinksShowDetailTweakScreen : NavigateBack, NavigateToManageMediaLinksScreen
+interface NavigatorMediaLinksShowDetailTweakScreen :
+    NavigateBack,
+    NavigateToManageMediaLinksScreen
 
 @Destination<ExternalModuleGraph>(
     navArgs = ManageMediaLinksTweakScreenArgs::class
@@ -86,7 +88,7 @@ internal fun MediaLinksShowDetailTweakScreen(
             navigator.navigateToManageMediaLinksScreen(
                 media = viewModel.show,
                 episode = Episode(
-                    id = "${viewModel.show.id}-${selectedSeason}-$episodeNumber",
+                    id = "${viewModel.show.id}-$selectedSeason-$episodeNumber",
                     number = episodeNumber,
                     season = selectedSeason ?: 1,
                     title = "Episode $episodeNumber",

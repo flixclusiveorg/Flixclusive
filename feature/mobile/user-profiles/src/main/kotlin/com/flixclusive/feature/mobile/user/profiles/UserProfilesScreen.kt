@@ -406,7 +406,7 @@ private fun TopBar(
                                     }
 
                                     ScreenType.ContinueScreen -> {
-                                        /*No-op*/
+                                        // No-op
                                     }
                                 }
                             }

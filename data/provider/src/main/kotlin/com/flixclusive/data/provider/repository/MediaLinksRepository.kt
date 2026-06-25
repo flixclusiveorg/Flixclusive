@@ -1,6 +1,8 @@
 package com.flixclusive.data.provider.repository
 
+import com.flixclusive.core.database.dao.provider.EpisodeLinks
 import com.flixclusive.core.database.dao.provider.MediaLinksWithData
+import com.flixclusive.core.database.dao.provider.SeasonLinks
 import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import kotlinx.coroutines.flow.Flow
@@ -47,9 +49,9 @@ interface MediaLinksRepository {
 
     fun getSize(ownerId: String): Flow<Int>
 
-    fun observeCachedSeasons(mediaId: String, ownerId: String): Flow<List<com.flixclusive.core.database.dao.provider.SeasonLinks>>
+    fun observeCachedSeasons(mediaId: String, ownerId: String): Flow<List<SeasonLinks>>
 
-    fun observeCachedEpisodes(mediaId: String, seasonNumber: Int, ownerId: String): Flow<List<com.flixclusive.core.database.dao.provider.EpisodeLinks>>
+    fun observeCachedEpisodes(mediaId: String, seasonNumber: Int, ownerId: String): Flow<List<EpisodeLinks>>
 
     suspend fun setLinkStatus(url: String, ownerId: String, isDead: Boolean)
 

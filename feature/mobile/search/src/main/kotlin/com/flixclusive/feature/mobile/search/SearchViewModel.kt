@@ -73,7 +73,8 @@ internal class SearchViewModel @Inject constructor(
 
     private val searchApis = LinkedHashMap<String, SearchProviderApi>()
 
-    val providers = userSessionDataStore.currentUserId.filterNotNull()
+    val providers = userSessionDataStore.currentUserId
+        .filterNotNull()
         .flatMapLatest(providerRepository::getProvidersAsFlow)
         .mapLatest { list ->
             searchApis.clear()
@@ -108,8 +109,7 @@ internal class SearchViewModel @Inject constructor(
                 }
 
             Async.Success(searchableProviders) as Async<List<SearchProvider>>
-        }
-        .onStart { emit(Async.Loading) }
+        }.onStart { emit(Async.Loading) }
         .catch { emit(Async.Failure(it)) }
         .stateIn(
             scope = viewModelScope,

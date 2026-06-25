@@ -169,7 +169,7 @@ private val mobileNavigationItems =
         ),
         AppNavigationItem(
             screen = AppmobileNavGraphs.search,
-            iconSelected = UiCommonR.drawable.search_filled, // Should probably be search_filled if available, but search_outlined is what we have
+            iconSelected = UiCommonR.drawable.search_filled,
             iconUnselected = UiCommonR.drawable.search_outlined,
             label = LocaleR.string.search,
         ),

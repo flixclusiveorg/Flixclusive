@@ -165,8 +165,7 @@ internal fun SearchBarInput(
                         1f to Color.Transparent,
                     )
                 )
-            }
-            .padding(horizontal = 10.dp),
+            }.padding(horizontal = 10.dp),
     ) {
         Box(
             modifier = Modifier
@@ -175,8 +174,7 @@ internal fun SearchBarInput(
                 .padding(top = 10.dp)
                 .graphicsLayer {
                     translationX = shakeOffset.value
-                }
-                .ifElse(
+                }.ifElse(
                     condition = provider == null,
                     ifTrueModifier = Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },

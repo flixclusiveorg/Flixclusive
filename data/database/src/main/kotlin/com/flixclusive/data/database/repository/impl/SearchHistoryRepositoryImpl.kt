@@ -16,13 +16,14 @@ internal class SearchHistoryRepositoryImpl @Inject constructor(
         return withContext(appDispatchers.io) {
             val existing = searchHistoryDao.get(item.ownerId, item.query)
 
-            searchHistoryDao.insert(
-                item.copy(
-                    id = existing?.id ?: 0,
-                    createdAt = existing?.createdAt ?: item.createdAt,
-                    updatedAt = item.updatedAt,
-                )
-            ).toInt()
+            searchHistoryDao
+                .insert(
+                    item.copy(
+                        id = existing?.id ?: 0,
+                        createdAt = existing?.createdAt ?: item.createdAt,
+                        updatedAt = item.updatedAt,
+                    )
+                ).toInt()
         }
     }
 

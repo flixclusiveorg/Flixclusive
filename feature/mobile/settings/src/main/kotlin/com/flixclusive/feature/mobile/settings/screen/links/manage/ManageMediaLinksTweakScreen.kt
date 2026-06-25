@@ -205,8 +205,11 @@ private fun ManageMediaLinksTweakScreenContent(
                         ) { selectionMode ->
                             Icon(
                                 painter = painterResource(
-                                    if (selectionMode) UiCommonR.drawable.round_close_24
-                                    else UiCommonR.drawable.left_arrow
+                                    if (selectionMode) {
+                                        UiCommonR.drawable.round_close_24
+                                    } else {
+                                        UiCommonR.drawable.left_arrow
+                                    }
                                 ),
                                 contentDescription = null
                             )
@@ -227,10 +230,10 @@ private fun ManageMediaLinksTweakScreenContent(
                                     transitionSpec = {
                                         if (targetState > initialState) {
                                             (slideInVertically { height -> height } + fadeIn()) togetherWith
-                                                    slideOutVertically { height -> -height } + fadeOut()
+                                                slideOutVertically { height -> -height } + fadeOut()
                                         } else {
                                             (slideInVertically { height -> -height } + fadeIn()) togetherWith
-                                                    slideOutVertically { height -> height } + fadeOut()
+                                                slideOutVertically { height -> height } + fadeOut()
                                         }.using(SizeTransform(clip = false))
                                     }
                                 ) { count ->
@@ -482,8 +485,11 @@ private fun LinkCard(
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 val icon =
-                    if (link is CachedStream) UiCommonR.drawable.play_outline_circle
-                    else UiCommonR.drawable.outline_subtitles_24
+                    if (link is CachedStream) {
+                        UiCommonR.drawable.play_outline_circle
+                    } else {
+                        UiCommonR.drawable.outline_subtitles_24
+                    }
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
