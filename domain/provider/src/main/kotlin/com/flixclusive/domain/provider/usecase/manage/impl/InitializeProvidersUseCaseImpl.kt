@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.json.fromJson
@@ -56,7 +57,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
     override val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     override fun invoke() = channelFlow {
-        if (_isLoading.value) {
+        if (!_isLoading.value) {
             warnLog("Providers have already been initialized. Skipping initialization...")
             return@channelFlow
         }
@@ -83,6 +84,10 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
     }.onStart {
         _isLoading.update { true }
     }.onCompletion {
+        if (it != null) {
+            errorLog("Failed to initialize providers")
+            errorLog(it)
+        }
         _isLoading.update { false }
     }
 
