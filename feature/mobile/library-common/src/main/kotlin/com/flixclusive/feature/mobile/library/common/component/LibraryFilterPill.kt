@@ -57,7 +57,7 @@ fun LibraryFilterPill(
                 is LibrarySort.Added -> selected() is LibrarySort.Added
             }
 
-            alpha = if (isSelected && enabled) 1f else 0.6f
+            alpha = if (isSelected && enabled) 1f else 0.8f
         },
         contentPadding = PaddingValues(
             horizontal = 8.dp,
@@ -124,7 +124,7 @@ private fun LibraryFilterPillDescendingPreview() {
     FlixclusiveTheme {
         Surface(modifier = Modifier.padding(16.dp)) {
             LibraryFilterPill(
-                selected = { LibrarySort.Modified(ascending = false) },
+                selected = { LibrarySort.Name(ascending = false) },
                 filter = LibrarySort.Modified(),
                 onToggleDirection = {},
             )
