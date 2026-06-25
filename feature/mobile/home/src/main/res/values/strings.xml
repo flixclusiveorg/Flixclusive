@@ -7,4 +7,5 @@
     <string name="catalog_providers_sheet_desc">Here are all the providers that the app can fetch catalogs from. You can enable or disable them to your liking.</string>
     <string name="empty_catalog_title">No juice here!</string>
     <string name="empty_catalog_desc">This catalog seems to be empty</string>
+    <string name="label_loading_catalogs">Loading catalogs...</string>
 </resources>

@@ -175,6 +175,7 @@ private fun HomeScreenContent(
                 modifier = Modifier.fillMaxSize(),
                 loadingContent = {
                     LoadingScreen(
+                        message = stringResource(R.string.label_loading_catalogs),
                         modifier = Modifier
                             .padding(it)
                             .padding(LocalGlobalScaffoldPadding.current),
@@ -199,11 +200,6 @@ private fun HomeScreenContent(
                     if (isEmpty) {
                         EmptyScreenContent(
                             openAddProviderScreen = navigator::navigateToAddProviderScreen,
-                        )
-                        LoadingScreen(
-                            modifier = Modifier
-                                .padding(it)
-                                .padding(LocalGlobalScaffoldPadding.current),
                         )
                     } else {
                         val updatedData by rememberUpdatedState(data)
