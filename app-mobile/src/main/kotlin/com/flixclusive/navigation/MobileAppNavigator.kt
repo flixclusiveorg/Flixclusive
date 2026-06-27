@@ -221,14 +221,12 @@ internal class MobileAppNavigator(
     }
 
     override fun navigateToHomeScreen() {
-        runOnResumed {
-            navigator.navigate(HomeGraph) {
-                popUpTo(AppGraph) {
-                    saveState = true
-                }
-
-                launchSingleTop = true
-                restoreState = true
+        // Not running on RESUMED only
+        // there might be cases where users close app even
+        // before triggering this method
+        navigator.navigate(HomeGraph) {
+            popUpTo(AppGraph) {
+                saveState = true
             }
         }
     }

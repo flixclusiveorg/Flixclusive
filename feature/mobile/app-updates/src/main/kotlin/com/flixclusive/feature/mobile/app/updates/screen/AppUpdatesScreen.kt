@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,6 +61,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
 import com.flixclusive.core.common.file.toUri
@@ -75,6 +78,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -88,6 +92,7 @@ internal fun AppUpdatesScreen(
     isComingFromSplashScreen: Boolean,
     viewModel: AppUpdatesViewModel = hiltViewModel(),
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
 
     AppUpdatesScreenContent(
@@ -102,7 +107,11 @@ internal fun AppUpdatesScreen(
                 url = updateUrl,
             )
         },
-        openHomeScreen = navigator::navigateToHomeScreen,
+        openHomeScreen = {
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                navigator.navigateToHomeScreen()
+            }
+        },
         goBack = navigator::navigateBack,
     )
 }
@@ -119,6 +128,7 @@ private fun AppUpdatesScreenContent(
     goBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val uriHandler = LocalUriHandler.current
 
     val buttonPaddingValues = PaddingValues(horizontal = 5.dp, vertical = 10.dp)
@@ -317,10 +327,10 @@ private fun AppUpdatesScreenContent(
                         ) {
                             val label by remember {
                                 derivedStateOf {
-                                    var label = context.getString(LocaleR.string.update_label)
+                                    var label = resources.getString(LocaleR.string.update_label)
 
                                     if (downloadState.status == DownloadStatus.COMPLETED) {
-                                        label = context.getString(LocaleR.string.label_install)
+                                        label = resources.getString(LocaleR.string.label_install)
                                     } else if (downloadState.status.isDownloading) {
                                         label = "${downloadState.progress}%"
                                     }
@@ -370,7 +380,7 @@ private fun AppUpdatesScreenBasePreview() {
             else -> DownloadState.IDLE
         }
 
-        delay(300)
+        delay(300.milliseconds)
     }
 
     FlixclusiveTheme {
