@@ -46,7 +46,7 @@ private const val ON_NAME_CHANGE_DELAY = 800L
 
 @Composable
 internal fun TweakTextField(tweak: ProfileTweakUI.TextField) {
-    var value by remember { mutableStateOf(tweak.initialValue.toTextFieldValue()) }
+    var value by remember(tweak.initialValue) { mutableStateOf(tweak.initialValue.toTextFieldValue()) }
 
     val changeCallback = onValueChangeWithDelay(tweak.onValueChange)
 

@@ -109,34 +109,33 @@ private fun UserEditScreenContent(
     pinSetupResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
     pinRemoveResultRecipient: ResultRecipient<PinVerifyScreenDestination, PinVerificationResult>,
 ) {
-    val tweaks =
-        remember(user.pin) {
-            listOf(
-                IdentityTweak(
-                    initialName = user.name,
-                    userHasPin = user.pin != null,
-                    onOpenPinScreen = { isRemovingPin ->
-                        val action = if (isRemovingPin) {
-                            PinAction.Verify(user.pin!!)
-                        } else {
-                            PinAction.Setup
-                        }
+    val tweaks = remember(user) {
+        listOf(
+            IdentityTweak(
+                initialName = user.name,
+                userHasPin = user.pin != null,
+                onOpenPinScreen = { isRemovingPin ->
+                    val action = if (isRemovingPin) {
+                        PinAction.Verify(user.pin!!)
+                    } else {
+                        PinAction.Setup
+                    }
 
-                        openUserPinScreen(action)
-                    },
-                    onNameChange = {
-                        onEditUser(user.copy(name = it))
-                    },
-                ),
-                DataTweak(
-                    onClearSearchHistory = { onClearSearchHistory(user.id) },
-                    onDeleteProfile = { onRemoveUser(user.id) },
-                    onClearLibraries = { selection ->
-                        onClearLibraries(user.id, selection)
-                    },
-                ),
-            )
-        }
+                    openUserPinScreen(action)
+                },
+                onNameChange = {
+                    onEditUser(user.copy(name = it))
+                },
+            ),
+            DataTweak(
+                onClearSearchHistory = { onClearSearchHistory(user.id) },
+                onDeleteProfile = { onRemoveUser(user.id) },
+                onClearLibraries = { selection ->
+                    onClearLibraries(user.id, selection)
+                },
+            ),
+        )
+    }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -204,7 +203,8 @@ private fun UserEditScreenContent(
                                             dp = (DefaultAvatarSize.value * 1.2).dp,
                                             increaseBy = 80.dp,
                                         ),
-                                    ).aspectRatio(1F),
+                                    )
+                                    .aspectRatio(1F),
                             )
                         }
 
@@ -238,7 +238,8 @@ private fun ChangeImageButton(
                 .background(
                     color = MaterialTheme.colorScheme.onSurface,
                     shape = CircleShape,
-                ).clickable(
+                )
+                .clickable(
                     indication =
                         ripple(
                             bounded = false,

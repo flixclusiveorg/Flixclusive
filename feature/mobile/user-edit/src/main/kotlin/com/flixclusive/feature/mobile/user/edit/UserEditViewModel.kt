@@ -30,6 +30,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.database.R as DatabaseR
 
+
+// TODO: support clearing other data
 @HiltViewModel
 internal class UserEditViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager,
@@ -51,7 +53,7 @@ internal class UserEditViewModel @Inject constructor(
         .filterNotNull()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = User.Empty,
         )
 
