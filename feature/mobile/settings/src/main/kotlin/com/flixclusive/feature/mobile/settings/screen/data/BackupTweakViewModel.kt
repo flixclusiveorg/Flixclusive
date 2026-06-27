@@ -14,6 +14,7 @@ import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.backup.util.BackupUtil.decodeFromUri
 import com.flixclusive.data.database.repository.SearchHistoryRepository
 import com.flixclusive.data.provider.repository.MediaLinksRepository
@@ -155,7 +156,7 @@ internal class BackupTweakViewModel @Inject constructor(
         if (includeProviders) {
             val userId = getCurrentUserId()
             providerRepository.getProviders(userId).forEach {
-                unloadProviderUseCase(it.provider, uninstall = false)
+                safeCall { unloadProviderUseCase(it.provider, uninstall = false) }
             }
         }
 
