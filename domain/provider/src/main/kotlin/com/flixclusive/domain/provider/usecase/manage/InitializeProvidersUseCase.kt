@@ -14,7 +14,9 @@ interface InitializeProvidersUseCase {
      *
      * *NOTE: This also initializes debug providers*
      *
+     * @param skipLoading If true, the loading state will not be emitted.
+     *
      * @return A flow containing the results of the initialization operation.
      * */
-    operator fun invoke(): Flow<ProviderResult>
+    operator fun invoke(skipLoading: Boolean = false): Flow<ProviderResult>
 }

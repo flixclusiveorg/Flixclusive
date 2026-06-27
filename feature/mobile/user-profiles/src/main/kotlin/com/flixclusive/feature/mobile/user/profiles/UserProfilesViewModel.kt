@@ -10,6 +10,7 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.data.database.repository.UserAuthRepository
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.onStart
@@ -32,13 +34,14 @@ internal class UserProfilesViewModel @Inject constructor(
     private val userAuthRepository: UserAuthRepository,
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
+    private val initializeProviders: InitializeProvidersUseCase,
     userSessionDataStore: UserSessionDataStore,
     userRepository: UserRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfilesUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<UserProfilesEvent>()
+    private val _events = MutableSharedFlow<UserProfilesEvent>(replay = 1)
     val events = _events.asSharedFlow()
 
     private var loginJob: Job? = null
@@ -56,7 +59,7 @@ internal class UserProfilesViewModel @Inject constructor(
         _uiState.update { it.copy(isLoadingProfiles = true) }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Lazily,
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList(),
     )
 
@@ -67,8 +70,15 @@ internal class UserProfilesViewModel @Inject constructor(
             userAuthRepository.signOut()
             providerRepository.clearAll()
             userAuthRepository.signIn(user)
+            initializeProviders(skipLoading = true).collect()
 
             _events.emit(UserProfilesEvent.Login)
+        }
+    }
+
+    fun onFocusProfile(user: User) {
+        _uiState.update {
+            it.copy(focusedProfile = user)
         }
     }
 }
@@ -79,5 +89,6 @@ internal sealed class UserProfilesEvent {
 
 @Immutable
 internal data class UserProfilesUiState(
-    val isLoadingProfiles: Boolean = true
+    val isLoadingProfiles: Boolean = true,
+    val focusedProfile: User? = null,
 )

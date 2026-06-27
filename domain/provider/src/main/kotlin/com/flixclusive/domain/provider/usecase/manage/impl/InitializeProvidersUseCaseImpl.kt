@@ -56,7 +56,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     override val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    override fun invoke() = channelFlow {
+    override fun invoke(skipLoading: Boolean) = channelFlow {
         if (mutex.isLocked) {
             warnLog("Provider initialization is already in progress. Skipping initialization...")
             return@channelFlow
@@ -78,7 +78,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
             }
         }
     }.onStart {
-        _isLoading.update { true }
+        _isLoading.update { !skipLoading }
     }.onCompletion {
         if (it != null) {
             errorLog("Failed to initialize providers")

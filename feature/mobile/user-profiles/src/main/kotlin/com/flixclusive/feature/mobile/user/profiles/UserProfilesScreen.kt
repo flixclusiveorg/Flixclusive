@@ -63,13 +63,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navigator.PinAction
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
-import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
@@ -98,7 +98,7 @@ fun UserProfilesScreen(
         navigator = navigator,
         isFromSplashScreen = isFromSplashScreen,
         pinVerifyResultRecipient = pinVerifyResultRecipient,
-        viewModel = activityHiltViewModel()
+        viewModel = hiltViewModel()
     )
 }
 
@@ -114,7 +114,6 @@ internal fun UserProfilesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var isContinueButtonLoading by remember { mutableStateOf(false) }
-    var focusedProfile by remember { mutableStateOf<User?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect {
@@ -129,8 +128,9 @@ internal fun UserProfilesScreen(
     }
 
     pinVerifyResultRecipient.onNavResult { result ->
+        val focusedProfile = uiState.focusedProfile
         if (result is NavResult.Value && result.value.isVerified && focusedProfile != null) {
-            viewModel.onUseProfile(focusedProfile!!)
+            viewModel.onUseProfile(focusedProfile)
         }
     }
 
@@ -138,11 +138,11 @@ internal fun UserProfilesScreen(
         profiles = profiles,
         isContinueButtonLoading = isContinueButtonLoading,
         isLoadingProfiles = uiState.isLoadingProfiles,
-        focusedProfile = focusedProfile,
+        focusedProfile = uiState.focusedProfile,
         isFromSplashScreen = isFromSplashScreen,
         navigator = navigator,
         initialState = if (isFromSplashScreen) ScreenType.ContinueScreen else ScreenType.Pager,
-        onFocusProfile = { focusedProfile = it },
+        onFocusProfile = viewModel::onFocusProfile,
         onUseProfile = viewModel::onUseProfile,
     )
 }

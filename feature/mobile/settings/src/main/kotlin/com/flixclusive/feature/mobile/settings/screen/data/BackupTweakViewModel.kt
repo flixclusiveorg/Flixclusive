@@ -166,7 +166,7 @@ internal class BackupTweakViewModel @Inject constructor(
         ).first { state -> state is BackupState.Success || state is BackupState.Error }
             .also {
                 if (includeProviders) {
-                    initializeProviders().collect()
+                    initializeProviders(skipLoading = true).collect()
                 }
             }
     }
