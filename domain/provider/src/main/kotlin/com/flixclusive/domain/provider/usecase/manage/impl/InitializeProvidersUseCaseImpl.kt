@@ -57,17 +57,11 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
     override val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     override fun invoke() = channelFlow {
-        if (!_isLoading.value) {
-            warnLog("Providers have already been initialized. Skipping initialization...")
-            return@channelFlow
-        }
-
         if (mutex.isLocked) {
             warnLog("Provider initialization is already in progress. Skipping initialization...")
             return@channelFlow
         }
 
-        // lock to prevent multiple initializations at the same time
         withContext(appDispatchers.io) {
             mutex.withLock {
                 val userId = userSessionDataStore.currentUserId.filterNotNull().first()
@@ -79,6 +73,8 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
                     loadProviderUseCase(installedProvider = providerWrapper.provider)
                         .collect(::send)
                 }
+
+                _isLoading.update { false }
             }
         }
     }.onStart {
@@ -88,7 +84,6 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
             errorLog("Failed to initialize providers")
             errorLog(it)
         }
-        _isLoading.update { false }
     }
 
     /**
