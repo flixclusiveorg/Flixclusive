@@ -51,7 +51,8 @@ internal class UserProfilesViewModel @Inject constructor(
         userRepository.observeUsers(),
         userSessionDataStore.currentUserId.debounce(300.milliseconds),
     ) { users, loggedInUser ->
-        users.fastFilter { it.id != loggedInUser }
+        users
+            .fastFilter { it.id != loggedInUser }
             .also {
                 _uiState.update { it.copy(isLoadingProfiles = false) }
             }
