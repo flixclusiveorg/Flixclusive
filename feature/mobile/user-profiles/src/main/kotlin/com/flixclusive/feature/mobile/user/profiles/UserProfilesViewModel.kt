@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.user.profiles
 
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,63 +10,59 @@ import com.flixclusive.data.database.repository.UserAuthRepository
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 internal class UserProfilesViewModel @Inject constructor(
     private val userAuthRepository: UserAuthRepository,
-    private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
     private val appDispatchers: AppDispatchers,
+    userSessionDataStore: UserSessionDataStore,
     userRepository: UserRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(ProfilesScreenUiState())
-    val uiState = _uiState.asStateFlow()
+    private val _events = MutableSharedFlow<ProfileUiScreenEvent>()
+    val events = _events.asSharedFlow()
 
     private var loginJob: Job? = null
 
-    val profiles = userRepository
-        .observeUsers()
-        .mapLatest { it.filterOutCurrentLoggedInUser() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Lazily,
-            initialValue = emptyList(),
-        )
+    @OptIn(FlowPreview::class)
+    val profiles = combine(
+        userRepository.observeUsers(),
+        userSessionDataStore.currentUserId.debounce(300.milliseconds),
+    ) { users, loggedInUser ->
+        users.fastFilter { it.id != loggedInUser }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = emptyList(),
+    )
 
     fun onUseProfile(user: User) {
         if (loginJob?.isActive == true) return
 
         loginJob = appDispatchers.ioScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _events.emit(ProfileUiScreenEvent.Loading)
 
             userAuthRepository.signOut()
             providerRepository.clearAll()
             userAuthRepository.signIn(user)
+
+            _events.emit(ProfileUiScreenEvent.Login)
         }
-    }
-
-    private suspend fun List<User>.filterOutCurrentLoggedInUser() =
-        fastFilter { it.id != userSessionDataStore.currentUserId.filterNotNull().first() }
-
-    fun onHoverProfile(user: User) {
-        _uiState.update { it.copy(focusedProfile = user) }
     }
 }
 
-@Immutable
-internal data class ProfilesScreenUiState(
-    val isLoggedIn: Boolean = false,
-    val isLoading: Boolean = false,
-    val focusedProfile: User? = null,
-)
+internal sealed class ProfileUiScreenEvent {
+    data object Login : ProfileUiScreenEvent()
+    data object Loading : ProfileUiScreenEvent()
+}

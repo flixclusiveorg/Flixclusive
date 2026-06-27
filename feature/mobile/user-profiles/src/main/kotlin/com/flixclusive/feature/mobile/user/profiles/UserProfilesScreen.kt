@@ -80,7 +80,9 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.OpenResultRecipient
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -108,31 +110,38 @@ internal fun UserProfilesScreen(
     viewModel: UserProfilesViewModel,
 ) {
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var isContinueButtonLoading by remember { mutableStateOf(false) }
+    var focusedProfile by remember { mutableStateOf<User?>(null) }
 
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            navigator.navigateToHomeScreen()
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect {
+            when (it) {
+                is ProfileUiScreenEvent.Login -> {
+                    delay(1.seconds)
+                    navigator.navigateToHomeScreen()
+                }
+
+                is ProfileUiScreenEvent.Loading -> {
+                    isContinueButtonLoading = true
+                }
+            }
         }
     }
 
     pinVerifyResultRecipient.onNavResult { result ->
-        if (result is NavResult.Value && result.value.isVerified && uiState.focusedProfile != null) {
-            viewModel.onUseProfile(uiState.focusedProfile!!)
+        if (result is NavResult.Value && result.value.isVerified && focusedProfile != null) {
+            viewModel.onUseProfile(focusedProfile!!)
         }
     }
 
     UserProfilesScreenContent(
         profiles = profiles,
-        uiState = uiState,
+        isContinueButtonLoading = isContinueButtonLoading,
+        focusedProfile = focusedProfile,
         isFromSplashScreen = isFromSplashScreen,
         navigator = navigator,
-        initialState = if (isFromSplashScreen) {
-            ScreenType.ContinueScreen
-        } else {
-            ScreenType.Pager
-        },
-        onHoverProfile = viewModel::onHoverProfile,
+        initialState = if (isFromSplashScreen) ScreenType.ContinueScreen else ScreenType.Pager,
+        onFocusProfile = { focusedProfile = it },
         onUseProfile = viewModel::onUseProfile,
     )
 }
@@ -147,11 +156,12 @@ private enum class ScreenType {
 @Composable
 private fun UserProfilesScreenContent(
     profiles: List<User>,
-    uiState: ProfilesScreenUiState,
     isFromSplashScreen: Boolean,
+    isContinueButtonLoading: Boolean,
+    focusedProfile: User?,
     navigator: NavigatorUserProfilesScreen,
     initialState: ScreenType,
-    onHoverProfile: (User) -> Unit,
+    onFocusProfile: (User) -> Unit,
     onUseProfile: (User) -> Unit,
 ) {
     val (pageCount, initialPage) = remember(profiles.size) {
@@ -214,7 +224,7 @@ private fun UserProfilesScreenContent(
                             val onHover = fun(user: User) {
                                 lastScreenTypeUsed = screenType
                                 screenType = ScreenType.ContinueScreen
-                                onHoverProfile(user)
+                                onFocusProfile(user)
                             }
 
                             when (state) {
@@ -237,10 +247,10 @@ private fun UserProfilesScreenContent(
                                 }
 
                                 ScreenType.ContinueScreen -> {
-                                    uiState.focusedProfile?.let { profile ->
+                                    focusedProfile?.let { profile ->
                                         ClickedProfileScreen(
                                             user = profile,
-                                            isLoading = uiState.isLoading,
+                                            isLoading = isContinueButtonLoading,
                                             onBack = { screenType = lastScreenTypeUsed },
                                             onConfirm = {
                                                 if (profile.pin.isNullOrEmpty()) {
@@ -264,12 +274,12 @@ private fun UserProfilesScreenContent(
         }
 
         AnimatedVisibility(
-            visible = !uiState.isLoading,
+            visible = !isContinueButtonLoading,
             enter = EnterTransition.None,
             exit = slideOutVertically(tween(500)) + fadeOut(),
         ) {
             TopBar(
-                showTagOnly = profiles.isEmpty() || screenType == ScreenType.ContinueScreen,
+                showTagOnly = (profiles.isEmpty() && isFromSplashScreen) || screenType == ScreenType.ContinueScreen,
                 screenType = screenType,
                 isFromSplashScreen = isFromSplashScreen,
                 addNewUser = navigator::navigateToAddProfileScreen,
@@ -521,7 +531,6 @@ private fun ActionButtonTooltip(
 @Preview
 @Composable
 private fun UserProfilesScreenBasePreview() {
-    var uiState by remember { mutableStateOf(ProfilesScreenUiState()) }
 
     FlixclusiveTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -532,7 +541,8 @@ private fun UserProfilesScreenBasePreview() {
                     User(id = "preview-user-3", name = "User 3", image = 3),
                     User(id = "preview-user-4", name = "User 4", image = 4),
                 ),
-                uiState = uiState,
+                focusedProfile = null,
+                isContinueButtonLoading = false,
                 isFromSplashScreen = false,
                 navigator = object : NavigatorUserProfilesScreen {
                     override fun navigateToHomeScreen() {}
@@ -550,8 +560,8 @@ private fun UserProfilesScreenBasePreview() {
                     override fun navigateBack() {}
                 },
                 initialState = ScreenType.Pager,
-                onHoverProfile = { uiState = uiState.copy(focusedProfile = it) },
-                onUseProfile = { uiState = uiState.copy(isLoading = true) },
+                onFocusProfile = {  },
+                onUseProfile = {  },
             )
         }
     }
