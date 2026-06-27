@@ -71,6 +71,7 @@ import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.Provid
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.common.util.ViewModelUtil.activityHiltViewModel
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.LoadingScreen
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -110,19 +111,18 @@ internal fun UserProfilesScreen(
     viewModel: UserProfilesViewModel,
 ) {
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     var isContinueButtonLoading by remember { mutableStateOf(false) }
     var focusedProfile by remember { mutableStateOf<User?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect {
             when (it) {
-                is ProfileUiScreenEvent.Login -> {
+                is UserProfilesEvent.Login -> {
+                    isContinueButtonLoading = true
                     delay(1.seconds)
                     navigator.navigateToHomeScreen()
-                }
-
-                is ProfileUiScreenEvent.Loading -> {
-                    isContinueButtonLoading = true
                 }
             }
         }
@@ -137,6 +137,7 @@ internal fun UserProfilesScreen(
     UserProfilesScreenContent(
         profiles = profiles,
         isContinueButtonLoading = isContinueButtonLoading,
+        isLoadingProfiles = uiState.isLoadingProfiles,
         focusedProfile = focusedProfile,
         isFromSplashScreen = isFromSplashScreen,
         navigator = navigator,
@@ -158,6 +159,7 @@ private fun UserProfilesScreenContent(
     profiles: List<User>,
     isFromSplashScreen: Boolean,
     isContinueButtonLoading: Boolean,
+    isLoadingProfiles: Boolean,
     focusedProfile: User?,
     navigator: NavigatorUserProfilesScreen,
     initialState: ScreenType,
@@ -191,85 +193,103 @@ private fun UserProfilesScreenContent(
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier =
-                Modifier
-                    .align(Alignment.Center),
+            modifier = Modifier.align(Alignment.Center),
         ) {
-            if (profiles.isNotEmpty()) {
-                ProvideSharedTransitionScope {
-                    AnimatedContent(
-                        label = "main_content",
-                        targetState = screenType,
-                        transitionSpec = {
-                            val enterDuration = 500
-                            val exitDuration = 300
-                            val enterTweenFloat = tween<Float>(durationMillis = enterDuration)
-                            val enterTweenInt = tween<IntOffset>(durationMillis = enterDuration)
-                            val exitTweenFloat = tween<Float>(durationMillis = exitDuration)
-                            val exitTweenInt = tween<IntOffset>(durationMillis = exitDuration)
+            AnimatedContent(
+                label = "loading_indicator",
+                targetState = isLoadingProfiles,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    fadeIn(tween(500)) togetherWith fadeOut(tween(300))
+                }
+            ) { isLoading ->
+                if (isLoading) {
+                    LoadingScreen(
+                        label = null,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                    return@AnimatedContent
+                }
 
-                            val isNotSelecting = initialState != ScreenType.ContinueScreen
-                            if (isNotSelecting && targetState == ScreenType.Grid) {
-                                slideInHorizontally(enterTweenInt) + fadeIn(enterTweenFloat) togetherWith
-                                    scaleOut(exitTweenFloat) + fadeOut(exitTweenFloat)
-                            } else if (isNotSelecting && targetState == ScreenType.Pager) {
-                                fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
-                                    slideOutHorizontally(exitTweenInt) + fadeOut(exitTweenFloat)
-                            } else {
-                                fadeIn() togetherWith fadeOut()
-                            }
-                        },
-                    ) { state ->
-                        ProvideAnimatedVisibilityScope {
-                            val onHover = fun(user: User) {
-                                lastScreenTypeUsed = screenType
-                                screenType = ScreenType.ContinueScreen
-                                onFocusProfile(user)
-                            }
+                if (profiles.isNotEmpty()) {
+                    ProvideSharedTransitionScope {
+                        AnimatedContent(
+                            label = "main_content",
+                            targetState = screenType,
+                            modifier = Modifier.fillMaxSize(),
+                            transitionSpec = {
+                                val enterDuration = 500
+                                val exitDuration = 300
+                                val enterTweenFloat = tween<Float>(durationMillis = enterDuration)
+                                val enterTweenInt = tween<IntOffset>(durationMillis = enterDuration)
+                                val exitTweenFloat = tween<Float>(durationMillis = exitDuration)
+                                val exitTweenInt = tween<IntOffset>(durationMillis = exitDuration)
 
-                            when (state) {
-                                ScreenType.Grid -> {
-                                    GridMode(
-                                        profiles = profiles,
-                                        onHover = onHover,
-                                        listState = listState,
-                                        onEdit = { navigator.navigateToEditUserScreen(it.id) },
-                                    )
+                                val isNotSelecting = initialState != ScreenType.ContinueScreen
+                                if (isNotSelecting && targetState == ScreenType.Grid) {
+                                    slideInHorizontally(enterTweenInt) + fadeIn(enterTweenFloat) togetherWith
+                                        scaleOut(exitTweenFloat) + fadeOut(exitTweenFloat)
+                                } else if (isNotSelecting && targetState == ScreenType.Pager) {
+                                    fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
+                                        slideOutHorizontally(exitTweenInt) + fadeOut(exitTweenFloat)
+                                } else {
+                                    fadeIn() togetherWith fadeOut()
+                                }
+                            },
+                        ) { state ->
+                            ProvideAnimatedVisibilityScope {
+                                val onHover = fun(user: User) {
+                                    lastScreenTypeUsed = screenType
+                                    screenType = ScreenType.ContinueScreen
+                                    onFocusProfile(user)
                                 }
 
-                                ScreenType.Pager -> {
-                                    PagerMode(
-                                        profiles = profiles,
-                                        onHover = onHover,
-                                        pagerState = pagerState,
-                                        onEdit = { navigator.navigateToEditUserScreen(it.id) },
-                                    )
-                                }
-
-                                ScreenType.ContinueScreen -> {
-                                    focusedProfile?.let { profile ->
-                                        ClickedProfileScreen(
-                                            user = profile,
-                                            isLoading = isContinueButtonLoading,
-                                            onBack = { screenType = lastScreenTypeUsed },
-                                            onConfirm = {
-                                                if (profile.pin.isNullOrEmpty()) {
-                                                    onUseProfile(profile)
-                                                } else {
-                                                    navigator.navigateToUserPinScreen(PinAction.Verify(profile.pin!!))
-                                                }
-                                            },
+                                when (state) {
+                                    ScreenType.Grid -> {
+                                        GridMode(
+                                            profiles = profiles,
+                                            onHover = onHover,
+                                            listState = listState,
+                                            onEdit = { navigator.navigateToEditUserScreen(it.id) },
                                         )
+                                    }
+
+                                    ScreenType.Pager -> {
+                                        PagerMode(
+                                            profiles = profiles,
+                                            onHover = onHover,
+                                            pagerState = pagerState,
+                                            onEdit = { navigator.navigateToEditUserScreen(it.id) },
+                                        )
+                                    }
+
+                                    ScreenType.ContinueScreen -> {
+                                        focusedProfile?.let { profile ->
+                                            ClickedProfileScreen(
+                                                user = profile,
+                                                isLoading = isContinueButtonLoading,
+                                                onBack = { screenType = lastScreenTypeUsed },
+                                                onConfirm = {
+                                                    if (profile.pin.isNullOrEmpty()) {
+                                                        onUseProfile(profile)
+                                                    } else {
+                                                        navigator.navigateToUserPinScreen(
+                                                            PinAction.Verify(profile.pin!!)
+                                                        )
+                                                    }
+                                                },
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                } else {
+                    EmptyScreen(
+                        onAdd = { navigator.navigateToAddProfileScreen() },
+                    )
                 }
-            } else {
-                EmptyScreen(
-                    onAdd = { navigator.navigateToAddProfileScreen() },
-                )
             }
         }
 
@@ -531,7 +551,6 @@ private fun ActionButtonTooltip(
 @Preview
 @Composable
 private fun UserProfilesScreenBasePreview() {
-
     FlixclusiveTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             UserProfilesScreenContent(
@@ -541,9 +560,10 @@ private fun UserProfilesScreenBasePreview() {
                     User(id = "preview-user-3", name = "User 3", image = 3),
                     User(id = "preview-user-4", name = "User 4", image = 4),
                 ),
-                focusedProfile = null,
-                isContinueButtonLoading = false,
                 isFromSplashScreen = false,
+                isContinueButtonLoading = false,
+                isLoadingProfiles = false,
+                focusedProfile = null,
                 navigator = object : NavigatorUserProfilesScreen {
                     override fun navigateToHomeScreen() {}
 
@@ -560,8 +580,8 @@ private fun UserProfilesScreenBasePreview() {
                     override fun navigateBack() {}
                 },
                 initialState = ScreenType.Pager,
-                onFocusProfile = {  },
-                onUseProfile = {  },
+                onFocusProfile = { },
+                onUseProfile = { },
             )
         }
     }

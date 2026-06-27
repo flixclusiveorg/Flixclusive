@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.user.profiles
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,11 +14,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -30,7 +35,10 @@ internal class UserProfilesViewModel @Inject constructor(
     userSessionDataStore: UserSessionDataStore,
     userRepository: UserRepository,
 ) : ViewModel() {
-    private val _events = MutableSharedFlow<ProfileUiScreenEvent>()
+    private val _uiState = MutableStateFlow(UserProfilesUiState())
+    val uiState = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<UserProfilesEvent>()
     val events = _events.asSharedFlow()
 
     private var loginJob: Job? = null
@@ -41,6 +49,11 @@ internal class UserProfilesViewModel @Inject constructor(
         userSessionDataStore.currentUserId.debounce(300.milliseconds),
     ) { users, loggedInUser ->
         users.fastFilter { it.id != loggedInUser }
+            .also {
+                _uiState.update { it.copy(isLoadingProfiles = false) }
+            }
+    }.onStart {
+        _uiState.update { it.copy(isLoadingProfiles = true) }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Lazily,
@@ -51,18 +64,20 @@ internal class UserProfilesViewModel @Inject constructor(
         if (loginJob?.isActive == true) return
 
         loginJob = appDispatchers.ioScope.launch {
-            _events.emit(ProfileUiScreenEvent.Loading)
-
             userAuthRepository.signOut()
             providerRepository.clearAll()
             userAuthRepository.signIn(user)
 
-            _events.emit(ProfileUiScreenEvent.Login)
+            _events.emit(UserProfilesEvent.Login)
         }
     }
 }
 
-internal sealed class ProfileUiScreenEvent {
-    data object Login : ProfileUiScreenEvent()
-    data object Loading : ProfileUiScreenEvent()
+internal sealed class UserProfilesEvent {
+    data object Login : UserProfilesEvent()
 }
+
+@Immutable
+internal data class UserProfilesUiState(
+    val isLoadingProfiles: Boolean = true
+)

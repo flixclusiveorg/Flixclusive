@@ -28,7 +28,7 @@ fun LoadingScreen(
     modifier: Modifier = Modifier,
     delay: Long = 600L,
     progressSize: Dp = getAdaptiveDp(40.dp),
-    label: String = stringResource(LocaleR.string.label_loading),
+    label: String? = stringResource(LocaleR.string.label_loading),
 ) {
     AnimatedVisibility(
         visible = isLoadingWithDelay(delay),
@@ -48,14 +48,16 @@ fun LoadingScreen(
                 ),
             )
 
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge
-                    .copy(fontWeight = FontWeight.Medium)
-                    .asAdaptiveTextStyle(increaseBy = 5.sp),
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
+            label?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelLarge
+                        .copy(fontWeight = FontWeight.Medium)
+                        .asAdaptiveTextStyle(increaseBy = 5.sp),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
