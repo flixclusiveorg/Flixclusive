@@ -1,4 +1,8 @@
-import com.flixclusive.getCommitCount
+import com.flixclusive.appId
+import com.flixclusive.appName
+import com.flixclusive.releaseVersionCode
+import com.flixclusive.releaseVersionName
+import com.flixclusive.versionPreviewCode
 
 plugins {
     alias(libs.plugins.flixclusive.application)
@@ -8,27 +12,13 @@ plugins {
     alias(libs.plugins.flixclusive.testing)
 }
 
-// Version
-val versionMajor = 2
-val versionMinor = 2
-val versionPatch = 0
-val versionBuild = 0
-val appName = "Flixclusive"
-val appId = "com.flixclusive"
-val semanticVersion = "$versionMajor.$versionMinor.$versionPatch"
-
-val commitCount by lazy { getCommitCount() }
-val previewVersionCode by lazy { "p$commitCount" }
-val debugVersionCode by lazy { "d$commitCount" }
-val benchmarkVersionCode by lazy { "b$commitCount" }
-
 android {
     namespace = appId
 
     defaultConfig {
         applicationId = appId
-        versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
-        versionName = semanticVersion
+        versionCode = releaseVersionCode
+        versionName = releaseVersionName
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -60,8 +50,7 @@ android {
 
             resValue("string", "app_name", "BENCHMARK-$appName")
             buildConfigField("int", "BUILD_TYPE", "3") // 3 for benchmark
-
-            // Debug key signing is available on all machines, you can also use your own signing keys.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -77,15 +66,6 @@ android {
             merges += "META-INF/LICENSE-notice.md"
         }
     }
-
-//    splits {
-//        abi {
-//            isEnable = true
-//            reset()
-//            include("x86", "x86_64", "armeabi-v7a", "arm64-v8a")
-//            isUniversalApk = true
-//        }
-//    }
 }
 
 /*
@@ -96,22 +76,22 @@ androidComponents {
         when (variant.buildType) {
             "debug" -> {
                 variant.outputs.forEach { output ->
-                    output.versionCode.set(commitCount.toInt())
-                    output.versionName.set(debugVersionCode)
+                    output.versionCode.set(1)
+                    output.versionName.set("d1")
                 }
             }
 
             "preview" -> {
                 variant.outputs.forEach { output ->
-                    output.versionCode.set(commitCount.toInt())
-                    output.versionName.set(previewVersionCode)
+                    output.versionCode.set(versionPreviewCode)
+                    output.versionName.set("p$versionPreviewCode")
                 }
             }
 
             "benchmark" -> {
                 variant.outputs.forEach { output ->
-                    output.versionCode.set(commitCount.toInt())
-                    output.versionName.set(benchmarkVersionCode)
+                    output.versionCode.set(1)
+                    output.versionName.set("b1")
                 }
             }
         }
