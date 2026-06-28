@@ -41,7 +41,6 @@ import com.flixclusive.core.presentation.mobile.components.provider.ProviderCras
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.mobile.component.BottomBar
-import com.flixclusive.mobile.component.DisplayChangelogsObserver
 import com.flixclusive.mobile.component.WebViewDriverDialog
 import com.flixclusive.navigation.AppNavHost
 import com.flixclusive.navigation.extensions.bottomBarNavigate
@@ -77,7 +76,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val hasNotSeenNewChangelogs by viewModel.hasNotSeenNewChangelogs.collectAsStateWithLifecycle()
+//    val hasNotSeenNewChangelogs by viewModel.hasNotSeenNewChangelogs.collectAsStateWithLifecycle()
     val isConnectedAtNetwork by viewModel.hasInternet.collectAsStateWithLifecycle()
 
     val isInPipMode = rememberIsInPipMode()
@@ -100,13 +99,6 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     var useBottomBar by remember {
         mutableStateOf(shouldHideBottomBar(route = currentSelectedScreen))
     }
-
-    DisplayChangelogsObserver(
-        navController = navController,
-        hasNotSeenNewChangelogs = hasNotSeenNewChangelogs,
-        currentSelectedScreen = currentSelectedScreen,
-        onSaveLastSeenChangelogs = viewModel::onSaveLastSeenChangelogs,
-    )
 
     LaunchedEffect(currentSelectedScreen) {
         useBottomBar = shouldHideBottomBar(route = currentSelectedScreen)

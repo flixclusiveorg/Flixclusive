@@ -5,7 +5,6 @@ import androidx.compose.ui.util.fastFilteredMap
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.BuildConfig
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.DataStoreManager
@@ -29,10 +28,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -89,15 +86,15 @@ internal class MobileAppViewModel @Inject constructor(
             initialValue = true,
         )
 
-    val hasNotSeenNewChangelogs = dataStoreManager
-        .getSystemPrefs()
-        .mapLatest { BuildConfig.VERSION_CODE > it.lastSeenChangelogs }
-        .distinctUntilChanged()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = true,
-        )
+//    val hasNotSeenNewChangelogs = dataStoreManager
+//        .getSystemPrefs()
+//        .mapLatest { BuildConfig.VERSION_CODE > it.lastSeenChangelogs }
+//        .distinctUntilChanged()
+//        .stateIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.Eagerly,
+//            initialValue = true,
+//        )
 
     init {
         viewModelScope.launch {
