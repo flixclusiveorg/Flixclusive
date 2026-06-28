@@ -4,6 +4,15 @@ androidGradlePlugin = "9.1.1"
 compileSdk = "36"
 targetSdk = "36"
 minSdk = "23"
+app-id = "com.flixclusive"
+app-name = "Flixclusive"
+
+# App Versioning ==
+app-version-release-major = "2"
+app-version-release-minor = "2"
+app-version-release-patch = "0"
+app-version-release-build = "0"
+app-version-preview = "1"
 # =================
 
 androidDesugarJdkLibs = "2.1.5"

@@ -8,13 +8,30 @@ import org.gradle.kotlin.dsl.getByType
 val Project.libs
     get(): VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-fun Project.getCommitCount(): String {
-    val gitCommitCountProvider =
-        providers.exec {
-            commandLine = "git rev-list --count HEAD".split(" ")
-        }
+val Project.appId: String
+    get() = libs.findVersion("app-id").get().toString()
 
-    return gitCommitCountProvider.standardOutput.asText
-        .get()
-        .trim()
-}
+val Project.appName: String
+    get() = libs.findVersion("app-name").get().toString()
+
+val Project.releaseVersionMajor: Int
+    get() = libs.findVersion("app-version-release-major").get().toString().toInt()
+
+val Project.releaseVersionMinor: Int
+    get() = libs.findVersion("app-version-release-minor").get().toString().toInt()
+
+val Project.releaseVersionPatch: Int
+    get() = libs.findVersion("app-version-release-patch").get().toString().toInt()
+
+val Project.releaseVersionBuild: Int
+    get() = libs.findVersion("app-version-release-build").get().toString().toInt()
+
+val Project.releaseVersionName: String
+    get() = "$releaseVersionMajor.$releaseVersionMinor.$releaseVersionPatch"
+
+val Project.releaseVersionCode: Int
+    get() = releaseVersionMajor * 10000 + releaseVersionMinor * 1000 + releaseVersionPatch * 100 + releaseVersionBuild
+
+val Project.versionPreviewCode: Int
+    get() = libs.findVersion("app-version-preview").get().toString().toInt()
+
