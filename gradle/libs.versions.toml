@@ -12,7 +12,7 @@ app-version-release-major = "2"
 app-version-release-minor = "2"
 app-version-release-patch = "0"
 app-version-release-build = "0"
-app-version-preview = "1"
+app-version-preview = "959"
 # =================
 
 androidDesugarJdkLibs = "2.1.5"

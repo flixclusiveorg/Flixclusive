@@ -26,8 +26,16 @@ jobs:
       - name: Determine pre-release tag
         id: version
         run: |
-          COMMIT_COUNT=$(git rev-list --count HEAD)
-          TAG_NAME="p${COMMIT_COUNT}"
+          # Extract the preview version code from libs.versions.toml
+          # Assuming it's in the [versions] section as app-version-preview = "..."
+          PREVIEW_CODE=$(grep 'app-version-preview' gradle/libs.versions.toml | cut -d'"' -f2 || echo "")
+
+          if [ -z "$PREVIEW_CODE" ]; then
+            echo "::error::Could not find a valid 'app-version-preview' in gradle/libs.versions.toml. Please ensure it is set."
+            exit 1
+          fi
+
+          TAG_NAME="p${PREVIEW_CODE}"
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "Pre-release tag: $TAG_NAME"
 
