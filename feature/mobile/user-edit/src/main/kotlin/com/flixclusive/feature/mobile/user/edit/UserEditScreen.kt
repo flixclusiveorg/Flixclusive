@@ -203,8 +203,7 @@ private fun UserEditScreenContent(
                                             dp = (DefaultAvatarSize.value * 1.2).dp,
                                             increaseBy = 80.dp,
                                         ),
-                                    )
-                                    .aspectRatio(1F),
+                                    ).aspectRatio(1F),
                             )
                         }
 
@@ -238,8 +237,7 @@ private fun ChangeImageButton(
                 .background(
                     color = MaterialTheme.colorScheme.onSurface,
                     shape = CircleShape,
-                )
-                .clickable(
+                ).clickable(
                     indication =
                         ripple(
                             bounded = false,

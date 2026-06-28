@@ -469,11 +469,10 @@ private fun BackButton(
             .clickable(
                 onClick = onBack,
                 interactionSource = null,
-                indication =
-                    ripple(
-                        radius = 30.dp,
-                        bounded = false,
-                    ),
+                indication = ripple(
+                    radius = 30.dp,
+                    bounded = false,
+                ),
             ),
     ) {
         AdaptiveIcon(
