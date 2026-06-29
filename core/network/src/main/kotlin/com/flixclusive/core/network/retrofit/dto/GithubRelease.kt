@@ -21,8 +21,8 @@ data class GithubRelease(
      * */
     fun getDownloadUrl(platform: PlatformType): String? {
         val apk = when (platform) {
-            PlatformType.MOBILE -> assets.firstOrNull { it.isApk && it.name.endsWith("mobile") }
-            PlatformType.TV -> assets.firstOrNull { it.isApk && it.name.endsWith("tv") }
+            PlatformType.MOBILE -> assets.firstOrNull { it.isApk && !it.name.contains("tv") }
+            PlatformType.TV -> assets.firstOrNull { it.isApk && it.name.contains("tv") }
         }
 
         return apk?.downloadUrl
