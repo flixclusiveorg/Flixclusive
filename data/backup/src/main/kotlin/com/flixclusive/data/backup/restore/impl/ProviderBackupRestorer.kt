@@ -2,7 +2,7 @@ package com.flixclusive.data.backup.restore.impl
 
 import android.content.Context
 import com.flixclusive.core.common.provider.ProviderConstants
-import com.flixclusive.core.common.provider.ProviderFile.getDebugProvidersPath
+import com.flixclusive.core.common.provider.ProviderFile
 import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.entity.provider.InstalledProvider
@@ -64,7 +64,7 @@ internal class ProviderBackupRestorer @Inject constructor(
             includeDebugSuffixMapping = false,
         )
 
-        val debugPath = context.getDebugProvidersPath()
+        val debugPath = ProviderFile.getDebugProvidersPath()
         indexProvidersInRoot(
             index = index,
             root = File(debugPath),

@@ -6,8 +6,9 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
+import com.flixclusive.core.common.provider.ProviderFile
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
 import com.flixclusive.core.database.entity.provider.InstalledProvider
-import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.util.log.errorLog
@@ -254,12 +255,13 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
         repositoryUrl: String,
         isDebugProvider: Boolean,
     ): String {
-        val parentDirectoryName = if (isDebugProvider) ProviderConstants.PROVIDER_DEBUG else "user-$userId"
-
         val repository = repositoryUrl.toValidRepositoryLink()
         val childDirectoryName = "${repository.owner}-${repository.name}"
-        val finalPathPrefix = "$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
 
-        return "${context.getExternalFilesDir(null)}/$finalPathPrefix"
+        return if (isDebugProvider) {
+            ProviderFile.getDebugProvidersSettingsPath() + "/$childDirectoryName"
+        } else {
+            context.getProvidersSettingsPath(userId) + "/$childDirectoryName"
+        }
     }
 }

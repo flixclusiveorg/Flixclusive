@@ -1,6 +1,7 @@
 package com.flixclusive.core.common.provider
 
 import android.content.Context
+import android.os.Environment
 import com.flixclusive.core.common.provider.ProviderConstants.PROVIDERS_FOLDER_NAME
 import com.flixclusive.core.common.provider.ProviderConstants.PROVIDERS_SETTINGS_FOLDER_NAME
 import com.flixclusive.core.common.provider.ProviderConstants.PROVIDER_DEBUG
@@ -24,6 +25,9 @@ object ProviderFile {
     fun Context.getProvidersSettingsPath(userId: String): String =
         getExternalFilesDir(null)?.absolutePath + "/$PROVIDERS_SETTINGS_FOLDER_NAME/user-$userId"
 
-    fun Context.getDebugProvidersPath(): String =
-        getExternalFilesDir(null)?.absolutePath + "/$PROVIDERS_FOLDER_NAME/$PROVIDER_DEBUG"
+    fun getDebugProvidersPath(): String =
+        "${Environment.getExternalStorageDirectory().absolutePath}/Flixclusive/$PROVIDERS_FOLDER_NAME/$PROVIDER_DEBUG"
+
+    fun getDebugProvidersSettingsPath(): String =
+        "${Environment.getExternalStorageDirectory().absolutePath}/Flixclusive/$PROVIDERS_SETTINGS_FOLDER_NAME/$PROVIDER_DEBUG"
 }

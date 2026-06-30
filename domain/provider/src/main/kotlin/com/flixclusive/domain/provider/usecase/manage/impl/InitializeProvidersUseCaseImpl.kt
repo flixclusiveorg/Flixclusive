@@ -3,9 +3,9 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
+import com.flixclusive.core.common.provider.ProviderFile
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
@@ -91,7 +91,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
      * them to the preferences, if they are not already present.
      * */
     private suspend fun initializeDebugProviders(userId: String) {
-        val path = "${context.getExternalFilesDir(null)}/$PROVIDERS_FOLDER_NAME/debug"
+        val path = ProviderFile.getDebugProvidersPath()
         val localDir = File(path)
 
         if (!localDir.exists()) {
