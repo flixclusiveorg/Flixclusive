@@ -45,8 +45,10 @@ internal data class GrantedPermissionItem(
 internal fun PermissionsStep(
     notificationsGranted: Boolean,
     unknownSourcesAllowed: Boolean,
+    storageAccessGranted: Boolean,
     grantedPermissions: List<GrantedPermissionItem>,
     requestNotificationsPermission: () -> Unit,
+    requestStorageAccess: () -> Unit,
     openUnknownSourcesSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -70,20 +72,29 @@ internal fun PermissionsStep(
 
         PermissionToggleCard(
             title = stringResource(R.string.onboarding_permission_unknown_sources_title),
-            badgeLabel = stringResource(R.string.permission_unknown_sources_desc),
+            badgeLabel = stringResource(R.string.onboarding_permission_unknown_sources_desc),
             checked = unknownSourcesAllowed,
             enabled = true,
             isRequired = true,
             onToggle = openUnknownSourcesSettings,
         )
 
-        val notificationsChecked = if (Build.VERSION.SDK_INT >= 33) notificationsGranted else true
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            PermissionToggleCard(
+                title = stringResource(R.string.onboarding_permission_storage_access_title),
+                badgeLabel = stringResource(R.string.onboarding_permission_storage_access_desc),
+                checked = storageAccessGranted,
+                enabled = true,
+                isRequired = true,
+                onToggle = requestStorageAccess,
+            )
+        }
 
-        if (Build.VERSION.SDK_INT >= 33) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionToggleCard(
                 title = stringResource(R.string.onboarding_permission_notifications_title),
-                badgeLabel = stringResource(R.string.permission_notifications_desc),
-                checked = notificationsChecked,
+                badgeLabel = stringResource(R.string.onboarding_permission_notifications_desc),
+                checked = notificationsGranted,
                 enabled = !notificationsGranted,
                 isRequired = false,
                 onToggle = requestNotificationsPermission,
