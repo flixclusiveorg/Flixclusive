@@ -95,24 +95,31 @@ internal fun AppUpdatesScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
 
+    val goBack = fun() {
+        val isResumed = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        if (!isResumed) return
+
+        if (isComingFromSplashScreen) {
+            navigator.navigateToHomeScreen()
+        } else {
+            navigator.navigateBack()
+        }
+    }
+
+    BackHandler(onBack = goBack)
+
     AppUpdatesScreenContent(
         applicationId = viewModel.applicationId,
         newVersion = newVersion,
         updateInfo = updateInfo,
-        isComingFromSplashScreen = isComingFromSplashScreen,
         downloadState = downloadState,
+        goBack = goBack,
         downloadUpdate = {
             viewModel.downloadUpdate(
                 version = newVersion,
                 url = updateUrl,
             )
         },
-        openHomeScreen = {
-            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                navigator.navigateToHomeScreen()
-            }
-        },
-        goBack = navigator::navigateBack,
     )
 }
 
@@ -121,10 +128,8 @@ private fun AppUpdatesScreenContent(
     applicationId: String,
     newVersion: String,
     updateInfo: String?,
-    isComingFromSplashScreen: Boolean,
     downloadState: DownloadState,
     downloadUpdate: () -> Unit,
-    openHomeScreen: () -> Unit,
     goBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -151,15 +156,11 @@ private fun AppUpdatesScreenContent(
         )
 
         context.startActivity(createApkInstallIntent(uri))
-        openHomeScreen()
+        goBack()
     }
 
     BackHandler {
-        if (isComingFromSplashScreen) {
-            openHomeScreen()
-        } else {
-            goBack()
-        }
+        goBack()
     }
 
     Box(
@@ -268,13 +269,7 @@ private fun AppUpdatesScreenContent(
                     }
 
                     Button(
-                        onClick = {
-                            if (isComingFromSplashScreen) {
-                                openHomeScreen()
-                            } else {
-                                goBack()
-                            }
-                        },
+                        onClick = goBack,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = Color.White.copy(0.6f),
@@ -398,7 +393,6 @@ private fun AppUpdatesScreenBasePreview() {
 
                     For more details, visit our [website](https://example.com).
                 """.trimIndent(),
-                isComingFromSplashScreen = false,
                 downloadState = state,
                 downloadUpdate = {
                     state = state.copy(
@@ -407,7 +401,6 @@ private fun AppUpdatesScreenBasePreview() {
                         progress = 0f,
                     )
                 },
-                openHomeScreen = {},
                 goBack = {},
             )
         }
