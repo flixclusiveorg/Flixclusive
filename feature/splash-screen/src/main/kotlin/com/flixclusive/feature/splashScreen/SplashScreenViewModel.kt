@@ -130,10 +130,10 @@ internal class SplashScreenViewModel @Inject constructor(
         val updateInfo = snapshot.uiState.newAppUpdateInfo
 
         return when {
-            updateInfo != null && hasAutoUpdate -> SplashNavigationEvent.AppUpdate(updateInfo)
             snapshot.preferences.isFirstTimeUserLaunch -> SplashNavigationEvent.Onboarding
-            snapshot.noUsersFound -> SplashNavigationEvent.AddProfile
             snapshot.currentUserId == null -> SplashNavigationEvent.ChooseProfile
+            snapshot.noUsersFound -> SplashNavigationEvent.AddProfile
+            updateInfo != null && hasAutoUpdate -> SplashNavigationEvent.AppUpdate(updateInfo)
             else -> SplashNavigationEvent.Home
         }
     }

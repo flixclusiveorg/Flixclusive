@@ -30,7 +30,8 @@ internal class GithubUpdatesRepository @Inject constructor(
         val buildConfig = buildConfigProvider.get()
 
         val repository = when (buildConfig.buildType) {
-            BuildType.PREVIEW, BuildType.DEBUG -> PREVIEW_CHANNEL_NAME
+            BuildType.DEBUG -> return Result.success(null)
+            BuildType.PREVIEW -> PREVIEW_CHANNEL_NAME
             else -> STABLE_CHANNEL_NAME
         }
 
