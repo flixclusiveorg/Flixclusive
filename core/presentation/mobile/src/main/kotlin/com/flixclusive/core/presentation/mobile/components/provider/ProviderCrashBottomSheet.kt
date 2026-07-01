@@ -199,7 +199,7 @@ private fun CrashItem(
             error = remember {
                 var message: String? = null
                 if (error is ExceptionWithUiText) {
-                    message = error.cause?.stackTraceToString() ?: error.uiText?.asString(resources)
+                    message = error.uiText?.asString(resources) ?: error.cause?.stackTraceToString()
                 }
 
                 message ?: error.stackTraceToString()
