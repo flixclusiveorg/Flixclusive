@@ -1,19 +1,16 @@
 package com.flixclusive.data.provider.repository
 
-import com.flixclusive.core.database.dao.provider.EpisodeLinks
-import com.flixclusive.core.database.dao.provider.MediaLinksWithData
-import com.flixclusive.core.database.dao.provider.SeasonLinks
-import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
+import com.flixclusive.core.database.entity.provider.EpisodeLinks
+import com.flixclusive.core.database.entity.provider.MediaLinksWithData
+import com.flixclusive.core.database.entity.provider.SeasonLinks
+import com.flixclusive.model.media.MediaMetadata
 import kotlinx.coroutines.flow.Flow
 
 interface MediaLinksRepository {
-    suspend fun upsertLinks(
-        media: DBMedia,
-        links: List<CachedMediaLink>
-    )
-
     suspend fun upsertLink(link: CachedMediaLink)
+
+    suspend fun upsertMedia(media: MediaMetadata)
 
     suspend fun getLinks(
         ownerId: String,

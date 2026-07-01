@@ -2,14 +2,14 @@ package com.flixclusive.data.provider.repository.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.dao.provider.CachedMediaLinkDao
-import com.flixclusive.core.database.dao.provider.EpisodeLinks
-import com.flixclusive.core.database.dao.provider.MediaLinksWithData
-import com.flixclusive.core.database.dao.provider.SeasonLinks
-import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.provider.CachedStream
 import com.flixclusive.core.database.entity.provider.CachedSubtitle
+import com.flixclusive.core.database.entity.provider.EpisodeLinks
+import com.flixclusive.core.database.entity.provider.MediaLinksWithData
+import com.flixclusive.core.database.entity.provider.SeasonLinks
 import com.flixclusive.data.provider.repository.MediaLinksRepository
+import com.flixclusive.model.media.MediaMetadata
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -18,13 +18,9 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
     private val cachedMediaLinkDao: CachedMediaLinkDao,
     private val appDispatchers: AppDispatchers
 ) : MediaLinksRepository {
-    override suspend fun upsertLinks(media: DBMedia, links: List<CachedMediaLink>) {
+    override suspend fun upsertMedia(media: MediaMetadata) {
         withContext(appDispatchers.io) {
-            cachedMediaLinkDao.upsertLinks(
-                media = media,
-                streams = links.filterIsInstance<CachedStream>(),
-                subtitles = links.filterIsInstance<CachedSubtitle>()
-            )
+            cachedMediaLinkDao.upsertMedia(media)
         }
     }
 
@@ -132,12 +128,17 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
     ) {
         withContext(appDispatchers.io) {
             when {
-                episodeNumber != null && seasonNumber != null ->
+                episodeNumber != null && seasonNumber != null -> {
                     cachedMediaLinkDao.deleteLinksByEpisode(ownerId, mediaId, seasonNumber, episodeNumber)
-                seasonNumber != null ->
+                }
+
+                seasonNumber != null -> {
                     cachedMediaLinkDao.deleteLinksBySeason(ownerId, mediaId, seasonNumber)
-                else ->
+                }
+
+                else -> {
                     cachedMediaLinkDao.deleteLinksByMedia(ownerId, mediaId)
+                }
             }
         }
     }
