@@ -13,7 +13,6 @@ import androidx.core.net.toUri
 import com.flixclusive.feature.mobile.onboarding.component.GrantedPermissionItem
 
 internal object PermissionUtil {
-
     @RequiresApi(Build.VERSION_CODES.R)
     fun createManageStorageIntent(context: Context): Intent {
         return try {
@@ -32,10 +31,12 @@ internal object PermissionUtil {
                 Environment.isExternalStorageManager()
             }
 
-            else -> ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            ) == PackageManager.PERMISSION_GRANTED
+            else -> {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                ) == PackageManager.PERMISSION_GRANTED
+            }
         }
     }
 
