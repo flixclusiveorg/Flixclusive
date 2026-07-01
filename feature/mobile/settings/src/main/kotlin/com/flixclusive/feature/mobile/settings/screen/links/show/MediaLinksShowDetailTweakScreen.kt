@@ -40,8 +40,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
-import com.flixclusive.core.database.dao.provider.EpisodeLinks
-import com.flixclusive.core.database.dao.provider.SeasonLinks
+import com.flixclusive.core.database.entity.provider.EpisodeLinks
+import com.flixclusive.core.database.entity.provider.SeasonLinks
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToManageMediaLinksScreen
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage

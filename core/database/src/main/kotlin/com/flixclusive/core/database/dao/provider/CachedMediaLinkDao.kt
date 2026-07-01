@@ -1,39 +1,54 @@
 package com.flixclusive.core.database.dao.provider
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
 import com.flixclusive.core.database.entity.media.DBMediaExternalId
+import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toDBMediaExternalIds
+import com.flixclusive.core.database.entity.media.DBMediaFts
+import com.flixclusive.core.database.entity.media.DBMediaFts.Companion.toDBMediaFts
 import com.flixclusive.core.database.entity.provider.CachedStream
 import com.flixclusive.core.database.entity.provider.CachedSubtitle
+import com.flixclusive.core.database.entity.provider.EpisodeLinks
+import com.flixclusive.core.database.entity.provider.MediaLinksWithData
+import com.flixclusive.core.database.entity.provider.SeasonLinks
+import com.flixclusive.model.media.MediaMetadata
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import java.util.Date
 
 @Dao
 interface CachedMediaLinkDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Upsert
     suspend fun insertStream(stream: CachedStream)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Upsert
     suspend fun insertSubtitle(subtitle: CachedSubtitle)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertMedia(media: DBMedia): Long
+    @Upsert
+    suspend fun insertMedia(media: DBMedia)
+
+    @Upsert
+    suspend fun insertMediaFts(mediaFts: DBMediaFts)
+
+    @Upsert
+    suspend fun insertMediaIds(externalIds: List<DBMediaExternalId>)
 
     @Transaction
-    suspend fun upsertLinks(
-        media: DBMedia,
-        streams: List<CachedStream>,
-        subtitles: List<CachedSubtitle>,
-    ) {
-        insertMedia(media)
-        streams.forEach { insertStream(it) }
-        subtitles.forEach { insertSubtitle(it) }
+    suspend fun upsertMedia(media: MediaMetadata) {
+        val existingMedia = getMediaByIds(
+            mediaId = media.id,
+            providerId = media.providerId
+        ) ?: media.toDBMedia()
+
+        insertMedia(existingMedia.copy(updatedAt = Date()))
+        insertMediaFts(media.toDBMediaFts())
+        insertMediaIds(media.toDBMediaExternalIds())
     }
 
     @Query("UPDATE cached_streams SET isDead = :isDead, updatedAt = :now WHERE url = :url AND ownerId = :ownerId")
@@ -221,6 +236,9 @@ interface CachedMediaLinkDao {
     @Query("SELECT * FROM media WHERE id = :mediaId")
     suspend fun getMediaById(mediaId: String): DBMedia?
 
+    @Query("SELECT * FROM media WHERE id = :mediaId AND providerId = :providerId")
+    suspend fun getMediaByIds(mediaId: String, providerId: String): DBMedia?
+
     @Query(
         """
         SELECT * FROM cached_streams
@@ -258,6 +276,9 @@ interface CachedMediaLinkDao {
     @Query("SELECT * FROM media_external_ids WHERE mediaId = :mediaId")
     suspend fun getExternalIdsByMediaId(mediaId: String): List<DBMediaExternalId>
 
+    @Query("SELECT * FROM media_external_ids WHERE mediaId = :mediaId AND providerId = :providerId")
+    suspend fun getExternalIdsByIds(mediaId: String, providerId: String): List<DBMediaExternalId>
+
     @Transaction
     suspend fun getLinks(
         ownerId: String,
@@ -281,15 +302,15 @@ interface CachedMediaLinkDao {
         episodeNumber: Int?,
         seasonNumber: Int?,
     ): MediaLinksWithData? {
-        val media = getMediaById(mediaId) ?: return null
-        val externalIds = getExternalIdsByMediaId(mediaId)
+        val media = getMediaByIds(mediaId, providerId) ?: return null
+        val externalIds = getExternalIdsByIds(mediaId, providerId)
         val streams = getStreams(mediaId, ownerId, providerId, episodeNumber, seasonNumber)
         val subtitles = getSubtitles(mediaId, ownerId, providerId, episodeNumber, seasonNumber)
 
         if (streams.isEmpty() && subtitles.isEmpty()) return null
 
         return MediaLinksWithData(
-            media = media.copy(providerId = providerId),
+            media = media,
             streams = streams,
             subtitles = subtitles,
             externalIds = externalIds,
@@ -484,30 +505,4 @@ interface CachedMediaLinkDao {
             )
         }
     }
-}
-
-data class SeasonLinks(
-    val number: Int,
-    val count: Int
-)
-
-data class EpisodeLinks(
-    val number: Int,
-    val count: Int,
-    val lastUpdated: Long?
-)
-
-data class MediaLinksWithData(
-    val media: DBMedia,
-    val streams: List<CachedStream> = emptyList(),
-    val subtitles: List<CachedSubtitle> = emptyList(),
-    val externalIds: List<DBMediaExternalId> = emptyList(),
-) {
-    val providerId: String get() = media.providerId
-    val ownerId: String? get() = streams.firstOrNull()?.ownerId ?: subtitles.firstOrNull()?.ownerId
-    val episodeNumber: Int? get() = streams.firstOrNull()?.episodeNumber ?: subtitles.firstOrNull()?.episodeNumber
-    val seasonNumber: Int? get() = streams.firstOrNull()?.seasonNumber ?: subtitles.firstOrNull()?.seasonNumber
-
-    val size: Int get() = streams.size + subtitles.size
-    val hasValidLinks: Boolean get() = streams.any { it.isValid }
 }

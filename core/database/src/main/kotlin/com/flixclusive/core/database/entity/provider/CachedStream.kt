@@ -14,7 +14,6 @@ import java.util.Date
             entity = DBMedia::class,
             parentColumns = ["id"],
             childColumns = ["mediaId"],
-            onDelete = ForeignKey.CASCADE,
         ),
     ],
     indices = [

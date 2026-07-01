@@ -71,6 +71,8 @@ internal class GetMediaLinksUseCaseImpl @Inject constructor(
             return@channelFlow
         }
 
+        mediaLinksRepository.upsertMedia(media)
+
         val provider = providerRepository.getProvider(media.providerId, userId)
         if (provider == null) {
             warnLog("Failed to fetch media links: no provider plugin found for id: ${media.providerId}")
