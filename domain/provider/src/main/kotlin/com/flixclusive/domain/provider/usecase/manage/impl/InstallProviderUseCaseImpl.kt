@@ -77,7 +77,7 @@ internal class InstallProviderUseCaseImpl @Inject constructor(
                 )
             } catch (e: Throwable) {
                 errorLog("Failed to download provider: ${metadata.name}")
-                errorLog(e)
+                errorLog(e.cause)
 
                 send(
                     DownloadProviderResult.Failure(
