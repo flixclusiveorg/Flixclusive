@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.CommonAlertDialog
@@ -45,9 +47,17 @@ internal fun ProviderCrashDialog(
     error: Throwable,
     onDismissRequest: () -> Unit,
 ) {
+    val resources = LocalResources.current
     val uriHandler = LocalUriHandler.current
 
-    val stackTrace = remember { error.stackTraceToString() }
+    val stackTrace = remember {
+        if (error is ExceptionWithUiText) {
+            Error(error.uiText?.asString(resources) ?: error.localizedMessage)
+                .stackTraceToString()
+        } else {
+            error.stackTraceToString()
+        }
+    }
 
     CommonAlertDialog(
         onDismiss = onDismissRequest,
