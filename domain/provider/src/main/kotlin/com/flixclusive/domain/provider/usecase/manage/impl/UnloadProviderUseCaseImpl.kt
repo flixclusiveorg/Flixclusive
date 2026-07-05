@@ -2,7 +2,9 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.file.isEmpty
 import com.flixclusive.core.common.provider.ProviderConstants
+import com.flixclusive.core.common.provider.ProviderFile.getProviderSettingsFileDirPath
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
@@ -51,11 +53,14 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
         }
 
         withContext(appDispatchers.io) {
-            deleteProviderRelatedFiles(file = file)
+            deleteProviderRelatedFiles(
+                provider = provider,
+                file = file
+            )
         }
     }
 
-    private fun deleteProviderRelatedFiles(file: File) {
+    private fun deleteProviderRelatedFiles(provider: InstalledProvider, file: File) {
         file.delete()
 
         // Delete updater.json file if it's the only thing remaining on that directory
@@ -66,6 +71,25 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
             if (lastRemainingFile.name.equals(ProviderConstants.UPDATER_JSON_FILE, true)) {
                 parentDirectory.deleteRecursively()
             }
+        }
+
+        // Delete provider settings
+        val settingsDirPath = context.getProviderSettingsFileDirPath(
+            userId = provider.ownerId,
+            isDebugProvider = provider.isDebug,
+            repositoryUrl = provider.repositoryUrl
+        )
+
+        val settingsDirectory = File(settingsDirPath)
+        if (!settingsDirectory.exists()) return
+
+        settingsDirectory.listFiles {
+            // Matching with "." since we might delete debug provider prefs
+            it.name.contains("${provider.id}.", true)
+        }?.forEach { it.delete() }
+
+        if (settingsDirectory.isEmpty()) {
+            settingsDirectory.delete()
         }
     }
 }

@@ -17,3 +17,7 @@ fun File.toUri(
         toUri()
     }
 }
+
+fun File.isEmpty(): Boolean {
+    return if (!isDirectory) !exists() else listFiles()?.isEmpty() ?: true
+}

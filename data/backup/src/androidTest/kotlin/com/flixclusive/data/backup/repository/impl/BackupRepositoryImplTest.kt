@@ -7,8 +7,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersDirPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsRootDirPath
 import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
@@ -164,8 +164,8 @@ class BackupRepositoryImplTest {
                     appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
                 )
 
-                providersDir = File(context.getProvidersPath(userId)).apply { mkdirs() }
-                providersSettingsDir = File(context.getProvidersSettingsPath(userId)).apply { mkdirs() }
+                providersDir = File(context.getProvidersDirPath(userId)).apply { mkdirs() }
+                providersSettingsDir = File(context.getProvidersSettingsRootDirPath(userId)).apply { mkdirs() }
 
                 val repositoryDir = File(providersDir, "test-repo").apply { mkdirs() }
 

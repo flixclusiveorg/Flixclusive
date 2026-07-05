@@ -2,8 +2,8 @@ package com.flixclusive.data.backup.util
 
 import android.content.Context
 import android.net.Uri
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersDirPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsRootDirPath
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.backup.model.Backup
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -136,7 +136,7 @@ object BackupUtil {
                                 if (relativePath.isBlank()) return@forEach
 
                                 val providersFolder = userProvidersFolder ?: run {
-                                    File(getProvidersPath(userId))
+                                    File(getProvidersDirPath(userId))
                                         .apply { mkdirs() }
                                         .also { userProvidersFolder = it }
                                 }
@@ -153,7 +153,7 @@ object BackupUtil {
                                 if (relativePath.isBlank()) return@forEach
 
                                 val settingsFolder = userProvidersSettingsFolder ?: run {
-                                    File(getProvidersSettingsPath(userId))
+                                    File(getProvidersSettingsRootDirPath(userId))
                                         .apply { mkdirs() }
                                         .also { userProvidersSettingsFolder = it }
                                 }

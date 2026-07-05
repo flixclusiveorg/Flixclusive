@@ -91,7 +91,7 @@ internal class InitializeProvidersUseCaseImpl @Inject constructor(
      * them to the preferences, if they are not already present.
      * */
     private suspend fun initializeDebugProviders(userId: String) {
-        val path = ProviderFile.getDebugProvidersPath()
+        val path = ProviderFile.getDebugProvidersDirPath()
         val localDir = File(path)
 
         if (!localDir.exists()) {
