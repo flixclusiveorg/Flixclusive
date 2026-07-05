@@ -83,10 +83,11 @@ internal class UnloadProviderUseCaseImpl @Inject constructor(
         val settingsDirectory = File(settingsDirPath)
         if (!settingsDirectory.exists()) return
 
-        settingsDirectory.listFiles {
-            // Matching with "." since we might delete debug provider prefs
-            it.name.contains("${provider.id}.", true)
-        }?.forEach { it.delete() }
+        settingsDirectory
+            .listFiles {
+                // Matching with "." since we might delete debug provider prefs
+                it.name.contains("${provider.id}.", true)
+            }?.forEach { it.delete() }
 
         if (settingsDirectory.isEmpty()) {
             settingsDirectory.delete()
