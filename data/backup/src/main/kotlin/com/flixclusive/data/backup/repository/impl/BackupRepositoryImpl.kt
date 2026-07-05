@@ -3,8 +3,8 @@ package com.flixclusive.data.backup.repository.impl
 import android.content.Context
 import android.net.Uri
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersDirPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsRootDirPath
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.data.backup.create.BackupCreator
@@ -142,8 +142,8 @@ internal class BackupRepositoryImpl @Inject constructor(
             if (bytes.isEmpty()) throw NoDataToBackupException()
 
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val userProvidersFolder = File(context.getProvidersPath(userId))
-            val userProvidersSettingsFolder = File(context.getProvidersSettingsPath(userId))
+            val userProvidersFolder = File(context.getProvidersDirPath(userId))
+            val userProvidersSettingsFolder = File(context.getProvidersSettingsRootDirPath(userId))
 
             file
                 .openOutputStream()

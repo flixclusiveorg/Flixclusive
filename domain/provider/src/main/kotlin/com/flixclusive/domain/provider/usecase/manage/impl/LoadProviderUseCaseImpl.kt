@@ -6,8 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
-import com.flixclusive.core.common.provider.ProviderFile
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
+import com.flixclusive.core.common.provider.ProviderFile.getProviderSettingsFileDirPath
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
@@ -27,7 +26,6 @@ import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
-import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import com.flixclusive.provider.ProviderPlugin
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
@@ -124,7 +122,7 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
 
                 val providerPrefs = dataStores.getOrPut(installedProvider.id) {
                     PreferenceDataStoreFactory.create {
-                        val settingsDirPath = createSettingsDirPath(
+                        val settingsDirPath = context.getProviderSettingsFileDirPath(
                             userId = installedProvider.ownerId,
                             repositoryUrl = installedProvider.repositoryUrl,
                             isDebugProvider = installedProvider.isDebug,
@@ -249,19 +247,4 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
             providerType = ProviderType("Unknown"),
             status = ProviderStatus.Down,
         )
-
-    private fun createSettingsDirPath(
-        userId: String,
-        repositoryUrl: String,
-        isDebugProvider: Boolean,
-    ): String {
-        val repository = repositoryUrl.toValidRepositoryLink()
-        val childDirectoryName = "${repository.owner}-${repository.name}"
-
-        return if (isDebugProvider) {
-            ProviderFile.getDebugProvidersSettingsPath() + "/$childDirectoryName"
-        } else {
-            context.getProvidersSettingsPath(userId) + "/$childDirectoryName"
-        }
-    }
 }

@@ -8,8 +8,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersPath
-import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersDirPath
+import com.flixclusive.core.common.provider.ProviderFile.getProvidersSettingsRootDirPath
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.datastore.migration.MigrationV220
@@ -155,8 +155,8 @@ internal class DataStoreManagerImpl @Inject constructor(
     override suspend fun deleteAllUserRelatedFiles(userId: String) {
         withContext(appDispatchers.io) {
             val datastoreFile = context.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
-            val providersFolder = context.getProvidersPath(userId)
-            val providersSettingsFolder = context.getProvidersSettingsPath(userId)
+            val providersFolder = context.getProvidersDirPath(userId)
+            val providersSettingsFolder = context.getProvidersSettingsRootDirPath(userId)
 
             File(providersFolder).deleteRecursively()
             File(providersSettingsFolder).deleteRecursively()
