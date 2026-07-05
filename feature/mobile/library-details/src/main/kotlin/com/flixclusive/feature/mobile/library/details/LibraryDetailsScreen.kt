@@ -340,7 +340,6 @@ private fun LibraryDetailsScreenContent(
         }
     }
 
-
     if (showDeleteSelectionAlert) {
         val alertDescription = stringResource(LocaleR.string.warn_delete_selected_libraries_format)
 
