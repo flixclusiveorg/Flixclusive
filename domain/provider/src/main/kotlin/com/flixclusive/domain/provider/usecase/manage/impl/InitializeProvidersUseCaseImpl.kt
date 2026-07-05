@@ -1,6 +1,5 @@
 package com.flixclusive.domain.provider.usecase.manage.impl
 
-import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.common.provider.ProviderFile
@@ -20,7 +19,6 @@ import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.util.extensions.toInstalledRepository
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +41,6 @@ import javax.inject.Inject
 //       This will be useful to show a notification or a dialog to the user
 //       to retry initialization of those providers.
 internal class InitializeProvidersUseCaseImpl @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     private val dataStoreManager: DataStoreManager,
     private val userSessionDataStore: UserSessionDataStore,
     private val loadProviderUseCase: LoadProviderUseCase,
