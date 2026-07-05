@@ -26,6 +26,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -56,6 +57,7 @@ import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.CommonPullToRefreshBox
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -133,6 +135,7 @@ fun LibraryDetailsScreen(
                 viewModel.onToggleSelect(it)
             }
         },
+        onRefresh = { viewModel.initialize(isRefreshing = true) },
         onStartMultiSelecting = viewModel::onStartMultiSelecting,
         onToggleSelect = viewModel::onToggleSelect,
         onUpdateFilter = viewModel::onUpdateFilter,
@@ -153,6 +156,7 @@ private fun LibraryDetailsScreenContent(
     searchQuery: () -> String,
     items: () -> Set<LibraryListItemWithMetadata>,
     selectedItems: () -> Set<LibraryListItemWithMetadata>,
+    onRefresh: () -> Unit,
     onGoBack: () -> Unit,
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
@@ -166,7 +170,12 @@ private fun LibraryDetailsScreenContent(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    val refreshState = rememberPullToRefreshState()
     val scrollBehavior = rememberEnterOnlyNearTopScrollBehavior()
+
+    val isRefreshing by remember {
+        derivedStateOf { uiState().isRefreshing }
+    }
 
     val selectCount by remember {
         derivedStateOf { selectedItems().size }
@@ -199,131 +208,138 @@ private fun LibraryDetailsScreenContent(
 
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
-    Scaffold(
-        modifier = modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            val topBarState = remember(uiState().isMultiSelecting, uiState().isShowingSearchBar) {
-                when {
-                    uiState().isMultiSelecting -> LibraryTopBarState.Selecting
-                    uiState().isShowingSearchBar -> LibraryTopBarState.Searching
-                    else -> LibraryTopBarState.DefaultSubScreen
-                }
-            }
-
-            LibraryDetailsTopBar(
-                topBarState = topBarState,
-                scrollBehavior = scrollBehavior,
-                isListEmpty = isListEmpty,
-                onGoBack = onGoBack,
-                selectCount = selectCount,
-                searchQuery = searchQuery,
-                onToggleSearchBar = onToggleSearchBar,
-                onQueryChange = onQueryChange,
-                onRemoveSelection = { showDeleteSelectionAlert = true },
-                onUnselectAll = onUnselectAll,
-                title = {
-                    val title = if (topBarState == LibraryTopBarState.Selecting) {
-                        stringResource(LocaleR.string.count_selection_format, selectCount)
-                    } else {
-                        library.name
+    CommonPullToRefreshBox(
+        isRefreshing = isRefreshing,
+        state = refreshState,
+        onRefresh = onRefresh
+    ) {
+        Scaffold(
+            modifier = modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                val topBarState = remember(uiState().isMultiSelecting, uiState().isShowingSearchBar) {
+                    when {
+                        uiState().isMultiSelecting -> LibraryTopBarState.Selecting
+                        uiState().isShowingSearchBar -> LibraryTopBarState.Searching
+                        else -> LibraryTopBarState.DefaultSubScreen
                     }
-
-                    Text(
-                        text = title,
-                        style = getTopBarHeadlinerTextStyle(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                        modifier = Modifier.graphicsLayer {
-                            alpha = when (topBarState) {
-                                LibraryTopBarState.Selecting -> 1f
-                                else -> TopTitleAlphaEasing.transform(scrollBehavior.state.collapsedFraction)
-                            }
-                        },
-                    )
-                },
-                infoContent = {
-                    ScreenHeader(
-                        library = library,
-                        tracker = tracker,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 16.dp),
-                    )
-                },
-                filterContent = {
-                    Column(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.2f),
-                        )
-
-                        LibraryFilterRow(
-                            isListEditable = !isListEmpty && !uiState().isMultiSelecting,
-                            selected = { uiState().selectedFilter },
-                            onStartSelecting = onStartMultiSelecting,
-                            onUpdate = onUpdateFilter,
-                            enabled = tracker == null,
-                        )
-                    }
-                },
-            )
-        },
-    ) { paddingValues ->
-        AnimatedContent(
-            screenState,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            modifier = Modifier.fillMaxSize()
-        ) { state ->
-            when (state) {
-                LibraryDetailsScreenState.Error -> {
-                    val pagingError = remember { uiState().pagingState as PagingState.Error }
-                    RetryButton(
-                        error = pagingError.error.asString(),
-                        onRetry = paginate,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                    )
                 }
 
-                else -> {
-                    AnimatedContent(
-                        targetState = isListEmpty && !uiState().pagingState.isLoading,
-                        modifier = Modifier.fillMaxSize(),
-                        transitionSpec = { fadeIn() togetherWith fadeOut() }
-                    ) { isEmpty ->
-                        if (isEmpty) {
-                            EmptyDataMessage(
-                                modifier = Modifier
-                                    .padding(paddingValues)
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.surface),
-                            )
+                LibraryDetailsTopBar(
+                    topBarState = topBarState,
+                    scrollBehavior = scrollBehavior,
+                    isListEmpty = isListEmpty,
+                    onGoBack = onGoBack,
+                    selectCount = selectCount,
+                    searchQuery = searchQuery,
+                    onToggleSearchBar = onToggleSearchBar,
+                    onQueryChange = onQueryChange,
+                    onRemoveSelection = { showDeleteSelectionAlert = true },
+                    onUnselectAll = onUnselectAll,
+                    title = {
+                        val title = if (topBarState == LibraryTopBarState.Selecting) {
+                            stringResource(LocaleR.string.count_selection_format, selectCount)
                         } else {
-                            NonEmptyScreen(
-                                uiState = uiState,
-                                selectedItems = selectedItems,
-                                itemsProvider = items,
-                                scaffoldPadding = paddingValues,
-                                onViewMedia = onViewMedia,
-                                onLongClickItem = onLongClickItem,
-                                onToggleSelect = onToggleSelect,
-                                paginate = paginate,
-                                modifier = Modifier.fillMaxSize()
+                            library.name
+                        }
+
+                        Text(
+                            text = title,
+                            style = getTopBarHeadlinerTextStyle(),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            modifier = Modifier.graphicsLayer {
+                                alpha = when (topBarState) {
+                                    LibraryTopBarState.Selecting -> 1f
+                                    else -> TopTitleAlphaEasing.transform(scrollBehavior.state.collapsedFraction)
+                                }
+                            },
+                        )
+                    },
+                    infoContent = {
+                        ScreenHeader(
+                            library = library,
+                            tracker = tracker,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
+                        )
+                    },
+                    filterContent = {
+                        Column(
+                            modifier = Modifier
+                                .padding(bottom = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.onSurface.copy(0.2f),
                             )
+
+                            LibraryFilterRow(
+                                isListEditable = !isListEmpty && !uiState().isMultiSelecting,
+                                selected = { uiState().selectedFilter },
+                                onStartSelecting = onStartMultiSelecting,
+                                onUpdate = onUpdateFilter,
+                                enabled = tracker == null,
+                            )
+                        }
+                    },
+                )
+            },
+        ) { paddingValues ->
+            AnimatedContent(
+                screenState,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                modifier = Modifier.fillMaxSize()
+            ) { state ->
+                when (state) {
+                    LibraryDetailsScreenState.Error -> {
+                        val pagingError = remember { uiState().pagingState as PagingState.Error }
+                        RetryButton(
+                            error = pagingError.error.asString(),
+                            onRetry = paginate,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                        )
+                    }
+
+                    else -> {
+                        AnimatedContent(
+                            targetState = isListEmpty && !uiState().pagingState.isLoading,
+                            modifier = Modifier.fillMaxSize(),
+                            transitionSpec = { fadeIn() togetherWith fadeOut() }
+                        ) { isEmpty ->
+                            if (isEmpty) {
+                                EmptyDataMessage(
+                                    modifier = Modifier
+                                        .padding(paddingValues)
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.surface),
+                                )
+                            } else {
+                                NonEmptyScreen(
+                                    uiState = uiState,
+                                    selectedItems = selectedItems,
+                                    itemsProvider = items,
+                                    scaffoldPadding = paddingValues,
+                                    onViewMedia = onViewMedia,
+                                    onLongClickItem = onLongClickItem,
+                                    onToggleSelect = onToggleSelect,
+                                    paginate = paginate,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
+
 
     if (showDeleteSelectionAlert) {
         val alertDescription = stringResource(LocaleR.string.warn_delete_selected_libraries_format)
@@ -564,6 +580,7 @@ private fun LibraryDetailsScreenBasePreview() {
                     searchQuery = { searchQuery },
                     items = { safeItems },
                     selectedItems = { selectedItems },
+                    onRefresh = {},
                     onGoBack = {},
                     onRemoveSelection = {
                         selectedItems.forEach { media ->
