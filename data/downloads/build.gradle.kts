@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreNetwork)
     implementation(projects.coreDatastore)
+    implementation(projects.coreStrings)
 
     implementation(libs.okhttp)
     implementation(libs.stubs.util)
