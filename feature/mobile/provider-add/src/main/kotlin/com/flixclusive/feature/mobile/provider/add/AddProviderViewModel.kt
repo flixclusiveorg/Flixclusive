@@ -139,7 +139,7 @@ internal class AddProviderViewModel @Inject constructor(
                         else -> throw IllegalArgumentException("Invalid filter provided: $filter")
                     }
                 }.fastDistinctBy { it.id + it.name }
-                    .toPersistentList()
+                .toPersistentList()
         )
     }.stateIn(
         scope = viewModelScope,
