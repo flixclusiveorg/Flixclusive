@@ -374,6 +374,7 @@
     <string name="backup_option_preferences">Preferences</string>
     <string name="backup_option_providers">Providers</string>
     <string name="backup_option_repositories">Repositories</string>
+    <string name="backup_option_cached_links">Cached links</string>
 
     <string name="backup_create_started">Creating backup…</string>
     <string name="backup_create_success">Backup created</string>

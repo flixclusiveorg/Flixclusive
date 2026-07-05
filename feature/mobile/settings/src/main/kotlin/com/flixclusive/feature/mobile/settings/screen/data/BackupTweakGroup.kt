@@ -90,6 +90,7 @@ internal fun backupTweakGroup(
         if (options.includePreferences) add(BackupOption.PREFERENCES)
         if (options.includeProviders) add(BackupOption.PROVIDERS)
         if (options.includeRepositories) add(BackupOption.REPOSITORIES)
+        if (options.includeCachedLinks) add(BackupOption.CACHED_LINKS)
     }
 
     val backupOptions = persistentMapOf(
@@ -99,6 +100,7 @@ internal fun backupTweakGroup(
         BackupOption.PREFERENCES to resources.getString(LocaleR.string.backup_option_preferences),
         BackupOption.PROVIDERS to resources.getString(LocaleR.string.backup_option_providers),
         BackupOption.REPOSITORIES to resources.getString(LocaleR.string.backup_option_repositories),
+        BackupOption.CACHED_LINKS to resources.getString(LocaleR.string.backup_option_cached_links),
     )
 
     val frequencyDays = dataPreferences().autoBackupFrequencyDays
@@ -250,6 +252,7 @@ internal fun backupTweakGroup(
                             includePreferences = manualSelectedOptions.contains(BackupOption.PREFERENCES),
                             includeProviders = manualSelectedOptions.contains(BackupOption.PROVIDERS),
                             includeRepositories = manualSelectedOptions.contains(BackupOption.REPOSITORIES),
+                            includeCachedLinks = manualSelectedOptions.contains(BackupOption.CACHED_LINKS),
                         )
 
                         pendingBackupOptions = options
@@ -374,6 +377,7 @@ internal fun backupTweakGroup(
                                     includePreferences = newValues.contains(BackupOption.PREFERENCES),
                                     includeProviders = newValues.contains(BackupOption.PROVIDERS),
                                     includeRepositories = newValues.contains(BackupOption.REPOSITORIES),
+                                    includeCachedLinks = newValues.contains(BackupOption.CACHED_LINKS),
                                 ),
                         )
                     }
@@ -405,6 +409,7 @@ private enum class BackupOption {
     PREFERENCES,
     PROVIDERS,
     REPOSITORIES,
+    CACHED_LINKS,
 }
 
 @Composable

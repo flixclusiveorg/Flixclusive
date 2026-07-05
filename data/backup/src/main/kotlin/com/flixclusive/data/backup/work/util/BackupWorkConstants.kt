@@ -10,6 +10,7 @@ internal object BackupWorkConstants {
     const val INPUT_INCLUDE_PREFERENCES = "includePreferences"
     const val INPUT_INCLUDE_PROVIDERS = "includeProviders"
     const val INPUT_INCLUDE_REPOSITORIES = "includeRepositories"
+    const val INPUT_INCLUDE_CACHED_LINKS = "includeCachedLinks"
 
     const val OUTPUT_ERROR_MESSAGE = "errorMessage"
 

@@ -1,12 +1,14 @@
 package com.flixclusive.data.backup.di
 
 import com.flixclusive.data.backup.create.BackupCreator
+import com.flixclusive.data.backup.create.impl.CachedLinkBackupCreator
 import com.flixclusive.data.backup.create.impl.LibraryListBackupCreator
 import com.flixclusive.data.backup.create.impl.PreferenceBackupCreator
 import com.flixclusive.data.backup.create.impl.ProviderBackupCreator
 import com.flixclusive.data.backup.create.impl.RepositoryBackupCreator
 import com.flixclusive.data.backup.create.impl.SearchHistoryBackupCreator
 import com.flixclusive.data.backup.create.impl.WatchProgressBackupCreator
+import com.flixclusive.data.backup.model.BackupCachedLink
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.model.BackupPreference
 import com.flixclusive.data.backup.model.BackupProvider
@@ -49,4 +51,8 @@ internal abstract class BackupCreateModule {
     @Binds
     @Singleton
     abstract fun bindsRepositoryBackupCreator(creator: RepositoryBackupCreator): BackupCreator<BackupProviderRepository>
+
+    @Binds
+    @Singleton
+    abstract fun bindsCachedLinkBackupCreator(creator: CachedLinkBackupCreator): BackupCreator<BackupCachedLink>
 }

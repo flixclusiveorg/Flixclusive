@@ -172,6 +172,10 @@ internal class BackupCreateWorker(
                         BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES,
                         defaultOptions.includeRepositories
                     ),
+                    includeCachedLinks = inputData.getBoolean(
+                        BackupWorkConstants.INPUT_INCLUDE_CACHED_LINKS,
+                        defaultOptions.includeCachedLinks
+                    ),
                 )
                 val result = entryPoint.backupRepository().create(
                     uri = outputUri,

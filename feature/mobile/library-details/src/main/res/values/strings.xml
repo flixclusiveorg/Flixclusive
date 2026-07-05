@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="time_just_now">just now</string>
+    <string name="time_just_now">Just now</string>
     <string name="time_ago">%d %s ago</string>
     <string name="edited">Edited</string>
 
