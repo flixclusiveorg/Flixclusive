@@ -179,6 +179,7 @@ internal fun OnboardingScreen(
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
                     manageStorageSettingsLauncher.launch(PermissionUtil.createManageStorageIntent(context))
                 }
+
                 else -> {
                     storageAccessPermissionLauncher.launch(
                         arrayOf(
@@ -338,7 +339,9 @@ private fun OnboardingScreenContent(
                         exit = fadeOut(tween(200)) + slideOutHorizontally(tween(300)) { -it / 6 },
                     ) {
                         TextButton(
-                            onClick = { currentStep-- },
+                            onClick = {
+                                currentStep = (currentStep - 1).coerceAtLeast(0)
+                            },
                             shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(text = stringResource(LocaleR.string.back))
@@ -349,8 +352,16 @@ private fun OnboardingScreenContent(
                         enabled = isContinueEnabled,
                         onClick = {
                             when {
-                                OnboardingStep.entries[currentStep] == OnboardingStep.FinishUp -> finishOnboarding()
-                                currentStep < OnboardingStep.entries.lastIndex -> currentStep++
+                                OnboardingStep.entries[currentStep] == OnboardingStep.FinishUp -> {
+                                    finishOnboarding()
+                                }
+
+                                currentStep < OnboardingStep.entries.lastIndex -> {
+                                    currentStep =
+                                        (currentStep + 1).coerceAtMost(
+                                            OnboardingStep.entries.lastIndex
+                                        )
+                                }
                             }
                         },
                         shape = MaterialTheme.shapes.medium,
