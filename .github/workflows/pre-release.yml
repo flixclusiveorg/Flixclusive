@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   checks: write
 
 concurrency:
@@ -136,3 +136,18 @@ jobs:
             --notes-file CHANGELOG.md \
             --latest \
             flixclusive-preview.apk
+
+      - name: Push tag to source repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ needs.build.outputs.tag_name }}"
+
+          git config user.name "flixclusiveorg"
+          git config user.email "bot@flixclusive.app"
+
+          # Overwrite the tag locally in case this run is a re-publish
+          git tag -f "$TAG_NAME" "${{ github.sha }}"
+
+          # Force-push so re-runs against the same preview code move the tag
+          git push origin "$TAG_NAME" --force
