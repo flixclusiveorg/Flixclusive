@@ -3,9 +3,11 @@ package com.flixclusive.data.downloads.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -24,7 +26,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import com.flixclusive.core.strings.R as StringR
 
 @AndroidEntryPoint
 class DownloadService : Service() {
@@ -36,6 +41,9 @@ class DownloadService : Service() {
 
     private lateinit var wakeLock: PowerManager.WakeLock
     internal val activeDownloads = mutableMapOf<String, Job>() // Internal for testing
+
+    private val lastUpdateTimes = ConcurrentHashMap<Int, Long>()
+    private val notificationThrottleMs = 1000L
 
     // Do not cancel this scope directly - use stopServiceJob to manage service stopping logic
     private val serviceScope by lazy { CoroutineScope(appDispatchers.io + SupervisorJob()) }
@@ -166,7 +174,7 @@ class DownloadService : Service() {
         stopServiceJob?.cancel()
 
         val notificationId = downloadId.hashCode()
-        startForeground(notificationId, createNotification(fileName))
+        safeStartForeground(notificationId, createNotification(fileName, downloadId))
 
         val job = serviceScope.launch {
             try {
@@ -174,7 +182,7 @@ class DownloadService : Service() {
 
                 downloadRepository.executeDownload(downloadId, url, file)
                 downloadRepository.getDownloadState(downloadId).collect { state ->
-                    updateNotification(notificationId, fileName, state.progress, state.status)
+                    updateNotification(notificationId, fileName, downloadId, state.progress, state.status)
 
                     if (state.status.isFinished) {
                         activeDownloads.remove(downloadId)
@@ -203,6 +211,10 @@ class DownloadService : Service() {
         downloadRepository.cancelDownload(downloadId)
         activeDownloads.remove(downloadId)
 
+        val notificationId = downloadId.hashCode()
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(notificationId)
+
         if (activeDownloads.isEmpty()) {
             stopForeground()
             releaseWakeLockIfNeeded()
@@ -210,10 +222,10 @@ class DownloadService : Service() {
         }
     }
 
-    private fun scheduleServiceStop(delay: Long = 5000L) {
+    private fun scheduleServiceStop(delayMs: Long = 5000L) {
         stopServiceJob?.cancel() // Cancel any existing stop job
         stopServiceJob = serviceScope.launch {
-            delay(delay) // Wait for 5 seconds before stopping the service
+            delay(delayMs.milliseconds) // Wait for 5 seconds before stopping the service
             if (activeDownloads.isEmpty()) {
                 stopForeground()
                 releaseWakeLockIfNeeded()
@@ -231,6 +243,14 @@ class DownloadService : Service() {
         }
     }
 
+    private fun safeStartForeground(id: Int, notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(id, notification)
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
@@ -245,7 +265,18 @@ class DownloadService : Service() {
         notificationManager.createNotificationChannel(channel)
     }
 
-    private fun createNotification(fileName: String): Notification {
+    private fun createNotification(fileName: String, downloadId: String): Notification {
+        val cancelIntent = Intent(this, DownloadService::class.java).apply {
+            action = ACTION_CANCEL_DOWNLOAD
+            putExtra(EXTRA_DOWNLOAD_ID, downloadId)
+        }
+        val cancelPendingIntent = PendingIntent.getService(
+            this,
+            downloadId.hashCode(),
+            cancelIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
         return NotificationCompat
             .Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Downloading $fileName")
@@ -253,57 +284,100 @@ class DownloadService : Service() {
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setProgress(100, 0, false)
             .setOngoing(true)
-            .build()
+            .setContentIntent(createContentIntent())
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(StringR.string.label_cancel),
+                cancelPendingIntent,
+            ).build()
+    }
+
+    private fun createContentIntent(): PendingIntent {
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        return PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     private fun updateNotification(
         notificationId: Int,
         fileName: String,
+        downloadId: String,
         progress: Float,
         status: DownloadStatus,
     ) {
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val currentTime = System.currentTimeMillis()
+        val lastUpdateTime = lastUpdateTimes[notificationId] ?: 0L
 
-        val notification = when (status) {
-            DownloadStatus.DOWNLOADING -> {
-                NotificationCompat
-                    .Builder(this, NOTIFICATION_CHANNEL_ID)
-                    .setContentTitle("Downloading ${fileName.substringBeforeLast(".")}")
-                    .setContentText("$progress%")
-                    .setSmallIcon(android.R.drawable.stat_sys_download)
-                    .setProgress(100, progress.toInt(), false)
-                    .setOngoing(true)
-                    .build()
+        if (
+            status.isFinished ||
+            progress == 0f ||
+            progress == 100f ||
+            currentTime - lastUpdateTime > notificationThrottleMs
+        ) {
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+            val notificationBuilder = NotificationCompat
+                .Builder(this, NOTIFICATION_CHANNEL_ID)
+                .setContentIntent(createContentIntent())
+
+            val notification = when (status) {
+                DownloadStatus.DOWNLOADING -> {
+                    val cancelIntent = Intent(this, DownloadService::class.java).apply {
+                        action = ACTION_CANCEL_DOWNLOAD
+                        putExtra(EXTRA_DOWNLOAD_ID, downloadId)
+                    }
+                    val cancelPendingIntent = PendingIntent.getService(
+                        this,
+                        downloadId.hashCode(),
+                        cancelIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                    )
+
+                    notificationBuilder
+                        .setContentTitle("Downloading ${fileName.substringBeforeLast(".")}")
+                        .setContentText("$progress%")
+                        .setSmallIcon(android.R.drawable.stat_sys_download)
+                        .setProgress(100, progress.toInt(), false)
+                        .setOngoing(true)
+                        .addAction(
+                            android.R.drawable.ic_menu_close_clear_cancel,
+                            getString(StringR.string.label_cancel),
+                            cancelPendingIntent,
+                        ).build()
+                }
+
+                DownloadStatus.COMPLETED -> {
+                    notificationBuilder
+                        .setContentTitle("Download completed")
+                        .setContentText(fileName.substringBeforeLast("."))
+                        .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                        .setProgress(0, 0, false)
+                        .setOngoing(false)
+                        .build()
+                }
+
+                DownloadStatus.FAILED -> {
+                    notificationBuilder
+                        .setContentTitle("Download failed")
+                        .setContentText(fileName.substringBeforeLast("."))
+                        .setSmallIcon(android.R.drawable.stat_notify_error)
+                        .setProgress(0, 0, false)
+                        .setOngoing(false)
+                        .build()
+                }
+
+                else -> {
+                    return
+                }
             }
 
-            DownloadStatus.COMPLETED -> {
-                NotificationCompat
-                    .Builder(this, NOTIFICATION_CHANNEL_ID)
-                    .setContentTitle("Download completed")
-                    .setContentText(fileName.substringBeforeLast("."))
-                    .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setProgress(0, 0, false)
-                    .setOngoing(false)
-                    .build()
-            }
-
-            DownloadStatus.FAILED -> {
-                NotificationCompat
-                    .Builder(this, NOTIFICATION_CHANNEL_ID)
-                    .setContentTitle("Download failed")
-                    .setContentText(fileName.substringBeforeLast("."))
-                    .setSmallIcon(android.R.drawable.stat_notify_error)
-                    .setProgress(0, 0, false)
-                    .setOngoing(false)
-                    .build()
-            }
-
-            else -> {
-                return
-            }
+            notificationManager.notify(notificationId, notification)
+            lastUpdateTimes[notificationId] = currentTime
         }
-
-        notificationManager.notify(notificationId, notification)
     }
 
     override fun onBind(intent: Intent?): IBinder {
