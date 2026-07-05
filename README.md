@@ -7,10 +7,6 @@
       <td><a href="https://github.com/flixclusiveorg/Flixclusive/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/flixclusiveorg/Flixclusive/release.yml?branch=master&event=push&style=for-the-badge&label=CI+Build" alt="CI"></a></td>
     </tr>
     <tr>
-      <td>Quality Gate</td>
-      <td><a href="https://sonarcloud.io/summary/overall?id=flixclusiveorg_Flixclusive"><img src="https://img.shields.io/sonar/quality_gate/flixclusiveorg_Flixclusive?server=https%3A%2F%2Fsonarcloud.io&style=for-the-badge" alt="Sonar quality gate"></a></td>
-    </tr>
-    <tr>
       <td>Pre-release</td>
       <td><a href="https://github.com/flixclusiveorg/preview-builds/releases/latest"><img src="https://img.shields.io/github/downloads/flixclusiveorg/preview-builds/latest/total?style=for-the-badge" alt="pre-release build"></a></td>
     </tr>
