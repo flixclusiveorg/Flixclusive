@@ -8,12 +8,13 @@ class NoDataToBackupException : Exception()
 
 @Serializable
 data class BackupResult(
-    val missingLibraryLists: Set<String>,
-    val missingProviders: Set<String>,
-    val missingProviderRepositories: Set<String>,
-    val missingPreferences: Set<String>,
-    val missingSearchHistory: Set<String>,
-    val missingWatchProgress: Set<String>,
+    val missingLibraryLists: Set<String> = emptySet(),
+    val missingProviders: Set<String> = emptySet(),
+    val missingProviderRepositories: Set<String> = emptySet(),
+    val missingPreferences: Set<String> = emptySet(),
+    val missingSearchHistory: Set<String> = emptySet(),
+    val missingWatchProgress: Set<String> = emptySet(),
+    val missingCachedLinks: Set<String> = emptySet(),
 )
 
 interface BackupRepository {

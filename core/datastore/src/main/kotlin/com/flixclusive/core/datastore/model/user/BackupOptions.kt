@@ -10,4 +10,5 @@ data class BackupOptions(
     val includePreferences: Boolean = true,
     val includeProviders: Boolean = true,
     val includeRepositories: Boolean = true,
+    val includeCachedLinks: Boolean = true,
 )

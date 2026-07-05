@@ -310,6 +310,7 @@ class BackupCreateWorkerTest {
             includePreferences = false,
             includeProviders = false,
             includeRepositories = false,
+            includeCachedLinks = false,
         )
     }
 
@@ -370,6 +371,7 @@ class BackupCreateWorkerTest {
             get { missingPreferences }.isEmpty()
             get { missingSearchHistory }.isEmpty()
             get { missingWatchProgress }.isEmpty()
+            get { missingCachedLinks }.isEmpty()
         }
     }
 

@@ -1,5 +1,6 @@
 package com.flixclusive.data.backup.di
 
+import com.flixclusive.data.backup.model.BackupCachedLink
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.model.BackupPreference
 import com.flixclusive.data.backup.model.BackupProvider
@@ -7,6 +8,7 @@ import com.flixclusive.data.backup.model.BackupProviderRepository
 import com.flixclusive.data.backup.model.BackupSearchHistory
 import com.flixclusive.data.backup.model.BackupWatchProgress
 import com.flixclusive.data.backup.restore.BackupRestorer
+import com.flixclusive.data.backup.restore.impl.CachedLinkBackupRestorer
 import com.flixclusive.data.backup.restore.impl.LibraryListBackupRestorer
 import com.flixclusive.data.backup.restore.impl.PreferenceBackupRestorer
 import com.flixclusive.data.backup.restore.impl.ProviderBackupRestorer
@@ -51,4 +53,8 @@ internal abstract class BackupRestoreModule {
     abstract fun bindsRepositoryBackupRestorer(
         restorer: RepositoryBackupRestorer
     ): BackupRestorer<BackupProviderRepository>
+
+    @Binds
+    @Singleton
+    abstract fun bindsCachedLinkBackupRestorer(restorer: CachedLinkBackupRestorer): BackupRestorer<BackupCachedLink>
 }

@@ -1,5 +1,6 @@
 package com.flixclusive.data.backup.di
 
+import com.flixclusive.data.backup.model.BackupCachedLink
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.model.BackupPreference
 import com.flixclusive.data.backup.model.BackupProvider
@@ -7,6 +8,7 @@ import com.flixclusive.data.backup.model.BackupProviderRepository
 import com.flixclusive.data.backup.model.BackupSearchHistory
 import com.flixclusive.data.backup.model.BackupWatchProgress
 import com.flixclusive.data.backup.validate.BackupValidator
+import com.flixclusive.data.backup.validate.impl.CachedLinkBackupValidator
 import com.flixclusive.data.backup.validate.impl.LibraryListBackupValidator
 import com.flixclusive.data.backup.validate.impl.PreferenceBackupValidator
 import com.flixclusive.data.backup.validate.impl.ProviderBackupValidator
@@ -57,4 +59,10 @@ internal abstract class ValidateModule {
     abstract fun bindWatchProgressBackupValidator(
         impl: WatchProgressBackupValidator,
     ): BackupValidator<BackupWatchProgress>
+
+    @Binds
+    @Singleton
+    abstract fun bindCachedLinkBackupValidator(
+        impl: CachedLinkBackupValidator,
+    ): BackupValidator<BackupCachedLink>
 }

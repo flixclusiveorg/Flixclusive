@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.data.backup.create.BackupCreator
 import com.flixclusive.data.backup.model.Backup
+import com.flixclusive.data.backup.model.BackupCachedLink
 import com.flixclusive.data.backup.model.BackupLibraryList
 import com.flixclusive.data.backup.model.BackupPreference
 import com.flixclusive.data.backup.model.BackupProvider
@@ -50,6 +51,7 @@ internal class BackupRepositoryImpl @Inject constructor(
     private val searchHistoryBackupValidator: BackupValidator<BackupSearchHistory>,
     private val providerBackupValidator: BackupValidator<BackupProvider>,
     private val repositoryBackupValidator: BackupValidator<BackupProviderRepository>,
+    private val cachedLinkBackupValidator: BackupValidator<BackupCachedLink>,
     // ==
     private val libraryListBackupCreator: BackupCreator<BackupLibraryList>,
     private val preferenceBackupCreator: BackupCreator<BackupPreference>,
@@ -57,6 +59,7 @@ internal class BackupRepositoryImpl @Inject constructor(
     private val searchHistoryBackupCreator: BackupCreator<BackupSearchHistory>,
     private val providerBackupCreator: BackupCreator<BackupProvider>,
     private val repositoryBackupCreator: BackupCreator<BackupProviderRepository>,
+    private val cachedLinkBackupCreator: BackupCreator<BackupCachedLink>,
     // ==
     private val libraryListBackupRestorer: BackupRestorer<BackupLibraryList>,
     private val preferenceBackupRestorer: BackupRestorer<BackupPreference>,
@@ -64,6 +67,7 @@ internal class BackupRepositoryImpl @Inject constructor(
     private val searchHistoryBackupRestorer: BackupRestorer<BackupSearchHistory>,
     private val providerBackupRestorer: BackupRestorer<BackupProvider>,
     private val repositoryBackupRestorer: BackupRestorer<BackupProviderRepository>,
+    private val cachedLinkBackupRestorer: BackupRestorer<BackupCachedLink>,
 ) : BackupRepository {
     override suspend fun create(uri: Uri, options: BackupOptions): BackupResult {
         return withContext(appDispatchers.io) {
@@ -82,6 +86,11 @@ internal class BackupRepositoryImpl @Inject constructor(
                 },
                 watchProgressList = if (options.includeWatchProgress) {
                     watchProgressBackupCreator().getOrThrow()
+                } else {
+                    emptyList()
+                },
+                cachedLinks = if (options.includeCachedLinks) {
+                    cachedLinkBackupCreator().getOrThrow()
                 } else {
                     emptyList()
                 },
@@ -131,6 +140,14 @@ internal class BackupRepositoryImpl @Inject constructor(
                 missingProviderRepositories = if (options.includeRepositories) {
                     repositoryBackupValidator(
                         backup = backup.repositories,
+                        mode = BackupValidationMode.CREATE,
+                    ).getOrThrow()
+                } else {
+                    emptySet()
+                },
+                missingCachedLinks = if (options.includeCachedLinks) {
+                    cachedLinkBackupValidator(
+                        backup = backup.cachedLinks,
                         mode = BackupValidationMode.CREATE,
                     ).getOrThrow()
                 } else {
@@ -197,6 +214,7 @@ internal class BackupRepositoryImpl @Inject constructor(
                 options.includeWatchProgress && includeLibrary && backup.watchProgressList.isNotEmpty()
             val includeSearchHistory = options.includeSearchHistory && backup.searchHistory.isNotEmpty()
             val includePreferences = options.includePreferences && backup.preferences.isNotEmpty()
+            val includeCachedLinks = options.includeCachedLinks && backup.cachedLinks.isNotEmpty()
 
             if (includeRepositories) {
                 repositoryBackupRestorer(backup.repositories).getOrThrow()
@@ -220,6 +238,10 @@ internal class BackupRepositoryImpl @Inject constructor(
 
             if (includePreferences) {
                 preferenceBackupRestorer(backup.preferences).getOrThrow()
+            }
+
+            if (includeCachedLinks) {
+                cachedLinkBackupRestorer(backup.cachedLinks).getOrThrow()
             }
 
             BackupResult(
@@ -266,6 +288,14 @@ internal class BackupRepositoryImpl @Inject constructor(
                 missingWatchProgress = if (includeWatchProgress) {
                     watchProgressBackupValidator(
                         backup = backup.watchProgressList,
+                        mode = BackupValidationMode.RESTORE,
+                    ).getOrThrow()
+                } else {
+                    emptySet()
+                },
+                missingCachedLinks = if (includeCachedLinks) {
+                    cachedLinkBackupValidator(
+                        backup = backup.cachedLinks,
                         mode = BackupValidationMode.RESTORE,
                     ).getOrThrow()
                 } else {

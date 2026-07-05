@@ -197,6 +197,7 @@ class BackupRestoreWorkerTest {
             searchHistory = emptyList(),
             providers = emptyList(),
             repositories = emptyList(),
+            cachedLinks = emptyList(),
         )
 
         val bytes = ProtoBuf.encodeToByteArray(Backup.serializer(), backup)
@@ -222,6 +223,7 @@ class BackupRestoreWorkerTest {
             includePreferences = false,
             includeProviders = false,
             includeRepositories = false,
+            includeCachedLinks = false,
         )
     }
 
@@ -233,6 +235,7 @@ class BackupRestoreWorkerTest {
             get { missingPreferences }.isEmpty()
             get { missingSearchHistory }.isEmpty()
             get { missingWatchProgress }.isEmpty()
+            get { missingCachedLinks }.isEmpty()
         }
     }
 }

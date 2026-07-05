@@ -106,6 +106,7 @@ internal class BackupRestoreWorker(
                     includePreferences = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_PREFERENCES, true),
                     includeProviders = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_PROVIDERS, true),
                     includeRepositories = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES, true),
+                    includeCachedLinks = inputData.getBoolean(BackupWorkConstants.INPUT_INCLUDE_CACHED_LINKS, true),
                 )
 
                 val result = entryPoint.backupRepository().restore(

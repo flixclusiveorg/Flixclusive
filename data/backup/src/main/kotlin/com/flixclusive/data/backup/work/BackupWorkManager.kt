@@ -76,6 +76,7 @@ class BackupWorkManager @Inject constructor(
                     BackupWorkConstants.INPUT_INCLUDE_PREFERENCES to options.includePreferences,
                     BackupWorkConstants.INPUT_INCLUDE_PROVIDERS to options.includeProviders,
                     BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES to options.includeRepositories,
+                    BackupWorkConstants.INPUT_INCLUDE_CACHED_LINKS to options.includeCachedLinks,
                 )
             ).addTag(BackupWorkConstants.TAG_BACKUP_CREATE)
             .addTag(BackupWorkConstants.TAG_BACKUP_CREATE_USER_PREFIX + userId)
@@ -112,6 +113,7 @@ class BackupWorkManager @Inject constructor(
                     BackupWorkConstants.INPUT_INCLUDE_PREFERENCES to options.includePreferences,
                     BackupWorkConstants.INPUT_INCLUDE_PROVIDERS to options.includeProviders,
                     BackupWorkConstants.INPUT_INCLUDE_REPOSITORIES to options.includeRepositories,
+                    BackupWorkConstants.INPUT_INCLUDE_CACHED_LINKS to options.includeCachedLinks,
                 )
             ).addTag(BackupWorkConstants.TAG_BACKUP_RESTORE)
             .addTag(BackupWorkConstants.TAG_BACKUP_RESTORE_USER_PREFIX + userId)

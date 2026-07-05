@@ -14,6 +14,8 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListType
 import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.CachedSubtitle
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -21,6 +23,7 @@ import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.data.backup.create.impl.CachedLinkBackupCreator
 import com.flixclusive.data.backup.create.impl.LibraryListBackupCreator
 import com.flixclusive.data.backup.create.impl.PreferenceBackupCreator
 import com.flixclusive.data.backup.create.impl.ProviderBackupCreator
@@ -29,12 +32,14 @@ import com.flixclusive.data.backup.create.impl.SearchHistoryBackupCreator
 import com.flixclusive.data.backup.create.impl.WatchProgressBackupCreator
 import com.flixclusive.data.backup.model.Backup
 import com.flixclusive.data.backup.repository.BackupResult
+import com.flixclusive.data.backup.restore.impl.CachedLinkBackupRestorer
 import com.flixclusive.data.backup.restore.impl.LibraryListBackupRestorer
 import com.flixclusive.data.backup.restore.impl.PreferenceBackupRestorer
 import com.flixclusive.data.backup.restore.impl.ProviderBackupRestorer
 import com.flixclusive.data.backup.restore.impl.RepositoryBackupRestorer
 import com.flixclusive.data.backup.restore.impl.SearchHistoryBackupRestorer
 import com.flixclusive.data.backup.restore.impl.WatchProgressBackupRestorer
+import com.flixclusive.data.backup.validate.impl.CachedLinkBackupValidator
 import com.flixclusive.data.backup.validate.impl.LibraryListBackupValidator
 import com.flixclusive.data.backup.validate.impl.PreferenceBackupValidator
 import com.flixclusive.data.backup.validate.impl.ProviderBackupValidator
@@ -115,6 +120,7 @@ class BackupRepositoryImplTest {
                 expectThat(backup.searchHistory).isEmpty()
                 expectThat(backup.providers).isEmpty()
                 expectThat(backup.repositories).isEmpty()
+                expectThat(backup.cachedLinks).isEmpty()
             } finally {
                 db.close()
                 backupFile.delete()
@@ -314,10 +320,112 @@ class BackupRepositoryImplTest {
             }
         }
 
+    @Test
+    fun shouldIncludeAndRestoreCachedLinks() =
+        runTest(testDispatcher) {
+            val db = DatabaseTestDefaults.createDatabase(context)
+            val backupFile = createBackupFile(context)
+            try {
+                val userId = insertUser(db)
+                val userSession = TestUserSessionDataStore(userId)
+                val repository = createRepository(
+                    context = context,
+                    db = db,
+                    userSessionDataStore = userSession,
+                    appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
+                )
+
+                val mediaId = "media-1"
+                seedMedia(db, mediaId)
+
+                val streamUrl = "https://example.com/stream"
+                val subtitleUrl = "https://example.com/subtitle"
+
+                db.cachedMediaLinkDao().insertStream(
+                    CachedStream(
+                        url = streamUrl,
+                        label = "Test Stream",
+                        providerId = "test-provider",
+                        ownerId = userId,
+                        mediaId = mediaId,
+                        createdAt = Date(1_700_000_000_000),
+                        updatedAt = Date(1_700_000_000_000),
+                    )
+                )
+
+                db.cachedMediaLinkDao().insertSubtitle(
+                    CachedSubtitle(
+                        url = subtitleUrl,
+                        label = "Test Subtitle",
+                        providerId = "test-provider",
+                        ownerId = userId,
+                        mediaId = mediaId,
+                        createdAt = Date(1_700_000_000_000),
+                        updatedAt = Date(1_700_000_000_000),
+                    )
+                )
+
+                val createResult = repository.create(
+                    uri = Uri.fromFile(backupFile),
+                    options = BackupOptions(
+                        includeLibrary = false,
+                        includeWatchProgress = false,
+                        includeSearchHistory = false,
+                        includePreferences = false,
+                        includeProviders = false,
+                        includeRepositories = false,
+                        includeCachedLinks = true,
+                    )
+                )
+
+                assertEmpty(createResult)
+
+                val backup = decodeBackup(backupFile)
+                expectThat(backup.cachedLinks).hasSize(2)
+
+                // Clear DB to test restore
+                db.cachedMediaLinkDao().deleteAll(userId)
+
+                val restoreResult = repository.restore(uri = Uri.fromFile(backupFile))
+                assertEmpty(restoreResult)
+
+                val restoredStreams = db.cachedMediaLinkDao().getStreamsByOwner(userId)
+                val restoredSubtitles = db.cachedMediaLinkDao().getSubtitlesByOwner(userId)
+
+                expectThat(restoredStreams).hasSize(1)
+                expectThat(restoredStreams.first().url).isEqualTo(streamUrl)
+                expectThat(restoredSubtitles).hasSize(1)
+                expectThat(restoredSubtitles.first().url).isEqualTo(subtitleUrl)
+            } finally {
+                db.close()
+                backupFile.delete()
+            }
+        }
+
     private suspend fun insertUser(db: AppDatabase): String {
         val userId = UUID.randomUUID().toString()
         db.userDao().insert(DatabaseTestDefaults.getUser(id = userId))
         return userId
+    }
+
+    private suspend fun seedMedia(db: AppDatabase, mediaId: String) {
+        db.libraryListItemDao().upsertMedia(
+            DBMedia(
+                id = mediaId,
+                title = "Test Media",
+                providerId = "test-provider",
+                adult = false,
+                type = MediaType.MOVIE,
+                overview = null,
+                posterImage = null,
+                language = null,
+                rating = null,
+                backdropImage = null,
+                releaseDate = null,
+                createdAt = Date(1_700_000_000_000),
+                updatedAt = Date(1_700_000_000_000),
+            )
+        )
     }
 
     private suspend fun seedCustomLibraryList(
@@ -339,23 +447,7 @@ class BackupRepositoryImplTest {
             )
         )
 
-        db.libraryListItemDao().upsertMedia(
-            DBMedia(
-                id = mediaId,
-                title = "Test Media",
-                providerId = "test-provider",
-                adult = false,
-                type = MediaType.MOVIE,
-                overview = null,
-                posterImage = null,
-                language = null,
-                rating = null,
-                backdropImage = null,
-                releaseDate = null,
-                createdAt = Date(1_700_000_000_000),
-                updatedAt = Date(1_700_000_000_000),
-            )
-        )
+        seedMedia(db, mediaId)
 
         db.libraryListItemDao().insertItem(
             LibraryListItem(
@@ -425,6 +517,7 @@ class BackupRepositoryImplTest {
             includePreferences = false,
             includeProviders = false,
             includeRepositories = false,
+            includeCachedLinks = false,
         )
     }
 
@@ -441,6 +534,7 @@ class BackupRepositoryImplTest {
         val searchHistoryDao = db.searchHistoryDao()
         val installedProviderDao = db.installedProviderDao()
         val repositoryDao = db.repositoryDao()
+        val cachedMediaLinkDao = db.cachedMediaLinkDao()
 
         return BackupRepositoryImpl(
             context = context,
@@ -471,6 +565,10 @@ class BackupRepositoryImplTest {
                 installedRepositoryDao = repositoryDao,
                 userSessionDataStore = userSessionDataStore,
             ),
+            cachedLinkBackupValidator = CachedLinkBackupValidator(
+                cachedMediaLinkDao = cachedMediaLinkDao,
+                userSessionDataStore = userSessionDataStore,
+            ),
             libraryListBackupCreator = LibraryListBackupCreator(
                 libraryListDao = libraryListDao,
                 userSessionDataStore = userSessionDataStore,
@@ -494,6 +592,10 @@ class BackupRepositoryImplTest {
             ),
             repositoryBackupCreator = RepositoryBackupCreator(
                 installedRepositoryDao = repositoryDao,
+                userSessionDataStore = userSessionDataStore,
+            ),
+            cachedLinkBackupCreator = CachedLinkBackupCreator(
+                cachedMediaLinkDao = cachedMediaLinkDao,
                 userSessionDataStore = userSessionDataStore,
             ),
             libraryListBackupRestorer = LibraryListBackupRestorer(
@@ -524,6 +626,10 @@ class BackupRepositoryImplTest {
                 installedRepositoryDao = repositoryDao,
                 userSessionDataStore = userSessionDataStore,
             ),
+            cachedLinkBackupRestorer = CachedLinkBackupRestorer(
+                cachedMediaLinkDao = cachedMediaLinkDao,
+                userSessionDataStore = userSessionDataStore,
+            ),
         )
     }
 
@@ -535,6 +641,7 @@ class BackupRepositoryImplTest {
             get { missingPreferences }.isEmpty()
             get { missingSearchHistory }.isEmpty()
             get { missingWatchProgress }.isEmpty()
+            get { missingCachedLinks }.isEmpty()
         }
     }
 

@@ -13,4 +13,5 @@ data class Backup(
     @ProtoNumber(4) val searchHistory: List<BackupSearchHistory>,
     @ProtoNumber(5) val providers: List<BackupProvider>,
     @ProtoNumber(6) val repositories: List<BackupProviderRepository>,
+    @ProtoNumber(7) val cachedLinks: List<BackupCachedLink>,
 )
