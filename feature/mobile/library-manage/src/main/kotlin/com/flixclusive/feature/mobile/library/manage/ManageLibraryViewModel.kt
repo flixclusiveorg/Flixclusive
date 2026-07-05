@@ -589,6 +589,9 @@ internal data class LibraryListWithPreview(
 
         if (id != other.id) return false
         if (provider?.id != other.provider?.id) return false
+        if (name != other.name) return false
+        if (description != other.description) return false
+        if (previews != other.previews) return false
 
         return true
     }
