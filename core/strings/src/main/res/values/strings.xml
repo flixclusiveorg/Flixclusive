@@ -99,7 +99,6 @@
     <string name="help">Help</string>
     <string name="hide_error_logs">Hide error logs</string>
     <string name="identity">Identity</string>
-    <string name="incognito">Incognito</string>
     <string name="label_downloading_provider">Downloading provider…</string>
     <string name="label_loading">Loading…</string>
     <string name="label_uninstalling">Uninstalling…</string>
@@ -303,7 +302,6 @@
     <string name="media_card_titles_settings_description">Display the titles on under the media cards.</string>
     <string name="filter_button">Filter</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
-    <string name="incognito_content_desc">Pauses watch history, search history, and any data that can be logged by the app.</string>
     <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
     <string name="navigate_to_media">Go see details of media button</string>

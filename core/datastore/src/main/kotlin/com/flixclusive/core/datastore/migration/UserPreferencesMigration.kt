@@ -45,7 +45,7 @@ internal class UserPreferencesMigration(
         val uiPreferences = oldAppSettings.toUiPreferences()
         val providerPreferences = oldAppProviderSettings.toProviderPreferences(context)
         val userOnBoarding = oldOnBoardingPreferences.toUserOnBoarding()
-        val dataPreferences = oldAppSettings.toDataPreferences()
+        val dataPreferences = DataPreferences()
         val subtitlesPreferences = oldAppSettings.toSubtitlesPreferences()
         val playerPreferences = oldAppSettings.toPlayerPreferences()
 
@@ -97,8 +97,6 @@ internal class UserPreferencesMigration(
             subtitleBackgroundColor = subtitleBackgroundColor,
             subtitleEdgeType = subtitleEdgeType,
         )
-
-    private fun OldAppSettings.toDataPreferences(): DataPreferences = DataPreferences(isIncognito = isIncognito)
 
     private fun OldAppSettings.toUiPreferences(): UiPreferences =
         UiPreferences(shouldShowTitleOnCards = isShowingMediaCardTitle)

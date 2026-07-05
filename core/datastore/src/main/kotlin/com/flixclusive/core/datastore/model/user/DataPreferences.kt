@@ -4,7 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DataPreferences(
-    val isIncognito: Boolean = false,
     /**
      * Auto-backup frequency in days.
      *

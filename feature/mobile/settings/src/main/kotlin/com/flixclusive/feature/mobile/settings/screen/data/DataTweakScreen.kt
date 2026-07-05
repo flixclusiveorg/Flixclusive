@@ -40,16 +40,6 @@ internal fun DataTweakScreen(
         navigateBack = navigator::navigateBack,
         tweaksProvider = {
             listOf(
-                TweakUI.SwitchTweak(
-                    value = { dataPreferences.isIncognito },
-                    title = stringResource(LocaleR.string.incognito),
-                    description = { resources.getString(LocaleR.string.incognito_content_desc) },
-                    onTweaked = {
-                        viewModel.updateUserPrefs { oldValue ->
-                            oldValue.copy(isIncognito = it)
-                        }
-                    },
-                ),
                 getSearchTweaks(
                     searchHistoryCount = searchHistoryCount,
                     clearSearchHistory = viewModel::clearSearchHistory,
