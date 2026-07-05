@@ -27,6 +27,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -107,7 +108,7 @@ class LibraryDetailsViewModel @AssistedInject constructor(
         )
 
     init {
-        paginate()
+        initialize()
 
         viewModelScope.launch {
             if (navArgs.tracker != null) return@launch
@@ -209,6 +210,32 @@ class LibraryDetailsViewModel @AssistedInject constructor(
         }
     }
 
+    fun initialize(isRefreshing: Boolean = false) {
+        if (isRefreshing) {
+            if (_uiState.value.isRefreshing) return
+
+            items.clear()
+            selectedItems.clear()
+            _uiState.update {
+                it.copy(
+                    isRefreshing = true,
+                    currentPage = 1,
+                    pagingState = PagingState.Idle
+                )
+            }
+        }
+
+        paginate()
+        viewModelScope.launch {
+            paginateJob?.join()
+            // Simulate a delay for native lists
+            if (navArgs.tracker == null) {
+                delay(1000.milliseconds)
+            }
+            _uiState.update { it.copy(isRefreshing = false) }
+        }
+    }
+
     fun paginate() {
         if (paginateJob?.isActive == true) return
         if (uiState.value.pagingState.isExhausted) return
@@ -303,6 +330,7 @@ fun LibraryList.toTrackerList(
 
 @Immutable
 data class LibraryDetailsUiState(
+    val isRefreshing: Boolean = false,
     val isShowingSearchBar: Boolean = false,
     val isMultiSelecting: Boolean = false,
     val selectedFilter: LibrarySort = LibrarySort.Added(ascending = false),
