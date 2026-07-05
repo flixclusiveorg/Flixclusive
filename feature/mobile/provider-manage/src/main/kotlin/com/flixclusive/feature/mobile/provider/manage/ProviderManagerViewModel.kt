@@ -42,7 +42,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
-
 import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(FlowPreview::class)
@@ -102,7 +101,7 @@ internal class ProviderManagerViewModel @Inject constructor(
             }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Lazily,
+        started = SharingStarted.WhileSubscribed(15_000),
         initialValue = emptyList(),
     )
 

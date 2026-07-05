@@ -72,7 +72,6 @@ class InitializeProvidersUseCaseImplTest {
         )
 
         initializeProvidersUseCase = InitializeProvidersUseCaseImpl(
-            context = context,
             loadProviderUseCase = mockLoadProviderUseCase,
             userSessionDataStore = userSessionDataStore,
             providerRepository = mockProviderRepository,
