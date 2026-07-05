@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.provider.add
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFold
 import androidx.compose.ui.util.fastForEach
@@ -137,7 +138,8 @@ internal class AddProviderViewModel @Inject constructor(
                         is StatusFilters -> currentList.filterStatus(filter)
                         else -> throw IllegalArgumentException("Invalid filter provided: $filter")
                     }
-                }.toPersistentList()
+                }.fastDistinctBy { it.id + it.name }
+                    .toPersistentList()
         )
     }.stateIn(
         scope = viewModelScope,
