@@ -65,7 +65,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
-import com.flixclusive.core.common.file.toUri
+import com.flixclusive.core.common.file.extension.toUri
 import com.flixclusive.core.common.intent.createApkInstallIntent
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -78,6 +78,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.delay
+import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -112,7 +113,7 @@ internal fun AppUpdatesScreen(
         applicationId = viewModel.applicationId,
         newVersion = newVersion,
         updateInfo = updateInfo,
-        downloadState = downloadState,
+        downloadState = { downloadState },
         goBack = goBack,
         downloadUpdate = {
             viewModel.downloadUpdate(
@@ -128,7 +129,7 @@ private fun AppUpdatesScreenContent(
     applicationId: String,
     newVersion: String,
     updateInfo: String?,
-    downloadState: DownloadState,
+    downloadState: () -> DownloadState,
     downloadUpdate: () -> Unit,
     goBack: () -> Unit,
 ) {
@@ -146,11 +147,11 @@ private fun AppUpdatesScreenContent(
     )
 
     val status by remember {
-        derivedStateOf { downloadState.status }
+        derivedStateOf { downloadState().status }
     }
 
     fun startInstallation() {
-        val uri = downloadState.file!!.toUri(
+        val uri = downloadState().file!!.toUri(
             applicationId,
             context,
         )
@@ -245,7 +246,7 @@ private fun AppUpdatesScreenContent(
                 ) {
                     Button(
                         onClick = {
-                            if (downloadState.status.isFinished) {
+                            if (status.isFinished) {
                                 startInstallation()
                             } else {
                                 downloadUpdate()
@@ -302,10 +303,11 @@ private fun AppUpdatesScreenContent(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.primary,
                                     shape = MaterialTheme.shapes.small,
-                                ).clip(MaterialTheme.shapes.medium)
+                                )
+                                .clip(MaterialTheme.shapes.medium)
                                 .fillMaxWidth()
                                 .height(50.dp)
-                                .clickable(downloadState.status.isFinished) { startInstallation() }
+                                .clickable(status.isFinished) { startInstallation() }
                                 .drawWithContent {
                                     with(drawContext.canvas.nativeCanvas) {
                                         val checkPoint = saveLayer(null, null)
@@ -313,7 +315,7 @@ private fun AppUpdatesScreenContent(
                                         drawContent()
                                         drawRect(
                                             color = progressColor,
-                                            size = Size(size.width * (downloadState.progress / 100), size.height),
+                                            size = Size(size.width * (downloadState().progress / 100), size.height),
                                             blendMode = BlendMode.SrcOut,
                                         )
                                         restoreToCount(checkPoint)
@@ -324,10 +326,11 @@ private fun AppUpdatesScreenContent(
                                 derivedStateOf {
                                     var label = resources.getString(LocaleR.string.update_label)
 
-                                    if (downloadState.status == DownloadStatus.COMPLETED) {
+                                    val status = downloadState().status
+                                    if (status == DownloadStatus.COMPLETED) {
                                         label = resources.getString(LocaleR.string.label_install)
-                                    } else if (downloadState.status.isDownloading) {
-                                        label = "${downloadState.progress}%"
+                                    } else if (status.isDownloading) {
+                                        label = "${String.format(Locale.ROOT, "%.2f", downloadState().progress)}%"
                                     }
 
                                     label
@@ -393,7 +396,7 @@ private fun AppUpdatesScreenBasePreview() {
 
                     For more details, visit our [website](https://example.com).
                 """.trimIndent(),
-                downloadState = state,
+                downloadState = { state },
                 downloadUpdate = {
                     state = state.copy(
                         id = "",
