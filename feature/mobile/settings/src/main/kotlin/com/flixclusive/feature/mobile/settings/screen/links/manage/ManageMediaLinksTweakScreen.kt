@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -55,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +68,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.CachedSubtitle
 import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
@@ -87,6 +90,7 @@ import com.flixclusive.model.media.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.flow.collectLatest
+import java.util.Date
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -108,6 +112,8 @@ internal fun ManageMediaLinksTweakScreen(
     navigator: NavigatorManageMediaLinksTweakScreen,
     viewModel: ManageMediaLinksTweakViewModel = hiltViewModel()
 ) {
+    val uriHandler = LocalUriHandler.current
+
     val links by viewModel.links.collectAsStateWithLifecycle()
     val providerFilters by viewModel.providerFilters.collectAsStateWithLifecycle()
     val typeFilter by viewModel.typeFilter.collectAsStateWithLifecycle()
@@ -149,7 +155,13 @@ internal fun ManageMediaLinksTweakScreen(
         onClearSelection = viewModel::onClearSelection,
         onDeleteLinks = viewModel::onDeleteLinks,
         onResetLinks = viewModel::onResetLinks,
-        onPlayLink = viewModel::onPlayLink
+        onPlayLink = { stream ->
+            if (stream is CachedStream && stream.isThirdPartyGateway) {
+                uriHandler.openUri(stream.url)
+            } else {
+                viewModel.onPlayLink(stream)
+            }
+        }
     )
 }
 
@@ -477,7 +489,7 @@ private fun LinkCard(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium,
         border = if (isSelected()) {
-            androidx.compose.foundation.BorderStroke(
+            BorderStroke(
                 1.dp,
                 MaterialTheme.colorScheme.primary
             )
@@ -553,19 +565,23 @@ private fun LinkCard(
                         )
                     }
                 }
-                PlainTooltipBox(description = stringResource(LocaleR.string.play)) {
-                    IconButton(
-                        onClick = onPlay,
-                        enabled = actionsEnabled(),
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            painterResource(UiCommonR.drawable.play),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
+
+                if (link is CachedStream) {
+                    PlainTooltipBox(description = stringResource(LocaleR.string.play)) {
+                        IconButton(
+                            onClick = onPlay,
+                            enabled = actionsEnabled(),
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                painterResource(UiCommonR.drawable.play),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
                 }
+
                 PlainTooltipBox(description = stringResource(LocaleR.string.delete)) {
                     IconButton(
                         onClick = onDelete,
@@ -670,13 +686,22 @@ private fun ManageMediaLinksTweakScreenPreview() {
             label = "Example Stream $i",
             description = "1080p • 2.3 GB",
             isDead = i % 2 == 0,
-            createdAt = java.util.Date(),
-            updatedAt = java.util.Date(),
+            createdAt = Date(),
+            updatedAt = Date(),
             providerId = "provider-1",
             ownerId = "owner-1",
             mediaId = "media-1"
         )
-    }
+    } + listOf(
+        CachedSubtitle(
+            url = "https://example.com/subtitles.srt",
+            label = "Example Subtitle",
+            description = "English",
+            providerId = "provider-1",
+            ownerId = "owner-1",
+            mediaId = "media-id",
+        )
+    )
 
     FlixclusiveTheme {
         Surface {
