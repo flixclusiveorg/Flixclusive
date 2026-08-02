@@ -39,6 +39,7 @@ import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerSc
 import com.flixclusive.feature.mobile.search.NavigatorSearchScreen
 import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
 import com.flixclusive.feature.mobile.settings.screen.data.NavigatorDataTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.downloads.NavigatorDownloadsTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.manage.NavigatorManageMediaLinksTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.root.NavigatorMediaLinkCardsTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.show.NavigatorMediaLinksShowDetailTweakScreen
@@ -129,6 +130,7 @@ internal class MobileAppNavigator(
     NavigatorAppUpdatesDialog,
     NavigatorAppUpdatesScreen,
     NavigatorDataTweakScreen,
+    NavigatorDownloadsTweakScreen,
     NavigatorExitApp,
     NavigatorHome,
     NavigatorLibraryDetailsScreen,
