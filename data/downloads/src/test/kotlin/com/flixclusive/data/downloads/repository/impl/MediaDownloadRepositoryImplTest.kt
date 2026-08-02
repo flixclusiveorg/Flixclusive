@@ -8,6 +8,8 @@ import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
 import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
+import com.flixclusive.data.downloads.hls.HlsSegmentInfo
+import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
@@ -29,6 +31,7 @@ class MediaDownloadRepositoryImplTest {
     private lateinit var downloadItemDao: DownloadItemDao
     private lateinit var downloadChunkDao: DownloadChunkDao
     private lateinit var mediaTransferEngine: MediaTransferEngine
+    private lateinit var hlsTransferEngine: HlsTransferEngine
     private lateinit var repository: MediaDownloadRepositoryImpl
 
     private val destinationFile = mockk<UniFile>()
@@ -38,8 +41,14 @@ class MediaDownloadRepositoryImplTest {
         downloadItemDao = mockk(relaxed = true)
         downloadChunkDao = mockk(relaxed = true)
         mediaTransferEngine = mockk()
+        hlsTransferEngine = mockk()
 
-        repository = MediaDownloadRepositoryImpl(downloadItemDao, downloadChunkDao, mediaTransferEngine)
+        repository = MediaDownloadRepositoryImpl(
+            downloadItemDao,
+            downloadChunkDao,
+            mediaTransferEngine,
+            hlsTransferEngine,
+        )
     }
 
     @Test
@@ -163,6 +172,14 @@ class MediaDownloadRepositoryImplTest {
         }
 
     @Test
+    fun `resetChunks should also zero the stream progress columns`() =
+        runTest {
+            repository.resetChunks(1)
+
+            coVerify { downloadItemDao.updateStreamProgress(1, 0, 0, any()) }
+        }
+
+    @Test
     fun `delete should remove the download item`() =
         runTest {
             repository.delete(1)
@@ -213,13 +230,13 @@ class MediaDownloadRepositoryImplTest {
             val result = repository.advanceStreamCandidate(1)
 
             expectThat(result).isNull()
-            coVerify(exactly = 0) { downloadItemDao.updateStreamSource(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloadItemDao.updateStreamSource(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test
     fun `advanceStreamCandidate should switch to the next candidate and persist the remaining ones`() =
         runTest {
-            val first = DownloadStreamCandidate(url = "https://example.com/a.mp4")
+            val first = DownloadStreamCandidate(url = "https://example.com/a.mp4", isHls = true)
             val second = DownloadStreamCandidate(url = "https://example.com/b.mp4", headers = mapOf("k" to "v"))
             val item = DownloadItem(
                 id = 1,
@@ -233,6 +250,58 @@ class MediaDownloadRepositoryImplTest {
             val result = repository.advanceStreamCandidate(1)
 
             expectThat(result).isEqualTo(first)
-            coVerify { downloadItemDao.updateStreamSource(1, first.url, first.headers, listOf(second), any()) }
+            coVerify {
+                downloadItemDao.updateStreamSource(1, first.url, first.headers, listOf(second), true, any())
+            }
+        }
+
+    @Test
+    fun `runHlsTransfer should delegate to the hls transfer engine and clear any pending interrupt`() =
+        runTest {
+            val segments =
+                listOf(
+                    HlsSegmentInfo(
+                        url = "https://example.com/0.ts",
+                        byteRangeOffset = 0,
+                        byteRangeLength = -1,
+                        encryptionKeyUri = null,
+                        encryptionIv = null
+                    )
+                )
+            repository.requestInterrupt(1, DownloadInterruptReason.PAUSE)
+            coEvery {
+                hlsTransferEngine.transfer(segments, 2, emptyMap(), destinationFile, any(), any())
+            } returns MediaTransferResult.Completed
+
+            val result = repository.runHlsTransfer(1, segments, 2, emptyMap(), destinationFile)
+
+            expectThat(result).isEqualTo(MediaTransferResult.Completed)
+            expectThat(repository.consumeInterruptReason(1)).isNull()
+        }
+
+    @Test
+    fun `runHlsTransfer progress callback should write segment counts to the item`() =
+        runTest {
+            val segments =
+                listOf(
+                    HlsSegmentInfo(
+                        url = "https://example.com/0.ts",
+                        byteRangeOffset = 0,
+                        byteRangeLength = -1,
+                        encryptionKeyUri = null,
+                        encryptionIv = null
+                    )
+                )
+            coEvery {
+                hlsTransferEngine.transfer(segments, 0, emptyMap(), destinationFile, any(), any())
+            } coAnswers {
+                val onSegmentWritten = arg<suspend (Int, Int) -> Unit>(5)
+                onSegmentWritten(1, 4)
+                MediaTransferResult.Completed
+            }
+
+            repository.runHlsTransfer(1, segments, 0, emptyMap(), destinationFile)
+
+            coVerify { downloadItemDao.updateStreamProgress(1, 1L, 4L, any()) }
         }
 }

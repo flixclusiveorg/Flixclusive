@@ -21,6 +21,8 @@ import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
+import strikt.assertions.isFalse
+import strikt.assertions.isTrue
 
 class ResolveDownloadableStreamUseCaseImplTest {
     private lateinit var dataStoreManager: DataStoreManager
@@ -66,7 +68,10 @@ class ResolveDownloadableStreamUseCaseImplTest {
 
             val result = useCase(listOf(worse, best))
 
-            expectThat(result).isA<Async.Success<ResolvedDownloadableStream>>().get { data.primary }.isEqualTo(best)
+            expectThat(result)
+                .isA<Async.Success<ResolvedDownloadableStream>>()
+                .get { data.primary.stream }
+                .isEqualTo(best)
         }
 
     @Test
@@ -84,7 +89,7 @@ class ResolveDownloadableStreamUseCaseImplTest {
 
             expectThat(result)
                 .isA<Async.Success<ResolvedDownloadableStream>>()
-                .get { data.primary }
+                .get { data.primary.stream }
                 .isEqualTo(reachable)
         }
 
@@ -106,8 +111,30 @@ class ResolveDownloadableStreamUseCaseImplTest {
 
             expectThat(result)
                 .isA<Async.Success<ResolvedDownloadableStream>>()
-                .get { data.fallbacks }
+                .get { data.fallbacks.map { it.stream } }
                 .isEqualTo(listOf(second, third))
+        }
+
+    @Test
+    fun `invoke should mark a probed HLS candidate as such on both primary and fallbacks`() =
+        runTest {
+            val hlsStream = stream("hls")
+            val progressiveStream = stream("progressive")
+
+            coEvery { linkProbe.probe(hlsStream.url, any()) } returns
+                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 500, isHls = true)
+            coEvery { linkProbe.probe(progressiveStream.url, any()) } returns
+                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 300, isHls = false)
+
+            val result = useCase(listOf(progressiveStream, hlsStream))
+
+            val success = expectThat(result).isA<Async.Success<ResolvedDownloadableStream>>().subject
+            expectThat(success.data.primary.isHls).isTrue()
+            expectThat(
+                success.data.fallbacks
+                    .single()
+                    .isHls
+            ).isFalse()
         }
 
     @Test

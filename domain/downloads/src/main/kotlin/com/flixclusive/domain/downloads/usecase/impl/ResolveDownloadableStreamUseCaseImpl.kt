@@ -8,6 +8,7 @@ import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.download.LinkProbe
 import com.flixclusive.core.network.download.LinkProbeResult
+import com.flixclusive.domain.downloads.usecase.RankedDownloadCandidate
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
 import com.flixclusive.domain.downloads.usecase.ResolvedDownloadableStream
 import com.flixclusive.domain.downloads.util.DownloadLinkRanker
@@ -51,10 +52,14 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
 
         val fallbacks = ranked
             .filterIndexed { index, _ -> index != primaryIndex }
-            .map { (stream, _) -> stream }
+            .map { (stream, result) -> RankedDownloadCandidate(stream, result.isHls) }
 
+        val (primaryStream, primaryResult) = ranked[primaryIndex]
         return Async.Success(
-            ResolvedDownloadableStream(primary = ranked[primaryIndex].first, fallbacks = fallbacks)
+            ResolvedDownloadableStream(
+                primary = RankedDownloadCandidate(primaryStream, primaryResult.isHls),
+                fallbacks = fallbacks,
+            )
         )
     }
 

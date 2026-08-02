@@ -8,6 +8,8 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
+import com.flixclusive.data.downloads.hls.HlsManifestResolver
+import com.flixclusive.data.downloads.hls.HlsResolutionResult
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,6 +34,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     private val mediaDownloadRepository: MediaDownloadRepository,
     private val downloadDirectoryRepository: DownloadDirectoryRepository,
     private val getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase,
+    private val hlsManifestResolver: HlsManifestResolver,
     private val mediaDownloadServiceController: MediaDownloadServiceController,
     private val dataStoreManager: DataStoreManager,
     private val appDispatchers: AppDispatchers,
@@ -202,6 +206,10 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     ) {
         mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
 
+        if (item.isHlsStream) {
+            return runHlsStreamPhase(itemId, item, directory, streamUrl)
+        }
+
         val fileName = DownloadPathUtil.buildStreamFileName(
             DownloadPathUtil.buildFileTitle(item.mediaTitle, item.episodeTitle),
             DownloadPathUtil.extensionFromUrl(
@@ -222,6 +230,60 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             totalBytes = item.streamTotalBytes.takeIf { it > 0 },
         )
 
+        handleStreamTransferResult(itemId, item, directory, destinationFile, result)
+    }
+
+    /**
+     * HLS segments have no known byte length ahead of time, so this reuses a raw ".mp4" file name
+     * (matching CS3's approach) instead of deriving an extension from the manifest URL, and reuses
+     * [DownloadItem.streamBytesDownloaded]/[DownloadItem.streamTotalBytes] to mean segment counts
+     * rather than byte counts for resume.
+     */
+    private suspend fun runHlsStreamPhase(
+        itemId: Long,
+        item: DownloadItem,
+        directory: UniFile,
+        streamUrl: String,
+    ) {
+        val headers = item.streamHeaders ?: emptyMap()
+
+        val fileName = DownloadPathUtil.buildStreamFileName(
+            DownloadPathUtil.buildFileTitle(item.mediaTitle, item.episodeTitle),
+            DownloadPathUtil.DEFAULT_STREAM_EXTENSION,
+        )
+        val destinationFile = downloadDirectoryRepository.getOrCreateFile(directory, fileName)
+            ?: return fail(itemId, "Unable to create destination file")
+
+        val resolution = hlsManifestResolver.resolve(streamUrl, headers)
+        val playlist = when (resolution) {
+            is HlsResolutionResult.Success -> resolution.playlist
+            is HlsResolutionResult.Failed -> return retryWithNextCandidateOrFail(
+                itemId,
+                item,
+                directory,
+                destinationFile,
+                MediaTransferResult.Failed(IOException(resolution.reason))
+            )
+        }
+
+        val result = mediaDownloadRepository.runHlsTransfer(
+            id = itemId,
+            segments = playlist.segments,
+            startIndex = item.streamBytesDownloaded.toInt(),
+            headers = headers,
+            destinationFile = destinationFile,
+        )
+
+        handleStreamTransferResult(itemId, item, directory, destinationFile, result)
+    }
+
+    private suspend fun handleStreamTransferResult(
+        itemId: Long,
+        item: DownloadItem,
+        directory: UniFile,
+        destinationFile: UniFile,
+        result: MediaTransferResult,
+    ) {
         when (result) {
             is MediaTransferResult.Completed -> {
                 if (destinationFile.length() < MIN_VALID_STREAM_FILE_BYTES) {

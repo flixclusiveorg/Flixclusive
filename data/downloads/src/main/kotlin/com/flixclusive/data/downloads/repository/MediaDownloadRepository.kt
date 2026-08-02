@@ -4,6 +4,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
 import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
+import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.hippo.unifile.UniFile
@@ -61,6 +62,20 @@ interface MediaDownloadRepository {
         headers: Map<String, String>,
         destinationFile: UniFile,
         totalBytes: Long?,
+    ): MediaTransferResult
+
+    /**
+     * Downloads an HLS stream's segments, resuming from [startIndex]. Progress is written to the
+     * same [DownloadItem.streamBytesDownloaded]/[DownloadItem.streamTotalBytes] columns as
+     * [runTransfer], but as segment counts rather than byte counts — segments have no known byte
+     * length up front, unlike byte-range chunks.
+     */
+    suspend fun runHlsTransfer(
+        id: Long,
+        segments: List<HlsSegmentInfo>,
+        startIndex: Int,
+        headers: Map<String, String>,
+        destinationFile: UniFile,
     ): MediaTransferResult
 
     fun requestInterrupt(

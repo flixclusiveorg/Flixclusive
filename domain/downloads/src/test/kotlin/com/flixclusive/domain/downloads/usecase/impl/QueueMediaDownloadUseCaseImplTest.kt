@@ -4,6 +4,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
+import com.flixclusive.domain.downloads.usecase.RankedDownloadCandidate
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
 import com.flixclusive.domain.downloads.usecase.ResolvedDownloadableStream
 import com.flixclusive.model.media.Movie
@@ -37,6 +38,11 @@ class QueueMediaDownloadUseCaseImplTest {
 
     private val testStream = Stream(name = "1080p", url = "https://example.com/stream.mp4")
 
+    private fun candidate(
+        stream: Stream,
+        isHls: Boolean = false,
+    ) = RankedDownloadCandidate(stream, isHls)
+
     @Before
     fun setup() {
         resolveDownloadableStreamUseCase = mockk()
@@ -60,7 +66,7 @@ class QueueMediaDownloadUseCaseImplTest {
     fun `invoke should queue a download item using the resolved stream for a movie`() =
         runTest {
             coEvery { resolveDownloadableStreamUseCase(any()) } returns
-                Async.Success(ResolvedDownloadableStream(testStream, emptyList()))
+                Async.Success(ResolvedDownloadableStream(candidate(testStream), emptyList()))
             val itemSlot = slot<DownloadItem>()
             coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 7L
 
@@ -81,7 +87,7 @@ class QueueMediaDownloadUseCaseImplTest {
             val subtitle = Subtitle(language = "en", url = "https://example.com/subs.srt")
 
             coEvery { resolveDownloadableStreamUseCase(any()) } returns
-                Async.Success(ResolvedDownloadableStream(testStream, emptyList()))
+                Async.Success(ResolvedDownloadableStream(candidate(testStream), emptyList()))
             val itemSlot = slot<DownloadItem>()
             coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 1L
 
@@ -99,7 +105,7 @@ class QueueMediaDownloadUseCaseImplTest {
             val fallback = Stream(name = "720p", url = "https://example.com/fallback.mp4")
 
             coEvery { resolveDownloadableStreamUseCase(any()) } returns
-                Async.Success(ResolvedDownloadableStream(testStream, listOf(fallback)))
+                Async.Success(ResolvedDownloadableStream(candidate(testStream), listOf(candidate(fallback))))
             val itemSlot = slot<DownloadItem>()
             coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 1L
 
@@ -110,10 +116,35 @@ class QueueMediaDownloadUseCaseImplTest {
         }
 
     @Test
+    fun `invoke should persist whether the primary and each fallback are HLS`() =
+        runTest {
+            val fallback = Stream(name = "720p", url = "https://example.com/fallback.m3u8")
+
+            coEvery { resolveDownloadableStreamUseCase(any()) } returns
+                Async.Success(
+                    ResolvedDownloadableStream(
+                        candidate(testStream, isHls = true),
+                        listOf(candidate(fallback, isHls = false)),
+                    )
+                )
+            val itemSlot = slot<DownloadItem>()
+            coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 1L
+
+            useCase(testMovie, null, listOf(testStream, fallback), null)
+
+            expectThat(itemSlot.captured.isHlsStream).isEqualTo(true)
+            expectThat(
+                itemSlot.captured.streamFallbackCandidates
+                    ?.single()
+                    ?.isHls
+            ).isEqualTo(false)
+        }
+
+    @Test
     fun `invoke should persist no fallback candidates when there are none`() =
         runTest {
             coEvery { resolveDownloadableStreamUseCase(any()) } returns
-                Async.Success(ResolvedDownloadableStream(testStream, emptyList()))
+                Async.Success(ResolvedDownloadableStream(candidate(testStream), emptyList()))
             val itemSlot = slot<DownloadItem>()
             coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 1L
 

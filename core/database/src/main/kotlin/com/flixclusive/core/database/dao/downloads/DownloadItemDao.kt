@@ -97,7 +97,7 @@ interface DownloadItemDao {
         """
         UPDATE download_items
         SET streamUrl = :streamUrl, streamHeaders = :streamHeaders,
-            streamFallbackCandidates = :streamFallbackCandidates,
+            streamFallbackCandidates = :streamFallbackCandidates, isHlsStream = :isHlsStream,
             streamBytesDownloaded = 0, streamTotalBytes = 0, updatedAt = :updatedAt
         WHERE id = :id
         """,
@@ -107,6 +107,7 @@ interface DownloadItemDao {
         streamUrl: String,
         streamHeaders: Map<String, String>?,
         streamFallbackCandidates: List<DownloadStreamCandidate>?,
+        isHlsStream: Boolean,
         updatedAt: Date,
     )
 

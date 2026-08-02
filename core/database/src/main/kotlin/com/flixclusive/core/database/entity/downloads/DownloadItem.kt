@@ -27,6 +27,10 @@ data class DownloadItem(
     val streamUrl: String? = null,
     val streamHeaders: Map<String, String>? = null,
     val streamFallbackCandidates: List<DownloadStreamCandidate>? = null,
+    /** Whether [streamUrl] is an HLS manifest rather than a direct file — determines which
+     * transfer engine downloads it and how [streamBytesDownloaded]/[streamTotalBytes] are
+     * interpreted (segments written/total, not bytes, for HLS). */
+    val isHlsStream: Boolean = false,
     val streamBytesDownloaded: Long = 0,
     val streamTotalBytes: Long = 0,
     val subtitleUrl: String? = null,

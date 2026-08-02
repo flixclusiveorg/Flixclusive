@@ -1,5 +1,9 @@
 package com.flixclusive.data.downloads.di
 
+import com.flixclusive.data.downloads.hls.HlsManifestResolver
+import com.flixclusive.data.downloads.hls.HlsTransferEngine
+import com.flixclusive.data.downloads.hls.impl.HlsManifestResolverImpl
+import com.flixclusive.data.downloads.hls.impl.HlsTransferEngineImpl
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.repository.impl.MediaDownloadRepositoryImpl
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
@@ -15,6 +19,12 @@ import javax.inject.Singleton
 internal abstract class MediaTransferModule {
     @Binds
     abstract fun bindMediaTransferEngine(impl: MediaTransferEngineImpl): MediaTransferEngine
+
+    @Binds
+    abstract fun bindHlsManifestResolver(impl: HlsManifestResolverImpl): HlsManifestResolver
+
+    @Binds
+    abstract fun bindHlsTransferEngine(impl: HlsTransferEngineImpl): HlsTransferEngine
 
     @Binds
     @Singleton

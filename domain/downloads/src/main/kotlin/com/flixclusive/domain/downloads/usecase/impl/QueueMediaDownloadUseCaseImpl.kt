@@ -26,7 +26,7 @@ internal class QueueMediaDownloadUseCaseImpl @Inject constructor(
         val resolved = resolveDownloadableStreamUseCase(streams)
         if (resolved is Async.Failure) return resolved
 
-        val (stream, fallbacks) = (resolved as Async.Success).data
+        val (primary, fallbacks) = (resolved as Async.Success).data
         val item = DownloadItem(
             mediaId = media.id,
             mediaTitle = media.title,
@@ -35,11 +35,16 @@ internal class QueueMediaDownloadUseCaseImpl @Inject constructor(
             episodeNumber = episode?.number,
             episodeTitle = episode?.title,
             state = DownloadItemState.QUEUED,
-            streamUrl = stream.url,
-            streamHeaders = stream.customHeaders,
+            streamUrl = primary.stream.url,
+            streamHeaders = primary.stream.customHeaders,
+            isHlsStream = primary.isHls,
             streamFallbackCandidates = fallbacks
                 .map { candidate ->
-                    DownloadStreamCandidate(url = candidate.url, headers = candidate.customHeaders)
+                    DownloadStreamCandidate(
+                        url = candidate.stream.url,
+                        headers = candidate.stream.customHeaders,
+                        isHls = candidate.isHls,
+                    )
                 }.ifEmpty { null },
             subtitleUrl = subtitle?.url,
             subtitleHeaders = subtitle?.customHeaders,

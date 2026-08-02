@@ -8,6 +8,8 @@ import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
 import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
+import com.flixclusive.data.downloads.hls.HlsSegmentInfo
+import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
@@ -25,6 +27,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     private val downloadItemDao: DownloadItemDao,
     private val downloadChunkDao: DownloadChunkDao,
     private val mediaTransferEngine: MediaTransferEngine,
+    private val hlsTransferEngine: HlsTransferEngine,
 ) : MediaDownloadRepository {
     private val interruptFlags = ConcurrentHashMap<Long, DownloadInterruptReason>()
     private val lastProgressWriteTimes = ConcurrentHashMap<Long, Long>()
@@ -75,6 +78,10 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
 
     override suspend fun resetChunks(id: Long) {
         downloadChunkDao.deleteChunksForItem(id)
+        // Also zeroes the segment-count progress HLS items keep in the same columns, so a manual
+        // retry restarts an HLS download instead of silently resuming it (matching the byte-range
+        // engine, where deleting chunks already forces a from-scratch replan).
+        downloadItemDao.updateStreamProgress(id, 0, 0, Date())
     }
 
     override suspend fun advanceStreamCandidate(id: Long): DownloadStreamCandidate? {
@@ -83,7 +90,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         val candidate = fallbackCandidates.firstOrNull() ?: return null
         val remaining = fallbackCandidates.drop(1)
 
-        downloadItemDao.updateStreamSource(id, candidate.url, candidate.headers, remaining, Date())
+        downloadItemDao.updateStreamSource(id, candidate.url, candidate.headers, remaining, candidate.isHls, Date())
         return candidate
     }
 
@@ -123,6 +130,40 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
             downloadChunkDao.updateProgress(chunkId, bytesDownloaded, status)
             writeAggregatedProgressThrottled(id, phase, totalBytes, status)
         }
+    }
+
+    override suspend fun runHlsTransfer(
+        id: Long,
+        segments: List<HlsSegmentInfo>,
+        startIndex: Int,
+        headers: Map<String, String>,
+        destinationFile: UniFile,
+    ): MediaTransferResult {
+        interruptFlags.remove(id)
+
+        return hlsTransferEngine.transfer(
+            segments = segments,
+            startIndex = startIndex,
+            headers = headers,
+            destinationFile = destinationFile,
+            shouldInterrupt = { interruptFlags.containsKey(id) },
+        ) { segmentsWritten, totalSegments ->
+            writeHlsProgressThrottled(id, segmentsWritten, totalSegments)
+        }
+    }
+
+    private suspend fun writeHlsProgressThrottled(
+        id: Long,
+        segmentsWritten: Int,
+        totalSegments: Int,
+    ) {
+        val now = System.currentTimeMillis()
+        val lastWrite = lastProgressWriteTimes[id] ?: 0L
+        val isFinal = segmentsWritten >= totalSegments
+        if (!isFinal && now - lastWrite < PROGRESS_WRITE_THROTTLE_MS) return
+
+        lastProgressWriteTimes[id] = now
+        downloadItemDao.updateStreamProgress(id, segmentsWritten.toLong(), totalSegments.toLong(), Date())
     }
 
     private suspend fun writeAggregatedProgressThrottled(

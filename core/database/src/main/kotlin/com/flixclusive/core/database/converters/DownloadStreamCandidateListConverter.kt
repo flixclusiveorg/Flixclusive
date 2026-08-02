@@ -12,7 +12,7 @@ internal class DownloadStreamCandidateListConverter {
 
         val array = JSONArray()
         value.forEach { candidate ->
-            val obj = JSONObject().put("url", candidate.url)
+            val obj = JSONObject().put("url", candidate.url).put("isHls", candidate.isHls)
             candidate.headers?.let { obj.put("headers", JSONObject(it)) }
             array.put(obj)
         }
@@ -35,7 +35,13 @@ internal class DownloadStreamCandidateListConverter {
                         }
                     }
                 }
-                add(DownloadStreamCandidate(url = obj.getString("url"), headers = headers))
+                add(
+                    DownloadStreamCandidate(
+                        url = obj.getString("url"),
+                        headers = headers,
+                        isHls = obj.optBoolean("isHls", false),
+                    )
+                )
             }
         }
     }

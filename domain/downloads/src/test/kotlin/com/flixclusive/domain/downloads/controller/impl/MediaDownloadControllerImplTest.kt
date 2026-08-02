@@ -9,6 +9,10 @@ import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
+import com.flixclusive.data.downloads.hls.HlsManifestResolver
+import com.flixclusive.data.downloads.hls.HlsResolutionResult
+import com.flixclusive.data.downloads.hls.HlsSegmentInfo
+import com.flixclusive.data.downloads.hls.ResolvedHlsPlaylist
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
@@ -36,6 +40,7 @@ class MediaDownloadControllerImplTest {
     private lateinit var mediaDownloadRepository: MediaDownloadRepository
     private lateinit var downloadDirectoryRepository: DownloadDirectoryRepository
     private lateinit var getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase
+    private lateinit var hlsManifestResolver: HlsManifestResolver
     private lateinit var mediaDownloadServiceController: MediaDownloadServiceController
     private lateinit var dataStoreManager: DataStoreManager
     private lateinit var controller: MediaDownloadControllerImpl
@@ -50,6 +55,8 @@ class MediaDownloadControllerImplTest {
         state: DownloadItemState = DownloadItemState.QUEUED,
         phase: DownloadPhase? = null,
         subtitleUrl: String? = null,
+        isHlsStream: Boolean = false,
+        streamBytesDownloaded: Long = 0,
     ) = DownloadItem(
         id = id,
         mediaId = "media-1",
@@ -59,6 +66,8 @@ class MediaDownloadControllerImplTest {
         phase = phase,
         streamUrl = "https://example.com/stream.mp4",
         subtitleUrl = subtitleUrl,
+        isHlsStream = isHlsStream,
+        streamBytesDownloaded = streamBytesDownloaded,
     )
 
     private fun setConcurrencyLimit(limit: Int) {
@@ -72,6 +81,7 @@ class MediaDownloadControllerImplTest {
         mediaDownloadRepository = mockk(relaxed = true)
         downloadDirectoryRepository = mockk()
         getDownloadDirectoryUseCase = mockk()
+        hlsManifestResolver = mockk()
         mediaDownloadServiceController = mockk(relaxed = true)
         dataStoreManager = mockk()
         setConcurrencyLimit(3)
@@ -87,6 +97,7 @@ class MediaDownloadControllerImplTest {
             mediaDownloadRepository = mediaDownloadRepository,
             downloadDirectoryRepository = downloadDirectoryRepository,
             getDownloadDirectoryUseCase = getDownloadDirectoryUseCase,
+            hlsManifestResolver = hlsManifestResolver,
             mediaDownloadServiceController = mediaDownloadServiceController,
             dataStoreManager = dataStoreManager,
             appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
@@ -262,6 +273,82 @@ class MediaDownloadControllerImplTest {
 
             coVerify { mediaDownloadRepository.advanceStreamCandidate(1) }
             coVerify { mediaDownloadRepository.markError(1, "boom") }
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
+        }
+
+    @Test
+    fun `start should download via the HLS transfer engine when the item is an HLS stream`() =
+        runTest(testDispatcher) {
+            val segments = listOf(
+                HlsSegmentInfo(
+                    url = "https://example.com/0.ts",
+                    byteRangeOffset = 0,
+                    byteRangeLength = -1,
+                    encryptionKeyUri = null,
+                    encryptionIv = null
+                )
+            )
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(isHlsStream = true)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap())
+            } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
+            coEvery {
+                mediaDownloadRepository.runHlsTransfer(1, segments, 0, emptyMap(), streamFile)
+            } returns MediaTransferResult.Completed
+
+            controller.start(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.runHlsTransfer(1, segments, 0, emptyMap(), streamFile) }
+            coVerify(exactly = 0) { mediaDownloadRepository.runTransfer(any(), any(), any(), any(), any(), any()) }
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.COMPLETED, null) }
+        }
+
+    @Test
+    fun `start should resume an HLS download from its persisted segment count`() =
+        runTest(testDispatcher) {
+            val segments = List(5) {
+                HlsSegmentInfo(
+                    url = "https://example.com/$it.ts",
+                    byteRangeOffset = 0,
+                    byteRangeLength = -1,
+                    encryptionKeyUri = null,
+                    encryptionIv = null
+                )
+            }
+            coEvery {
+                mediaDownloadRepository.getItem(1)
+            } returns testItem(isHlsStream = true, streamBytesDownloaded = 3)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap())
+            } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
+            coEvery {
+                mediaDownloadRepository.runHlsTransfer(1, segments, 3, emptyMap(), streamFile)
+            } returns MediaTransferResult.Completed
+
+            controller.start(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.runHlsTransfer(1, segments, 3, emptyMap(), streamFile) }
+        }
+
+    @Test
+    fun `start should fall through to the next candidate when HLS resolution fails`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(isHlsStream = true)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap())
+            } returns HlsResolutionResult.Failed("manifest not found")
+            coEvery { mediaDownloadRepository.advanceStreamCandidate(1) } returns null
+
+            controller.start(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.advanceStreamCandidate(1) }
+            coVerify { mediaDownloadRepository.markError(1, "manifest not found") }
             coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
         }
 
