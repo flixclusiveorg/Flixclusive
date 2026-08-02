@@ -22,4 +22,6 @@ dependencies {
     implementation(libs.stubs.model.media)
 
     implementation(libs.gson)
+
+    androidTestImplementation(projects.coreTesting)
 }
