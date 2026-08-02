@@ -79,6 +79,7 @@ class MediaDownloadControllerImplTest {
         every { downloadDirectoryRepository.getOrCreateFile(directory, any()) } returns streamFile
         every { downloadDirectoryRepository.getOrCreateSubtitlesDirectory(directory) } returns subtitlesDirectory
         every { downloadDirectoryRepository.getOrCreateFile(subtitlesDirectory, any()) } returns subtitleFile
+        every { streamFile.length() } returns 200_000L
 
         controller = MediaDownloadControllerImpl(
             mediaDownloadRepository = mediaDownloadRepository,
@@ -207,6 +208,23 @@ class MediaDownloadControllerImplTest {
 
             coVerify { mediaDownloadRepository.markError(1, "boom") }
             coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
+        }
+
+    @Test
+    fun `start should mark item FAILED when a completed transfer produced a suspiciously small file`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+            every { streamFile.length() } returns 10L
+
+            controller.start(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(1, DownloadItemState.STREAM_COMPLETE, any()) }
         }
 
     @Test

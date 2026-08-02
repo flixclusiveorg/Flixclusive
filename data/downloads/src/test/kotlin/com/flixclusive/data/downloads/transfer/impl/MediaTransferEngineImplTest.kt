@@ -184,4 +184,25 @@ class MediaTransferEngineImplTest {
             expectThat(result).isA<MediaTransferResult.Completed>()
             expectThat(destinationFile.readText()).isEqualTo(fullContent)
         }
+
+    @Test
+    fun `transfer should report Failed when a chunk under-delivers fewer bytes than its declared range`() =
+        runTest(testDispatcher) {
+            // Every attempt (including retries, which resume from the offset already written)
+            // delivers only 10 more bytes, so the cumulative total across all 3 attempts (30
+            // bytes) still falls well short of the declared 1000-byte range.
+            repeat(3) { server.enqueue(MockResponse().setBody("x".repeat(10))) }
+
+            val progressEvents = mutableListOf<DownloadChunkStatus>()
+            val result = engine.transfer(
+                chunks = listOf(chunk(rangeEnd = 999)),
+                url = server.url("/file.mp4").toString(),
+                headers = emptyMap(),
+                destinationFile = UniFile.fromFile(destinationFile)!!,
+                shouldInterrupt = { false },
+            ) { _, _, status -> progressEvents += status }
+
+            expectThat(result).isA<MediaTransferResult.Failed>()
+            expectThat(progressEvents.last()).isEqualTo(DownloadChunkStatus.FAILED)
+        }
 }

@@ -220,6 +220,9 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
         when (result) {
             is MediaTransferResult.Completed -> {
+                if (destinationFile.length() < MIN_VALID_STREAM_FILE_BYTES) {
+                    return fail(itemId, "Downloaded file is too small to be valid")
+                }
                 mediaDownloadRepository.updateState(itemId, DownloadItemState.STREAM_COMPLETE, null)
                 advancePastStreamComplete(itemId, item, directory)
             }
@@ -326,5 +329,9 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         private const val DEFAULT_STREAM_EXTENSION = "mp4"
         private val SUBTITLE_EXTENSIONS = setOf("srt", "vtt", "ass", "ssa")
         private const val DEFAULT_SUBTITLE_EXTENSION = "srt"
+
+        // Catches a "successful" transfer that actually saved an error page or empty response
+        // (e.g. a dead link the initial probe didn't catch) instead of a real video file.
+        private const val MIN_VALID_STREAM_FILE_BYTES = 100 * 1024L
     }
 }

@@ -104,6 +104,7 @@ internal class MediaTransferEngineImpl @Inject constructor(
         val isOpenEnded = chunk.rangeEnd < 0
         val rangeStart = chunk.rangeStart + startOffset
         val rangeHeader = if (isOpenEnded) "bytes=$rangeStart-" else "bytes=$rangeStart-${chunk.rangeEnd}"
+        val expectedBytes = if (isOpenEnded) null else chunk.rangeEnd - chunk.rangeStart + 1
 
         val requestBuilder = Request.Builder().url(url).addHeader("Range", rangeHeader)
         headers.forEach { (name, value) -> requestBuilder.addHeader(name, value) }
@@ -125,7 +126,17 @@ internal class MediaTransferEngineImpl @Inject constructor(
                     if (shouldInterrupt()) return false
 
                     val read = source.read(buffer)
-                    if (read == -1) return true
+                    if (read == -1) {
+                        // A 200/206 response can still end early on a flaky connection or a
+                        // misbehaving CDN; treat under-delivery as a failure so it retries
+                        // instead of silently completing with a truncated file.
+                        if (expectedBytes != null && written < expectedBytes) {
+                            throw IOException(
+                                "Chunk ${chunk.chunkIndex} under-delivered: expected $expectedBytes bytes, got $written"
+                            )
+                        }
+                        return true
+                    }
 
                     randomAccessFile.write(buffer, 0, read)
                     written += read
