@@ -26,6 +26,7 @@ data class DownloadItem(
     val phase: DownloadPhase? = null,
     val streamUrl: String? = null,
     val streamHeaders: Map<String, String>? = null,
+    val streamFallbackCandidates: List<DownloadStreamCandidate>? = null,
     val streamBytesDownloaded: Long = 0,
     val streamTotalBytes: Long = 0,
     val subtitleUrl: String? = null,

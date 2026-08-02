@@ -8,6 +8,7 @@ import androidx.room.Update
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
@@ -92,10 +93,20 @@ interface DownloadItemDao {
         updatedAt: Date,
     )
 
-    @Query("UPDATE download_items SET streamUrl = :streamUrl, updatedAt = :updatedAt WHERE id = :id")
-    suspend fun updateStreamUrl(
+    @Query(
+        """
+        UPDATE download_items
+        SET streamUrl = :streamUrl, streamHeaders = :streamHeaders,
+            streamFallbackCandidates = :streamFallbackCandidates,
+            streamBytesDownloaded = 0, streamTotalBytes = 0, updatedAt = :updatedAt
+        WHERE id = :id
+        """,
+    )
+    suspend fun updateStreamSource(
         id: Long,
         streamUrl: String,
+        streamHeaders: Map<String, String>?,
+        streamFallbackCandidates: List<DownloadStreamCandidate>?,
         updatedAt: Date,
     )
 

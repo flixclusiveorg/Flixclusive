@@ -231,8 +231,37 @@ internal class MediaDownloadControllerImpl @Inject constructor(
                 advancePastStreamComplete(itemId, item, directory)
             }
             is MediaTransferResult.Cancelled -> handleInterrupted(itemId, DownloadPhase.STREAM, directory)
-            is MediaTransferResult.Failed -> fail(itemId, result.cause.message ?: "Stream download failed")
+            is MediaTransferResult.Failed -> retryWithNextCandidateOrFail(
+                itemId,
+                item,
+                directory,
+                destinationFile,
+                result
+            )
         }
+    }
+
+    /**
+     * On stream failure, falls through the candidate links persisted at queue time
+     * ([DownloadItem.streamFallbackCandidates]) before giving up, since the link a
+     * provider returns can go dead (expire, get throttled) independently of the app.
+     */
+    private suspend fun retryWithNextCandidateOrFail(
+        itemId: Long,
+        item: DownloadItem,
+        directory: UniFile,
+        staleDestinationFile: UniFile,
+        result: MediaTransferResult.Failed,
+    ) {
+        val nextCandidate = mediaDownloadRepository.advanceStreamCandidate(itemId)
+        if (nextCandidate == null) {
+            return fail(itemId, result.cause.message ?: "Stream download failed")
+        }
+
+        staleDestinationFile.delete()
+        mediaDownloadRepository.resetChunks(itemId)
+        val refreshedItem = mediaDownloadRepository.getItem(itemId) ?: item
+        runStreamPhase(itemId, refreshedItem, directory, nextCandidate.url)
     }
 
     private suspend fun advancePastStreamComplete(

@@ -5,6 +5,7 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
+import com.flixclusive.domain.downloads.usecase.ResolvedDownloadableStream
 import com.flixclusive.model.media.Movie
 import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.media.common.tv.Episode
@@ -58,7 +59,8 @@ class QueueMediaDownloadUseCaseImplTest {
     @Test
     fun `invoke should queue a download item using the resolved stream for a movie`() =
         runTest {
-            coEvery { resolveDownloadableStreamUseCase(any()) } returns Async.Success(testStream)
+            coEvery { resolveDownloadableStreamUseCase(any()) } returns
+                Async.Success(ResolvedDownloadableStream(testStream, emptyList()))
             val itemSlot = slot<DownloadItem>()
             coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 7L
 
@@ -78,7 +80,8 @@ class QueueMediaDownloadUseCaseImplTest {
             val episode = Episode(id = "ep-1", number = 2, season = 1, isReleased = true, title = "Pilot")
             val subtitle = Subtitle(language = "en", url = "https://example.com/subs.srt")
 
-            coEvery { resolveDownloadableStreamUseCase(any()) } returns Async.Success(testStream)
+            coEvery { resolveDownloadableStreamUseCase(any()) } returns
+                Async.Success(ResolvedDownloadableStream(testStream, emptyList()))
             val itemSlot = slot<DownloadItem>()
             coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 1L
 
@@ -88,5 +91,34 @@ class QueueMediaDownloadUseCaseImplTest {
             expectThat(itemSlot.captured.episodeNumber).isEqualTo(2)
             expectThat(itemSlot.captured.episodeTitle).isEqualTo("Pilot")
             expectThat(itemSlot.captured.subtitleUrl).isEqualTo(subtitle.url)
+        }
+
+    @Test
+    fun `invoke should persist the ranked fallback candidates alongside the primary stream`() =
+        runTest {
+            val fallback = Stream(name = "720p", url = "https://example.com/fallback.mp4")
+
+            coEvery { resolveDownloadableStreamUseCase(any()) } returns
+                Async.Success(ResolvedDownloadableStream(testStream, listOf(fallback)))
+            val itemSlot = slot<DownloadItem>()
+            coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 1L
+
+            useCase(testMovie, null, listOf(testStream, fallback), null)
+
+            expectThat(itemSlot.captured.streamFallbackCandidates?.map { it.url })
+                .isEqualTo(listOf(fallback.url))
+        }
+
+    @Test
+    fun `invoke should persist no fallback candidates when there are none`() =
+        runTest {
+            coEvery { resolveDownloadableStreamUseCase(any()) } returns
+                Async.Success(ResolvedDownloadableStream(testStream, emptyList()))
+            val itemSlot = slot<DownloadItem>()
+            coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns 1L
+
+            useCase(testMovie, null, listOf(testStream), null)
+
+            expectThat(itemSlot.captured.streamFallbackCandidates).isNull()
         }
 }

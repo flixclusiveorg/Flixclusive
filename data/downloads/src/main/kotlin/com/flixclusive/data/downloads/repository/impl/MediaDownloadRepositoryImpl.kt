@@ -7,6 +7,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
@@ -74,6 +75,16 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
 
     override suspend fun resetChunks(id: Long) {
         downloadChunkDao.deleteChunksForItem(id)
+    }
+
+    override suspend fun advanceStreamCandidate(id: Long): DownloadStreamCandidate? {
+        val item = downloadItemDao.get(id) ?: return null
+        val fallbackCandidates = item.streamFallbackCandidates ?: return null
+        val candidate = fallbackCandidates.firstOrNull() ?: return null
+        val remaining = fallbackCandidates.drop(1)
+
+        downloadItemDao.updateStreamSource(id, candidate.url, candidate.headers, remaining, Date())
+        return candidate
     }
 
     override suspend fun runTransfer(

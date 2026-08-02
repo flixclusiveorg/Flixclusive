@@ -3,6 +3,7 @@ package com.flixclusive.domain.downloads.usecase.impl
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
+import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
@@ -25,7 +26,7 @@ internal class QueueMediaDownloadUseCaseImpl @Inject constructor(
         val resolved = resolveDownloadableStreamUseCase(streams)
         if (resolved is Async.Failure) return resolved
 
-        val stream = (resolved as Async.Success).data
+        val (stream, fallbacks) = (resolved as Async.Success).data
         val item = DownloadItem(
             mediaId = media.id,
             mediaTitle = media.title,
@@ -36,6 +37,10 @@ internal class QueueMediaDownloadUseCaseImpl @Inject constructor(
             state = DownloadItemState.QUEUED,
             streamUrl = stream.url,
             streamHeaders = stream.customHeaders,
+            streamFallbackCandidates = fallbacks
+                .map { candidate ->
+                    DownloadStreamCandidate(url = candidate.url, headers = candidate.customHeaders)
+                }.ifEmpty { null },
             subtitleUrl = subtitle?.url,
             subtitleHeaders = subtitle?.customHeaders,
         )

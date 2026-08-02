@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.download.LinkProbe
 import com.flixclusive.core.network.download.LinkProbeResult
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
+import com.flixclusive.domain.downloads.usecase.ResolvedDownloadableStream
 import com.flixclusive.domain.downloads.util.DownloadLinkRanker
 import com.flixclusive.model.provider.link.Stream
 import kotlinx.coroutines.async
@@ -21,7 +22,7 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val linkProbe: LinkProbe,
 ) : ResolveDownloadableStreamUseCase {
-    override suspend fun invoke(streams: List<Stream>): Async<Stream> {
+    override suspend fun invoke(streams: List<Stream>): Async<ResolvedDownloadableStream> {
         if (streams.isEmpty()) {
             return Async.Failure(UiText.from(LocaleR.string.no_download_links_available))
         }
@@ -40,12 +41,21 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
             preferredQuality = playerPreferences.quality,
         )
 
-        val resolved = ranked
+        val primaryIndex = ranked
             .take(MAX_FALLBACK_ATTEMPTS)
-            .firstOrNull { (_, result) -> result.isReachable }
+            .indexOfFirst { (_, result) -> result.isReachable }
 
-        return resolved?.let { (stream, _) -> Async.Success(stream) }
-            ?: Async.Failure(UiText.from(LocaleR.string.download_link_resolution_failed))
+        if (primaryIndex == -1) {
+            return Async.Failure(UiText.from(LocaleR.string.download_link_resolution_failed))
+        }
+
+        val fallbacks = ranked
+            .filterIndexed { index, _ -> index != primaryIndex }
+            .map { (stream, _) -> stream }
+
+        return Async.Success(
+            ResolvedDownloadableStream(primary = ranked[primaryIndex].first, fallbacks = fallbacks)
+        )
     }
 
     private suspend fun probeAll(streams: List<Stream>): List<Pair<Stream, LinkProbeResult>> =

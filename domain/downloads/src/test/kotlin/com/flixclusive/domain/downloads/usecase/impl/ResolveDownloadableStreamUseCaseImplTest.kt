@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionM
 import com.flixclusive.core.datastore.model.user.player.PlayerQuality
 import com.flixclusive.core.network.download.LinkProbe
 import com.flixclusive.core.network.download.LinkProbeResult
+import com.flixclusive.domain.downloads.usecase.ResolvedDownloadableStream
 import com.flixclusive.model.provider.link.Stream
 import io.mockk.coEvery
 import io.mockk.every
@@ -53,7 +54,7 @@ class ResolveDownloadableStreamUseCaseImplTest {
         }
 
     @Test
-    fun `invoke should return the best ranked reachable stream`() =
+    fun `invoke should return the best ranked reachable stream as the primary`() =
         runTest {
             val best = stream("1080p")
             val worse = stream("480p")
@@ -65,7 +66,7 @@ class ResolveDownloadableStreamUseCaseImplTest {
 
             val result = useCase(listOf(worse, best))
 
-            expectThat(result).isA<Async.Success<Stream>>().get { data }.isEqualTo(best)
+            expectThat(result).isA<Async.Success<ResolvedDownloadableStream>>().get { data.primary }.isEqualTo(best)
         }
 
     @Test
@@ -81,7 +82,32 @@ class ResolveDownloadableStreamUseCaseImplTest {
 
             val result = useCase(listOf(unreachable, reachable))
 
-            expectThat(result).isA<Async.Success<Stream>>().get { data }.isEqualTo(reachable)
+            expectThat(result)
+                .isA<Async.Success<ResolvedDownloadableStream>>()
+                .get { data.primary }
+                .isEqualTo(reachable)
+        }
+
+    @Test
+    fun `invoke should return the remaining ranked candidates as fallbacks`() =
+        runTest {
+            val best = stream("1080p")
+            val second = stream("720p")
+            val third = stream("480p")
+
+            coEvery { linkProbe.probe(best.url, any()) } returns
+                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 500)
+            coEvery { linkProbe.probe(second.url, any()) } returns
+                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 300)
+            coEvery { linkProbe.probe(third.url, any()) } returns
+                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 100)
+
+            val result = useCase(listOf(third, second, best))
+
+            expectThat(result)
+                .isA<Async.Success<ResolvedDownloadableStream>>()
+                .get { data.fallbacks }
+                .isEqualTo(listOf(second, third))
         }
 
     @Test

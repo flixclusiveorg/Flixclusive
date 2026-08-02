@@ -3,6 +3,7 @@ package com.flixclusive.data.downloads.repository
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.hippo.unifile.UniFile
@@ -46,6 +47,12 @@ interface MediaDownloadRepository {
     )
 
     suspend fun resetChunks(id: Long)
+
+    /**
+     * Switches [id] to its next persisted fallback stream candidate, resetting stream progress.
+     * Returns the candidate that was switched to, or `null` if none remain.
+     */
+    suspend fun advanceStreamCandidate(id: Long): DownloadStreamCandidate?
 
     suspend fun runTransfer(
         id: Long,

@@ -3,6 +3,7 @@ package com.flixclusive.domain.downloads.controller.impl
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
@@ -75,6 +76,7 @@ class MediaDownloadControllerImplTest {
         dataStoreManager = mockk()
         setConcurrencyLimit(3)
         coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns null
+        coEvery { mediaDownloadRepository.advanceStreamCandidate(any()) } returns null
 
         every { downloadDirectoryRepository.getOrCreateFile(directory, any()) } returns streamFile
         every { downloadDirectoryRepository.getOrCreateSubtitlesDirectory(directory) } returns subtitlesDirectory
@@ -206,6 +208,59 @@ class MediaDownloadControllerImplTest {
             controller.start(1)
             advanceUntilIdle()
 
+            coVerify { mediaDownloadRepository.markError(1, "boom") }
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
+        }
+
+    @Test
+    fun `start should switch to the next fallback candidate and retry when the stream transfer fails`() =
+        runTest(testDispatcher) {
+            val fallback = DownloadStreamCandidate(url = "https://example.com/fallback.mp4")
+            val refreshedItem = testItem().copy(streamUrl = fallback.url)
+
+            coEvery { mediaDownloadRepository.getItem(1) } returnsMany listOf(testItem(), refreshedItem)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(
+                    1,
+                    DownloadPhase.STREAM,
+                    "https://example.com/stream.mp4",
+                    any(),
+                    streamFile,
+                    any()
+                )
+            } returns MediaTransferResult.Failed(IOException("boom"))
+            coEvery {
+                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, fallback.url, any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+            coEvery { mediaDownloadRepository.advanceStreamCandidate(1) } returns fallback
+            every { streamFile.delete() } returns true
+
+            controller.start(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.advanceStreamCandidate(1) }
+            coVerify { mediaDownloadRepository.resetChunks(1) }
+            coVerify {
+                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, fallback.url, any(), streamFile, any())
+            }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, any()) }
+        }
+
+    @Test
+    fun `start should mark item FAILED after exhausting all fallback candidates`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+            } returns MediaTransferResult.Failed(IOException("boom"))
+            coEvery { mediaDownloadRepository.advanceStreamCandidate(1) } returns null
+
+            controller.start(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.advanceStreamCandidate(1) }
             coVerify { mediaDownloadRepository.markError(1, "boom") }
             coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
         }

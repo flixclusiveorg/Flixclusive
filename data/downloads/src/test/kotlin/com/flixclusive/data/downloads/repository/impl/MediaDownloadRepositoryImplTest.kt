@@ -7,6 +7,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
@@ -201,5 +202,37 @@ class MediaDownloadRepositoryImplTest {
             )
 
             coVerify { downloadItemDao.updateStreamProgress(1, any(), 1000L, any()) }
+        }
+
+    @Test
+    fun `advanceStreamCandidate should return null when there are no fallback candidates`() =
+        runTest {
+            val item = DownloadItem(id = 1, mediaId = "m1", mediaTitle = "Movie", mediaType = MediaType.MOVIE)
+            coEvery { downloadItemDao.get(1) } returns item
+
+            val result = repository.advanceStreamCandidate(1)
+
+            expectThat(result).isNull()
+            coVerify(exactly = 0) { downloadItemDao.updateStreamSource(any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `advanceStreamCandidate should switch to the next candidate and persist the remaining ones`() =
+        runTest {
+            val first = DownloadStreamCandidate(url = "https://example.com/a.mp4")
+            val second = DownloadStreamCandidate(url = "https://example.com/b.mp4", headers = mapOf("k" to "v"))
+            val item = DownloadItem(
+                id = 1,
+                mediaId = "m1",
+                mediaTitle = "Movie",
+                mediaType = MediaType.MOVIE,
+                streamFallbackCandidates = listOf(first, second),
+            )
+            coEvery { downloadItemDao.get(1) } returns item
+
+            val result = repository.advanceStreamCandidate(1)
+
+            expectThat(result).isEqualTo(first)
+            coVerify { downloadItemDao.updateStreamSource(1, first.url, first.headers, listOf(second), any()) }
         }
 }
