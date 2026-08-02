@@ -51,14 +51,15 @@ internal class HlsTransferEngineImpl @Inject constructor(
             var interrupted = false
             var failed = false
 
-            val randomAccessFile = destinationFile.createRandomAccessFile("rw")
+            // Segments have no known byte length ahead of time, so resuming can't seek to a
+            // specific offset the way the byte-range engine does — appending at the file's
+            // current end is correct as long as writes only ever happen in segment order, which
+            // the pending-buffer below guarantees. An append-mode OutputStream (rather than
+            // UniFile's createRandomAccessFile, which needs a reflection trick to get seekable
+            // access to a SAF-backed file and can fail outright on some devices) is exactly what
+            // that write pattern needs, and every device supports it natively.
+            val outputStream = destinationFile.openOutputStream(true)
             try {
-                // Segments have no known byte length ahead of time, so resuming can't seek to a
-                // specific offset the way the byte-range engine does — appending at the file's
-                // current end is correct as long as writes only ever happen in segment order,
-                // which the pending-buffer below guarantees.
-                randomAccessFile.seek(destinationFile.length())
-
                 coroutineScope {
                     val workerCount = HLS_PARALLEL_CONNECTIONS.coerceAtMost(segments.size - startIndex)
                     repeat(workerCount) {
@@ -84,12 +85,12 @@ internal class HlsTransferEngineImpl @Inject constructor(
                                     if (failed || interrupted) return@withLock nextWriteIndex
 
                                     if (index == nextWriteIndex) {
-                                        randomAccessFile.write(bytes)
+                                        outputStream.write(bytes)
                                         nextWriteIndex++
 
                                         while (true) {
                                             val cached = pendingData.remove(nextWriteIndex) ?: break
-                                            randomAccessFile.write(cached)
+                                            outputStream.write(cached)
                                             nextWriteIndex++
                                         }
                                     } else {
@@ -105,7 +106,7 @@ internal class HlsTransferEngineImpl @Inject constructor(
                     }
                 }
             } finally {
-                randomAccessFile.close()
+                outputStream.close()
             }
 
             when {
