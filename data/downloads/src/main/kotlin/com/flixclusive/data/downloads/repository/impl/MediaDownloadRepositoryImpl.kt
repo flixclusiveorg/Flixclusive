@@ -36,6 +36,20 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
 
     override suspend fun queue(item: DownloadItem): Long = downloadItemDao.insert(item)
 
+    override suspend fun getOldestQueuedItem(): DownloadItem? = downloadItemDao.getOldestByState(
+        DownloadItemState.QUEUED
+    )
+
+    override suspend fun getBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    ): List<DownloadItem> = downloadItemDao.getBatch(mediaId, seasonNumber)
+
+    override fun observeBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    ): Flow<List<DownloadItem>> = downloadItemDao.getBatchAsFlow(mediaId, seasonNumber)
+
     override suspend fun updateState(
         id: Long,
         state: DownloadItemState,

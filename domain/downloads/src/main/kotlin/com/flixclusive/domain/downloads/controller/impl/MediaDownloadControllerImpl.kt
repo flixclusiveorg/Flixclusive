@@ -4,6 +4,9 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.model.user.DataPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
@@ -15,7 +18,10 @@ import com.hippo.unifile.UniFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,14 +30,18 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     private val mediaDownloadRepository: MediaDownloadRepository,
     private val downloadDirectoryRepository: DownloadDirectoryRepository,
     private val getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase,
+    private val dataStoreManager: DataStoreManager,
     private val appDispatchers: AppDispatchers,
 ) : MediaDownloadController {
     private val scope by lazy { CoroutineScope(appDispatchers.io + SupervisorJob()) }
     private val jobs = mutableMapOf<Long, Job>()
 
+    private val dispatchMutex = Mutex()
+    private val activeItemIds = mutableSetOf<Long>()
+
     override fun start(itemId: Long) {
         if (jobs[itemId]?.isActive == true) return
-        jobs[itemId] = scope.launch { runDownload(itemId) }
+        jobs[itemId] = scope.launch { dispatchOrQueue(itemId) }
     }
 
     override fun resume(itemId: Long) = start(itemId)
@@ -41,16 +51,32 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         jobs[itemId] = scope.launch {
             mediaDownloadRepository.resetChunks(itemId)
             mediaDownloadRepository.updateState(itemId, DownloadItemState.QUEUED, null)
-            runDownload(itemId)
+            dispatchOrQueue(itemId)
         }
     }
 
     override fun pause(itemId: Long) {
-        mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE)
+        scope.launch {
+            val item = mediaDownloadRepository.getItem(itemId) ?: return@launch
+            when (item.state) {
+                DownloadItemState.QUEUED -> mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, null)
+                DownloadItemState.DOWNLOADING_STREAM, DownloadItemState.FETCHING_SUBTITLES ->
+                    mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE)
+                else -> Unit
+            }
+        }
     }
 
     override fun stop(itemId: Long) {
-        mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.STOP)
+        scope.launch {
+            val item = mediaDownloadRepository.getItem(itemId) ?: return@launch
+            when (item.state) {
+                DownloadItemState.DOWNLOADING_STREAM, DownloadItemState.FETCHING_SUBTITLES ->
+                    mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.STOP)
+                DownloadItemState.COMPLETED, DownloadItemState.STOPPED -> Unit
+                else -> stopInactiveItem(itemId, item)
+            }
+        }
     }
 
     override fun delete(itemId: Long) {
@@ -61,6 +87,89 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             }
             mediaDownloadRepository.resetChunks(itemId)
             mediaDownloadRepository.delete(itemId)
+        }
+    }
+
+    override fun pauseBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    ) {
+        scope.launch {
+            mediaDownloadRepository.getBatch(mediaId, seasonNumber).forEach { pause(it.id) }
+        }
+    }
+
+    override fun stopBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    ) {
+        scope.launch {
+            mediaDownloadRepository.getBatch(mediaId, seasonNumber).forEach { stop(it.id) }
+        }
+    }
+
+    private suspend fun stopInactiveItem(
+        itemId: Long,
+        item: DownloadItem,
+    ) {
+        resolveDirectory(item)?.delete()
+        mediaDownloadRepository.resetChunks(itemId)
+        mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, null)
+    }
+
+    private suspend fun currentConcurrencyLimit(): Int =
+        dataStoreManager
+            .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
+            .first()
+            .downloadConcurrencyLimit
+            .coerceAtLeast(1)
+
+    private suspend fun tryReserveSlot(itemId: Long): Boolean =
+        dispatchMutex.withLock {
+            if (itemId in activeItemIds || activeItemIds.size >= currentConcurrencyLimit()) {
+                false
+            } else {
+                activeItemIds += itemId
+                true
+            }
+        }
+
+    private suspend fun releaseSlot(itemId: Long) {
+        dispatchMutex.withLock { activeItemIds -= itemId }
+    }
+
+    /** Runs [itemId] now if a concurrency slot is free; otherwise it stays QUEUED for [dispatchNext] to pick up. */
+    private suspend fun dispatchOrQueue(itemId: Long) {
+        if (!tryReserveSlot(itemId)) return
+
+        try {
+            runDownload(itemId)
+        } finally {
+            releaseSlot(itemId)
+            dispatchNext()
+        }
+    }
+
+    /** Fills every free concurrency slot with the oldest QUEUED items, FIFO, until none remain or the limit is hit. */
+    private suspend fun dispatchNext() {
+        while (true) {
+            val next = dispatchMutex.withLock {
+                if (activeItemIds.size >= currentConcurrencyLimit()) return
+                val candidate = mediaDownloadRepository.getOldestQueuedItem() ?: return
+                // Guards a theoretical race with dispatchOrQueue reserving the same id; bail rather
+                // than spin, since a queued item can never legitimately already be active.
+                if (!activeItemIds.add(candidate.id)) return
+                candidate
+            }
+
+            jobs[next.id] = scope.launch {
+                try {
+                    runDownload(next.id)
+                } finally {
+                    releaseSlot(next.id)
+                    dispatchNext()
+                }
+            }
         }
     }
 

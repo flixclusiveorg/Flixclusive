@@ -19,6 +19,7 @@ import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
+import strikt.assertions.isNotEqualTo
 import strikt.assertions.isNull
 import java.util.Date
 
@@ -128,5 +129,38 @@ class DownloadDaoTest {
 
             expectThat(downloadChunkDao.getChunksForItem(itemId)).isEmpty()
             expectThat(downloadItemDao.get(itemId)).isNull()
+        }
+
+    @Test
+    fun `getOldestByState should return the earliest queued item first`() =
+        runTest {
+            val first = downloadItemDao.insert(testItem)
+            val second = downloadItemDao.insert(testItem.copy(episodeNumber = 2))
+
+            val result = downloadItemDao.getOldestByState(DownloadItemState.QUEUED)
+
+            expectThat(result?.id).isEqualTo(first)
+            expectThat(second).isNotEqualTo(first)
+        }
+
+    @Test
+    fun `getBatch should return items for the same media and season ordered by episode number`() =
+        runTest {
+            val showId = "show-1"
+            downloadItemDao.insert(
+                testItem.copy(mediaId = showId, mediaType = MediaType.SHOW, seasonNumber = 1, episodeNumber = 2)
+            )
+            downloadItemDao.insert(
+                testItem.copy(mediaId = showId, mediaType = MediaType.SHOW, seasonNumber = 1, episodeNumber = 1)
+            )
+            downloadItemDao.insert(
+                testItem.copy(mediaId = showId, mediaType = MediaType.SHOW, seasonNumber = 2, episodeNumber = 1)
+            )
+
+            val batch = downloadItemDao.getBatch(showId, 1)
+
+            expectThat(batch).hasSize(2)
+            expectThat(batch[0].episodeNumber).isEqualTo(1)
+            expectThat(batch[1].episodeNumber).isEqualTo(2)
         }
 }

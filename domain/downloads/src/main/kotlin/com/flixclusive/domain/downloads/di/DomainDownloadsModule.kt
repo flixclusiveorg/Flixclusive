@@ -7,11 +7,13 @@ import com.flixclusive.domain.downloads.controller.impl.MediaDownloadControllerI
 import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
+import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadBatchUseCase
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
 import com.flixclusive.domain.downloads.usecase.impl.CancelDownloadUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.DownloadFileUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.GetDownloadDirectoryUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.QueueMediaDownloadBatchUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.QueueMediaDownloadUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.ResolveDownloadableStreamUseCaseImpl
 import dagger.Binds
@@ -42,6 +44,11 @@ internal abstract class DomainDownloadsModule {
 
     @Binds
     abstract fun bindQueueMediaDownloadUseCase(impl: QueueMediaDownloadUseCaseImpl): QueueMediaDownloadUseCase
+
+    @Binds
+    abstract fun bindQueueMediaDownloadBatchUseCase(
+        impl: QueueMediaDownloadBatchUseCaseImpl
+    ): QueueMediaDownloadBatchUseCase
 
     @Binds
     @Singleton

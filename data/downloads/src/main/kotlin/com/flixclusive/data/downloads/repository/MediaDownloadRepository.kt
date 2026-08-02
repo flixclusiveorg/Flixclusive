@@ -17,6 +17,18 @@ interface MediaDownloadRepository {
 
     suspend fun queue(item: DownloadItem): Long
 
+    suspend fun getOldestQueuedItem(): DownloadItem?
+
+    suspend fun getBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    ): List<DownloadItem>
+
+    fun observeBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    ): Flow<List<DownloadItem>>
+
     suspend fun updateState(
         id: Long,
         state: DownloadItemState,

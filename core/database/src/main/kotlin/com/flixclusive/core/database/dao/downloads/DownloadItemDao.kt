@@ -28,8 +28,27 @@ interface DownloadItemDao {
     @Query("SELECT * FROM download_items ORDER BY createdAt DESC")
     fun getAllAsFlow(): Flow<List<DownloadItem>>
 
-    @Query("SELECT * FROM download_items WHERE state = :state")
+    @Query("SELECT * FROM download_items WHERE state = :state ORDER BY createdAt ASC")
     suspend fun getAllByState(state: DownloadItemState): List<DownloadItem>
+
+    @Query("SELECT * FROM download_items WHERE state = :state ORDER BY createdAt ASC LIMIT 1")
+    suspend fun getOldestByState(state: DownloadItemState): DownloadItem?
+
+    @Query(
+        "SELECT * FROM download_items WHERE mediaId = :mediaId AND seasonNumber = :seasonNumber ORDER BY episodeNumber ASC",
+    )
+    suspend fun getBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    ): List<DownloadItem>
+
+    @Query(
+        "SELECT * FROM download_items WHERE mediaId = :mediaId AND seasonNumber = :seasonNumber ORDER BY episodeNumber ASC",
+    )
+    fun getBatchAsFlow(
+        mediaId: String,
+        seasonNumber: Int,
+    ): Flow<List<DownloadItem>>
 
     @Query(
         """

@@ -3,18 +3,23 @@ package com.flixclusive.domain.downloads.controller.impl
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.model.user.DataPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
-import com.hippo.unifile.UniFile
 import com.flixclusive.model.media.common.MediaType
+import com.hippo.unifile.UniFile
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -28,6 +33,7 @@ class MediaDownloadControllerImplTest {
     private lateinit var mediaDownloadRepository: MediaDownloadRepository
     private lateinit var downloadDirectoryRepository: DownloadDirectoryRepository
     private lateinit var getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase
+    private lateinit var dataStoreManager: DataStoreManager
     private lateinit var controller: MediaDownloadControllerImpl
 
     private val directory = mockk<UniFile>(relaxed = true)
@@ -51,11 +57,20 @@ class MediaDownloadControllerImplTest {
         subtitleUrl = subtitleUrl,
     )
 
+    private fun setConcurrencyLimit(limit: Int) {
+        every {
+            dataStoreManager.getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
+        } returns flowOf(DataPreferences(downloadConcurrencyLimit = limit))
+    }
+
     @Before
     fun setup() {
         mediaDownloadRepository = mockk(relaxed = true)
         downloadDirectoryRepository = mockk()
         getDownloadDirectoryUseCase = mockk()
+        dataStoreManager = mockk()
+        setConcurrencyLimit(3)
+        coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns null
 
         every { downloadDirectoryRepository.getOrCreateFile(directory, any()) } returns streamFile
         every { downloadDirectoryRepository.getOrCreateSubtitlesDirectory(directory) } returns subtitlesDirectory
@@ -65,6 +80,7 @@ class MediaDownloadControllerImplTest {
             mediaDownloadRepository = mediaDownloadRepository,
             downloadDirectoryRepository = downloadDirectoryRepository,
             getDownloadDirectoryUseCase = getDownloadDirectoryUseCase,
+            dataStoreManager = dataStoreManager,
             appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
         )
     }
@@ -259,5 +275,138 @@ class MediaDownloadControllerImplTest {
 
             coVerify { directory.delete() }
             coVerify { mediaDownloadRepository.delete(1) }
+        }
+
+    @Test
+    fun `pause on a queued item should transition it directly to PAUSED without an interrupt flag`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(state = DownloadItemState.QUEUED)
+
+            controller.pause(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.PAUSED, null) }
+            coVerify(exactly = 0) { mediaDownloadRepository.requestInterrupt(any(), any()) }
+        }
+
+    @Test
+    fun `stop on a queued item should clean up and mark STOPPED directly without an interrupt flag`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(state = DownloadItemState.QUEUED)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+
+            controller.stop(1)
+            advanceUntilIdle()
+
+            coVerify { directory.delete() }
+            coVerify { mediaDownloadRepository.resetChunks(1) }
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STOPPED, null) }
+            coVerify(exactly = 0) { mediaDownloadRepository.requestInterrupt(any(), any()) }
+        }
+
+    @Test
+    fun `stop on a paused item should clean up and mark STOPPED directly`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns
+                testItem(state = DownloadItemState.PAUSED, phase = DownloadPhase.STREAM)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+
+            controller.stop(1)
+            advanceUntilIdle()
+
+            coVerify { directory.delete() }
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STOPPED, null) }
+        }
+
+    @Test
+    fun `pause on an actively downloading item should request an interrupt instead of transitioning state directly`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns
+                testItem(state = DownloadItemState.DOWNLOADING_STREAM)
+
+            controller.pause(1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.requestInterrupt(1, DownloadInterruptReason.PAUSE) }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(1, DownloadItemState.PAUSED, any()) }
+        }
+
+    @Test
+    fun `pauseBatch should pause every item returned for that media and season`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getBatch("media-1", 1) } returns
+                listOf(
+                    testItem(id = 1, state = DownloadItemState.QUEUED),
+                    testItem(id = 2, state = DownloadItemState.QUEUED)
+                )
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(id = 1)
+            coEvery { mediaDownloadRepository.getItem(2) } returns testItem(id = 2)
+
+            controller.pauseBatch("media-1", 1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.PAUSED, null) }
+            coVerify { mediaDownloadRepository.updateState(2, DownloadItemState.PAUSED, null) }
+        }
+
+    @Test
+    fun `stopBatch should stop every item returned for that media and season`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getBatch("media-1", 1) } returns
+                listOf(
+                    testItem(id = 1, state = DownloadItemState.QUEUED),
+                    testItem(id = 2, state = DownloadItemState.QUEUED)
+                )
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(id = 1)
+            coEvery { mediaDownloadRepository.getItem(2) } returns testItem(id = 2)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+
+            controller.stopBatch("media-1", 1)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STOPPED, null) }
+            coVerify { mediaDownloadRepository.updateState(2, DownloadItemState.STOPPED, null) }
+        }
+
+    @Test
+    fun `a second item should not start until the first releases its concurrency slot`() =
+        runTest(testDispatcher) {
+            setConcurrencyLimit(1)
+
+            val item1Gate = CompletableDeferred<Unit>()
+
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(id = 1)
+            coEvery { mediaDownloadRepository.getItem(2) } returns testItem(id = 2)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), any(), any())
+            } coAnswers {
+                item1Gate.await()
+                MediaTransferResult.Completed
+            }
+            coEvery {
+                mediaDownloadRepository.runTransfer(2, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+            coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns testItem(id = 2) andThen null
+
+            controller.start(1)
+            controller.start(2)
+            advanceUntilIdle()
+
+            // Item 1 is still mid-transfer (blocked on item1Gate), so item 2 must not have gotten a slot.
+            coVerify(exactly = 1) {
+                mediaDownloadRepository.updateState(1, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
+            }
+            coVerify(
+                exactly = 0
+            ) { mediaDownloadRepository.updateState(2, DownloadItemState.DOWNLOADING_STREAM, any()) }
+
+            item1Gate.complete(Unit)
+            advanceUntilIdle()
+
+            // Once item 1 finishes and frees its slot, dispatchNext() should pick item 2 up.
+            coVerify(exactly = 1) {
+                mediaDownloadRepository.updateState(2, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
+            }
         }
 }

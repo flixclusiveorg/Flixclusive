@@ -32,8 +32,14 @@ data class DataPreferences(
      * Speed is always the secondary sort key.
      */
     val downloadLinkSelectionMode: DownloadLinkSelectionMode = DownloadLinkSelectionMode.QUALITY_FIRST,
+    /**
+     * Maximum number of downloads (movies/episodes) allowed to transfer at the same time.
+     * Items beyond this limit stay queued (FIFO by queue time) until a slot frees up.
+     */
+    val downloadConcurrencyLimit: Int = DEFAULT_DOWNLOAD_CONCURRENCY_LIMIT,
 ) : UserPreferences
 
 private const val DEFAULT_AUTO_BACKUP_FREQUENCY_DAYS = 7
 private const val DEFAULT_MAX_BACKUPS = 5
 private const val DEFAULT_DEAD_LINK_RETENTION_DAYS = 1
+private const val DEFAULT_DOWNLOAD_CONCURRENCY_LIMIT = 3

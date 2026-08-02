@@ -12,4 +12,14 @@ interface MediaDownloadController {
     fun retry(itemId: Long)
 
     fun delete(itemId: Long)
+
+    fun pauseBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    )
+
+    fun stopBatch(
+        mediaId: String,
+        seasonNumber: Int,
+    )
 }

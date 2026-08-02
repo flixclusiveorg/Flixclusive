@@ -116,6 +116,28 @@ class MediaDownloadRepositoryImplTest {
     }
 
     @Test
+    fun `getOldestQueuedItem should delegate to the dao filtered by QUEUED state`() =
+        runTest {
+            val queuedItem = DownloadItem(id = 3, mediaId = "m1", mediaTitle = "Movie", mediaType = MediaType.MOVIE)
+            coEvery { downloadItemDao.getOldestByState(DownloadItemState.QUEUED) } returns queuedItem
+
+            val result = repository.getOldestQueuedItem()
+
+            expectThat(result).isEqualTo(queuedItem)
+        }
+
+    @Test
+    fun `getBatch should delegate to the dao with mediaId and seasonNumber`() =
+        runTest {
+            val batch = listOf(DownloadItem(id = 1, mediaId = "m1", mediaTitle = "Show", mediaType = MediaType.SHOW))
+            coEvery { downloadItemDao.getBatch("m1", 1) } returns batch
+
+            val result = repository.getBatch("m1", 1)
+
+            expectThat(result).isEqualTo(batch)
+        }
+
+    @Test
     fun `updateState should delegate to the dao with the given state and phase`() =
         runTest {
             repository.updateState(1, DownloadItemState.PAUSED, DownloadPhase.STREAM)
