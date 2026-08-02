@@ -204,7 +204,11 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
         val fileName = DownloadPathUtil.buildStreamFileName(
             DownloadPathUtil.buildFileTitle(item.mediaTitle, item.episodeTitle),
-            DownloadPathUtil.extensionFromUrl(streamUrl, DEFAULT_STREAM_EXTENSION, STREAM_EXTENSIONS),
+            DownloadPathUtil.extensionFromUrl(
+                streamUrl,
+                DownloadPathUtil.DEFAULT_STREAM_EXTENSION,
+                DownloadPathUtil.STREAM_EXTENSIONS
+            ),
         )
         val destinationFile = downloadDirectoryRepository.getOrCreateFile(directory, fileName)
             ?: return fail(itemId, "Unable to create destination file")
@@ -262,7 +266,11 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
         val fileName = DownloadPathUtil.buildSubtitleFileName(
             DownloadPathUtil.buildFileTitle(item.mediaTitle, item.episodeTitle),
-            DownloadPathUtil.extensionFromUrl(subtitleUrl, DEFAULT_SUBTITLE_EXTENSION, SUBTITLE_EXTENSIONS),
+            DownloadPathUtil.extensionFromUrl(
+                subtitleUrl,
+                DownloadPathUtil.DEFAULT_SUBTITLE_EXTENSION,
+                DownloadPathUtil.SUBTITLE_EXTENSIONS
+            ),
         )
         val destinationFile = downloadDirectoryRepository.getOrCreateFile(subtitlesDirectory, fileName)
             ?: return markSubtitleFailureAndComplete(itemId, "Unable to create subtitle file")
@@ -325,11 +333,6 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         getDownloadDirectoryUseCase(item.mediaId, item.mediaTitle, item.seasonNumber, item.episodeNumber)
 
     companion object {
-        private val STREAM_EXTENSIONS = setOf("mp4", "mkv", "mov", "webm")
-        private const val DEFAULT_STREAM_EXTENSION = "mp4"
-        private val SUBTITLE_EXTENSIONS = setOf("srt", "vtt", "ass", "ssa")
-        private const val DEFAULT_SUBTITLE_EXTENSION = "srt"
-
         // Catches a "successful" transfer that actually saved an error page or empty response
         // (e.g. a dead link the initial probe didn't catch) instead of a real video file.
         private const val MIN_VALID_STREAM_FILE_BYTES = 100 * 1024L

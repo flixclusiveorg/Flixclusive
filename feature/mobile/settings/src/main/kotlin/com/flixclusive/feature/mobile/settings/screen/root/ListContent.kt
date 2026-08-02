@@ -103,6 +103,14 @@ internal fun ListContent(
             )
         }
 
+        item {
+            MenuItem(
+                icon = painterResource(id = UiCommonR.drawable.download),
+                label = stringResource(id = LocaleR.string.downloads),
+                onClick = navigator::navigateToDownloadsScreen,
+            )
+        }
+
         navigationItems(
             title = LocaleR.string.application,
         ) {
@@ -381,6 +389,8 @@ private fun ListContentPreview() {
                     override fun navigateToProviderManagerScreen() = Unit
 
                     override fun navigateToRepositoryManagerScreen() = Unit
+
+                    override fun navigateToDownloadsScreen() = Unit
 
                     override fun navigateToUrl(url: String) = Unit
 

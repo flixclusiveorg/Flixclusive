@@ -1,6 +1,11 @@
 package com.flixclusive.data.downloads.util
 
 object DownloadPathUtil {
+    val STREAM_EXTENSIONS = setOf("mp4", "mkv", "mov", "webm")
+    const val DEFAULT_STREAM_EXTENSION = "mp4"
+    val SUBTITLE_EXTENSIONS = setOf("srt", "vtt", "ass", "ssa")
+    const val DEFAULT_SUBTITLE_EXTENSION = "srt"
+
     private val illegalFileNameChars = Regex("[/\\\\:*?\"<>|]")
 
     fun sanitizeFileName(name: String): String {

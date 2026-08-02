@@ -392,5 +392,28 @@
         <item quantity="one">%1$d Episode</item>
         <item quantity="other">%1$d Episodes</item>
     </plurals>
+
+    <string name="downloads">Downloads</string>
+    <string name="download_state_queued">Queued</string>
+    <string name="download_state_downloading">Downloading</string>
+    <string name="download_state_paused">Paused</string>
+    <string name="download_state_fetching_subtitles">Fetching subtitles</string>
+    <string name="download_state_completed">Completed</string>
+    <string name="download_state_stopped">Stopped</string>
+    <string name="download_state_failed">Failed</string>
+    <string name="download_type_movie">Movie</string>
+    <string name="download_type_show">Show</string>
+    <string name="download_search_placeholder">Search downloads</string>
+    <string name="download_empty_title">No downloads yet</string>
+    <string name="download_empty_description">Downloaded movies and episodes will show up here</string>
+    <string name="download_action_pause_content_desc">Pause download</string>
+    <string name="download_action_resume_content_desc">Resume download</string>
+    <string name="download_action_stop_content_desc">Stop download</string>
+    <string name="download_action_open_content_desc">Open downloaded file</string>
+    <string name="season_number_format">Season %1$d</string>
+    <plurals name="download_batch_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
 </resources>
 

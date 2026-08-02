@@ -8,12 +8,14 @@ import com.flixclusive.domain.downloads.controller.impl.MediaDownloadControllerI
 import com.flixclusive.domain.downloads.controller.impl.MediaDownloadServiceControllerImpl
 import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
+import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadBatchUseCase
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
 import com.flixclusive.domain.downloads.usecase.impl.CancelDownloadUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.DownloadFileUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.GetCompletedDownloadFileUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.GetDownloadDirectoryUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.QueueMediaDownloadBatchUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.QueueMediaDownloadUseCaseImpl
@@ -38,6 +40,11 @@ internal abstract class DomainDownloadsModule {
 
     @Binds
     abstract fun bindGetDownloadDirectoryUseCase(impl: GetDownloadDirectoryUseCaseImpl): GetDownloadDirectoryUseCase
+
+    @Binds
+    abstract fun bindGetCompletedDownloadFileUseCase(
+        impl: GetCompletedDownloadFileUseCaseImpl
+    ): GetCompletedDownloadFileUseCase
 
     @Binds
     abstract fun bindResolveDownloadableStreamUseCase(

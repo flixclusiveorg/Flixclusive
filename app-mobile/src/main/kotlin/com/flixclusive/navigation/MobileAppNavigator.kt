@@ -87,6 +87,7 @@ import com.ramcosta.composedestinations.generated.providersettings.destinations.
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.AppearanceTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.DownloadsTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ManageMediaLinksTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinkCardsTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinksShowDetailTweakScreenDestination
@@ -327,6 +328,12 @@ internal class MobileAppNavigator(
     override fun navigateToProviderManagerScreen() {
         runOnResumed {
             navigator.navigate(ProviderManagerScreenDestination)
+        }
+    }
+
+    override fun navigateToDownloadsScreen() {
+        runOnResumed {
+            navigator.navigate(DownloadsTweakScreenDestination)
         }
     }
 
