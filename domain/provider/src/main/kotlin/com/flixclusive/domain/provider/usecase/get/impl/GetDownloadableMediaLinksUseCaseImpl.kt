@@ -47,7 +47,9 @@ internal class GetDownloadableMediaLinksUseCaseImpl @Inject constructor(
 
         val streams = cachedLinks
             .flatMap { it.streams }
-            .filter { it.isValid }
+            // Third-party gateway links hand off to another site's own web player, not a
+            // direct file/manifest URL — there's nothing downloadable to transfer.
+            .filter { it.isValid && !it.isThirdPartyGateway }
             .map { it.toStream() }
 
         if (streams.isEmpty()) {

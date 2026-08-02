@@ -52,6 +52,11 @@ class MediaDownloadService : Service() {
     private var observerJob: Job? = null
     private var stopServiceJob: Job? = null
 
+    /** Ids of [DownloadItemState.FAILED] items already notified, so re-emissions of the same
+     * failure (e.g. from an unrelated item's progress update) don't re-alert. Cleared once the
+     * item is retried/deleted and no longer reports as failed. */
+    private val notifiedFailureIds = mutableSetOf<Long>()
+
     companion object {
         private const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
         private const val ACTION_RESUME = "MEDIA_DOWNLOAD_RESUME"
@@ -123,6 +128,9 @@ class MediaDownloadService : Service() {
         observerJob = serviceScope.launch {
             mediaDownloadRepository.observeAllItems().collectLatest { items ->
                 val activeItems = items.filter { !it.state.isTerminal && it.state != DownloadItemState.QUEUED }
+                val notificationManager: NotificationManager = getSystemService()!!
+
+                notifyNewFailures(items, notificationManager)
 
                 if (activeItems.isEmpty()) {
                     scheduleServiceStop()
@@ -132,10 +140,22 @@ class MediaDownloadService : Service() {
                 stopServiceJob?.cancel()
                 safeStartForeground(SUMMARY_NOTIFICATION_ID, buildSummaryNotification(activeItems.size))
 
-                val notificationManager: NotificationManager = getSystemService()!!
                 activeItems.forEach { item ->
                     notificationManager.notify(item.id.toInt(), buildItemNotification(item))
                 }
+            }
+        }
+    }
+
+    /** Posts a dismissible error notification the first time an item is seen as [DownloadItemState.FAILED] —
+     * failed items are terminal, so [startObservingActiveItems] otherwise never surfaces them. */
+    private fun notifyNewFailures(items: List<DownloadItem>, notificationManager: NotificationManager) {
+        val failedItems = items.filter { it.state == DownloadItemState.FAILED }
+        notifiedFailureIds.retainAll(failedItems.map { it.id }.toSet())
+
+        failedItems.forEach { item ->
+            if (notifiedFailureIds.add(item.id)) {
+                notificationManager.notify(item.id.toInt(), buildErrorNotification(item))
             }
         }
     }
@@ -227,6 +247,23 @@ class MediaDownloadService : Service() {
         }
 
         return builder.build()
+    }
+
+    private fun buildErrorNotification(item: DownloadItem): Notification {
+        val title = item.episodeTitle?.takeIf { it.isNotBlank() } ?: item.mediaTitle
+        val message = item.errorMessage?.takeIf { it.isNotBlank() } ?: "Download failed"
+
+        return NotificationCompat
+            .Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setGroup(NOTIFICATION_GROUP_KEY)
+            .setOngoing(false)
+            .setAutoCancel(true)
+            .addAction(0, "Retry", actionPendingIntent(ACTION_RETRY, item.id))
+            .build()
     }
 
     private fun progressAndStatusFor(item: DownloadItem): Pair<Int?, String> =

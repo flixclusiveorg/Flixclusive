@@ -68,13 +68,18 @@ class GetDownloadableMediaLinksUseCaseImplTest {
         )
     }
 
-    private fun cachedStream(url: String, isDead: Boolean = false) = CachedStream(
+    private fun cachedStream(
+        url: String,
+        isDead: Boolean = false,
+        isThirdPartyGateway: Boolean = false,
+    ) = CachedStream(
         url = url,
         label = "1080p",
         providerId = "test-provider",
         ownerId = "user-1",
         mediaId = testMovie.id,
         isDead = isDead,
+        isThirdPartyGateway = isThirdPartyGateway,
     )
 
     private fun cachedSubtitle(url: String, label: String) = CachedSubtitle(
@@ -89,6 +94,42 @@ class GetDownloadableMediaLinksUseCaseImplTest {
     fun invokeShouldReturnFailureWhenLinkResolutionDoesNotSucceed() =
         runTest {
             coEvery { getMediaLinksUseCase(testMovie, null) } returns flowOf(LoadLinksState.Unavailable())
+
+            val result = useCase(testMovie, null)
+
+            expectThat(result).isA<Async.Failure>()
+        }
+
+    @Test
+    fun invokeShouldFilterOutThirdPartyGatewayStreams() =
+        runTest {
+            coEvery { getMediaLinksUseCase(testMovie, null) } returns flowOf(LoadLinksState.Success)
+            coEvery { mediaLinksRepository.getLinks("user-1", testMovie.id, null, null) } returns listOf(
+                MediaLinksWithData(
+                    media = testMovie.toDBMedia(),
+                    streams = listOf(
+                        cachedStream("https://example.com/gateway.mp4", isThirdPartyGateway = true),
+                        cachedStream("https://example.com/direct.mp4"),
+                    ),
+                ),
+            )
+
+            val result = useCase(testMovie, null)
+
+            val data = (result as Async.Success).data
+            expectThat(data.streams.map { it.url }).isEqualTo(listOf("https://example.com/direct.mp4"))
+        }
+
+    @Test
+    fun invokeShouldReturnFailureWhenOnlyThirdPartyGatewayStreamsAreCached() =
+        runTest {
+            coEvery { getMediaLinksUseCase(testMovie, null) } returns flowOf(LoadLinksState.Success)
+            coEvery { mediaLinksRepository.getLinks("user-1", testMovie.id, null, null) } returns listOf(
+                MediaLinksWithData(
+                    media = testMovie.toDBMedia(),
+                    streams = listOf(cachedStream("https://example.com/gateway.mp4", isThirdPartyGateway = true)),
+                ),
+            )
 
             val result = useCase(testMovie, null)
 
