@@ -16,6 +16,8 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.stubs.util)
+    implementation(libs.stubs.model.media)
+    implementation(libs.unifile)
 
     testImplementation(projects.coreTesting)
     testImplementation(libs.okhttp.mockwebserver)

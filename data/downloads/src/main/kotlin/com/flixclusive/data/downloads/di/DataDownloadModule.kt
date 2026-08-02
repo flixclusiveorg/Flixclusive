@@ -1,5 +1,7 @@
 package com.flixclusive.data.downloads.di
 
+import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
+import com.flixclusive.data.downloads.directory.impl.DownloadDirectoryRepositoryImpl
 import com.flixclusive.data.downloads.repository.DownloadRepository
 import com.flixclusive.data.downloads.repository.impl.DownloadRepositoryImpl
 import dagger.Binds
@@ -14,4 +16,7 @@ internal abstract class DataDownloadModule {
     @Binds
     @Singleton
     abstract fun bindDownloadRepository(impl: DownloadRepositoryImpl): DownloadRepository
+
+    @Binds
+    abstract fun bindDownloadDirectoryRepository(impl: DownloadDirectoryRepositoryImpl): DownloadDirectoryRepository
 }

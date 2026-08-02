@@ -12,10 +12,14 @@ dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreNetwork)
     implementation(projects.coreDatastore)
+    implementation(projects.coreStrings)
     implementation(projects.dataDownloads)
 
     implementation(libs.okhttp)
     implementation(libs.stubs.util)
+    implementation(libs.stubs.model.media)
+    implementation(libs.stubs.model.provider)
+    implementation(libs.unifile)
 
     testImplementation(projects.coreTesting)
     testImplementation(libs.okhttp.mockwebserver)

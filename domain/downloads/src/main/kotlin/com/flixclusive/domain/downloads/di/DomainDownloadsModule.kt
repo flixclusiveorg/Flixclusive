@@ -4,8 +4,10 @@ import com.flixclusive.domain.downloads.controller.DownloadServiceController
 import com.flixclusive.domain.downloads.controller.impl.DownloadServiceControllerImpl
 import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
+import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
 import com.flixclusive.domain.downloads.usecase.impl.CancelDownloadUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.DownloadFileUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.GetDownloadDirectoryUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -22,4 +24,7 @@ internal abstract class DomainDownloadsModule {
 
     @Binds
     abstract fun bindCancelDownloadUseCase(impl: CancelDownloadUseCaseImpl): CancelDownloadUseCase
+
+    @Binds
+    abstract fun bindGetDownloadDirectoryUseCase(impl: GetDownloadDirectoryUseCaseImpl): GetDownloadDirectoryUseCase
 }
