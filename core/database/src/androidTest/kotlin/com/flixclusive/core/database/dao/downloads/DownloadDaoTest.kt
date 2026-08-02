@@ -49,7 +49,7 @@ class DownloadDaoTest {
     }
 
     @Test
-    fun `insert should assign an id and get should return the inserted item`() =
+    fun insertShouldAssignIdAndGetShouldReturnInsertedItem() =
         runTest {
             val id = downloadItemDao.insert(testItem)
 
@@ -60,7 +60,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun `updateState should persist state and phase`() =
+    fun updateStateShouldPersistStateAndPhase() =
         runTest {
             val id = downloadItemDao.insert(testItem)
 
@@ -72,7 +72,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun `updateStreamProgress should persist byte counts without touching other fields`() =
+    fun updateStreamProgressShouldPersistByteCountsWithoutTouchingOtherFields() =
         runTest {
             val id = downloadItemDao.insert(testItem)
 
@@ -85,7 +85,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun `insertAll chunks should be retrievable ordered by chunkIndex`() =
+    fun insertAllChunksShouldBeRetrievableOrderedByChunkIndex() =
         runTest {
             val itemId = downloadItemDao.insert(testItem)
             val chunks = listOf(
@@ -102,7 +102,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun `updateProgress should persist chunk bytes and status`() =
+    fun updateProgressShouldPersistChunkBytesAndStatus() =
         runTest {
             val itemId = downloadItemDao.insert(testItem)
             downloadChunkDao.insertAll(
@@ -118,7 +118,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun `deleting a download item should cascade delete its chunks`() =
+    fun deletingDownloadItemShouldCascadeDeleteItsChunks() =
         runTest {
             val itemId = downloadItemDao.insert(testItem)
             downloadChunkDao.insertAll(
@@ -132,7 +132,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun `getOldestByState should return the earliest queued item first`() =
+    fun getOldestByStateShouldReturnEarliestQueuedItemFirst() =
         runTest {
             val first = downloadItemDao.insert(testItem)
             val second = downloadItemDao.insert(testItem.copy(episodeNumber = 2))
@@ -144,7 +144,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun `getBatch should return items for the same media and season ordered by episode number`() =
+    fun getBatchShouldReturnItemsForSameMediaAndSeasonOrderedByEpisodeNumber() =
         runTest {
             val showId = "show-1"
             downloadItemDao.insert(
