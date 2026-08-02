@@ -13,6 +13,7 @@ import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.flixclusive.data.downloads.util.DownloadPathUtil
 import com.flixclusive.domain.downloads.controller.MediaDownloadController
+import com.flixclusive.domain.downloads.controller.MediaDownloadServiceController
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
 import com.hippo.unifile.UniFile
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     private val mediaDownloadRepository: MediaDownloadRepository,
     private val downloadDirectoryRepository: DownloadDirectoryRepository,
     private val getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase,
+    private val mediaDownloadServiceController: MediaDownloadServiceController,
     private val dataStoreManager: DataStoreManager,
     private val appDispatchers: AppDispatchers,
 ) : MediaDownloadController {
@@ -142,6 +144,8 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     private suspend fun dispatchOrQueue(itemId: Long) {
         if (!tryReserveSlot(itemId)) return
 
+        mediaDownloadServiceController.ensureRunning()
+
         try {
             runDownload(itemId)
         } finally {
@@ -161,6 +165,8 @@ internal class MediaDownloadControllerImpl @Inject constructor(
                 if (!activeItemIds.add(candidate.id)) return
                 candidate
             }
+
+            mediaDownloadServiceController.ensureRunning()
 
             jobs[next.id] = scope.launch {
                 try {

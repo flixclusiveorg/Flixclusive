@@ -2,8 +2,10 @@ package com.flixclusive.domain.downloads.di
 
 import com.flixclusive.domain.downloads.controller.DownloadServiceController
 import com.flixclusive.domain.downloads.controller.MediaDownloadController
+import com.flixclusive.domain.downloads.controller.MediaDownloadServiceController
 import com.flixclusive.domain.downloads.controller.impl.DownloadServiceControllerImpl
 import com.flixclusive.domain.downloads.controller.impl.MediaDownloadControllerImpl
+import com.flixclusive.domain.downloads.controller.impl.MediaDownloadServiceControllerImpl
 import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
@@ -53,4 +55,9 @@ internal abstract class DomainDownloadsModule {
     @Binds
     @Singleton
     abstract fun bindMediaDownloadController(impl: MediaDownloadControllerImpl): MediaDownloadController
+
+    @Binds
+    abstract fun bindMediaDownloadServiceController(
+        impl: MediaDownloadServiceControllerImpl
+    ): MediaDownloadServiceController
 }

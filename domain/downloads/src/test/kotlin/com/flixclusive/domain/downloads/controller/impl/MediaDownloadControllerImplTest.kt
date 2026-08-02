@@ -11,6 +11,7 @@ import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
+import com.flixclusive.domain.downloads.controller.MediaDownloadServiceController
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
 import com.flixclusive.model.media.common.MediaType
 import com.hippo.unifile.UniFile
@@ -18,6 +19,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,6 +35,7 @@ class MediaDownloadControllerImplTest {
     private lateinit var mediaDownloadRepository: MediaDownloadRepository
     private lateinit var downloadDirectoryRepository: DownloadDirectoryRepository
     private lateinit var getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase
+    private lateinit var mediaDownloadServiceController: MediaDownloadServiceController
     private lateinit var dataStoreManager: DataStoreManager
     private lateinit var controller: MediaDownloadControllerImpl
 
@@ -68,6 +71,7 @@ class MediaDownloadControllerImplTest {
         mediaDownloadRepository = mockk(relaxed = true)
         downloadDirectoryRepository = mockk()
         getDownloadDirectoryUseCase = mockk()
+        mediaDownloadServiceController = mockk(relaxed = true)
         dataStoreManager = mockk()
         setConcurrencyLimit(3)
         coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns null
@@ -80,6 +84,7 @@ class MediaDownloadControllerImplTest {
             mediaDownloadRepository = mediaDownloadRepository,
             downloadDirectoryRepository = downloadDirectoryRepository,
             getDownloadDirectoryUseCase = getDownloadDirectoryUseCase,
+            mediaDownloadServiceController = mediaDownloadServiceController,
             dataStoreManager = dataStoreManager,
             appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
         )
@@ -122,6 +127,21 @@ class MediaDownloadControllerImplTest {
             coVerify(
                 exactly = 0
             ) { mediaDownloadRepository.updateState(1, DownloadItemState.FETCHING_SUBTITLES, any()) }
+        }
+
+    @Test
+    fun `start should ensure the media download service is running before transferring`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(subtitleUrl = null)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(1)
+            advanceUntilIdle()
+
+            verify { mediaDownloadServiceController.ensureRunning() }
         }
 
     @Test
