@@ -22,6 +22,7 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiv
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
+import com.flixclusive.feature.mobile.media.MediaDownloadStatus
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.media.common.tv.Season
 
@@ -30,9 +31,11 @@ internal fun LazyGridScope.seriesContent(
     selectedSeason: Int,
     seasons: List<Season>,
     seasonToDisplay: Async<SeasonWithProgress>,
+    episodeDownloadStatuses: Map<Int, Async<MediaDownloadStatus>>,
     onSeasonChange: (Season) -> Unit,
     onClick: (Episode) -> Unit,
     onLongClick: (EpisodeWithProgress) -> Unit,
+    onToggleEpisodeDownload: (Episode) -> Unit,
     onRetry: () -> Unit,
 ) {
     item(span = { GridItemSpan(maxLineSpan) }) {
@@ -104,6 +107,9 @@ internal fun LazyGridScope.seriesContent(
                     episode = item,
                     onClick = { onClick(item.episode) },
                     onLongClick = onLongClick,
+                    downloadStatus = episodeDownloadStatuses[item.number]
+                        ?: Async.Success(MediaDownloadStatus.NOT_DOWNLOADED),
+                    onToggleDownload = { onToggleEpisodeDownload(item.episode) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateItem(),

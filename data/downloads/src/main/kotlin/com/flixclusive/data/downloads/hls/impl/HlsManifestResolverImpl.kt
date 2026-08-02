@@ -9,6 +9,7 @@ import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist
 import androidx.media3.exoplayer.hls.playlist.HlsPlaylist
 import androidx.media3.exoplayer.hls.playlist.HlsPlaylistParser
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
 import com.flixclusive.data.downloads.hls.HlsManifestResolver
 import com.flixclusive.data.downloads.hls.HlsResolutionResult
 import com.flixclusive.data.downloads.hls.HlsSegmentInfo
@@ -35,10 +36,11 @@ internal class HlsManifestResolverImpl @Inject constructor(
     override suspend fun resolve(
         url: String,
         headers: Map<String, String>,
+        mode: DownloadLinkSelectionMode,
     ): HlsResolutionResult =
         withContext(appDispatchers.io) {
             try {
-                resolveInternal(url, headers)
+                resolveInternal(url, headers, mode)
             } catch (e: Throwable) {
                 HlsResolutionResult.Failed(e.message ?: "Failed to resolve HLS playlist")
             }
@@ -48,6 +50,7 @@ internal class HlsManifestResolverImpl @Inject constructor(
     private fun resolveInternal(
         url: String,
         headers: Map<String, String>,
+        mode: DownloadLinkSelectionMode,
     ): HlsResolutionResult {
         val rootPlaylist = fetchAndParse(url, headers, HlsPlaylistParser())
 
@@ -55,7 +58,7 @@ internal class HlsManifestResolverImpl @Inject constructor(
         val mediaPlaylist = when (rootPlaylist) {
             is HlsMediaPlaylist -> rootPlaylist
             is HlsMultivariantPlaylist -> {
-                val variant = selectBestVariant(rootPlaylist)
+                val variant = selectVariant(rootPlaylist, mode)
                     ?: return HlsResolutionResult.Failed("No playable HLS variant with muxed audio was found")
                 mediaPlaylistUrl = variant.url.toString()
 
@@ -101,8 +104,16 @@ internal class HlsManifestResolverImpl @Inject constructor(
      * HLS spec), or its audio group's rendition has no URI of its own (meaning that audio is
      * embedded in the variant's segments too) — and it isn't a trick-play (I-frame-only) variant.
      * There's no way to fully verify muxing without inspecting the TS segments themselves.
+     *
+     * Among those usable variants, [DownloadLinkSelectionMode.QUALITY_FIRST] picks the highest
+     * resolution/bitrate and [DownloadLinkSelectionMode.SIZE_FIRST] the lowest — a variant's file
+     * size tracks its resolution directly, so there's no independent size axis to probe here the
+     * way there is for progressive links.
      */
-    private fun selectBestVariant(playlist: HlsMultivariantPlaylist): HlsMultivariantPlaylist.Variant? {
+    private fun selectVariant(
+        playlist: HlsMultivariantPlaylist,
+        mode: DownloadLinkSelectionMode,
+    ): HlsMultivariantPlaylist.Variant? {
         val usable = playlist.variants.filter { variant ->
             val mustContainAudio = variant.audioGroupId == null ||
                 playlist.audios.firstOrNull { it.groupId == variant.audioGroupId }?.url == null
@@ -110,8 +121,13 @@ internal class HlsManifestResolverImpl @Inject constructor(
             mustContainAudio && !isTrickPlay
         }
 
-        return usable.maxByOrNull { variant ->
+        val bySize = compareBy<HlsMultivariantPlaylist.Variant> { variant ->
             (variant.format.width.toLong() * variant.format.height) * 1000L + variant.format.averageBitrate
+        }
+
+        return when (mode) {
+            DownloadLinkSelectionMode.QUALITY_FIRST -> usable.maxWithOrNull(bySize)
+            DownloadLinkSelectionMode.SIZE_FIRST -> usable.minWithOrNull(bySize)
         }
     }
 

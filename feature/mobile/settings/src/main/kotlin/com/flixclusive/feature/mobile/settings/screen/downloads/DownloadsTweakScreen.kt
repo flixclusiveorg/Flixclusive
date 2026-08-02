@@ -1,7 +1,5 @@
 package com.flixclusive.feature.mobile.settings.screen.downloads
 
-import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,21 +43,27 @@ import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.navigation.navigator.NavigateBack
+import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Movie
+import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.MediaType
+import com.flixclusive.model.media.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.flow.collectLatest
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-interface NavigatorDownloadsTweakScreen : NavigateBack
+interface NavigatorDownloadsTweakScreen :
+    NavigateBack,
+    NavigateToMediaLinksBottomSheet
 
 @Destination<ExternalModuleGraph>
 @Composable
@@ -68,8 +71,6 @@ internal fun DownloadsTweakScreen(
     navigator: NavigatorDownloadsTweakScreen,
     viewModel: DownloadsTweakViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val stateFilters by viewModel.stateFilters.collectAsStateWithLifecycle()
@@ -78,7 +79,11 @@ internal fun DownloadsTweakScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
             when (event) {
-                is DownloadsTweakEvent.OpenFile -> openDownloadedFile(context, event.file)
+                is DownloadsTweakEvent.OpenFile -> navigator.showPlayerSplashScreen(
+                    media = event.item.toPlayableMediaMetadata(),
+                    episode = event.item.toPlayableEpisode(),
+                    initialStreamUrl = event.file.uri.toString(),
+                )
             }
         }
     }
@@ -103,14 +108,44 @@ internal fun DownloadsTweakScreen(
     )
 }
 
-private fun openDownloadedFile(context: Context, file: CompletedDownloadFile) {
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(file.uri, file.mimeType)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    context.startActivity(intent)
+/**
+ * Downloads don't retain the provider they were fetched from, so a minimal, non-partial
+ * [MediaMetadata] is synthesized here purely to satisfy the player's nav args — the player
+ * falls back to [initialStreamUrl] as the local file to play instead of resolving links.
+ */
+private fun DownloadItem.toPlayableMediaMetadata(): MediaMetadata = when (mediaType) {
+    MediaType.MOVIE -> Movie(
+        id = mediaId,
+        title = mediaTitle,
+        providerId = LOCAL_DOWNLOAD_PROVIDER_ID,
+        posterImage = null,
+    )
+
+    MediaType.SHOW -> Show(
+        id = mediaId,
+        title = mediaTitle,
+        providerId = LOCAL_DOWNLOAD_PROVIDER_ID,
+        posterImage = null,
+        seasons = emptyList(),
+        totalEpisodes = 0,
+        totalSeasons = 0,
+    )
 }
+
+private fun DownloadItem.toPlayableEpisode(): Episode? {
+    val season = seasonNumber ?: return null
+    val episode = episodeNumber ?: return null
+
+    return Episode(
+        id = "$mediaId-$season-$episode",
+        number = episode,
+        season = season,
+        isReleased = true,
+        title = episodeTitle,
+    )
+}
+
+private const val LOCAL_DOWNLOAD_PROVIDER_ID = "local-download"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

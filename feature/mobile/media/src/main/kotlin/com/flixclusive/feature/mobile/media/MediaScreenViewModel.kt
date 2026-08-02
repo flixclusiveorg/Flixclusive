@@ -12,6 +12,8 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.database.entity.downloads.DownloadItem
+import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
@@ -21,14 +23,21 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
+import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
+import com.flixclusive.domain.downloads.controller.MediaDownloadController
+import com.flixclusive.domain.downloads.model.MediaDownloadRequest
+import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadBatchUseCase
+import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetDownloadableMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
@@ -43,6 +52,7 @@ import com.flixclusive.feature.mobile.media.LibraryListAndState.Companion.toLibr
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.tracker.TrackerList
@@ -58,6 +68,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -70,6 +81,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -97,6 +109,11 @@ class MediaScreenViewModel @AssistedInject constructor(
     private val toggleListItemOnTrackerList: ToggleListItemOnTrackerListUseCase,
     private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
     private val syncFromScrobblers: SyncFromScrobblersUseCase,
+    private val getDownloadableMediaLinks: GetDownloadableMediaLinksUseCase,
+    private val queueMediaDownload: QueueMediaDownloadUseCase,
+    private val queueMediaDownloadBatch: QueueMediaDownloadBatchUseCase,
+    private val mediaDownloadController: MediaDownloadController,
+    private val mediaDownloadRepository: MediaDownloadRepository,
     @Assisted private val navArgMedia: MediaMetadata,
 ) : ViewModel() {
     @AssistedFactory
@@ -213,6 +230,218 @@ class MediaScreenViewModel @AssistedInject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = Async.Loading
         )
+
+    /**
+     * Transient overrides layered on top of the persisted [DownloadItem] state — used to show
+     * [Async.Loading] while resolving/queueing a download (before any [DownloadItem] row exists
+     * yet to read state from) and [Async.Failure] when resolution/queueing fails outright.
+     * Cleared once the corresponding [DownloadItem] exists (or on success).
+     */
+    private val downloadOverrides = MutableStateFlow<Map<DownloadScopeKey, Async<Unit>>>(emptyMap())
+
+    /**
+     * The download status shown on [com.flixclusive.feature.mobile.media.component.HeaderButtons]:
+     * the movie's own download for a [com.flixclusive.model.media.Movie], or the aggregate of the
+     * currently selected season's episodes for a [Show].
+     */
+    val downloadStatus: StateFlow<Async<MediaDownloadStatus>> = combine(
+        _metadata.filterNotNull(),
+        uiState.mapLatest { it.selectedSeason }.distinctUntilChanged(),
+        downloadOverrides,
+    ) { media, season, overrides -> Triple(media, season, overrides) }
+        .flatMapLatest { (media, season, overrides) ->
+            val key = headerDownloadKey(media, season)
+            val itemsFlow = when {
+                media is Show && season != null -> mediaDownloadRepository.observeBatch(media.id, season)
+                media is Show -> flowOf(emptyList())
+                else -> mediaDownloadRepository.observeAllItems().mapLatest { items ->
+                    items.filter { it.mediaId == media.id && it.seasonNumber == null }
+                }
+            }
+
+            itemsFlow.mapLatest { items -> deriveAsyncStatus(items, overrides[key]) }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = Async.Loading,
+        )
+
+    /** Per-episode download status for the currently selected season, keyed by episode number. */
+    val episodeDownloadStatuses: StateFlow<Map<Int, Async<MediaDownloadStatus>>> = combine(
+        _metadata.filterIsInstance<Show>(),
+        uiState.mapLatest { it.selectedSeason }.filterNotNull().distinctUntilChanged(),
+        downloadOverrides,
+    ) { show, season, overrides -> Triple(show, season, overrides) }
+        .flatMapLatest { (show, season, overrides) ->
+            mediaDownloadRepository.observeBatch(show.id, season).mapLatest { items ->
+                val byEpisode = items.filter { it.episodeNumber != null }.groupBy { it.episodeNumber!! }
+                val overrideEpisodes = overrides.keys
+                    .filterIsInstance<DownloadScopeKey.Episode>()
+                    .filter { it.mediaId == show.id && it.seasonNumber == season }
+                    .map { it.episodeNumber }
+
+                (byEpisode.keys + overrideEpisodes).associateWith { episodeNumber ->
+                    deriveAsyncStatus(
+                        items = byEpisode[episodeNumber].orEmpty(),
+                        override = overrides[DownloadScopeKey.Episode(show.id, season, episodeNumber)],
+                    )
+                }
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyMap(),
+        )
+
+    private fun headerDownloadKey(
+        media: MediaMetadata,
+        season: Int?,
+    ): DownloadScopeKey {
+        return if (media is Show && season != null) {
+            DownloadScopeKey.Season(media.id, season)
+        } else {
+            DownloadScopeKey.Movie(media.id)
+        }
+    }
+
+    private fun deriveAsyncStatus(
+        items: List<DownloadItem>,
+        override: Async<Unit>?,
+    ): Async<MediaDownloadStatus> {
+        if (override is Async.Loading) return Async.Loading
+        if (override is Async.Failure) return Async.Failure(override.message, override.cause)
+        return Async.Success(deriveDownloadStatus(items))
+    }
+
+    private fun deriveDownloadStatus(items: List<DownloadItem>): MediaDownloadStatus {
+        if (items.isEmpty()) return MediaDownloadStatus.NOT_DOWNLOADED
+        if (items.any { !it.state.isTerminal }) return MediaDownloadStatus.IN_PROGRESS
+        if (items.all { it.state == DownloadItemState.COMPLETED }) return MediaDownloadStatus.DOWNLOADED
+        return MediaDownloadStatus.NOT_DOWNLOADED
+    }
+
+    /** Toggles the download shown on [com.flixclusive.feature.mobile.media.component.HeaderButtons]. */
+    fun onToggleDownload() {
+        val media = _metadata.value ?: return
+        val season = uiState.value.selectedSeason
+
+        appDispatchers.ioScope.launch {
+            if (media is Show) {
+                if (season == null) return@launch
+                toggleSeasonDownload(media, season)
+            } else {
+                toggleMovieDownload(media)
+            }
+        }
+    }
+
+    /** Toggles the download for a single episode, shown on [EpisodeWithProgress]'s episode card. */
+    fun onToggleEpisodeDownload(episode: Episode) {
+        val show = _metadata.value as? Show ?: return
+
+        appDispatchers.ioScope.launch {
+            toggleEpisodeDownload(show, episode)
+        }
+    }
+
+    private suspend fun toggleMovieDownload(media: MediaMetadata) {
+        val existing = mediaDownloadRepository
+            .observeAllItems()
+            .first()
+            .firstOrNull { it.mediaId == media.id && it.seasonNumber == null }
+
+        when {
+            existing == null -> resolveAndQueue(DownloadScopeKey.Movie(media.id), media, episode = null)
+            !existing.state.isTerminal -> mediaDownloadController.stop(existing.id)
+            existing.state == DownloadItemState.COMPLETED -> Unit
+            else -> mediaDownloadController.retry(existing.id)
+        }
+    }
+
+    private suspend fun toggleEpisodeDownload(show: Show, episode: Episode) {
+        val existing = mediaDownloadRepository
+            .getBatch(show.id, episode.season)
+            .firstOrNull { it.episodeNumber == episode.number }
+
+        when {
+            existing == null -> resolveAndQueue(
+                key = DownloadScopeKey.Episode(show.id, episode.season, episode.number),
+                media = show,
+                episode = episode,
+            )
+            !existing.state.isTerminal -> mediaDownloadController.stop(existing.id)
+            existing.state == DownloadItemState.COMPLETED -> Unit
+            else -> mediaDownloadController.retry(existing.id)
+        }
+    }
+
+    private suspend fun toggleSeasonDownload(show: Show, seasonNumber: Int) {
+        val key = DownloadScopeKey.Season(show.id, seasonNumber)
+        val existingBatch = mediaDownloadRepository.getBatch(show.id, seasonNumber)
+
+        if (existingBatch.any { !it.state.isTerminal }) {
+            mediaDownloadController.stopBatch(show.id, seasonNumber)
+            return
+        }
+
+        val retryable = existingBatch.filter { it.state.isTerminal && it.state != DownloadItemState.COMPLETED }
+        if (retryable.isNotEmpty()) {
+            retryable.forEach { mediaDownloadController.retry(it.id) }
+            return
+        }
+
+        if (existingBatch.isNotEmpty() && existingBatch.all { it.state == DownloadItemState.COMPLETED }) {
+            return
+        }
+
+        val season = show.getSeason(seasonNumber) as? Season.Full ?: return
+        val alreadyQueued = existingBatch.mapNotNull { it.episodeNumber }.toSet()
+        val episodesToQueue = season.episodes.filterNot { it.number in alreadyQueued }
+        if (episodesToQueue.isEmpty()) return
+
+        downloadOverrides.update { it + (key to Async.Loading) }
+
+        val resolved = episodesToQueue.mapAsync { episode -> episode to getDownloadableMediaLinks(show, episode) }
+        val requests = resolved.mapNotNull { (episode, result) ->
+            (result as? Async.Success)?.data?.let { data ->
+                MediaDownloadRequest(media = show, episode = episode, streams = data.streams, subtitle = data.subtitle)
+            }
+        }
+
+        if (requests.isEmpty()) {
+            val message = resolved.firstNotNullOfOrNull { (_, result) -> (result as? Async.Failure)?.message }
+                ?: UiText.from(R.string.download_batch_failed_message)
+            downloadOverrides.update { it + (key to Async.Failure(message)) }
+            return
+        }
+
+        queueMediaDownloadBatch(requests)
+        downloadOverrides.update { it - key }
+    }
+
+    private suspend fun resolveAndQueue(
+        key: DownloadScopeKey,
+        media: MediaMetadata,
+        episode: Episode?,
+    ) {
+        downloadOverrides.update { it + (key to Async.Loading) }
+
+        val links = getDownloadableMediaLinks(media, episode)
+        if (links is Async.Failure) {
+            downloadOverrides.update { it + (key to Async.Failure(links.message, links.cause)) }
+            return
+        }
+
+        val data = (links as Async.Success).data
+        val queued = queueMediaDownload(media, episode, data.streams, data.subtitle)
+        if (queued is Async.Failure) {
+            downloadOverrides.update { it + (key to Async.Failure(queued.message, queued.cause)) }
+            return
+        }
+
+        mediaDownloadController.start((queued as Async.Success).data)
+        downloadOverrides.update { it - key }
+    }
 
     @OptIn(FlowPreview::class)
     private fun syncWatchProgressFromScrobblers() {
@@ -702,4 +931,28 @@ enum class MediaScreenState {
     Loading,
     Error,
     Success,
+}
+
+enum class MediaDownloadStatus {
+    NOT_DOWNLOADED,
+    IN_PROGRESS,
+    DOWNLOADED,
+}
+
+/** Identifies which download this ViewModel's transient override state (`downloadOverrides`) belongs to. */
+private sealed interface DownloadScopeKey {
+    data class Movie(
+        val mediaId: String
+    ) : DownloadScopeKey
+
+    data class Season(
+        val mediaId: String,
+        val seasonNumber: Int
+    ) : DownloadScopeKey
+
+    data class Episode(
+        val mediaId: String,
+        val seasonNumber: Int,
+        val episodeNumber: Int
+    ) : DownloadScopeKey
 }

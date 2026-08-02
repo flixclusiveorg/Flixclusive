@@ -92,7 +92,7 @@ internal class DownloadsTweakViewModel @Inject constructor(
     fun onOpen(item: DownloadItem) {
         viewModelScope.launch {
             val file = getCompletedDownloadFile(item) ?: return@launch
-            _event.emit(DownloadsTweakEvent.OpenFile(file))
+            _event.emit(DownloadsTweakEvent.OpenFile(item, file))
         }
     }
 
@@ -122,6 +122,7 @@ private fun <T> Set<T>.toggle(value: T): Set<T> = if (value in this) this - valu
 
 internal sealed class DownloadsTweakEvent {
     data class OpenFile(
+        val item: DownloadItem,
         val file: CompletedDownloadFile,
     ) : DownloadsTweakEvent()
 }

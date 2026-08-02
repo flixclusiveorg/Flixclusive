@@ -291,7 +291,7 @@ class MediaDownloadControllerImplTest {
             coEvery { mediaDownloadRepository.getItem(1) } returns testItem(isHlsStream = true)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap())
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
             } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
             coEvery {
                 mediaDownloadRepository.runHlsTransfer(1, segments, 0, emptyMap(), streamFile)
@@ -322,7 +322,7 @@ class MediaDownloadControllerImplTest {
             } returns testItem(isHlsStream = true, streamBytesDownloaded = 3)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap())
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
             } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
             coEvery {
                 mediaDownloadRepository.runHlsTransfer(1, segments, 3, emptyMap(), streamFile)
@@ -340,7 +340,7 @@ class MediaDownloadControllerImplTest {
             coEvery { mediaDownloadRepository.getItem(1) } returns testItem(isHlsStream = true)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap())
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
             } returns HlsResolutionResult.Failed("manifest not found")
             coEvery { mediaDownloadRepository.advanceStreamCandidate(1) } returns null
 

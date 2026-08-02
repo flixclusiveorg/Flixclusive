@@ -214,7 +214,11 @@ private fun DownloadItem.progress(): Float? {
 
 @Composable
 private fun DownloadItem.subtitleLabel(): String {
-    val stateLabel = state.label()
+    val stateLabel = if (state == DownloadItemState.FAILED && !errorMessage.isNullOrBlank()) {
+        errorMessage.orEmpty()
+    } else {
+        state.label()
+    }
     val season = seasonNumber
     val episode = episodeNumber
 

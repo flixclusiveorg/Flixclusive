@@ -1,6 +1,7 @@
 package com.flixclusive.data.downloads.hls.impl
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.data.downloads.hls.HlsResolutionResult
@@ -78,7 +79,11 @@ class HlsManifestResolverImplTest {
         runTest(testDispatcher) {
             server.enqueue(MockResponse().setBody(vodMediaPlaylist))
 
-            val result = resolver.resolve(server.url("/media.m3u8").toString(), emptyMap())
+            val result = resolver.resolve(
+                server.url("/media.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSelectionMode.QUALITY_FIRST
+            )
 
             expectThat(result)
                 .isA<HlsResolutionResult.Success>()
@@ -91,30 +96,54 @@ class HlsManifestResolverImplTest {
         runTest(testDispatcher) {
             server.enqueue(MockResponse().setBody(liveMediaPlaylist))
 
-            val result = resolver.resolve(server.url("/media.m3u8").toString(), emptyMap())
+            val result = resolver.resolve(
+                server.url("/media.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSelectionMode.QUALITY_FIRST
+            )
 
             expectThat(result).isA<HlsResolutionResult.Failed>()
         }
 
-    @Test
-    fun resolveShouldSelectBestMuxedAudioVariantFromMasterPlaylist() =
-        runTest(testDispatcher) {
-            val master = """
-                #EXTM3U
-                #EXT-X-VERSION:3
-                #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360,CODECS="avc1.640028,mp4a.40.2"
-                low.m3u8
-                #EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720,CODECS="avc1.640028,mp4a.40.2"
-                high.m3u8
-            """.trimIndent()
+    private val twoVariantMaster = """
+        #EXTM3U
+        #EXT-X-VERSION:3
+        #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360,CODECS="avc1.640028,mp4a.40.2"
+        low.m3u8
+        #EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720,CODECS="avc1.640028,mp4a.40.2"
+        high.m3u8
+    """.trimIndent()
 
-            server.enqueue(MockResponse().setBody(master))
+    @Test
+    fun resolveShouldSelectHighestQualityVariantWhenQualityFirst() =
+        runTest(testDispatcher) {
+            server.enqueue(MockResponse().setBody(twoVariantMaster))
             server.enqueue(MockResponse().setBody(vodMediaPlaylist))
 
-            resolver.resolve(server.url("/master.m3u8").toString(), emptyMap())
+            resolver.resolve(
+                server.url("/master.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSelectionMode.QUALITY_FIRST
+            )
 
             val requestedPaths = listOf(server.takeRequest().path, server.takeRequest().path)
             expectThat(requestedPaths).isEqualTo(listOf("/master.m3u8", "/high.m3u8"))
+        }
+
+    @Test
+    fun resolveShouldSelectLowestQualityVariantWhenSizeFirst() =
+        runTest(testDispatcher) {
+            server.enqueue(MockResponse().setBody(twoVariantMaster))
+            server.enqueue(MockResponse().setBody(vodMediaPlaylist))
+
+            resolver.resolve(
+                server.url("/master.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSelectionMode.SIZE_FIRST
+            )
+
+            val requestedPaths = listOf(server.takeRequest().path, server.takeRequest().path)
+            expectThat(requestedPaths).isEqualTo(listOf("/master.m3u8", "/low.m3u8"))
         }
 
     @Test
@@ -130,7 +159,11 @@ class HlsManifestResolverImplTest {
 
             server.enqueue(MockResponse().setBody(master))
 
-            val result = resolver.resolve(server.url("/master.m3u8").toString(), emptyMap())
+            val result = resolver.resolve(
+                server.url("/master.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSelectionMode.QUALITY_FIRST
+            )
 
             expectThat(result).isA<HlsResolutionResult.Failed>()
         }
@@ -150,7 +183,11 @@ class HlsManifestResolverImplTest {
 
             server.enqueue(MockResponse().setBody(encryptedPlaylist))
 
-            val result = resolver.resolve(server.url("/media.m3u8").toString(), emptyMap())
+            val result = resolver.resolve(
+                server.url("/media.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSelectionMode.QUALITY_FIRST
+            )
 
             expectThat(result)
                 .isA<HlsResolutionResult.Success>()
