@@ -28,6 +28,8 @@
     <string name="warning_install_message_second_half">By proceeding with the installation, you acknowledge that you understand the risks involved, and any resulting damage will be your responsibility. Are you sure you want to continue?</string>
     <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
     <string name="no_available_providers">No available providers</string>
+    <string name="no_download_links_available">No download links available</string>
+    <string name="download_link_resolution_failed">Unable to find a working download link</string>
 
     <!--  Errors with formatting  -->
     <plurals name="warning_install_message_first_half">

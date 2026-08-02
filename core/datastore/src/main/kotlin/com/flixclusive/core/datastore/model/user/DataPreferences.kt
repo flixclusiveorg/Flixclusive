@@ -1,5 +1,6 @@
 package com.flixclusive.core.datastore.model.user
 
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -25,6 +26,12 @@ data class DataPreferences(
      * - `0` means dead streams are removed immediately on the next cleanup run.
      */
     val deadLinkRetentionDays: Int = DEFAULT_DEAD_LINK_RETENTION_DAYS,
+    /**
+     * Preference for ranking candidate streaming links when starting a download:
+     * closest to the player's preferred quality first, or largest known size first.
+     * Speed is always the secondary sort key.
+     */
+    val downloadLinkSelectionMode: DownloadLinkSelectionMode = DownloadLinkSelectionMode.QUALITY_FIRST,
 ) : UserPreferences
 
 private const val DEFAULT_AUTO_BACKUP_FREQUENCY_DAYS = 7
