@@ -1,5 +1,7 @@
 package com.flixclusive.data.downloads.transfer.impl
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.flixclusive.core.database.entity.downloads.DownloadChunk
 import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
@@ -17,12 +19,19 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 import java.io.File
 import java.io.RandomAccessFile
 
+/**
+ * Instrumented, not a JVM unit test: [MediaTransferEngineImpl] opens destination files through
+ * [android.content.ContentResolver.openFileDescriptor], which needs a real Android [Context] —
+ * same reasoning as [com.flixclusive.data.downloads.hls.impl.HlsManifestResolverImplTest].
+ */
+@RunWith(AndroidJUnit4::class)
 class MediaTransferEngineImplTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var server: MockWebServer
@@ -39,6 +48,7 @@ class MediaTransferEngineImplTest {
 
         engine = MediaTransferEngineImpl(
             client = OkHttpClient(),
+            context = InstrumentationRegistry.getInstrumentation().targetContext,
             appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
         )
 
@@ -68,7 +78,7 @@ class MediaTransferEngineImplTest {
     )
 
     @Test
-    fun `transfer should download a single chunk fully and write it to the destination file`() =
+    fun transferShouldDownloadSingleChunkFullyAndWriteItToDestinationFile() =
         runTest(testDispatcher) {
             val content = "hello world".repeat(100)
             server.enqueue(MockResponse().setBody(content))
@@ -88,7 +98,7 @@ class MediaTransferEngineImplTest {
         }
 
     @Test
-    fun `transfer should stop early and report Cancelled when interrupted mid-download`() =
+    fun transferShouldStopEarlyAndReportCancelledWhenInterruptedMidDownload() =
         runTest(testDispatcher) {
             val content = "x".repeat(50_000)
             server.enqueue(MockResponse().setBody(content))
@@ -106,7 +116,7 @@ class MediaTransferEngineImplTest {
         }
 
     @Test
-    fun `transfer should resume from the chunk's persisted offset using a Range header`() =
+    fun transferShouldResumeFromChunksPersistedOffsetUsingRangeHeader() =
         runTest(testDispatcher) {
             val fullContent = "0123456789".repeat(20)
             val alreadyDownloaded = 50L
@@ -133,7 +143,7 @@ class MediaTransferEngineImplTest {
         }
 
     @Test
-    fun `transfer should report Failed when a chunk exhausts its retries`() =
+    fun transferShouldReportFailedWhenChunkExhaustsItsRetries() =
         runTest(testDispatcher) {
             repeat(3) { server.enqueue(MockResponse().setResponseCode(500)) }
 
@@ -151,7 +161,7 @@ class MediaTransferEngineImplTest {
         }
 
     @Test
-    fun `transfer should download multiple chunks in parallel into their own byte ranges`() =
+    fun transferShouldDownloadMultipleChunksInParallelIntoTheirOwnByteRanges() =
         runTest(testDispatcher) {
             val fullContent = ('a'..'z').joinToString("").repeat(400)
             server.dispatcher = object : Dispatcher() {
@@ -186,7 +196,7 @@ class MediaTransferEngineImplTest {
         }
 
     @Test
-    fun `transfer should report Failed when a chunk under-delivers fewer bytes than its declared range`() =
+    fun transferShouldReportFailedWhenChunkUnderDeliversFewerBytesThanItsDeclaredRange() =
         runTest(testDispatcher) {
             // Every attempt (including retries, which resume from the offset already written)
             // delivers only 10 more bytes, so the cumulative total across all 3 attempts (30

@@ -1,5 +1,6 @@
 package com.flixclusive.data.downloads.transfer.impl
 
+import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.entity.downloads.DownloadChunk
 import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
@@ -7,17 +8,21 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.hippo.unifile.UniFile
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.ByteBuffer
 import javax.inject.Inject
 
 internal class MediaTransferEngineImpl @Inject constructor(
     client: OkHttpClient,
+    @param:ApplicationContext private val context: Context,
     private val appDispatchers: AppDispatchers,
 ) : MediaTransferEngine {
     private val client by lazy {
@@ -114,36 +119,49 @@ internal class MediaTransferEngineImpl @Inject constructor(
                 throw IOException("Chunk request failed: ${response.code}")
             }
 
-            val randomAccessFile = destinationFile.createRandomAccessFile("rw")
+            // Concurrent chunks write to disjoint byte ranges of the same destination file, so
+            // this needs true random access — unlike the HLS engine, an append-only OutputStream
+            // won't do. UniFile.createRandomAccessFile() would work, but it needs a reflection
+            // trick to get seekable access to a SAF-backed file that can fail outright on some
+            // devices. ParcelFileDescriptor gives the same seek+write semantics through a real,
+            // non-reflective file descriptor instead.
+            val pfd = context.contentResolver.openFileDescriptor(destinationFile.uri, "rw")
+                ?: throw IOException("Failed to open ${destinationFile.uri} for writing")
+
             try {
-                randomAccessFile.seek(rangeStart)
+                FileOutputStream(pfd.fileDescriptor).channel.use { channel ->
+                    channel.position(rangeStart)
 
-                val source = response.body.source()
-                val buffer = ByteArray(TRANSFER_BUFFER_BYTES)
-                var written = startOffset
+                    val source = response.body.source()
+                    val buffer = ByteArray(TRANSFER_BUFFER_BYTES)
+                    var written = startOffset
 
-                while (true) {
-                    if (shouldInterrupt()) return false
+                    while (true) {
+                        if (shouldInterrupt()) return false
 
-                    val read = source.read(buffer)
-                    if (read == -1) {
-                        // A 200/206 response can still end early on a flaky connection or a
-                        // misbehaving CDN; treat under-delivery as a failure so it retries
-                        // instead of silently completing with a truncated file.
-                        if (expectedBytes != null && written < expectedBytes) {
-                            throw IOException(
-                                "Chunk ${chunk.chunkIndex} under-delivered: expected $expectedBytes bytes, got $written"
-                            )
+                        val read = source.read(buffer)
+                        if (read == -1) {
+                            // A 200/206 response can still end early on a flaky connection or a
+                            // misbehaving CDN; treat under-delivery as a failure so it retries
+                            // instead of silently completing with a truncated file.
+                            if (expectedBytes != null && written < expectedBytes) {
+                                throw IOException(
+                                    "Chunk ${chunk.chunkIndex} under-delivered: expected $expectedBytes bytes, got $written"
+                                )
+                            }
+                            return true
                         }
-                        return true
-                    }
 
-                    randomAccessFile.write(buffer, 0, read)
-                    written += read
-                    onBytesWritten(written)
+                        val byteBuffer = ByteBuffer.wrap(buffer, 0, read)
+                        while (byteBuffer.hasRemaining()) {
+                            channel.write(byteBuffer)
+                        }
+                        written += read
+                        onBytesWritten(written)
+                    }
                 }
             } finally {
-                randomAccessFile.close()
+                pfd.close()
             }
         }
     }
