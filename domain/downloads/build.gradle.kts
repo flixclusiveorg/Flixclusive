@@ -10,6 +10,7 @@ android {
 
 dependencies {
     implementation(projects.coreCommon)
+    implementation(projects.coreDatabase)
     implementation(projects.coreNetwork)
     implementation(projects.coreDatastore)
     implementation(projects.coreStrings)

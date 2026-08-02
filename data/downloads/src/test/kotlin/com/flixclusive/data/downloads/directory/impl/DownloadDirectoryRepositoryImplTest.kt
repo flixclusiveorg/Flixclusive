@@ -1,7 +1,5 @@
 package com.flixclusive.data.downloads.directory.impl
 
-import com.flixclusive.model.media.Movie
-import com.flixclusive.model.media.common.tv.Episode
 import com.hippo.unifile.UniFile
 import io.mockk.every
 import io.mockk.mockk
@@ -16,19 +14,8 @@ import strikt.assertions.isNull
 class DownloadDirectoryRepositoryImplTest {
     private lateinit var repository: DownloadDirectoryRepositoryImpl
 
-    private val testMovie = Movie(
-        id = "123",
-        title = "Test Movie",
-        providerId = "test-provider",
-        posterImage = null,
-    )
-
-    private val testEpisode = Episode(
-        id = "ep-1",
-        number = 1,
-        season = 1,
-        isReleased = true,
-    )
+    private val mediaId = "123"
+    private val mediaTitle = "Test Movie"
 
     @Before
     fun setup() {
@@ -51,7 +38,7 @@ class DownloadDirectoryRepositoryImplTest {
     fun `getOrCreateMediaDirectory should create Downloads and movie folders when absent`() {
         val root = mockDirectory()
 
-        val result = repository.getOrCreateMediaDirectory(root, testMovie, episode = null)
+        val result = repository.getOrCreateMediaDirectory(root, mediaId, mediaTitle)
 
         expectThat(result).isNotNull()
         verify { root.createDirectory("Downloads") }
@@ -62,27 +49,27 @@ class DownloadDirectoryRepositoryImplTest {
         val existingDownloadsDir = mockDirectory()
         val root = mockDirectory(mutableMapOf("Downloads" to existingDownloadsDir))
 
-        repository.getOrCreateMediaDirectory(root, testMovie, episode = null)
+        repository.getOrCreateMediaDirectory(root, mediaId, mediaTitle)
 
         verify(exactly = 0) { root.createDirectory("Downloads") }
         verify { existingDownloadsDir.createDirectory("123-Test Movie") }
     }
 
     @Test
-    fun `getOrCreateMediaDirectory should return the media folder when episode is null`() {
+    fun `getOrCreateMediaDirectory should return the media folder when season and episode are null`() {
         val downloadsDir = mockDirectory()
         val mediaDir = mockDirectory()
         every { downloadsDir.findFile("123-Test Movie") } returns null
         every { downloadsDir.createDirectory("123-Test Movie") } returns mediaDir
         val root = mockDirectory(mutableMapOf("Downloads" to downloadsDir))
 
-        val result = repository.getOrCreateMediaDirectory(root, testMovie, episode = null)
+        val result = repository.getOrCreateMediaDirectory(root, mediaId, mediaTitle)
 
         expectThat(result).isEqualTo(mediaDir)
     }
 
     @Test
-    fun `getOrCreateMediaDirectory should also create the episode folder when episode is provided`() {
+    fun `getOrCreateMediaDirectory should also create the episode folder when season and episode are provided`() {
         val downloadsDir = mockDirectory()
         val mediaDir = mockDirectory()
         val episodeDir = mockDirectory()
@@ -90,7 +77,13 @@ class DownloadDirectoryRepositoryImplTest {
         every { mediaDir.createDirectory("s01e01") } returns episodeDir
         val root = mockDirectory(mutableMapOf("Downloads" to downloadsDir))
 
-        val result = repository.getOrCreateMediaDirectory(root, testMovie, testEpisode)
+        val result = repository.getOrCreateMediaDirectory(
+            root,
+            mediaId,
+            mediaTitle,
+            seasonNumber = 1,
+            episodeNumber = 1
+        )
 
         expectThat(result).isEqualTo(episodeDir)
         verify { mediaDir.createDirectory("s01e01") }
@@ -102,7 +95,7 @@ class DownloadDirectoryRepositoryImplTest {
         every { root.findFile(any()) } returns null
         every { root.createDirectory(any()) } returns null
 
-        val result = repository.getOrCreateMediaDirectory(root, testMovie, episode = null)
+        val result = repository.getOrCreateMediaDirectory(root, mediaId, mediaTitle)
 
         expectThat(result).isNull()
     }
@@ -114,5 +107,29 @@ class DownloadDirectoryRepositoryImplTest {
         repository.getOrCreateSubtitlesDirectory(mediaDirectory)
 
         verify { mediaDirectory.createDirectory("subtitles") }
+    }
+
+    @Test
+    fun `getOrCreateFile should reuse an existing file instead of recreating it`() {
+        val existingFile = mockk<UniFile>()
+        val directory = mockk<UniFile>()
+        every { directory.findFile("Pilot.mp4") } returns existingFile
+
+        val result = repository.getOrCreateFile(directory, "Pilot.mp4")
+
+        expectThat(result).isEqualTo(existingFile)
+        verify(exactly = 0) { directory.createFile(any()) }
+    }
+
+    @Test
+    fun `getOrCreateFile should create the file when it does not exist`() {
+        val createdFile = mockk<UniFile>()
+        val directory = mockk<UniFile>()
+        every { directory.findFile("Pilot.mp4") } returns null
+        every { directory.createFile("Pilot.mp4") } returns createdFile
+
+        val result = repository.getOrCreateFile(directory, "Pilot.mp4")
+
+        expectThat(result).isEqualTo(createdFile)
     }
 }

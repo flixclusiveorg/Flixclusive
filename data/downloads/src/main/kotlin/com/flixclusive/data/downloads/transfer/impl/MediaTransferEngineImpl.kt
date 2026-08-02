@@ -1,0 +1,150 @@
+package com.flixclusive.data.downloads.transfer.impl
+
+import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.database.entity.downloads.DownloadChunk
+import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
+import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.data.downloads.transfer.MediaTransferEngine
+import com.flixclusive.data.downloads.transfer.MediaTransferResult
+import com.hippo.unifile.UniFile
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
+import javax.inject.Inject
+
+internal class MediaTransferEngineImpl @Inject constructor(
+    client: OkHttpClient,
+    private val appDispatchers: AppDispatchers,
+) : MediaTransferEngine {
+    private val client by lazy {
+        client
+            .newBuilder()
+            .cache(null)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .build()
+    }
+
+    override suspend fun transfer(
+        chunks: List<DownloadChunk>,
+        url: String,
+        headers: Map<String, String>,
+        destinationFile: UniFile,
+        shouldInterrupt: () -> Boolean,
+        onChunkProgress: suspend (Long, Long, DownloadChunkStatus) -> Unit,
+    ): MediaTransferResult =
+        withContext(appDispatchers.io) {
+            val outcomes =
+                coroutineScope {
+                    chunks
+                        .filter { it.status != DownloadChunkStatus.COMPLETED }
+                        .map { chunk ->
+                            async {
+                                transferChunk(chunk, url, headers, destinationFile, shouldInterrupt, onChunkProgress)
+                            }
+                        }.awaitAll()
+                }
+
+            when {
+                outcomes.any { it == ChunkOutcome.INTERRUPTED } -> MediaTransferResult.Cancelled
+                outcomes.all { it == ChunkOutcome.COMPLETED } -> MediaTransferResult.Completed
+                else -> MediaTransferResult.Failed(IOException("One or more chunks failed to download"))
+            }
+        }
+
+    private suspend fun transferChunk(
+        chunk: DownloadChunk,
+        url: String,
+        headers: Map<String, String>,
+        destinationFile: UniFile,
+        shouldInterrupt: () -> Boolean,
+        onChunkProgress: suspend (Long, Long, DownloadChunkStatus) -> Unit,
+    ): ChunkOutcome {
+        var offset = chunk.bytesDownloaded
+        var attempt = 0
+
+        while (attempt < MAX_CHUNK_RETRIES) {
+            try {
+                val completed =
+                    downloadChunkOnce(chunk, offset, url, headers, destinationFile, shouldInterrupt) { bytesWritten ->
+                        offset = bytesWritten
+                        onChunkProgress(chunk.id, bytesWritten, DownloadChunkStatus.DOWNLOADING)
+                    }
+
+                if (completed) {
+                    onChunkProgress(chunk.id, offset, DownloadChunkStatus.COMPLETED)
+                    return ChunkOutcome.COMPLETED
+                }
+
+                return ChunkOutcome.INTERRUPTED
+            } catch (e: Throwable) {
+                errorLog("Chunk ${chunk.chunkIndex} failed (attempt ${attempt + 1}): ${e.message}")
+                attempt++
+            }
+        }
+
+        onChunkProgress(chunk.id, offset, DownloadChunkStatus.FAILED)
+        return ChunkOutcome.FAILED
+    }
+
+    /** Returns `true` if the chunk's full range was written, `false` if interrupted (paused/stopped) partway. */
+    private suspend fun downloadChunkOnce(
+        chunk: DownloadChunk,
+        startOffset: Long,
+        url: String,
+        headers: Map<String, String>,
+        destinationFile: UniFile,
+        shouldInterrupt: () -> Boolean,
+        onBytesWritten: suspend (Long) -> Unit,
+    ): Boolean {
+        val isOpenEnded = chunk.rangeEnd < 0
+        val rangeStart = chunk.rangeStart + startOffset
+        val rangeHeader = if (isOpenEnded) "bytes=$rangeStart-" else "bytes=$rangeStart-${chunk.rangeEnd}"
+
+        val requestBuilder = Request.Builder().url(url).addHeader("Range", rangeHeader)
+        headers.forEach { (name, value) -> requestBuilder.addHeader(name, value) }
+
+        client.newCall(requestBuilder.build()).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("Chunk request failed: ${response.code}")
+            }
+
+            val randomAccessFile = destinationFile.createRandomAccessFile("rw")
+            try {
+                randomAccessFile.seek(rangeStart)
+
+                val source = response.body.source()
+                val buffer = ByteArray(TRANSFER_BUFFER_BYTES)
+                var written = startOffset
+
+                while (true) {
+                    if (shouldInterrupt()) return false
+
+                    val read = source.read(buffer)
+                    if (read == -1) return true
+
+                    randomAccessFile.write(buffer, 0, read)
+                    written += read
+                    onBytesWritten(written)
+                }
+            } finally {
+                randomAccessFile.close()
+            }
+        }
+    }
+
+    private enum class ChunkOutcome {
+        COMPLETED,
+        INTERRUPTED,
+        FAILED,
+    }
+
+    companion object {
+        private const val MAX_CHUNK_RETRIES = 3
+        private const val TRANSFER_BUFFER_BYTES = 16 * 1024
+    }
+}

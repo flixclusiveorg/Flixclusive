@@ -1,19 +1,24 @@
 package com.flixclusive.domain.downloads.di
 
 import com.flixclusive.domain.downloads.controller.DownloadServiceController
+import com.flixclusive.domain.downloads.controller.MediaDownloadController
 import com.flixclusive.domain.downloads.controller.impl.DownloadServiceControllerImpl
+import com.flixclusive.domain.downloads.controller.impl.MediaDownloadControllerImpl
 import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
+import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
 import com.flixclusive.domain.downloads.usecase.impl.CancelDownloadUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.DownloadFileUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.GetDownloadDirectoryUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.QueueMediaDownloadUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.ResolveDownloadableStreamUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -34,4 +39,11 @@ internal abstract class DomainDownloadsModule {
     abstract fun bindResolveDownloadableStreamUseCase(
         impl: ResolveDownloadableStreamUseCaseImpl
     ): ResolveDownloadableStreamUseCase
+
+    @Binds
+    abstract fun bindQueueMediaDownloadUseCase(impl: QueueMediaDownloadUseCaseImpl): QueueMediaDownloadUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindMediaDownloadController(impl: MediaDownloadControllerImpl): MediaDownloadController
 }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 21,
-    "identityHash": "03913597104a9d68147f36ce996a7341",
+    "identityHash": "e540919a946cb9fb88e99479699bd4d8",
     "entities": [
       {
         "tableName": "media",
@@ -1280,7 +1280,7 @@
       },
       {
         "tableName": "download_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mediaId` TEXT NOT NULL, `mediaTitle` TEXT NOT NULL, `mediaType` TEXT NOT NULL, `seasonNumber` INTEGER, `episodeNumber` INTEGER, `episodeTitle` TEXT, `state` TEXT NOT NULL, `phase` TEXT, `streamUrl` TEXT, `streamBytesDownloaded` INTEGER NOT NULL, `streamTotalBytes` INTEGER NOT NULL, `subtitleBytesDownloaded` INTEGER NOT NULL, `subtitleTotalBytes` INTEGER NOT NULL, `subtitleError` TEXT, `errorMessage` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mediaId` TEXT NOT NULL, `mediaTitle` TEXT NOT NULL, `mediaType` TEXT NOT NULL, `seasonNumber` INTEGER, `episodeNumber` INTEGER, `episodeTitle` TEXT, `state` TEXT NOT NULL, `phase` TEXT, `streamUrl` TEXT, `streamHeaders` TEXT, `streamBytesDownloaded` INTEGER NOT NULL, `streamTotalBytes` INTEGER NOT NULL, `subtitleUrl` TEXT, `subtitleHeaders` TEXT, `subtitleBytesDownloaded` INTEGER NOT NULL, `subtitleTotalBytes` INTEGER NOT NULL, `subtitleError` TEXT, `errorMessage` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -1338,6 +1338,11 @@
             "affinity": "TEXT"
           },
           {
+            "fieldPath": "streamHeaders",
+            "columnName": "streamHeaders",
+            "affinity": "TEXT"
+          },
+          {
             "fieldPath": "streamBytesDownloaded",
             "columnName": "streamBytesDownloaded",
             "affinity": "INTEGER",
@@ -1348,6 +1353,16 @@
             "columnName": "streamTotalBytes",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "subtitleUrl",
+            "columnName": "subtitleUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "subtitleHeaders",
+            "columnName": "subtitleHeaders",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "subtitleBytesDownloaded",
@@ -1498,7 +1513,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '03913597104a9d68147f36ce996a7341')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e540919a946cb9fb88e99479699bd4d8')"
     ]
   }
 }

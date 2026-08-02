@@ -2,28 +2,34 @@ package com.flixclusive.data.downloads.directory.impl
 
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.util.DownloadPathUtil
-import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.model.media.common.tv.Episode
 import com.hippo.unifile.UniFile
 import javax.inject.Inject
 
 internal class DownloadDirectoryRepositoryImpl @Inject constructor() : DownloadDirectoryRepository {
     override fun getOrCreateMediaDirectory(
         root: UniFile,
-        media: MediaMetadata,
-        episode: Episode?,
+        mediaId: String,
+        mediaTitle: String,
+        seasonNumber: Int?,
+        episodeNumber: Int?,
     ): UniFile? {
         val downloadsDir = root.getOrCreateChildDirectory(DOWNLOADS_FOLDER_NAME) ?: return null
         val mediaDir =
-            downloadsDir.getOrCreateChildDirectory(DownloadPathUtil.buildMediaFolderName(media)) ?: return null
+            downloadsDir.getOrCreateChildDirectory(DownloadPathUtil.buildMediaFolderName(mediaId, mediaTitle))
+                ?: return null
 
-        if (episode == null) return mediaDir
+        if (seasonNumber == null || episodeNumber == null) return mediaDir
 
-        return mediaDir.getOrCreateChildDirectory(DownloadPathUtil.buildEpisodeFolderName(episode))
+        return mediaDir.getOrCreateChildDirectory(DownloadPathUtil.buildEpisodeFolderName(seasonNumber, episodeNumber))
     }
 
     override fun getOrCreateSubtitlesDirectory(mediaDirectory: UniFile): UniFile? =
         mediaDirectory.getOrCreateChildDirectory(SUBTITLES_FOLDER_NAME)
+
+    override fun getOrCreateFile(
+        directory: UniFile,
+        fileName: String,
+    ): UniFile? = directory.findFile(fileName) ?: directory.createFile(fileName)
 
     private fun UniFile.getOrCreateChildDirectory(name: String): UniFile? = findFile(name) ?: createDirectory(name)
 

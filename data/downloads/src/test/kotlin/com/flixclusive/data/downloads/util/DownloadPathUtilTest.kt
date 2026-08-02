@@ -1,26 +1,12 @@
 package com.flixclusive.data.downloads.util
 
-import com.flixclusive.model.media.Movie
-import com.flixclusive.model.media.common.tv.Episode
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 
 class DownloadPathUtilTest {
-    private val testMovie = Movie(
-        id = "123",
-        title = "Everything Everywhere: All at Once?",
-        providerId = "test-provider",
-        posterImage = null,
-    )
-
-    private val testEpisode = Episode(
-        id = "ep-1",
-        number = 1,
-        season = 1,
-        isReleased = true,
-        title = "Pilot",
-    )
+    private val mediaId = "123"
+    private val mediaTitle = "Everything Everywhere: All at Once?"
 
     @Test
     fun `sanitizeFileName should strip illegal filesystem characters`() {
@@ -36,35 +22,33 @@ class DownloadPathUtilTest {
 
     @Test
     fun `buildMediaFolderName should prefix sanitized title with media id`() {
-        expectThat(DownloadPathUtil.buildMediaFolderName(testMovie))
+        expectThat(DownloadPathUtil.buildMediaFolderName(mediaId, mediaTitle))
             .isEqualTo("123-Everything Everywhere_ All at Once_")
     }
 
     @Test
     fun `buildEpisodeFolderName should format season and episode as sNNeNN`() {
-        expectThat(DownloadPathUtil.buildEpisodeFolderName(testEpisode)).isEqualTo("s01e01")
+        expectThat(DownloadPathUtil.buildEpisodeFolderName(1, 1)).isEqualTo("s01e01")
     }
 
     @Test
     fun `buildEpisodeFolderName should zero pad double digit season and episode`() {
-        val episode = testEpisode.copy(season = 12, number = 34)
-        expectThat(DownloadPathUtil.buildEpisodeFolderName(episode)).isEqualTo("s12e34")
+        expectThat(DownloadPathUtil.buildEpisodeFolderName(12, 34)).isEqualTo("s12e34")
     }
 
     @Test
     fun `buildFileTitle should use episode title when present`() {
-        expectThat(DownloadPathUtil.buildFileTitle(testMovie, testEpisode)).isEqualTo("Pilot")
+        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle, "Pilot")).isEqualTo("Pilot")
     }
 
     @Test
     fun `buildFileTitle should fall back to media title when episode title is blank`() {
-        val episode = testEpisode.copy(title = "")
-        expectThat(DownloadPathUtil.buildFileTitle(testMovie, episode)).isEqualTo(testMovie.title)
+        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle, "")).isEqualTo(mediaTitle)
     }
 
     @Test
-    fun `buildFileTitle should fall back to media title when episode is null`() {
-        expectThat(DownloadPathUtil.buildFileTitle(testMovie, null)).isEqualTo(testMovie.title)
+    fun `buildFileTitle should fall back to media title when episode title is null`() {
+        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle, null)).isEqualTo(mediaTitle)
     }
 
     @Test
@@ -75,5 +59,27 @@ class DownloadPathUtilTest {
     @Test
     fun `buildSubtitleFileName should append extension to sanitized title`() {
         expectThat(DownloadPathUtil.buildSubtitleFileName("Pilot", "srt")).isEqualTo("Pilot.srt")
+    }
+
+    @Test
+    fun `extensionFromUrl should return the url extension when it is in the allowed set`() {
+        val result = DownloadPathUtil.extensionFromUrl(
+            url = "https://example.com/video.mkv?token=abc",
+            fallback = "mp4",
+            allowed = setOf("mp4", "mkv", "mov", "webm"),
+        )
+
+        expectThat(result).isEqualTo("mkv")
+    }
+
+    @Test
+    fun `extensionFromUrl should fall back when the url has no recognizable extension`() {
+        val result = DownloadPathUtil.extensionFromUrl(
+            url = "https://example.com/stream/segment123",
+            fallback = "mp4",
+            allowed = setOf("mp4", "mkv", "mov", "webm"),
+        )
+
+        expectThat(result).isEqualTo("mp4")
     }
 }

@@ -1,8 +1,5 @@
 package com.flixclusive.data.downloads.util
 
-import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.model.media.common.tv.Episode
-
 object DownloadPathUtil {
     private val illegalFileNameChars = Regex("[/\\\\:*?\"<>|]")
 
@@ -11,16 +8,29 @@ object DownloadPathUtil {
         return sanitized.ifBlank { "untitled" }
     }
 
-    fun buildMediaFolderName(media: MediaMetadata): String = "${media.id}-${sanitizeFileName(media.title)}"
+    fun buildMediaFolderName(mediaId: String, mediaTitle: String): String = "$mediaId-${sanitizeFileName(mediaTitle)}"
 
-    fun buildEpisodeFolderName(episode: Episode): String = "s%02de%02d".format(episode.season, episode.number)
+    fun buildEpisodeFolderName(seasonNumber: Int, episodeNumber: Int): String = "s%02de%02d".format(
+        seasonNumber,
+        episodeNumber
+    )
 
-    fun buildFileTitle(media: MediaMetadata, episode: Episode?): String =
-        episode?.title?.takeIf { it.isNotBlank() } ?: media.title
+    fun buildFileTitle(mediaTitle: String, episodeTitle: String?): String =
+        episodeTitle?.takeIf { it.isNotBlank() } ?: mediaTitle
 
     fun buildStreamFileName(fileTitle: String, extension: String): String =
         "${sanitizeFileName(fileTitle)}.$extension"
 
     fun buildSubtitleFileName(fileTitle: String, extension: String): String =
         "${sanitizeFileName(fileTitle)}.$extension"
+
+    fun extensionFromUrl(url: String, fallback: String, allowed: Set<String>): String {
+        val candidate = url
+            .substringBefore('?')
+            .substringBefore('#')
+            .substringAfterLast('.', "")
+            .lowercase()
+
+        return candidate.takeIf { it in allowed } ?: fallback
+    }
 }

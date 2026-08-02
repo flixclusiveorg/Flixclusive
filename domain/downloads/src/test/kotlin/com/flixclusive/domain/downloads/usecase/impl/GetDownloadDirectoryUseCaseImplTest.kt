@@ -5,7 +5,6 @@ import android.net.Uri
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
-import com.flixclusive.model.media.Movie
 import com.hippo.unifile.UniFile
 import io.mockk.every
 import io.mockk.mockk
@@ -26,12 +25,8 @@ class GetDownloadDirectoryUseCaseImplTest {
     private lateinit var downloadDirectoryRepository: DownloadDirectoryRepository
     private lateinit var useCase: GetDownloadDirectoryUseCaseImpl
 
-    private val testMovie = Movie(
-        id = "123",
-        title = "Test Movie",
-        providerId = "test-provider",
-        posterImage = null,
-    )
+    private val mediaId = "123"
+    private val mediaTitle = "Test Movie"
 
     @Before
     fun setup() {
@@ -62,7 +57,7 @@ class GetDownloadDirectoryUseCaseImplTest {
         runTest {
             every { dataStoreManager.getSystemPrefs() } returns flowOf(SystemPreferences(storageDirectoryUri = null))
 
-            val result = useCase(testMovie)
+            val result = useCase(mediaId, mediaTitle)
 
             expectThat(result).isNull()
         }
@@ -77,7 +72,7 @@ class GetDownloadDirectoryUseCaseImplTest {
             mockkStatic(UniFile::class)
             every { UniFile.fromUri(context, any()) } returns null
 
-            val result = useCase(testMovie)
+            val result = useCase(mediaId, mediaTitle)
 
             expectThat(result).isNull()
         }
@@ -96,7 +91,7 @@ class GetDownloadDirectoryUseCaseImplTest {
             mockkStatic(UniFile::class)
             every { UniFile.fromUri(context, any()) } returns root
 
-            val result = useCase(testMovie)
+            val result = useCase(mediaId, mediaTitle)
 
             expectThat(result).isNull()
         }
@@ -113,12 +108,14 @@ class GetDownloadDirectoryUseCaseImplTest {
             every { root.canWrite() } returns true
 
             val mediaDir = mockk<UniFile>()
-            every { downloadDirectoryRepository.getOrCreateMediaDirectory(root, testMovie, null) } returns mediaDir
+            every {
+                downloadDirectoryRepository.getOrCreateMediaDirectory(root, mediaId, mediaTitle, null, null)
+            } returns mediaDir
 
             mockkStatic(UniFile::class)
             every { UniFile.fromUri(context, any()) } returns root
 
-            val result = useCase(testMovie)
+            val result = useCase(mediaId, mediaTitle)
 
             expectThat(result).isEqualTo(mediaDir)
         }
