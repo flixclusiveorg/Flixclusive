@@ -82,8 +82,9 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         id: String,
         sourceUrl: String?,
         isHls: Boolean,
+        totalBytes: Long,
     ) {
-        downloadItemDao.updateSource(id, sourceUrl, isHls, Date())
+        downloadItemDao.updateSource(id, sourceUrl, isHls, totalBytes, Date())
     }
 
     override suspend fun updateStreamFilePath(

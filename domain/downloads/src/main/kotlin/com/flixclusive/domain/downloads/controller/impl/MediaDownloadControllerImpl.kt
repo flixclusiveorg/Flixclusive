@@ -239,7 +239,10 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         }
 
         val candidate = (resolved as Async.Success<RankedDownloadCandidate>).data
-        mediaDownloadRepository.updateSource(itemId, candidate.stream.url, candidate.isHls)
+        // HLS totals are tracked as segment counts once the manifest resolves, not bytes, so
+        // only a direct file's probed content length seeds streamTotalBytes here.
+        val totalBytes = if (candidate.isHls) 0L else candidate.contentLength ?: 0L
+        mediaDownloadRepository.updateSource(itemId, candidate.stream.url, candidate.isHls, totalBytes)
         return mediaDownloadRepository.getItem(itemId)
     }
 
@@ -399,7 +402,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
         staleDestinationFile.delete()
         mediaDownloadRepository.resetChunks(itemId)
-        mediaDownloadRepository.updateSource(itemId, sourceUrl = null, isHls = false)
+        mediaDownloadRepository.updateSource(itemId, sourceUrl = null, isHls = false, totalBytes = 0)
         mediaDownloadRepository.updateStreamFilePath(itemId, null)
 
         val clearedItem = mediaDownloadRepository.getItem(itemId) ?: return

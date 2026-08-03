@@ -44,14 +44,17 @@ interface MediaDownloadRepository {
     suspend fun resetChunks(id: String)
 
     /**
-     * Persists [sourceUrl]/[isHls] together and resets stream progress — the single write path
-     * keeping [DownloadItem.sourceUrl] and [DownloadItem.isHlsStream] in lockstep, so no caller can
-     * update one without the other.
+     * Persists [sourceUrl]/[isHls] together and resets stream progress to `0`/[totalBytes] — the
+     * single write path keeping [DownloadItem.sourceUrl] and [DownloadItem.isHlsStream] in
+     * lockstep, so no caller can update one without the other. [totalBytes] should be the probed
+     * content length for a direct file, or `0` for HLS (whose total is tracked as a segment count
+     * once the manifest resolves) or when the length is unknown.
      */
     suspend fun updateSource(
         id: String,
         sourceUrl: String?,
         isHls: Boolean,
+        totalBytes: Long,
     )
 
     suspend fun updateStreamFilePath(

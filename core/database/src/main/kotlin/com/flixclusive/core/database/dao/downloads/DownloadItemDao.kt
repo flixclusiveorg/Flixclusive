@@ -82,7 +82,7 @@ interface DownloadItemDao {
         """
         UPDATE download_items
         SET sourceUrl = :sourceUrl, isHlsStream = :isHlsStream,
-            streamBytesDownloaded = 0, streamTotalBytes = 0, updatedAt = :updatedAt
+            streamBytesDownloaded = 0, streamTotalBytes = :totalBytes, updatedAt = :updatedAt
         WHERE id = :id
         """,
     )
@@ -90,6 +90,7 @@ interface DownloadItemDao {
         id: String,
         sourceUrl: String?,
         isHlsStream: Boolean,
+        totalBytes: Long,
         updatedAt: Date,
     )
 

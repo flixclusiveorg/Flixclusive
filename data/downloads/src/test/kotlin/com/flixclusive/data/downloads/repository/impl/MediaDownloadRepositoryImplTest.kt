@@ -219,10 +219,10 @@ class MediaDownloadRepositoryImplTest {
     @Test
     fun `updateSource should always write sourceUrl and isHlsStream together`() =
         runTest {
-            repository.updateSource(itemId, "https://example.com/fallback.m3u8", isHls = true)
+            repository.updateSource(itemId, "https://example.com/fallback.m3u8", isHls = true, totalBytes = 500L)
 
             coVerify {
-                downloadItemDao.updateSource(itemId, "https://example.com/fallback.m3u8", true, any())
+                downloadItemDao.updateSource(itemId, "https://example.com/fallback.m3u8", true, 500L, any())
             }
         }
 

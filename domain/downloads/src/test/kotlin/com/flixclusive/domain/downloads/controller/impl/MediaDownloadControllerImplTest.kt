@@ -270,8 +270,34 @@ class MediaDownloadControllerImplTest {
             controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateSource(itemId, resolvedUrl, false) }
+            coVerify { mediaDownloadRepository.updateSource(itemId, resolvedUrl, false, 0L) }
             coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
+        }
+
+    @Test
+    fun `start should seed streamTotalBytes with the probed content length of a resolved direct file`() =
+        runTest(testDispatcher) {
+            val resolvedUrl = "https://example.com/resolved.mp4"
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returnsMany
+                listOf(testItem(sourceUrl = null), testItem(sourceUrl = resolvedUrl))
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery { resolveDownloadableStreamUseCase(ownerId, mediaId, null, null) } returns
+                Async.Success(
+                    RankedDownloadCandidate(
+                        stream = Stream(name = "1080p", url = resolvedUrl),
+                        isHls = false,
+                        contentLength = 123_456L,
+                    ),
+                )
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, resolvedUrl, any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateSource(itemId, resolvedUrl, false, 123_456L) }
         }
 
     @Test
@@ -417,8 +443,8 @@ class MediaDownloadControllerImplTest {
             advanceUntilIdle()
 
             coVerify { mediaLinksRepository.setLinkStatus(primaryUrl, ownerId, isDead = true) }
-            coVerify { mediaDownloadRepository.updateSource(itemId, null, false) }
-            coVerify { mediaDownloadRepository.updateSource(itemId, fallbackUrl, false) }
+            coVerify { mediaDownloadRepository.updateSource(itemId, null, false, 0L) }
+            coVerify { mediaDownloadRepository.updateSource(itemId, fallbackUrl, false, 0L) }
             coVerify {
                 mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, fallbackUrl, any(), streamFile, any())
             }

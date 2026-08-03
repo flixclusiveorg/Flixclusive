@@ -91,18 +91,24 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun updateSourceShouldAlwaysWriteSourceUrlAndIsHlsStreamTogetherAndResetProgress() =
+    fun updateSourceShouldAlwaysWriteSourceUrlAndIsHlsStreamTogetherAndResetBytesDownloaded() =
         runTest {
             downloadItemDao.insert(testItem)
             downloadItemDao.updateStreamProgress(testItem.id, bytesDownloaded = 512, totalBytes = 1024, Date())
 
-            downloadItemDao.updateSource(testItem.id, "https://example.com/video.m3u8", isHlsStream = true, Date())
+            downloadItemDao.updateSource(
+                testItem.id,
+                "https://example.com/video.m3u8",
+                isHlsStream = true,
+                totalBytes = 2048,
+                Date(),
+            )
 
             val result = downloadItemDao.get(testItem.id)
             expectThat(result?.sourceUrl).isEqualTo("https://example.com/video.m3u8")
             expectThat(result?.isHlsStream).isTrue()
             expectThat(result?.streamBytesDownloaded).isEqualTo(0)
-            expectThat(result?.streamTotalBytes).isEqualTo(0)
+            expectThat(result?.streamTotalBytes).isEqualTo(2048)
         }
 
     @Test

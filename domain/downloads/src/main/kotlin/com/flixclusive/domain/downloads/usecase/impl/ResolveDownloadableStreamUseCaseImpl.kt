@@ -65,7 +65,7 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
 
         for ((stream, result) in ranked) {
             if (result.isReachable) {
-                return Async.Success(RankedDownloadCandidate(stream, result.isHls))
+                return Async.Success(RankedDownloadCandidate(stream, result.isHls, result.contentLength))
             }
 
             mediaLinksRepository.setLinkStatus(stream.url, ownerId, isDead = true)
