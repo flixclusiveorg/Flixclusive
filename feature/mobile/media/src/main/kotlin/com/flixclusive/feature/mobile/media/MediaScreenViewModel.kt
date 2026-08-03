@@ -323,12 +323,10 @@ class MediaScreenViewModel @AssistedInject constructor(
     /** Toggles the download shown on [com.flixclusive.feature.mobile.media.component.HeaderButtons]. */
     fun onToggleDownload() {
         val media = _metadata.value ?: return
-        val season = uiState.value.selectedSeason
 
         appDispatchers.ioScope.launch {
             if (media is Show) {
-                if (season == null) return@launch
-                toggleSeasonDownload(media, season)
+                toggleSeasonDownload(media)
             } else {
                 toggleMovieDownload(media)
             }
@@ -375,12 +373,14 @@ class MediaScreenViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun toggleSeasonDownload(show: Show, seasonNumber: Int) {
-        val key = DownloadScopeKey.Season(show.id, seasonNumber)
-        val existingBatch = mediaDownloadRepository.getBatch(show.id, seasonNumber)
+    private suspend fun toggleSeasonDownload(show: Show) {
+        val season = (seasonToDisplay.value as? Async.Success)?.data?.season ?: return
+
+        val key = DownloadScopeKey.Season(show.id, season.number)
+        val existingBatch = mediaDownloadRepository.getBatch(show.id, season.number)
 
         if (existingBatch.any { !it.state.isTerminal }) {
-            mediaDownloadController.stopBatch(show.id, seasonNumber)
+            mediaDownloadController.stopBatch(show.id, season.number)
             return
         }
 
@@ -394,7 +394,6 @@ class MediaScreenViewModel @AssistedInject constructor(
             return
         }
 
-        val season = show.getSeason(seasonNumber) as? Season.Full ?: return
         val alreadyQueued = existingBatch.mapNotNull { it.episodeNumber }.toSet()
         val episodesToQueue = season.episodes.filterNot { it.number in alreadyQueued }
         if (episodesToQueue.isEmpty()) return
