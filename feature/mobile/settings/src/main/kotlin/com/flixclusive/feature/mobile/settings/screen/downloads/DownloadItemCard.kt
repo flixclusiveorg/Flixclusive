@@ -62,9 +62,7 @@ internal fun DownloadItemCard(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium,
     ) {
-        Column(modifier = Modifier
-            .padding(12.dp)
-            .animateContentSize()) {
+        Column(modifier = Modifier.padding(12.dp).animateContentSize()) {
             Row(verticalAlignment = Alignment.Top) {
                 Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
                     Icon(

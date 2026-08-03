@@ -8,6 +8,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.datastore.model.user.DataPreferences
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakScaffold
@@ -15,6 +17,7 @@ import com.flixclusive.feature.mobile.settings.TweakUI
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import com.flixclusive.core.strings.R as LocaleR
 
 interface NavigatorDataTweakScreen : NavigateBack {
@@ -109,6 +112,34 @@ private fun getCachedLinksTweaks(
                 steps = 29,
                 onTweaked = { days ->
                     onUpdatePreferences { it.copy(deadLinkRetentionDays = days.toInt()) }
+                },
+            ),
+            TweakUI.ListTweak(
+                title = stringResource(LocaleR.string.download_link_selection_mode_title),
+                description = { resources.getString(LocaleR.string.download_link_selection_mode_desc) },
+                value = { dataPreferences().downloadLinkSelectionMode },
+                options = persistentMapOf(
+                    DownloadLinkSelectionMode.QUALITY_FIRST to
+                        stringResource(LocaleR.string.download_link_selection_mode_quality_first),
+                    DownloadLinkSelectionMode.SIZE_FIRST to
+                        stringResource(LocaleR.string.download_link_selection_mode_size_first),
+                ),
+                onTweaked = { mode ->
+                    onUpdatePreferences { it.copy(downloadLinkSelectionMode = mode) }
+                },
+            ),
+            TweakUI.ListTweak(
+                title = stringResource(LocaleR.string.download_link_sort_direction_title),
+                description = { resources.getString(LocaleR.string.download_link_sort_direction_desc) },
+                value = { dataPreferences().downloadLinkSortDirection },
+                options = persistentMapOf(
+                    DownloadLinkSortDirection.HIGHEST_FIRST to
+                        stringResource(LocaleR.string.download_link_sort_direction_highest_first),
+                    DownloadLinkSortDirection.LOWEST_FIRST to
+                        stringResource(LocaleR.string.download_link_sort_direction_lowest_first),
+                ),
+                onTweaked = { direction ->
+                    onUpdatePreferences { it.copy(downloadLinkSortDirection = direction) }
                 },
             ),
         ),

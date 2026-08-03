@@ -287,6 +287,14 @@
     <string name="label_no_cached_media">No cached media yet</string>
     <string name="dead_link_retention_days_title">Dead link retention period</string>
     <string name="dead_link_retention_days_desc">Remove dead links after %1$d day(s). Set to 0 to remove them immediately on the next cleanup.</string>
+    <string name="download_link_selection_mode_title">Link selection priority</string>
+    <string name="download_link_selection_mode_desc">How to rank candidate links when starting a download. Speed is always the tiebreaker.</string>
+    <string name="download_link_selection_mode_quality_first">Closest to preferred quality</string>
+    <string name="download_link_selection_mode_size_first">By file size</string>
+    <string name="download_link_sort_direction_title">Sort direction</string>
+    <string name="download_link_sort_direction_desc">Which end to prefer: the largest/best-matching file, or when nothing matches exactly, which way to fall back.</string>
+    <string name="download_link_sort_direction_highest_first">Highest first</string>
+    <string name="download_link_sort_direction_lowest_first">Lowest first</string>
     <string name="links_test_done_format">Test complete: %1$d alive, %2$d dead</string>
     <string name="testing_link_format">Testing link %1$d of %2$d…</string>
     <string name="change_avatar_content_desc">Change user\'s avatar</string>
