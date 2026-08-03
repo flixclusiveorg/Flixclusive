@@ -134,7 +134,10 @@ class MediaDownloadService : Service() {
     private fun startObservingActiveItems() {
         observerJob = serviceScope.launch {
             mediaDownloadRepository.observeAllItems().collectLatest { items ->
-                val activeItems = items.filter { !it.state.isTerminal && it.state != DownloadItemState.QUEUED }
+                // QUEUED counts as active too: a freshly queued item stays QUEUED for the whole
+                // link-resolution/probing window before its state ever reaches DOWNLOADING_STREAM,
+                // so excluding it here made the service tear itself down mid-resolution.
+                val activeItems = items.filter { !it.state.isTerminal }
                 val notificationManager: NotificationManager = getSystemService()!!
 
                 notifyNewFailures(items, notificationManager)
