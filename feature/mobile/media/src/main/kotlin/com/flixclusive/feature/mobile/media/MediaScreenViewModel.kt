@@ -64,7 +64,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -403,10 +402,11 @@ class MediaScreenViewModel @AssistedInject constructor(
         downloadOverrides.update { it + (key to Async.Loading) }
 
         // Ensure every episode has links cached before queueing, since the download engine
-        // only ever reads from the link cache and never invokes a provider itself.
-        coroutineScope {
-            episodesToQueue.map { episode -> async { ensureMediaLinksLoaded(show, episode) } }.awaitAll()
-        }
+        // only ever reads from the link cache and never invokes a provider itself. Resolved
+        // sequentially since provider plugins are third-party code with no thread-safety
+        // guarantee, and concurrent resolution would fan out unbounded parallel calls into
+        // the same provider plugin instance across every episode in the season at once.
+        episodesToQueue.forEach { episode -> ensureMediaLinksLoaded(show, episode) }
 
         val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
         val requests = episodesToQueue.map { episode ->
