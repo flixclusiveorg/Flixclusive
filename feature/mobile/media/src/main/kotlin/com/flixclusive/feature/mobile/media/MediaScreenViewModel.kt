@@ -36,6 +36,7 @@ import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadBatchUseCase
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
+import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
@@ -63,6 +64,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -80,6 +82,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -107,6 +110,7 @@ class MediaScreenViewModel @AssistedInject constructor(
     private val toggleListItemOnTrackerList: ToggleListItemOnTrackerListUseCase,
     private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
     private val syncFromScrobblers: SyncFromScrobblersUseCase,
+    private val getMediaLinks: GetMediaLinksUseCase,
     private val queueMediaDownload: QueueMediaDownloadUseCase,
     private val queueMediaDownloadBatch: QueueMediaDownloadBatchUseCase,
     private val mediaDownloadController: MediaDownloadController,
@@ -398,6 +402,12 @@ class MediaScreenViewModel @AssistedInject constructor(
 
         downloadOverrides.update { it + (key to Async.Loading) }
 
+        // Ensure every episode has links cached before queueing, since the download engine
+        // only ever reads from the link cache and never invokes a provider itself.
+        coroutineScope {
+            episodesToQueue.map { episode -> async { ensureMediaLinksLoaded(show, episode) } }.awaitAll()
+        }
+
         val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
         val requests = episodesToQueue.map { episode ->
             MediaDownloadRequest(media = show, episode = episode, ownerId = ownerId)
@@ -414,6 +424,14 @@ class MediaScreenViewModel @AssistedInject constructor(
     ) {
         downloadOverrides.update { it + (key to Async.Loading) }
 
+        // The download engine only ever reads cached links, so trigger the same link-loading
+        // path the Play button uses here to avoid requiring the user to open Play first.
+        val linksResult = ensureMediaLinksLoaded(media, episode)
+        if (linksResult is Async.Failure) {
+            downloadOverrides.update { it + (key to Async.Failure(linksResult.message, linksResult.cause)) }
+            return
+        }
+
         val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
         val queued = queueMediaDownload(media, episode, ownerId)
         if (queued is Async.Failure) {
@@ -423,6 +441,18 @@ class MediaScreenViewModel @AssistedInject constructor(
 
         mediaDownloadController.start((queued as Async.Success).data)
         downloadOverrides.update { it - key }
+    }
+
+    private suspend fun ensureMediaLinksLoaded(
+        media: MediaMetadata,
+        episode: Episode?,
+    ): Async<Unit> {
+        val finalState = getMediaLinks(media, episode).last()
+        return if (finalState.isSuccess) {
+            Async.Success(Unit)
+        } else {
+            Async.Failure(finalState.message)
+        }
     }
 
     @OptIn(FlowPreview::class)
