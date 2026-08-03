@@ -1,5 +1,12 @@
 package com.flixclusive.feature.mobile.settings.screen.downloads
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,10 +27,10 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,8 +54,7 @@ import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
-import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
-import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
@@ -73,7 +80,6 @@ internal fun DownloadsTweakScreen(
     viewModel: DownloadsTweakViewModel = hiltViewModel()
 ) {
     val entries by viewModel.entries.collectAsStateWithLifecycle()
-    val query by viewModel.query.collectAsStateWithLifecycle()
     val stateFilters by viewModel.stateFilters.collectAsStateWithLifecycle()
     val typeFilters by viewModel.typeFilters.collectAsStateWithLifecycle()
 
@@ -91,7 +97,9 @@ internal fun DownloadsTweakScreen(
 
     DownloadsTweakScreenContent(
         entries = entries,
-        query = query,
+        // Read once as the search field's seed value rather than collected as State — the field
+        // owns its own text state after that, so the query doesn't need to be observed here.
+        searchQuery = { viewModel.query.value },
         stateFilters = stateFilters,
         typeFilters = typeFilters,
         onNavigateBack = navigator::navigateBack,
@@ -152,7 +160,7 @@ private const val LOCAL_DOWNLOAD_PROVIDER_ID = "local-download"
 @Composable
 private fun DownloadsTweakScreenContent(
     entries: Async<List<DownloadListEntry>>,
-    query: String,
+    searchQuery: () -> String,
     stateFilters: Set<DownloadStateFilter>,
     typeFilters: Set<MediaType>,
     onNavigateBack: () -> Unit,
@@ -169,146 +177,198 @@ private fun DownloadsTweakScreenContent(
     onStopBatch: (String, Int) -> Unit,
 ) {
     var expandedBatches by remember { mutableStateOf(setOf<String>()) }
+    var isSearching by remember { mutableStateOf(false) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
         contentWindowInsets = WindowInsets(),
         topBar = {
-            CommonTopBar(
-                navigationIcon = {
-                    ActionButton(onClick = onNavigateBack) {
-                        Icon(
-                            painter = painterResource(UiCommonR.drawable.left_arrow),
-                            contentDescription = null
-                        )
-                    }
-                },
-                title = { Text(text = stringResource(LocaleR.string.downloads)) },
+            CommonTopBarWithSearch(
+                title = stringResource(LocaleR.string.downloads),
+                isSearching = isSearching,
+                searchQuery = searchQuery,
+                onQueryChange = onQueryChange,
+                onToggleSearchBar = { isSearching = it },
+                onNavigate = onNavigateBack,
+                scrollBehavior = scrollBehavior,
             )
         },
-        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current)
+        modifier = Modifier
+            .padding(LocalGlobalScaffoldPadding.current)
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text(text = stringResource(LocaleR.string.download_search_placeholder)) },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(UiCommonR.drawable.search_outlined),
-                        contentDescription = null
-                    )
-                },
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium,
+            DownloadsFilterRow(
+                stateFilters = stateFilters,
+                typeFilters = typeFilters,
+                onToggleStateFilter = onToggleStateFilter,
+                onToggleTypeFilter = onToggleTypeFilter,
             )
-
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                items(DownloadStateFilter.entries) { filter ->
-                    val isSelected = filter in stateFilters
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { onToggleStateFilter(filter) },
-                        label = { Text(filter.label()) },
-                        shape = CircleShape,
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.onSurface,
-                            selectedLabelColor = MaterialTheme.colorScheme.surface
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(enabled = true, selected = isSelected)
-                    )
-                }
-
-                items(MediaType.entries) { type ->
-                    val isSelected = type in typeFilters
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { onToggleTypeFilter(type) },
-                        label = { Text(type.label()) },
-                        shape = CircleShape,
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.onSurface,
-                            selectedLabelColor = MaterialTheme.colorScheme.surface
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(enabled = true, selected = isSelected)
-                    )
-                }
-            }
 
             HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
 
-            AsyncAnimatedContent(
-                targetState = entries,
+            DownloadsEntriesList(
+                entries = entries,
+                expandedBatches = expandedBatches,
+                onToggleExpand = { key -> expandedBatches = expandedBatches.toggleBatch(key) },
+                onPause = onPause,
+                onResume = onResume,
+                onStop = onStop,
+                onRetry = onRetry,
+                onDelete = onDelete,
+                onOpen = onOpen,
+                onPauseBatch = onPauseBatch,
+                onStopBatch = onStopBatch,
                 modifier = Modifier.fillMaxSize(),
-                loadingContent = {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                },
-                errorContent = {
-                    RetryButton(
-                        modifier = Modifier.fillMaxSize(),
-                        error = it.message.asString(),
-                        // The list is a hot, self-recovering DB flow (no one-shot load to redo).
-                        onRetry = {},
-                    )
-                },
-            ) { entriesProvider ->
-                if (entriesProvider().isEmpty()) {
-                    EmptyDataMessage(
-                        modifier = Modifier.fillMaxSize(),
-                        emojiHeader = "📥",
-                        title = stringResource(LocaleR.string.download_empty_title),
-                        description = stringResource(LocaleR.string.download_empty_description),
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(entriesProvider(), key = { it.key() }) { entry ->
-                            when (entry) {
-                                is DownloadListEntry.Single -> DownloadItemCard(
-                                    item = entry.item,
-                                    onPause = { onPause(entry.item.id) },
-                                    onResume = { onResume(entry.item.id) },
-                                    onStop = { onStop(entry.item.id) },
-                                    onRetry = { onRetry(entry.item.id) },
-                                    onDelete = { onDelete(entry.item.id) },
-                                    onOpen = { onOpen(entry.item) },
-                                    modifier = Modifier.animateItem()
-                                )
+            )
+        }
+    }
+}
 
-                                is DownloadListEntry.Batch -> DownloadBatchGroup(
-                                    entry = entry,
-                                    isExpanded = entry.batchKey() in expandedBatches,
-                                    onToggleExpand = {
-                                        expandedBatches = expandedBatches.toggleBatch(entry.batchKey())
-                                    },
-                                    onPauseBatch = { onPauseBatch(entry.mediaId, entry.seasonNumber) },
-                                    onStopBatch = { onStopBatch(entry.mediaId, entry.seasonNumber) },
-                                    onPause = onPause,
-                                    onResume = onResume,
-                                    onStop = onStop,
-                                    onRetry = onRetry,
-                                    onDelete = onDelete,
-                                    onOpen = onOpen,
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
-                        }
+/** Isolated so a filter toggle only recomposes this row, not the top bar or the entries list. */
+@Composable
+private fun DownloadsFilterRow(
+    stateFilters: Set<DownloadStateFilter>,
+    typeFilters: Set<MediaType>,
+    onToggleStateFilter: (DownloadStateFilter) -> Unit,
+    onToggleTypeFilter: (MediaType) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items(DownloadStateFilter.entries, key = { "state-${it.name}" }) { filter ->
+            AnimatedFilterChip(
+                selected = filter in stateFilters,
+                label = filter.label(),
+                onClick = { onToggleStateFilter(filter) },
+            )
+        }
+
+        items(MediaType.entries, key = { "type-${it.name}" }) { type ->
+            AnimatedFilterChip(
+                selected = type in typeFilters,
+                label = type.label(),
+                onClick = { onToggleTypeFilter(type) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AnimatedFilterChip(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label) },
+        shape = CircleShape,
+        leadingIcon = {
+            AnimatedVisibility(
+                visible = selected,
+                enter = fadeIn(tween(150)) + expandHorizontally(tween(150)),
+                exit = fadeOut(tween(150)) + shrinkHorizontally(tween(150)),
+            ) {
+                Icon(
+                    painter = painterResource(UiCommonR.drawable.check),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.onSurface,
+            selectedLabelColor = MaterialTheme.colorScheme.surface
+        ),
+        border = FilterChipDefaults.filterChipBorder(enabled = true, selected = selected),
+        modifier = modifier.animateContentSize(),
+    )
+}
+
+/** Isolated so entries/expansion updates don't force the top bar or filter row to recompose. */
+@Composable
+private fun DownloadsEntriesList(
+    entries: Async<List<DownloadListEntry>>,
+    expandedBatches: Set<String>,
+    onToggleExpand: (String) -> Unit,
+    onPause: (String) -> Unit,
+    onResume: (String) -> Unit,
+    onStop: (String) -> Unit,
+    onRetry: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    onOpen: (DownloadItem) -> Unit,
+    onPauseBatch: (String, Int) -> Unit,
+    onStopBatch: (String, Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AsyncAnimatedContent(
+        targetState = entries,
+        modifier = modifier,
+        loadingContent = {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        },
+        errorContent = {
+            RetryButton(
+                modifier = Modifier.fillMaxSize(),
+                error = it.message.asString(),
+                // The list is a hot, self-recovering DB flow (no one-shot load to redo).
+                onRetry = {},
+            )
+        },
+    ) { entriesProvider ->
+        if (entriesProvider().isEmpty()) {
+            EmptyDataMessage(
+                modifier = Modifier.fillMaxSize(),
+                emojiHeader = "📥",
+                title = stringResource(LocaleR.string.download_empty_title),
+                description = stringResource(LocaleR.string.download_empty_description),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(entriesProvider(), key = { it.key() }) { entry ->
+                    when (entry) {
+                        is DownloadListEntry.Single -> DownloadItemCard(
+                            item = entry.item,
+                            onPause = { onPause(entry.item.id) },
+                            onResume = { onResume(entry.item.id) },
+                            onStop = { onStop(entry.item.id) },
+                            onRetry = { onRetry(entry.item.id) },
+                            onDelete = { onDelete(entry.item.id) },
+                            onOpen = { onOpen(entry.item) },
+                            modifier = Modifier.animateItem()
+                        )
+
+                        is DownloadListEntry.Batch -> DownloadBatchGroup(
+                            entry = entry,
+                            isExpanded = entry.batchKey() in expandedBatches,
+                            onToggleExpand = { onToggleExpand(entry.batchKey()) },
+                            onPauseBatch = { onPauseBatch(entry.mediaId, entry.seasonNumber) },
+                            onStopBatch = { onStopBatch(entry.mediaId, entry.seasonNumber) },
+                            onPause = onPause,
+                            onResume = onResume,
+                            onStop = onStop,
+                            onRetry = onRetry,
+                            onDelete = onDelete,
+                            onOpen = onOpen,
+                            modifier = Modifier.animateItem()
+                        )
                     }
                 }
             }
@@ -384,7 +444,7 @@ private fun DownloadsTweakScreenPreview() {
         Surface {
             DownloadsTweakScreenContent(
                 entries = Async.Success(items.map { DownloadListEntry.Single(it) }),
-                query = "",
+                searchQuery = { "" },
                 stateFilters = emptySet(),
                 typeFilters = emptySet(),
                 onNavigateBack = {},

@@ -10,6 +10,7 @@ import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
 import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
 import com.flixclusive.model.media.common.MediaType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,12 +18,16 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 internal class DownloadsTweakViewModel @Inject constructor(
     private val mediaDownloadRepository: MediaDownloadRepository,
@@ -31,6 +36,15 @@ internal class DownloadsTweakViewModel @Inject constructor(
 ) : ViewModel() {
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
+
+    /** Debounced separately from [query] (rather than inline in the [entries] combine) so its
+     * [stateIn] can seed an immediate [initialValue] — debouncing [_query] directly inside the
+     * combine would delay the very first emission of [entries] by the debounce window too, since
+     * `combine` waits on every source's first value. */
+    private val debouncedQuery = _query
+        .debounce(800.milliseconds)
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = _query.value)
 
     private val _stateFilters = MutableStateFlow<Set<DownloadStateFilter>>(emptySet())
     val stateFilters = _stateFilters.asStateFlow()
@@ -43,7 +57,7 @@ internal class DownloadsTweakViewModel @Inject constructor(
 
     val entries = combine(
         mediaDownloadRepository.observeAllItems(),
-        _query,
+        debouncedQuery,
         _stateFilters,
         _typeFilters,
     ) { items, query, stateFilters, typeFilters ->
