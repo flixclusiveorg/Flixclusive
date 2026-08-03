@@ -68,6 +68,11 @@ class MediaDownloadService : Service() {
      * remove a previously-posted notification just because the underlying data went away. */
     private var knownItemIds: Set<String> = emptySet()
 
+    /** Ids of [DownloadItemState.STOPPED] items already dismissed — mirrors [notifiedFailureIds],
+     * but cancels the notification outright instead of replacing it, so tapping Stop closes the
+     * row immediately rather than leaving it stuck on its last in-progress message. */
+    private val dismissedStoppedIds = mutableSetOf<String>()
+
     companion object {
         private const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
         private const val ACTION_RESUME = "MEDIA_DOWNLOAD_RESUME"
@@ -149,6 +154,7 @@ class MediaDownloadService : Service() {
                 val notificationManager: NotificationManager = getSystemService()!!
 
                 cancelRemovedItemNotifications(items, notificationManager)
+                cancelStoppedNotifications(items, notificationManager)
                 notifyNewFailures(items, notificationManager)
                 notifyNewCompletions(items, notificationManager)
 
@@ -194,6 +200,20 @@ class MediaDownloadService : Service() {
         val removedIds = knownItemIds - currentIds
         removedIds.forEach { id -> notificationManager.cancel(id.hashCode()) }
         knownItemIds = currentIds
+    }
+
+    /** Dismisses a [DownloadItemState.STOPPED] item's notification the first time it's seen —
+     * stopped items are terminal, so [startObservingActiveItems] otherwise never touches their
+     * notification again, leaving Stop's last "Downloading…"/"Paused" message stuck forever. */
+    private fun cancelStoppedNotifications(items: List<DownloadItem>, notificationManager: NotificationManager) {
+        val stoppedItems = items.filter { it.state == DownloadItemState.STOPPED }
+        dismissedStoppedIds.retainAll(stoppedItems.map { it.id }.toSet())
+
+        stoppedItems.forEach { item ->
+            if (dismissedStoppedIds.add(item.id)) {
+                notificationManager.cancel(item.notificationId())
+            }
+        }
     }
 
     /** Posts a dismissible error notification the first time an item is seen as [DownloadItemState.FAILED] —
