@@ -9,7 +9,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadPhase
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.hls.HlsManifestResolver
 import com.flixclusive.data.downloads.hls.HlsResolutionResult
@@ -140,11 +140,11 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             .downloadConcurrencyLimit
             .coerceAtLeast(1)
 
-    private suspend fun currentLinkSelectionMode(): DownloadLinkSelectionMode =
+    private suspend fun currentLinkSortDirection(): DownloadLinkSortDirection =
         dataStoreManager
             .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
             .first()
-            .downloadLinkSelectionMode
+            .downloadLinkSortDirection
 
     private suspend fun tryReserveSlot(itemId: String): Boolean =
         dispatchMutex.withLock {
@@ -316,7 +316,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         val destinationFile = resolveOrCreateStreamFile(itemId, item, directory, fileName)
             ?: return fail(itemId, "Unable to create destination file")
 
-        val resolution = hlsManifestResolver.resolve(sourceUrl, headers, currentLinkSelectionMode())
+        val resolution = hlsManifestResolver.resolve(sourceUrl, headers, currentLinkSortDirection())
         val playlist = when (resolution) {
             is HlsResolutionResult.Success -> resolution.playlist
             is HlsResolutionResult.Failed -> return markDeadAndRetryOrFail(

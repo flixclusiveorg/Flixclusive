@@ -60,6 +60,7 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
         val ranked = DownloadLinkRanker.rank(
             candidates = probed,
             mode = dataPreferences.downloadLinkSelectionMode,
+            direction = dataPreferences.downloadLinkSortDirection,
             preferredQuality = playerPreferences.quality,
         )
 

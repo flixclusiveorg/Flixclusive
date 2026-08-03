@@ -1,6 +1,7 @@
 package com.flixclusive.core.datastore.model.user
 
 import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -27,11 +28,15 @@ data class DataPreferences(
      */
     val deadLinkRetentionDays: Int = DEFAULT_DEAD_LINK_RETENTION_DAYS,
     /**
-     * Preference for ranking candidate streaming links when starting a download:
-     * closest to the player's preferred quality first, or largest known size first.
-     * Speed is always the secondary sort key.
+     * Preference for ranking candidate streaming links when starting a download: closest to the
+     * player's preferred quality first, or by known size first. Speed is always the secondary
+     * sort key. See [downloadLinkSortDirection] for which end of that axis to prefer.
      */
     val downloadLinkSelectionMode: DownloadLinkSelectionMode = DownloadLinkSelectionMode.QUALITY_FIRST,
+    /**
+     * Which end of [downloadLinkSelectionMode]'s axis to prefer — see [DownloadLinkSortDirection].
+     */
+    val downloadLinkSortDirection: DownloadLinkSortDirection = DownloadLinkSortDirection.HIGHEST_FIRST,
     /**
      * Maximum number of downloads (movies/episodes) allowed to transfer at the same time.
      * Items beyond this limit stay queued (FIFO by queue time) until a slot frees up.

@@ -1,7 +1,7 @@
 package com.flixclusive.data.downloads.hls.impl
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.data.downloads.hls.HlsResolutionResult
@@ -82,7 +82,7 @@ class HlsManifestResolverImplTest {
             val result = resolver.resolve(
                 server.url("/media.m3u8").toString(),
                 emptyMap(),
-                DownloadLinkSelectionMode.QUALITY_FIRST
+                DownloadLinkSortDirection.HIGHEST_FIRST
             )
 
             expectThat(result)
@@ -99,7 +99,7 @@ class HlsManifestResolverImplTest {
             val result = resolver.resolve(
                 server.url("/media.m3u8").toString(),
                 emptyMap(),
-                DownloadLinkSelectionMode.QUALITY_FIRST
+                DownloadLinkSortDirection.HIGHEST_FIRST
             )
 
             expectThat(result).isA<HlsResolutionResult.Failed>()
@@ -115,7 +115,7 @@ class HlsManifestResolverImplTest {
     """.trimIndent()
 
     @Test
-    fun resolveShouldSelectHighestQualityVariantWhenQualityFirst() =
+    fun resolveShouldSelectHighestQualityVariantWhenDirectionIsHighestFirst() =
         runTest(testDispatcher) {
             server.enqueue(MockResponse().setBody(twoVariantMaster))
             server.enqueue(MockResponse().setBody(vodMediaPlaylist))
@@ -123,7 +123,7 @@ class HlsManifestResolverImplTest {
             resolver.resolve(
                 server.url("/master.m3u8").toString(),
                 emptyMap(),
-                DownloadLinkSelectionMode.QUALITY_FIRST
+                DownloadLinkSortDirection.HIGHEST_FIRST
             )
 
             val requestedPaths = listOf(server.takeRequest().path, server.takeRequest().path)
@@ -131,7 +131,7 @@ class HlsManifestResolverImplTest {
         }
 
     @Test
-    fun resolveShouldSelectLowestQualityVariantWhenSizeFirst() =
+    fun resolveShouldSelectLowestQualityVariantWhenDirectionIsLowestFirst() =
         runTest(testDispatcher) {
             server.enqueue(MockResponse().setBody(twoVariantMaster))
             server.enqueue(MockResponse().setBody(vodMediaPlaylist))
@@ -139,7 +139,7 @@ class HlsManifestResolverImplTest {
             resolver.resolve(
                 server.url("/master.m3u8").toString(),
                 emptyMap(),
-                DownloadLinkSelectionMode.SIZE_FIRST
+                DownloadLinkSortDirection.LOWEST_FIRST
             )
 
             val requestedPaths = listOf(server.takeRequest().path, server.takeRequest().path)
@@ -162,7 +162,7 @@ class HlsManifestResolverImplTest {
             val result = resolver.resolve(
                 server.url("/master.m3u8").toString(),
                 emptyMap(),
-                DownloadLinkSelectionMode.QUALITY_FIRST
+                DownloadLinkSortDirection.HIGHEST_FIRST
             )
 
             expectThat(result).isA<HlsResolutionResult.Failed>()
@@ -186,7 +186,7 @@ class HlsManifestResolverImplTest {
             val result = resolver.resolve(
                 server.url("/media.m3u8").toString(),
                 emptyMap(),
-                DownloadLinkSelectionMode.QUALITY_FIRST
+                DownloadLinkSortDirection.HIGHEST_FIRST
             )
 
             expectThat(result)

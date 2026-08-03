@@ -1,6 +1,6 @@
 package com.flixclusive.data.downloads.hls
 
-import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 
 data class HlsSegmentInfo(
     val url: String,
@@ -31,14 +31,14 @@ interface HlsManifestResolver {
      * ready for download. Fails for live (no `#EXT-X-ENDLIST`) manifests since a live stream has
      * no finite end to download.
      *
-     * @param mode among usable (muxed-audio, non-trick-play) variants, [DownloadLinkSelectionMode.QUALITY_FIRST]
-     * picks the highest resolution/bitrate and [DownloadLinkSelectionMode.SIZE_FIRST] the lowest —
-     * HLS variant size tracks resolution directly, so there's no separate probed-size axis the way
-     * there is for progressive links.
+     * @param direction among usable (muxed-audio, non-trick-play) variants, [DownloadLinkSortDirection.HIGHEST_FIRST]
+     * picks the highest resolution/bitrate and [DownloadLinkSortDirection.LOWEST_FIRST] the lowest —
+     * an HLS variant's file size tracks its resolution directly, so quality and size are the same
+     * single axis here, unlike progressive links where they're probed independently.
      */
     suspend fun resolve(
         url: String,
         headers: Map<String, String>,
-        mode: DownloadLinkSelectionMode,
+        direction: DownloadLinkSortDirection,
     ): HlsResolutionResult
 }
