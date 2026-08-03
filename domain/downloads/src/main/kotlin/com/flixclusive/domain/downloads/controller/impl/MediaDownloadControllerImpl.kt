@@ -460,6 +460,15 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
         val alreadyDownloaded = mediaDownloadRepository.getItem(itemId)?.downloadedSubtitlesCount ?: 0
         for (subtitle in subtitles.drop(alreadyDownloaded)) {
+            // Each subtitle file is its own runTransfer() call, and runTransfer() clears any
+            // pending interrupt flag the instant it starts — so a pause/stop requested between
+            // two (typically near-instant) subtitle transfers would otherwise be silently wiped
+            // before shouldInterrupt is ever checked for the next file. Catch it here instead.
+            val pendingInterrupt = mediaDownloadRepository.consumeInterruptReason(itemId)
+            if (pendingInterrupt != null) {
+                return applyInterrupt(itemId, pendingInterrupt, DownloadPhase.SUBTITLES, directory)
+            }
+
             mediaDownloadRepository.resetChunks(itemId)
 
             val fileName = DownloadPathUtil.buildSubtitleFileName(
@@ -497,13 +506,27 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         phase: DownloadPhase,
         directory: UniFile,
     ) {
-        when (mediaDownloadRepository.consumeInterruptReason(itemId)) {
+        val reason = mediaDownloadRepository.consumeInterruptReason(itemId) ?: DownloadInterruptReason.PAUSE
+        applyInterrupt(itemId, reason, phase, directory)
+    }
+
+    private suspend fun applyInterrupt(
+        itemId: String,
+        reason: DownloadInterruptReason,
+        phase: DownloadPhase,
+        directory: UniFile,
+    ) {
+        when (reason) {
             DownloadInterruptReason.STOP -> {
                 directory.delete()
                 mediaDownloadRepository.resetChunks(itemId)
                 mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, null)
             }
-            else -> mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, phase)
+            DownloadInterruptReason.PAUSE -> mediaDownloadRepository.updateState(
+                itemId,
+                DownloadItemState.PAUSED,
+                phase
+            )
         }
     }
 

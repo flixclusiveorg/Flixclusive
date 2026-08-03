@@ -140,6 +140,10 @@ class MediaDownloadControllerImplTest {
         dataStoreManager = mockk()
         setConcurrencyLimit(3)
         coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns null
+        // Relaxed mocks default an unstubbed enum-returning call to its first declared constant
+        // rather than null, so without this every runSubtitlePhase() per-file interrupt pre-check
+        // would see a phantom pending PAUSE. Tests exercising an actual pause/stop override this.
+        coEvery { mediaDownloadRepository.consumeInterruptReason(any()) } returns null
         coEvery { mediaLinksRepository.getLinks(any(), any(), any(), any()) } returns emptyList()
 
         every { downloadDirectoryRepository.getOrCreateFile(directory, any()) } returns streamFile
@@ -394,6 +398,48 @@ class MediaDownloadControllerImplTest {
             coVerify(exactly = 1) { mediaDownloadRepository.incrementDownloadedSubtitlesCount(itemId) }
             coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
             coVerify(exactly = 0) { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, any()) }
+        }
+
+    @Test
+    fun `start should pause between subtitle files when a pause lands after one already completed`() =
+        runTest(testDispatcher) {
+            // Regression test: each subtitle is its own runTransfer() call, and runTransfer()
+            // used to clear any interrupt flag the instant it started — so a pause requested
+            // between two (near-instant) subtitle transfers was silently discarded, and the whole
+            // subtitle phase ran to completion regardless of the pause tap.
+            val subtitle1 = cachedSubtitle("en", "https://s/en.srt")
+            val subtitle2 = cachedSubtitle("es", "https://s/es.srt")
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns
+                listOf(MediaLinksWithData(media = media, subtitles = listOf(subtitle1, subtitle2)))
+            coEvery {
+                mediaDownloadRepository.runTransfer(
+                    itemId,
+                    DownloadPhase.SUBTITLES,
+                    subtitle1.url,
+                    any(),
+                    subtitleFile,
+                    any()
+                )
+            } returns MediaTransferResult.Completed
+            // No interrupt pending before subtitle1, but one lands right after it completes.
+            coEvery { mediaDownloadRepository.consumeInterruptReason(itemId) } returnsMany
+                listOf(null, DownloadInterruptReason.PAUSE)
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { mediaDownloadRepository.incrementDownloadedSubtitlesCount(itemId) }
+            coVerify(exactly = 0) {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.SUBTITLES, subtitle2.url, any(), any(), any())
+            }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, DownloadPhase.SUBTITLES) }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
         }
 
     @Test
