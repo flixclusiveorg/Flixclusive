@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.screen.downloads
 
+import android.content.Context
 import android.text.format.Formatter
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -19,6 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -47,6 +51,7 @@ internal fun DownloadItemCard(
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val isDimmed = item.state == DownloadItemState.STOPPED
 
     Surface(
@@ -57,7 +62,9 @@ internal fun DownloadItemCard(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium,
     ) {
-        Column(modifier = Modifier.padding(12.dp).animateContentSize()) {
+        Column(modifier = Modifier
+            .padding(12.dp)
+            .animateContentSize()) {
             Row(verticalAlignment = Alignment.Top) {
                 Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
                     Icon(
@@ -111,23 +118,24 @@ internal fun DownloadItemCard(
             // Shown whenever there's data to report, regardless of the item's current phase —
             // e.g. the stream row stays visible once fetching subtitles starts, not just while
             // DOWNLOADING_STREAM is active, and vice versa.
-            val streamProgress = item.streamProgress()
-            if (streamProgress != null) {
+            val hasStreamProgress by remember {
+                derivedStateOf { item.streamTotalBytes > 0 }
+            }
+            if (hasStreamProgress) {
                 Spacer(modifier = Modifier.height(8.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_video_label),
-                    progress = streamProgress,
-                    valueText = item.streamValueText(),
+                    progress = { item.streamProgress() },
+                    valueText = { item.streamValueText(context) },
                 )
             }
 
-            val subtitlesProgress = item.subtitlesProgress()
-            if (subtitlesProgress != null) {
+            if (item.totalSubtitlesCount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_subtitles_label),
-                    progress = subtitlesProgress,
-                    valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
+                    progress = { item.subtitlesProgress() },
+                    valueText = { "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}" },
                 )
             }
         }
@@ -137,8 +145,8 @@ internal fun DownloadItemCard(
 @Composable
 private fun DownloadProgressRow(
     label: String,
-    progress: Float,
-    valueText: String,
+    progress: () -> Float,
+    valueText: () -> String,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -152,7 +160,7 @@ private fun DownloadProgressRow(
         )
 
         LinearProgressIndicator(
-            progress = { progress },
+            progress = progress,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 8.dp)
@@ -160,7 +168,7 @@ private fun DownloadProgressRow(
         )
 
         Text(
-            text = valueText,
+            text = valueText(),
             style = MaterialTheme.typography.labelSmall,
         )
     }
@@ -247,27 +255,25 @@ private fun IconAction(
     }
 }
 
-private fun DownloadItem.streamProgress(): Float? {
-    if (streamTotalBytes <= 0) return null
+private fun DownloadItem.streamProgress(): Float {
+    if (streamTotalBytes <= 0) return 0f
     return (streamBytesDownloaded.toFloat() / streamTotalBytes.toFloat()).coerceIn(0f, 1f)
 }
 
-private fun DownloadItem.subtitlesProgress(): Float? {
-    if (totalSubtitlesCount <= 0) return null
+private fun DownloadItem.subtitlesProgress(): Float {
+    if (totalSubtitlesCount <= 0) return 0f
     return (downloadedSubtitlesCount.toFloat() / totalSubtitlesCount.toFloat()).coerceIn(0f, 1f)
 }
 
-@Composable
-private fun DownloadItem.streamValueText(): String {
+private fun DownloadItem.streamValueText(context: Context): String {
     if (isHlsStream) {
-        return stringResource(
+        return context.getString(
             LocaleR.string.download_progress_segments_format,
             streamBytesDownloaded.toInt(),
             streamTotalBytes.toInt(),
         )
     }
 
-    val context = LocalContext.current
     val downloaded = Formatter.formatShortFileSize(context, streamBytesDownloaded)
     val total = Formatter.formatShortFileSize(context, streamTotalBytes)
     return "$downloaded / $total"

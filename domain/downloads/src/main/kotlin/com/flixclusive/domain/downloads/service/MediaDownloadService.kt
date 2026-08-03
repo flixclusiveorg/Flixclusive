@@ -63,6 +63,11 @@ class MediaDownloadService : Service() {
      * just vanishing once it drops out of [startObservingActiveItems]'s active-items set. */
     private val notifiedCompletionIds = mutableSetOf<String>()
 
+    /** Every item id seen in the last emission, so a row that disappears entirely (deleted) can
+     * have its notification explicitly cancelled — nothing else ever does, since Android doesn't
+     * remove a previously-posted notification just because the underlying data went away. */
+    private var knownItemIds: Set<String> = emptySet()
+
     companion object {
         private const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
         private const val ACTION_RESUME = "MEDIA_DOWNLOAD_RESUME"
@@ -72,6 +77,7 @@ class MediaDownloadService : Service() {
 
         internal const val NOTIFICATION_CHANNEL_ID = "download_channel"
         private const val SUMMARY_NOTIFICATION_ID = Int.MAX_VALUE
+        private const val QUEUED_GROUP_NOTIFICATION_ID = Int.MAX_VALUE - 1
         private const val NOTIFICATION_GROUP_KEY = "media_downloads_group"
 
         fun ensureStarted(context: Context) {
@@ -140,16 +146,19 @@ class MediaDownloadService : Service() {
     private fun startObservingActiveItems() {
         observerJob = serviceScope.launch {
             mediaDownloadRepository.observeAllItems().collectLatest { items ->
+                val notificationManager: NotificationManager = getSystemService()!!
+
+                cancelRemovedItemNotifications(items, notificationManager)
+                notifyNewFailures(items, notificationManager)
+                notifyNewCompletions(items, notificationManager)
+
                 // QUEUED counts as active too: a freshly queued item stays QUEUED for the whole
                 // link-resolution/probing window before its state ever reaches DOWNLOADING_STREAM,
                 // so excluding it here made the service tear itself down mid-resolution.
                 val activeItems = items.filter { !it.state.isTerminal }
-                val notificationManager: NotificationManager = getSystemService()!!
-
-                notifyNewFailures(items, notificationManager)
-                notifyNewCompletions(items, notificationManager)
 
                 if (activeItems.isEmpty()) {
+                    notificationManager.cancel(QUEUED_GROUP_NOTIFICATION_ID)
                     scheduleServiceStop()
                     return@collectLatest
                 }
@@ -157,11 +166,34 @@ class MediaDownloadService : Service() {
                 stopServiceJob?.cancel()
                 safeStartForeground(SUMMARY_NOTIFICATION_ID, buildSummaryNotification(activeItems.size))
 
-                activeItems.forEach { item ->
+                // QUEUED items are collapsed into a single count notification instead of one each —
+                // otherwise a big batch queue floods the shade with rows that have nothing to show
+                // yet, and (since QUEUED shares the same download icon as an active transfer) reads
+                // as though everything queued is already downloading.
+                val (queuedItems, inProgressItems) = activeItems.partition { it.state == DownloadItemState.QUEUED }
+
+                inProgressItems.forEach { item ->
                     notificationManager.notify(item.notificationId(), buildItemNotification(item))
+                }
+
+                if (queuedItems.isNotEmpty()) {
+                    queuedItems.forEach { notificationManager.cancel(it.notificationId()) }
+                    notificationManager.notify(
+                        QUEUED_GROUP_NOTIFICATION_ID,
+                        buildQueuedGroupNotification(queuedItems.size)
+                    )
+                } else {
+                    notificationManager.cancel(QUEUED_GROUP_NOTIFICATION_ID)
                 }
             }
         }
+    }
+
+    private fun cancelRemovedItemNotifications(items: List<DownloadItem>, notificationManager: NotificationManager) {
+        val currentIds = items.map { it.id }.toSet()
+        val removedIds = knownItemIds - currentIds
+        removedIds.forEach { id -> notificationManager.cancel(id.hashCode()) }
+        knownItemIds = currentIds
     }
 
     /** Posts a dismissible error notification the first time an item is seen as [DownloadItemState.FAILED] —
@@ -308,6 +340,16 @@ class MediaDownloadService : Service() {
             .build()
     }
 
+    private fun buildQueuedGroupNotification(count: Int): Notification =
+        NotificationCompat
+            .Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setContentTitle("Queued")
+            .setContentText(if (count == 1) "1 download queued" else "$count downloads queued")
+            .setSmallIcon(android.R.drawable.ic_popup_sync)
+            .setGroup(NOTIFICATION_GROUP_KEY)
+            .setOngoing(true)
+            .build()
+
     private fun buildCompletedNotification(item: DownloadItem): Notification =
         NotificationCompat
             .Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -336,12 +378,16 @@ class MediaDownloadService : Service() {
         when (item.state) {
             DownloadItemState.DOWNLOADING_STREAM -> {
                 val percent = percentOf(item.streamBytesDownloaded, item.streamTotalBytes)
-                val text = if (item.streamTotalBytes > 0) {
-                    "Downloading video… ${formatSize(
-                        item.streamBytesDownloaded
-                    )} / ${formatSize(item.streamTotalBytes)}"
-                } else {
-                    "Downloading video… ${formatSize(item.streamBytesDownloaded)}"
+                val text = when {
+                    // HLS reuses these same columns for a segment count, not a byte count — running
+                    // it through formatSize() would render a handful of segments as a bogus "1 KB".
+                    item.isHlsStream && item.streamTotalBytes > 0 ->
+                        "Downloading video… ${item.streamBytesDownloaded}/${item.streamTotalBytes} segments"
+                    item.streamTotalBytes > 0 ->
+                        "Downloading video… ${formatSize(
+                            item.streamBytesDownloaded
+                        )} / ${formatSize(item.streamTotalBytes)}"
+                    else -> "Downloading video… ${formatSize(item.streamBytesDownloaded)}"
                 }
                 percent to text
             }

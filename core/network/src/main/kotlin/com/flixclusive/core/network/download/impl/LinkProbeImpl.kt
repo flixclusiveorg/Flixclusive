@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class LinkProbeImpl @Inject constructor(
     client: OkHttpClient,
@@ -29,7 +30,7 @@ internal class LinkProbeImpl @Inject constructor(
         headers: Map<String, String>,
     ): LinkProbeResult =
         withContext(appDispatchers.io) {
-            withTimeoutOrNull(PROBE_TIMEOUT_MS) { runProbe(url, headers) } ?: UNREACHABLE_RESULT
+            withTimeoutOrNull(PROBE_TIMEOUT_MS.milliseconds) { runProbe(url, headers) } ?: UNREACHABLE_RESULT
         }
 
     private fun runProbe(
@@ -63,7 +64,25 @@ internal class LinkProbeImpl @Inject constructor(
     private data class ThroughputSample(
         val bytesPerSecond: Long?,
         val firstChunk: ByteArray,
-    )
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as ThroughputSample
+
+            if (bytesPerSecond != other.bytesPerSecond) return false
+            if (!firstChunk.contentEquals(other.firstChunk)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = bytesPerSecond?.hashCode() ?: 0
+            result = 31 * result + firstChunk.contentHashCode()
+            return result
+        }
+    }
 
     private fun readThroughputSample(response: Response): ThroughputSample {
         val source = response.body.source()
