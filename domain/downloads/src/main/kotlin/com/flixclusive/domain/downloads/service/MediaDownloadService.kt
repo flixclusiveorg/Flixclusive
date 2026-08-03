@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.text.format.Formatter
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -56,6 +57,11 @@ class MediaDownloadService : Service() {
      * failure (e.g. from an unrelated item's progress update) don't re-alert. Cleared once the
      * item is retried/deleted and no longer reports as failed. */
     private val notifiedFailureIds = mutableSetOf<String>()
+
+    /** Ids of [DownloadItemState.COMPLETED] items already notified — mirrors [notifiedFailureIds]
+     * so a completed item's notification is replaced with a "Complete" message once instead of
+     * just vanishing once it drops out of [startObservingActiveItems]'s active-items set. */
+    private val notifiedCompletionIds = mutableSetOf<String>()
 
     companion object {
         private const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
@@ -141,6 +147,7 @@ class MediaDownloadService : Service() {
                 val notificationManager: NotificationManager = getSystemService()!!
 
                 notifyNewFailures(items, notificationManager)
+                notifyNewCompletions(items, notificationManager)
 
                 if (activeItems.isEmpty()) {
                     scheduleServiceStop()
@@ -166,6 +173,22 @@ class MediaDownloadService : Service() {
         failedItems.forEach { item ->
             if (notifiedFailureIds.add(item.id)) {
                 notificationManager.notify(item.notificationId(), buildErrorNotification(item))
+            }
+        }
+    }
+
+    /** Posts a dismissible "Complete" notification the first time an item is seen as
+     * [DownloadItemState.COMPLETED] — completed items are terminal, so [startObservingActiveItems]
+     * otherwise never surfaces them again, and the item's last in-progress notification would
+     * otherwise sit there stale (or disappear entirely once the service stops itself) instead of
+     * reflecting that the download finished. */
+    private fun notifyNewCompletions(items: List<DownloadItem>, notificationManager: NotificationManager) {
+        val completedItems = items.filter { it.state == DownloadItemState.COMPLETED }
+        notifiedCompletionIds.retainAll(completedItems.map { it.id }.toSet())
+
+        completedItems.forEach { item ->
+            if (notifiedCompletionIds.add(item.id)) {
+                notificationManager.notify(item.notificationId(), buildCompletedNotification(item))
             }
         }
     }
@@ -236,11 +259,17 @@ class MediaDownloadService : Service() {
     private fun buildItemNotification(item: DownloadItem): Notification {
         val (progress, statusText) = progressAndStatusFor(item)
 
+        val icon = if (item.state == DownloadItemState.PAUSED) {
+            android.R.drawable.ic_media_pause
+        } else {
+            android.R.drawable.stat_sys_download
+        }
+
         val builder = NotificationCompat
             .Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle(item.displayTitle())
             .setContentText(statusText)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setSmallIcon(icon)
             .setGroup(NOTIFICATION_GROUP_KEY)
             .setOngoing(true)
 
@@ -279,6 +308,17 @@ class MediaDownloadService : Service() {
             .build()
     }
 
+    private fun buildCompletedNotification(item: DownloadItem): Notification =
+        NotificationCompat
+            .Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setContentTitle(item.displayTitle())
+            .setContentText("Download complete")
+            .setSmallIcon(android.R.drawable.stat_sys_download_done)
+            .setGroup(NOTIFICATION_GROUP_KEY)
+            .setOngoing(false)
+            .setAutoCancel(true)
+            .build()
+
     /** Falls back to the media title, with the `SxxExx` tag appended for episodes — downloads
      * don't persist an episode title of their own (see [DownloadItem]). */
     private fun DownloadItem.displayTitle(): String {
@@ -294,8 +334,17 @@ class MediaDownloadService : Service() {
 
     private fun progressAndStatusFor(item: DownloadItem): Pair<Int?, String> =
         when (item.state) {
-            DownloadItemState.DOWNLOADING_STREAM -> percentOf(item.streamBytesDownloaded, item.streamTotalBytes)
-                .let { it to "Downloading video… $it%" }
+            DownloadItemState.DOWNLOADING_STREAM -> {
+                val percent = percentOf(item.streamBytesDownloaded, item.streamTotalBytes)
+                val text = if (item.streamTotalBytes > 0) {
+                    "Downloading video… ${formatSize(
+                        item.streamBytesDownloaded
+                    )} / ${formatSize(item.streamTotalBytes)}"
+                } else {
+                    "Downloading video… ${formatSize(item.streamBytesDownloaded)}"
+                }
+                percent to text
+            }
             DownloadItemState.FETCHING_SUBTITLES ->
                 percentOf(item.downloadedSubtitlesCount.toLong(), item.totalSubtitlesCount.toLong())
                     .let { it to "Downloading subtitles… ${item.downloadedSubtitlesCount}/${item.totalSubtitlesCount}" }
@@ -306,6 +355,8 @@ class MediaDownloadService : Service() {
 
     private fun percentOf(current: Long, total: Long): Int =
         if (total <= 0) 0 else ((current * 100) / total).toInt().coerceIn(0, 100)
+
+    private fun formatSize(bytes: Long): String = Formatter.formatShortFileSize(this, bytes)
 
     private fun actionPendingIntent(action: String, itemId: String): PendingIntent {
         val intent = Intent(this, MediaDownloadService::class.java).apply {

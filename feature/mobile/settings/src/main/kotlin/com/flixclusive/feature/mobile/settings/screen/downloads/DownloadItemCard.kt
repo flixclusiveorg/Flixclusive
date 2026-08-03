@@ -1,6 +1,8 @@
 package com.flixclusive.feature.mobile.settings.screen.downloads
 
 import android.text.format.Formatter
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -46,7 +48,6 @@ internal fun DownloadItemCard(
     modifier: Modifier = Modifier,
 ) {
     val isDimmed = item.state == DownloadItemState.STOPPED
-    val isShowingProgress = item.state.isTransferring() || item.state == DownloadItemState.PAUSED
 
     Surface(
         modifier = modifier
@@ -56,20 +57,22 @@ internal fun DownloadItemCard(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium,
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(12.dp).animateContentSize()) {
             Row(verticalAlignment = Alignment.Top) {
-                Icon(
-                    painter = painterResource(downloadStateIcon(item.state)),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(top = 2.dp),
-                    tint = if (item.state == DownloadItemState.FAILED) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    }
-                )
+                Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
+                    Icon(
+                        painter = painterResource(downloadStateIcon(state)),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(top = 2.dp),
+                        tint = if (state == DownloadItemState.FAILED) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -105,26 +108,27 @@ internal fun DownloadItemCard(
                 )
             }
 
-            if (isShowingProgress) {
-                val streamProgress = item.streamProgress()
-                if (streamProgress != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    DownloadProgressRow(
-                        label = stringResource(LocaleR.string.download_progress_video_label),
-                        progress = streamProgress,
-                        valueText = item.streamValueText(),
-                    )
-                }
+            // Shown whenever there's data to report, regardless of the item's current phase —
+            // e.g. the stream row stays visible once fetching subtitles starts, not just while
+            // DOWNLOADING_STREAM is active, and vice versa.
+            val streamProgress = item.streamProgress()
+            if (streamProgress != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                DownloadProgressRow(
+                    label = stringResource(LocaleR.string.download_progress_video_label),
+                    progress = streamProgress,
+                    valueText = item.streamValueText(),
+                )
+            }
 
-                val subtitlesProgress = item.subtitlesProgress()
-                if (subtitlesProgress != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    DownloadProgressRow(
-                        label = stringResource(LocaleR.string.download_progress_subtitles_label),
-                        progress = subtitlesProgress,
-                        valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
-                    )
-                }
+            val subtitlesProgress = item.subtitlesProgress()
+            if (subtitlesProgress != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                DownloadProgressRow(
+                    label = stringResource(LocaleR.string.download_progress_subtitles_label),
+                    progress = subtitlesProgress,
+                    valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
+                )
             }
         }
     }
@@ -242,10 +246,6 @@ private fun IconAction(
         )
     }
 }
-
-private fun DownloadItemState.isTransferring(): Boolean = this == DownloadItemState.DOWNLOADING_STREAM ||
-    this == DownloadItemState.STREAM_COMPLETE ||
-    this == DownloadItemState.FETCHING_SUBTITLES
 
 private fun DownloadItem.streamProgress(): Float? {
     if (streamTotalBytes <= 0) return null
