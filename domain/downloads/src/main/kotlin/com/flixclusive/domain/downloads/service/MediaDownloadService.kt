@@ -96,6 +96,13 @@ class MediaDownloadService : Service() {
             createNotificationChannel()
         }
 
+        // Must run synchronously here: `startForegroundService()` requires `startForeground()`
+        // to be called within a few seconds or the OS kills the process with a
+        // RemoteServiceException. The real summary notification below is posted once the item
+        // Flow in startObservingActiveItems() emits, but that's async and may resolve to zero
+        // active items, which previously left startForeground() uncalled entirely.
+        safeStartForeground(SUMMARY_NOTIFICATION_ID, buildSummaryNotification(0))
+
         setupWakeLock()
         startObservingActiveItems()
     }
@@ -211,8 +218,13 @@ class MediaDownloadService : Service() {
         NotificationCompat
             .Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Downloading")
-            .setContentText(if (activeCount == 1) "1 download in progress" else "$activeCount downloads in progress")
-            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setContentText(
+                when {
+                    activeCount <= 0 -> "Preparing downloads…"
+                    activeCount == 1 -> "1 download in progress"
+                    else -> "$activeCount downloads in progress"
+                },
+            ).setSmallIcon(android.R.drawable.stat_sys_download)
             .setGroup(NOTIFICATION_GROUP_KEY)
             .setGroupSummary(true)
             .setOngoing(true)
