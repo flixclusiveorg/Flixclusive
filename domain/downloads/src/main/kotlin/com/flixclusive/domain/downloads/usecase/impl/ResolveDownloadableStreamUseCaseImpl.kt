@@ -8,9 +8,10 @@ import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.download.LinkProbe
 import com.flixclusive.core.network.download.LinkProbeResult
+import com.flixclusive.data.provider.repository.MediaLinksRepository
+import com.flixclusive.data.provider.util.extensions.toStream
 import com.flixclusive.domain.downloads.usecase.RankedDownloadCandidate
 import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
-import com.flixclusive.domain.downloads.usecase.ResolvedDownloadableStream
 import com.flixclusive.domain.downloads.util.DownloadLinkRanker
 import com.flixclusive.model.provider.link.Stream
 import kotlinx.coroutines.async
@@ -21,9 +22,29 @@ import com.flixclusive.core.strings.R as LocaleR
 
 internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
     private val dataStoreManager: DataStoreManager,
+    private val mediaLinksRepository: MediaLinksRepository,
     private val linkProbe: LinkProbe,
 ) : ResolveDownloadableStreamUseCase {
-    override suspend fun invoke(streams: List<Stream>): Async<ResolvedDownloadableStream> {
+    override suspend fun invoke(
+        ownerId: String,
+        mediaId: String,
+        seasonNumber: Int?,
+        episodeNumber: Int?,
+    ): Async<RankedDownloadCandidate> {
+        val cachedLinks = mediaLinksRepository.getLinks(
+            ownerId = ownerId,
+            mediaId = mediaId,
+            episodeNumber = episodeNumber,
+            seasonNumber = seasonNumber,
+        )
+
+        val streams = cachedLinks
+            .flatMap { it.streams }
+            // Third-party gateway links hand off to another site's own web player, not a
+            // direct file/manifest URL — there's nothing downloadable to transfer.
+            .filter { it.isValid && !it.isThirdPartyGateway }
+            .map { it.toStream() }
+
         if (streams.isEmpty()) {
             return Async.Failure(UiText.from(LocaleR.string.no_download_links_available))
         }
@@ -42,25 +63,15 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
             preferredQuality = playerPreferences.quality,
         )
 
-        val primaryIndex = ranked
-            .take(MAX_FALLBACK_ATTEMPTS)
-            .indexOfFirst { (_, result) -> result.isReachable }
+        for ((stream, result) in ranked) {
+            if (result.isReachable) {
+                return Async.Success(RankedDownloadCandidate(stream, result.isHls))
+            }
 
-        if (primaryIndex == -1) {
-            return Async.Failure(UiText.from(LocaleR.string.download_link_resolution_failed))
+            mediaLinksRepository.setLinkStatus(stream.url, ownerId, isDead = true)
         }
 
-        val fallbacks = ranked
-            .filterIndexed { index, _ -> index != primaryIndex }
-            .map { (stream, result) -> RankedDownloadCandidate(stream, result.isHls) }
-
-        val (primaryStream, primaryResult) = ranked[primaryIndex]
-        return Async.Success(
-            ResolvedDownloadableStream(
-                primary = RankedDownloadCandidate(primaryStream, primaryResult.isHls),
-                fallbacks = fallbacks,
-            )
-        )
+        return Async.Failure(UiText.from(LocaleR.string.download_link_resolution_failed))
     }
 
     private suspend fun probeAll(streams: List<Stream>): List<Pair<Stream, LinkProbeResult>> =
@@ -69,8 +80,4 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
                 .map { stream -> stream to async { linkProbe.probe(stream.url, stream.customHeaders ?: emptyMap()) } }
                 .map { (stream, deferred) -> stream to deferred.await() }
         }
-
-    companion object {
-        private const val MAX_FALLBACK_ATTEMPTS = 3
-    }
 }

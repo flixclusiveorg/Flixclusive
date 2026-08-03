@@ -8,24 +8,22 @@ internal object Schema20to21 : Migration(20, 21) {
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `download_items` (
-                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `id` TEXT PRIMARY KEY NOT NULL,
+                `ownerId` TEXT NOT NULL,
                 `mediaId` TEXT NOT NULL,
                 `mediaTitle` TEXT NOT NULL,
                 `mediaType` TEXT NOT NULL,
                 `seasonNumber` INTEGER,
                 `episodeNumber` INTEGER,
-                `episodeTitle` TEXT,
                 `state` TEXT NOT NULL,
                 `phase` TEXT,
-                `streamUrl` TEXT,
-                `streamHeaders` TEXT,
+                `sourceUrl` TEXT,
+                `isHlsStream` INTEGER NOT NULL,
+                `streamFilePath` TEXT,
                 `streamBytesDownloaded` INTEGER NOT NULL,
                 `streamTotalBytes` INTEGER NOT NULL,
-                `subtitleUrl` TEXT,
-                `subtitleHeaders` TEXT,
-                `subtitleBytesDownloaded` INTEGER NOT NULL,
-                `subtitleTotalBytes` INTEGER NOT NULL,
-                `subtitleError` TEXT,
+                `downloadedSubtitlesCount` INTEGER NOT NULL,
+                `totalSubtitlesCount` INTEGER NOT NULL,
                 `errorMessage` TEXT,
                 `createdAt` INTEGER NOT NULL,
                 `updatedAt` INTEGER NOT NULL
@@ -34,12 +32,13 @@ internal object Schema20to21 : Migration(20, 21) {
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_download_items_mediaId` ON `download_items` (`mediaId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_download_items_state` ON `download_items` (`state`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_download_items_ownerId` ON `download_items` (`ownerId`)")
 
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `download_chunks` (
                 `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                `downloadItemId` INTEGER NOT NULL,
+                `downloadItemId` TEXT NOT NULL,
                 `chunkIndex` INTEGER NOT NULL,
                 `rangeStart` INTEGER NOT NULL,
                 `rangeEnd` INTEGER NOT NULL,

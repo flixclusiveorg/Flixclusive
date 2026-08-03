@@ -7,7 +7,6 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
-import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
@@ -29,16 +28,18 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     private val mediaTransferEngine: MediaTransferEngine,
     private val hlsTransferEngine: HlsTransferEngine,
 ) : MediaDownloadRepository {
-    private val interruptFlags = ConcurrentHashMap<Long, DownloadInterruptReason>()
-    private val lastProgressWriteTimes = ConcurrentHashMap<Long, Long>()
+    private val interruptFlags = ConcurrentHashMap<String, DownloadInterruptReason>()
+    private val lastProgressWriteTimes = ConcurrentHashMap<String, Long>()
 
-    override fun observeItem(id: Long): Flow<DownloadItem?> = downloadItemDao.getAsFlow(id)
+    override fun observeItem(id: String): Flow<DownloadItem?> = downloadItemDao.getAsFlow(id)
 
     override fun observeAllItems(): Flow<List<DownloadItem>> = downloadItemDao.getAllAsFlow()
 
-    override suspend fun getItem(id: Long): DownloadItem? = downloadItemDao.get(id)
+    override suspend fun getItem(id: String): DownloadItem? = downloadItemDao.get(id)
 
-    override suspend fun queue(item: DownloadItem): Long = downloadItemDao.insert(item)
+    override suspend fun queue(item: DownloadItem) {
+        downloadItemDao.insert(item)
+    }
 
     override suspend fun getOldestQueuedItem(): DownloadItem? = downloadItemDao.getOldestByState(
         DownloadItemState.QUEUED
@@ -55,7 +56,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     ): Flow<List<DownloadItem>> = downloadItemDao.getBatchAsFlow(mediaId, seasonNumber)
 
     override suspend fun updateState(
-        id: Long,
+        id: String,
         state: DownloadItemState,
         phase: DownloadPhase?,
     ) {
@@ -63,20 +64,13 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     }
 
     override suspend fun markError(
-        id: Long,
+        id: String,
         message: String,
     ) {
         downloadItemDao.updateError(id, message, Date())
     }
 
-    override suspend fun markSubtitleError(
-        id: Long,
-        message: String,
-    ) {
-        downloadItemDao.updateSubtitleError(id, message, Date())
-    }
-
-    override suspend fun resetChunks(id: Long) {
+    override suspend fun resetChunks(id: String) {
         downloadChunkDao.deleteChunksForItem(id)
         // Also zeroes the segment-count progress HLS items keep in the same columns, so a manual
         // retry restarts an HLS download instead of silently resuming it (matching the byte-range
@@ -84,18 +78,34 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         downloadItemDao.updateStreamProgress(id, 0, 0, Date())
     }
 
-    override suspend fun advanceStreamCandidate(id: Long): DownloadStreamCandidate? {
-        val item = downloadItemDao.get(id) ?: return null
-        val fallbackCandidates = item.streamFallbackCandidates ?: return null
-        val candidate = fallbackCandidates.firstOrNull() ?: return null
-        val remaining = fallbackCandidates.drop(1)
+    override suspend fun updateSource(
+        id: String,
+        sourceUrl: String?,
+        isHls: Boolean,
+    ) {
+        downloadItemDao.updateSource(id, sourceUrl, isHls, Date())
+    }
 
-        downloadItemDao.updateStreamSource(id, candidate.url, candidate.headers, remaining, candidate.isHls, Date())
-        return candidate
+    override suspend fun updateStreamFilePath(
+        id: String,
+        streamFilePath: String?,
+    ) {
+        downloadItemDao.updateStreamFilePath(id, streamFilePath, Date())
+    }
+
+    override suspend fun setTotalSubtitlesCount(
+        id: String,
+        count: Int,
+    ) {
+        downloadItemDao.setTotalSubtitlesCount(id, count, Date())
+    }
+
+    override suspend fun incrementDownloadedSubtitlesCount(id: String) {
+        downloadItemDao.incrementDownloadedSubtitlesCount(id, Date())
     }
 
     override suspend fun runTransfer(
-        id: Long,
+        id: String,
         phase: DownloadPhase,
         url: String,
         headers: Map<String, String>,
@@ -133,7 +143,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     }
 
     override suspend fun runHlsTransfer(
-        id: Long,
+        id: String,
         segments: List<HlsSegmentInfo>,
         startIndex: Int,
         headers: Map<String, String>,
@@ -153,7 +163,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     }
 
     private suspend fun writeHlsProgressThrottled(
-        id: Long,
+        id: String,
         segmentsWritten: Int,
         totalSegments: Int,
     ) {
@@ -166,12 +176,17 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         downloadItemDao.updateStreamProgress(id, segmentsWritten.toLong(), totalSegments.toLong(), Date())
     }
 
+    /** Only [DownloadPhase.STREAM] transfers write to [DownloadItem.streamBytesDownloaded] —
+     * subtitles track completion as a count ([DownloadItem.downloadedSubtitlesCount]), not bytes,
+     * even though they reuse this same chunked engine for their own resumable transfer. */
     private suspend fun writeAggregatedProgressThrottled(
-        id: Long,
+        id: String,
         phase: DownloadPhase,
         totalBytes: Long?,
         status: DownloadChunkStatus,
     ) {
+        if (phase != DownloadPhase.STREAM) return
+
         val now = System.currentTimeMillis()
         val lastWrite = lastProgressWriteTimes[id] ?: 0L
         val shouldWrite = status != DownloadChunkStatus.DOWNLOADING || now - lastWrite >= PROGRESS_WRITE_THROTTLE_MS
@@ -179,34 +194,19 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
 
         lastProgressWriteTimes[id] = now
         val totalDownloaded = downloadChunkDao.getChunksForItem(id).sumOf { it.bytesDownloaded }
-        val updatedAt = Date()
-
-        when (phase) {
-            DownloadPhase.STREAM -> downloadItemDao.updateStreamProgress(
-                id,
-                totalDownloaded,
-                totalBytes ?: 0,
-                updatedAt
-            )
-            DownloadPhase.SUBTITLES -> downloadItemDao.updateSubtitleProgress(
-                id,
-                totalDownloaded,
-                totalBytes ?: 0,
-                updatedAt
-            )
-        }
+        downloadItemDao.updateStreamProgress(id, totalDownloaded, totalBytes ?: 0, Date())
     }
 
     override fun requestInterrupt(
-        id: Long,
+        id: String,
         reason: DownloadInterruptReason,
     ) {
         interruptFlags[id] = reason
     }
 
-    override fun consumeInterruptReason(id: Long): DownloadInterruptReason? = interruptFlags.remove(id)
+    override fun consumeInterruptReason(id: String): DownloadInterruptReason? = interruptFlags.remove(id)
 
-    override suspend fun delete(id: Long) {
+    override suspend fun delete(id: String) {
         lastProgressWriteTimes.remove(id)
         downloadItemDao.delete(id)
     }

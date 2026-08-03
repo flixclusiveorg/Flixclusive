@@ -51,7 +51,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.Comm
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.settings.screen.links.manage.ManageMediaLinksTweakScreenArgs
-import com.flixclusive.feature.mobile.settings.screen.links.util.CacheLinksFormatUtil
+import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
 import com.flixclusive.feature.mobile.settings.screen.links.util.LinkUtil.toRelativeTime
 import com.flixclusive.model.media.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination

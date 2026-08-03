@@ -1,17 +1,25 @@
 package com.flixclusive.data.downloads.directory.impl
 
+import android.content.Context
+import android.net.Uri
 import com.hippo.unifile.UniFile
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
+import strikt.assertions.hasSize
+import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
 import strikt.assertions.isNull
 
 class DownloadDirectoryRepositoryImplTest {
+    private lateinit var context: Context
     private lateinit var repository: DownloadDirectoryRepositoryImpl
 
     private val mediaId = "123"
@@ -19,7 +27,14 @@ class DownloadDirectoryRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = DownloadDirectoryRepositoryImpl()
+        context = mockk()
+        repository = DownloadDirectoryRepositoryImpl(context)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(UniFile::class)
+        unmockkStatic(Uri::class)
     }
 
     private fun mockDirectory(children: MutableMap<String, UniFile> = mutableMapOf()): UniFile {
@@ -131,5 +146,86 @@ class DownloadDirectoryRepositoryImplTest {
         val result = repository.getOrCreateFile(directory, "Pilot.mp4")
 
         expectThat(result).isEqualTo(createdFile)
+    }
+
+    private fun mockUriParsing() {
+        mockkStatic(Uri::class)
+        every { Uri.parse(any()) } returns mockk()
+    }
+
+    @Test
+    fun `resolveFile should return null when the uri does not resolve to an existing file`() {
+        mockUriParsing()
+        mockkStatic(UniFile::class)
+        every { UniFile.fromUri(context, any()) } returns null
+
+        val result = repository.resolveFile("content://tree/document/video.mp4")
+
+        expectThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveFile should return null when the resolved file no longer exists on disk`() {
+        mockUriParsing()
+        val resolved = mockk<UniFile>()
+        every { resolved.exists() } returns false
+
+        mockkStatic(UniFile::class)
+        every { UniFile.fromUri(context, any()) } returns resolved
+
+        val result = repository.resolveFile("content://tree/document/video.mp4")
+
+        expectThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveFile should return the file when it resolves and still exists`() {
+        mockUriParsing()
+        val resolved = mockk<UniFile>()
+        every { resolved.exists() } returns true
+
+        mockkStatic(UniFile::class)
+        every { UniFile.fromUri(context, any()) } returns resolved
+
+        val result = repository.resolveFile("content://tree/document/video.mp4")
+
+        expectThat(result).isEqualTo(resolved)
+    }
+
+    @Test
+    fun `listSubtitleFiles should return empty when the stream file has no parent`() {
+        val streamFile = mockk<UniFile>()
+        every { streamFile.getParentFile() } returns null
+
+        val result = repository.listSubtitleFiles(streamFile)
+
+        expectThat(result).isEmpty()
+    }
+
+    @Test
+    fun `listSubtitleFiles should return empty when there is no subtitles folder next to the stream file`() {
+        val parent = mockk<UniFile>()
+        val streamFile = mockk<UniFile>()
+        every { streamFile.getParentFile() } returns parent
+        every { parent.findFile("subtitles") } returns null
+
+        val result = repository.listSubtitleFiles(streamFile)
+
+        expectThat(result).isEmpty()
+    }
+
+    @Test
+    fun `listSubtitleFiles should list the files inside the sibling subtitles folder`() {
+        val parent = mockk<UniFile>()
+        val streamFile = mockk<UniFile>()
+        val subtitlesDir = mockk<UniFile>()
+        val subtitleFile = mockk<UniFile>()
+        every { streamFile.getParentFile() } returns parent
+        every { parent.findFile("subtitles") } returns subtitlesDir
+        every { subtitlesDir.listFiles() } returns arrayOf(subtitleFile)
+
+        val result = repository.listSubtitleFiles(streamFile)
+
+        expectThat(result).hasSize(1)
     }
 }

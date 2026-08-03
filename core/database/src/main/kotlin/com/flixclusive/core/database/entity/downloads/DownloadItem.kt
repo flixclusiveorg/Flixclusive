@@ -5,39 +5,42 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flixclusive.model.media.common.MediaType
 import java.util.Date
+import java.util.UUID
 
 @Entity(
     tableName = "download_items",
     indices = [
         Index(value = ["mediaId"]),
         Index(value = ["state"]),
+        Index(value = ["ownerId"]),
     ],
 )
 data class DownloadItem(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val ownerId: String,
     val mediaId: String,
     val mediaTitle: String,
     val mediaType: MediaType,
     val seasonNumber: Int? = null,
     val episodeNumber: Int? = null,
-    val episodeTitle: String? = null,
     val state: DownloadItemState = DownloadItemState.QUEUED,
     val phase: DownloadPhase? = null,
-    val streamUrl: String? = null,
-    val streamHeaders: Map<String, String>? = null,
-    val streamFallbackCandidates: List<DownloadStreamCandidate>? = null,
-    /** Whether [streamUrl] is an HLS manifest rather than a direct file — determines which
+    /** Foreign key into `cached_streams.url` — the link this item is currently downloading (or
+     * last downloaded from). Persisted rather than re-resolved so a resume after process death
+     * knows which link produced the partial file already on disk. */
+    val sourceUrl: String? = null,
+    /** Whether [sourceUrl] is an HLS manifest rather than a direct file — determines which
      * transfer engine downloads it and how [streamBytesDownloaded]/[streamTotalBytes] are
-     * interpreted (segments written/total, not bytes, for HLS). */
+     * interpreted (segments written/total, not bytes, for HLS). Rewritten every time [sourceUrl]
+     * changes so the two can never disagree. */
     val isHlsStream: Boolean = false,
+    /** SAF document URI (resolved via [com.hippo.unifile.UniFile]) of the downloaded video file
+     * on disk. Sibling subtitle files live in that file's parent's `subtitles/` folder. */
+    val streamFilePath: String? = null,
     val streamBytesDownloaded: Long = 0,
     val streamTotalBytes: Long = 0,
-    val subtitleUrl: String? = null,
-    val subtitleHeaders: Map<String, String>? = null,
-    val subtitleBytesDownloaded: Long = 0,
-    val subtitleTotalBytes: Long = 0,
-    val subtitleError: String? = null,
+    val downloadedSubtitlesCount: Int = 0,
+    val totalSubtitlesCount: Int = 0,
     val errorMessage: String? = null,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),

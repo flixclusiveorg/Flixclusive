@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.coreDatastore)
     implementation(projects.coreStrings)
     implementation(projects.dataDownloads)
+    implementation(projects.dataProvider)
 
     implementation(libs.okhttp)
     implementation(libs.stubs.util)

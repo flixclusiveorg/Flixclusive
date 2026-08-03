@@ -51,6 +51,8 @@ private fun PhonePreview() {
 
                     override fun navigateToEditUserScreen(userId: String) = Unit
 
+                    override fun navigateToDownloadsScreen() = Unit
+
                     override fun showMediaPreviewBottomSheet(media: MediaMetadata) = Unit
 
                     override fun navigateToSubSettingsScreen(route: SubSettingsNavItem) = Unit

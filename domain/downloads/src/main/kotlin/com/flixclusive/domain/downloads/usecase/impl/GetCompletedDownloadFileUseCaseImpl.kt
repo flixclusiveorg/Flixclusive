@@ -3,41 +3,39 @@ package com.flixclusive.domain.downloads.usecase.impl
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
-import com.flixclusive.data.downloads.util.DownloadPathUtil
 import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
+import com.flixclusive.domain.downloads.usecase.CompletedSubtitleFile
 import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
-import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
 import javax.inject.Inject
 
 internal class GetCompletedDownloadFileUseCaseImpl @Inject constructor(
-    private val getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase,
     private val downloadDirectoryRepository: DownloadDirectoryRepository,
 ) : GetCompletedDownloadFileUseCase {
     override suspend fun invoke(item: DownloadItem): CompletedDownloadFile? {
         if (item.state != DownloadItemState.COMPLETED) return null
-        val streamUrl = item.streamUrl ?: return null
+        val streamFilePath = item.streamFilePath ?: return null
 
-        val directory = getDownloadDirectoryUseCase(
-            mediaId = item.mediaId,
-            mediaTitle = item.mediaTitle,
-            seasonNumber = item.seasonNumber,
-            episodeNumber = item.episodeNumber,
-        ) ?: return null
-
-        val fileName = DownloadPathUtil.buildStreamFileName(
-            DownloadPathUtil.buildFileTitle(item.mediaTitle, item.episodeTitle),
-            DownloadPathUtil.extensionFromUrl(
-                streamUrl,
-                DownloadPathUtil.DEFAULT_STREAM_EXTENSION,
-                DownloadPathUtil.STREAM_EXTENSIONS
-            ),
-        )
-
-        val file = downloadDirectoryRepository.getOrCreateFile(directory, fileName) ?: return null
+        val file = downloadDirectoryRepository.resolveFile(streamFilePath) ?: return null
+        val subtitles = downloadDirectoryRepository.listSubtitleFiles(file).map { subtitleFile ->
+            CompletedSubtitleFile(
+                uri = subtitleFile.uri,
+                language = languageFromFileName(subtitleFile.name.orEmpty()),
+            )
+        }
 
         return CompletedDownloadFile(
             uri = file.uri,
             mimeType = file.type?.takeIf { it.isNotBlank() } ?: "video/*",
+            subtitles = subtitles,
         )
+    }
+
+    /** Subtitle files are named `"<title> (<language>).<ext>"` by the download controller — the
+     * only place a subtitle's language survives once it's just a file on disk. */
+    private fun languageFromFileName(fileName: String): String =
+        LANGUAGE_IN_PARENS.find(fileName)?.groupValues?.get(1) ?: fileName.substringBeforeLast('.')
+
+    companion object {
+        private val LANGUAGE_IN_PARENS = Regex("""\(([^()]+)\)\.[^.]+$""")
     }
 }

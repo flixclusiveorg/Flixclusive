@@ -75,15 +75,15 @@ internal class DownloadsTweakViewModel @Inject constructor(
         _typeFilters.value = _typeFilters.value.toggle(type)
     }
 
-    fun onPause(itemId: Long) = mediaDownloadController.pause(itemId)
+    fun onPause(itemId: String) = mediaDownloadController.pause(itemId)
 
-    fun onResume(itemId: Long) = mediaDownloadController.resume(itemId)
+    fun onResume(itemId: String) = mediaDownloadController.resume(itemId)
 
-    fun onStop(itemId: Long) = mediaDownloadController.stop(itemId)
+    fun onStop(itemId: String) = mediaDownloadController.stop(itemId)
 
-    fun onRetry(itemId: Long) = mediaDownloadController.retry(itemId)
+    fun onRetry(itemId: String) = mediaDownloadController.retry(itemId)
 
-    fun onDelete(itemId: Long) = mediaDownloadController.delete(itemId)
+    fun onDelete(itemId: String) = mediaDownloadController.delete(itemId)
 
     fun onPauseBatch(mediaId: String, seasonNumber: Int) = mediaDownloadController.pauseBatch(mediaId, seasonNumber)
 

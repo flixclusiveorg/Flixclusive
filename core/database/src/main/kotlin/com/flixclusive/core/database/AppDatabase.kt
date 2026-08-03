@@ -6,7 +6,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.flixclusive.core.database.converters.DateConverter
-import com.flixclusive.core.database.converters.DownloadStreamCandidateListConverter
 import com.flixclusive.core.database.converters.StringMapConverter
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
@@ -47,8 +46,6 @@ import com.flixclusive.core.database.migration.Schema18to19
 import com.flixclusive.core.database.migration.Schema19to20
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema20to21
-import com.flixclusive.core.database.migration.Schema21to22
-import com.flixclusive.core.database.migration.Schema22to23
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
 import com.flixclusive.core.database.migration.Schema4to5
@@ -80,13 +77,12 @@ internal const val APP_DATABASE = "app_database"
         DownloadChunk::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 23,
+    version = 21,
     exportSchema = true,
 )
 @TypeConverters(
     DateConverter::class,
     StringMapConverter::class,
-    DownloadStreamCandidateListConverter::class,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
@@ -148,8 +144,6 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema18to19,
                         Schema19to20,
                         Schema20to21,
-                        Schema21to22,
-                        Schema22to23,
                     ).build()
                     .also { INSTANCE = it }
             }

@@ -7,7 +7,6 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
-import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
@@ -35,6 +34,7 @@ class MediaDownloadRepositoryImplTest {
     private lateinit var repository: MediaDownloadRepositoryImpl
 
     private val destinationFile = mockk<UniFile>()
+    private val itemId = "item-1"
 
     @Before
     fun setup() {
@@ -54,13 +54,13 @@ class MediaDownloadRepositoryImplTest {
     @Test
     fun `runTransfer should plan and insert chunks when none exist yet`() =
         runTest {
-            coEvery { downloadChunkDao.getChunksForItem(1) } returnsMany listOf(emptyList(), emptyList())
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returnsMany listOf(emptyList(), emptyList())
             coEvery {
                 mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any())
             } returns MediaTransferResult.Completed
 
             repository.runTransfer(
-                1,
+                itemId,
                 DownloadPhase.STREAM,
                 "https://example.com/file",
                 emptyMap(),
@@ -75,14 +75,14 @@ class MediaDownloadRepositoryImplTest {
     fun `runTransfer should reuse existing chunks instead of replanning`() =
         runTest {
             val existing =
-                listOf(DownloadChunk(id = 1, downloadItemId = 1, chunkIndex = 0, rangeStart = 0, rangeEnd = 999))
-            coEvery { downloadChunkDao.getChunksForItem(1) } returns existing
+                listOf(DownloadChunk(id = 1, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = 999))
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returns existing
             coEvery {
                 mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any())
             } returns MediaTransferResult.Completed
 
             repository.runTransfer(
-                1,
+                itemId,
                 DownloadPhase.STREAM,
                 "https://example.com/file",
                 emptyMap(),
@@ -97,15 +97,15 @@ class MediaDownloadRepositoryImplTest {
     fun `runTransfer should pass persisted chunks to the transfer engine`() =
         runTest {
             val existing =
-                listOf(DownloadChunk(id = 5, downloadItemId = 1, chunkIndex = 0, rangeStart = 0, rangeEnd = 999))
-            coEvery { downloadChunkDao.getChunksForItem(1) } returns existing
+                listOf(DownloadChunk(id = 5, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = 999))
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returns existing
             val chunksSlot = slot<List<DownloadChunk>>()
             coEvery {
                 mediaTransferEngine.transfer(capture(chunksSlot), any(), any(), any(), any(), any())
             } returns MediaTransferResult.Completed
 
             repository.runTransfer(
-                1,
+                itemId,
                 DownloadPhase.STREAM,
                 "https://example.com/file",
                 emptyMap(),
@@ -119,16 +119,22 @@ class MediaDownloadRepositoryImplTest {
 
     @Test
     fun `requestInterrupt then consumeInterruptReason should return and clear the reason`() {
-        repository.requestInterrupt(1, DownloadInterruptReason.PAUSE)
+        repository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE)
 
-        expectThat(repository.consumeInterruptReason(1)).isEqualTo(DownloadInterruptReason.PAUSE)
-        expectThat(repository.consumeInterruptReason(1)).isNull()
+        expectThat(repository.consumeInterruptReason(itemId)).isEqualTo(DownloadInterruptReason.PAUSE)
+        expectThat(repository.consumeInterruptReason(itemId)).isNull()
     }
 
     @Test
     fun `getOldestQueuedItem should delegate to the dao filtered by QUEUED state`() =
         runTest {
-            val queuedItem = DownloadItem(id = 3, mediaId = "m1", mediaTitle = "Movie", mediaType = MediaType.MOVIE)
+            val queuedItem = DownloadItem(
+                id = "item-3",
+                ownerId = "owner-1",
+                mediaId = "m1",
+                mediaTitle = "Movie",
+                mediaType = MediaType.MOVIE,
+            )
             coEvery { downloadItemDao.getOldestByState(DownloadItemState.QUEUED) } returns queuedItem
 
             val result = repository.getOldestQueuedItem()
@@ -139,7 +145,15 @@ class MediaDownloadRepositoryImplTest {
     @Test
     fun `getBatch should delegate to the dao with mediaId and seasonNumber`() =
         runTest {
-            val batch = listOf(DownloadItem(id = 1, mediaId = "m1", mediaTitle = "Show", mediaType = MediaType.SHOW))
+            val batch = listOf(
+                DownloadItem(
+                    id = itemId,
+                    ownerId = "owner-1",
+                    mediaId = "m1",
+                    mediaTitle = "Show",
+                    mediaType = MediaType.SHOW,
+                )
+            )
             coEvery { downloadItemDao.getBatch("m1", 1) } returns batch
 
             val result = repository.getBatch("m1", 1)
@@ -150,59 +164,97 @@ class MediaDownloadRepositoryImplTest {
     @Test
     fun `updateState should delegate to the dao with the given state and phase`() =
         runTest {
-            repository.updateState(1, DownloadItemState.PAUSED, DownloadPhase.STREAM)
+            repository.updateState(itemId, DownloadItemState.PAUSED, DownloadPhase.STREAM)
 
-            coVerify { downloadItemDao.updateState(1, DownloadItemState.PAUSED, DownloadPhase.STREAM, any()) }
+            coVerify { downloadItemDao.updateState(itemId, DownloadItemState.PAUSED, DownloadPhase.STREAM, any()) }
         }
 
     @Test
     fun `markError should delegate to the dao`() =
         runTest {
-            repository.markError(1, "boom")
+            repository.markError(itemId, "boom")
 
-            coVerify { downloadItemDao.updateError(1, "boom", any()) }
+            coVerify { downloadItemDao.updateError(itemId, "boom", any()) }
         }
 
     @Test
     fun `resetChunks should delete all chunks for the item`() =
         runTest {
-            repository.resetChunks(1)
+            repository.resetChunks(itemId)
 
-            coVerify { downloadChunkDao.deleteChunksForItem(1) }
+            coVerify { downloadChunkDao.deleteChunksForItem(itemId) }
         }
 
     @Test
     fun `resetChunks should also zero the stream progress columns`() =
         runTest {
-            repository.resetChunks(1)
+            repository.resetChunks(itemId)
 
-            coVerify { downloadItemDao.updateStreamProgress(1, 0, 0, any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 0, 0, any()) }
         }
 
     @Test
     fun `delete should remove the download item`() =
         runTest {
-            repository.delete(1)
+            repository.delete(itemId)
 
-            coVerify { downloadItemDao.delete(1) }
+            coVerify { downloadItemDao.delete(itemId) }
         }
 
     @Test
-    fun `queue should insert the item and return its generated id`() =
+    fun `queue should insert the item`() =
         runTest {
-            val item = DownloadItem(mediaId = "m1", mediaTitle = "Movie", mediaType = MediaType.MOVIE)
-            coEvery { downloadItemDao.insert(item) } returns 42L
+            val item = DownloadItem(
+                ownerId = "owner-1",
+                mediaId = "m1",
+                mediaTitle = "Movie",
+                mediaType = MediaType.MOVIE,
+            )
 
-            val id = repository.queue(item)
+            repository.queue(item)
 
-            expectThat(id).isEqualTo(42L)
+            coVerify { downloadItemDao.insert(item) }
         }
 
     @Test
-    fun `runTransfer progress callback should write aggregated bytes to the item on completion status`() =
+    fun `updateSource should always write sourceUrl and isHlsStream together`() =
         runTest {
-            val chunk = DownloadChunk(id = 1, downloadItemId = 1, chunkIndex = 0, rangeStart = 0, rangeEnd = 999)
-            coEvery { downloadChunkDao.getChunksForItem(1) } returns listOf(chunk)
+            repository.updateSource(itemId, "https://example.com/fallback.m3u8", isHls = true)
+
+            coVerify {
+                downloadItemDao.updateSource(itemId, "https://example.com/fallback.m3u8", true, any())
+            }
+        }
+
+    @Test
+    fun `updateStreamFilePath should delegate to the dao`() =
+        runTest {
+            repository.updateStreamFilePath(itemId, "content://tree/video.mp4")
+
+            coVerify { downloadItemDao.updateStreamFilePath(itemId, "content://tree/video.mp4", any()) }
+        }
+
+    @Test
+    fun `setTotalSubtitlesCount should delegate to the dao`() =
+        runTest {
+            repository.setTotalSubtitlesCount(itemId, 3)
+
+            coVerify { downloadItemDao.setTotalSubtitlesCount(itemId, 3, any()) }
+        }
+
+    @Test
+    fun `incrementDownloadedSubtitlesCount should delegate to the dao`() =
+        runTest {
+            repository.incrementDownloadedSubtitlesCount(itemId)
+
+            coVerify { downloadItemDao.incrementDownloadedSubtitlesCount(itemId, any()) }
+        }
+
+    @Test
+    fun `runTransfer progress callback should write aggregated bytes for the STREAM phase on completion status`() =
+        runTest {
+            val chunk = DownloadChunk(id = 1, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = 999)
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returns listOf(chunk)
             coEvery { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) } coAnswers {
                 val onProgress = arg<suspend (Long, Long, DownloadChunkStatus) -> Unit>(5)
                 onProgress(1, 1000, DownloadChunkStatus.COMPLETED)
@@ -210,7 +262,7 @@ class MediaDownloadRepositoryImplTest {
             }
 
             repository.runTransfer(
-                1,
+                itemId,
                 DownloadPhase.STREAM,
                 "https://example.com/file",
                 emptyMap(),
@@ -218,41 +270,30 @@ class MediaDownloadRepositoryImplTest {
                 1000L
             )
 
-            coVerify { downloadItemDao.updateStreamProgress(1, any(), 1000L, any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, any(), 1000L, any()) }
         }
 
     @Test
-    fun `advanceStreamCandidate should return null when there are no fallback candidates`() =
+    fun `runTransfer progress callback should not write item byte progress for the SUBTITLES phase`() =
         runTest {
-            val item = DownloadItem(id = 1, mediaId = "m1", mediaTitle = "Movie", mediaType = MediaType.MOVIE)
-            coEvery { downloadItemDao.get(1) } returns item
-
-            val result = repository.advanceStreamCandidate(1)
-
-            expectThat(result).isNull()
-            coVerify(exactly = 0) { downloadItemDao.updateStreamSource(any(), any(), any(), any(), any(), any()) }
-        }
-
-    @Test
-    fun `advanceStreamCandidate should switch to the next candidate and persist the remaining ones`() =
-        runTest {
-            val first = DownloadStreamCandidate(url = "https://example.com/a.mp4", isHls = true)
-            val second = DownloadStreamCandidate(url = "https://example.com/b.mp4", headers = mapOf("k" to "v"))
-            val item = DownloadItem(
-                id = 1,
-                mediaId = "m1",
-                mediaTitle = "Movie",
-                mediaType = MediaType.MOVIE,
-                streamFallbackCandidates = listOf(first, second),
-            )
-            coEvery { downloadItemDao.get(1) } returns item
-
-            val result = repository.advanceStreamCandidate(1)
-
-            expectThat(result).isEqualTo(first)
-            coVerify {
-                downloadItemDao.updateStreamSource(1, first.url, first.headers, listOf(second), true, any())
+            val chunk = DownloadChunk(id = 1, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = 999)
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returns listOf(chunk)
+            coEvery { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) } coAnswers {
+                val onProgress = arg<suspend (Long, Long, DownloadChunkStatus) -> Unit>(5)
+                onProgress(1, 1000, DownloadChunkStatus.COMPLETED)
+                MediaTransferResult.Completed
             }
+
+            repository.runTransfer(
+                itemId,
+                DownloadPhase.SUBTITLES,
+                "https://example.com/subs.srt",
+                emptyMap(),
+                destinationFile,
+                null
+            )
+
+            coVerify(exactly = 0) { downloadItemDao.updateStreamProgress(itemId, any(), any(), any()) }
         }
 
     @Test
@@ -268,15 +309,15 @@ class MediaDownloadRepositoryImplTest {
                         encryptionIv = null
                     )
                 )
-            repository.requestInterrupt(1, DownloadInterruptReason.PAUSE)
+            repository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE)
             coEvery {
                 hlsTransferEngine.transfer(segments, 2, emptyMap(), destinationFile, any(), any())
             } returns MediaTransferResult.Completed
 
-            val result = repository.runHlsTransfer(1, segments, 2, emptyMap(), destinationFile)
+            val result = repository.runHlsTransfer(itemId, segments, 2, emptyMap(), destinationFile)
 
             expectThat(result).isEqualTo(MediaTransferResult.Completed)
-            expectThat(repository.consumeInterruptReason(1)).isNull()
+            expectThat(repository.consumeInterruptReason(itemId)).isNull()
         }
 
     @Test
@@ -300,8 +341,8 @@ class MediaDownloadRepositoryImplTest {
                 MediaTransferResult.Completed
             }
 
-            repository.runHlsTransfer(1, segments, 0, emptyMap(), destinationFile)
+            repository.runHlsTransfer(itemId, segments, 0, emptyMap(), destinationFile)
 
-            coVerify { downloadItemDao.updateStreamProgress(1, 1L, 4L, any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 1L, 4L, any()) }
         }
 }

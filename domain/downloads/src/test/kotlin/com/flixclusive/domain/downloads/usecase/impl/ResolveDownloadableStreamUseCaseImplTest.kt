@@ -1,6 +1,9 @@
 package com.flixclusive.domain.downloads.usecase.impl
 
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.MediaLinksWithData
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
@@ -9,9 +12,11 @@ import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionM
 import com.flixclusive.core.datastore.model.user.player.PlayerQuality
 import com.flixclusive.core.network.download.LinkProbe
 import com.flixclusive.core.network.download.LinkProbeResult
-import com.flixclusive.domain.downloads.usecase.ResolvedDownloadableStream
-import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.data.provider.repository.MediaLinksRepository
+import com.flixclusive.domain.downloads.usecase.RankedDownloadCandidate
+import com.flixclusive.model.media.common.MediaType
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
@@ -21,17 +26,35 @@ import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
-import strikt.assertions.isFalse
 import strikt.assertions.isTrue
 
 class ResolveDownloadableStreamUseCaseImplTest {
     private lateinit var dataStoreManager: DataStoreManager
+    private lateinit var mediaLinksRepository: MediaLinksRepository
     private lateinit var linkProbe: LinkProbe
     private lateinit var useCase: ResolveDownloadableStreamUseCaseImpl
+
+    private val ownerId = "owner-1"
+    private val mediaId = "media-1"
+
+    private val media = DBMedia(
+        id = mediaId,
+        title = "Test Movie",
+        providerId = "test-provider",
+        adult = false,
+        type = MediaType.MOVIE,
+        overview = null,
+        posterImage = null,
+        language = null,
+        rating = null,
+        backdropImage = null,
+        releaseDate = null,
+    )
 
     @Before
     fun setup() {
         dataStoreManager = mockk()
+        mediaLinksRepository = mockk()
         linkProbe = mockk()
 
         every {
@@ -42,112 +65,120 @@ class ResolveDownloadableStreamUseCaseImplTest {
             dataStoreManager.getUserPrefsAsFlow(UserPreferences.PLAYER_PREFS_KEY, PlayerPreferences::class)
         } returns flowOf(PlayerPreferences(quality = PlayerQuality.Quality1080p))
 
-        useCase = ResolveDownloadableStreamUseCaseImpl(dataStoreManager, linkProbe)
+        coEvery { mediaLinksRepository.setLinkStatus(any(), any(), any()) } returns Unit
+
+        useCase = ResolveDownloadableStreamUseCaseImpl(dataStoreManager, mediaLinksRepository, linkProbe)
     }
 
-    private fun stream(name: String) = Stream(name = name, url = "https://example.com/$name")
+    private fun stream(
+        name: String,
+        url: String = "https://example.com/$name",
+    ) = CachedStream(
+        url = url,
+        label = name,
+        providerId = "test-provider",
+        ownerId = ownerId,
+        mediaId = mediaId,
+    )
+
+    private fun linksWith(vararg streams: CachedStream) =
+        listOf(MediaLinksWithData(media = media, streams = streams.toList()))
 
     @Test
-    fun `invoke should return failure when streams list is empty`() =
+    fun `invoke should return failure when no valid cached streams exist`() =
         runTest {
-            val result = useCase(emptyList())
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns emptyList()
+
+            val result = useCase(ownerId, mediaId, null, null)
 
             expectThat(result).isA<Async.Failure>()
         }
 
     @Test
-    fun `invoke should return the best ranked reachable stream as the primary`() =
+    fun `invoke should filter out third-party gateway and dead cached streams`() =
+        runTest {
+            val gateway = stream("gateway").copy(isThirdPartyGateway = true)
+            val dead = stream("dead").copy(isDead = true)
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns linksWith(gateway, dead)
+
+            val result = useCase(ownerId, mediaId, null, null)
+
+            expectThat(result).isA<Async.Failure>()
+            coVerify(exactly = 0) { linkProbe.probe(any(), any()) }
+        }
+
+    @Test
+    fun `invoke should return the best ranked reachable stream`() =
         runTest {
             val best = stream("1080p")
             val worse = stream("480p")
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns linksWith(worse, best)
 
             coEvery { linkProbe.probe(best.url, any()) } returns
                 LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 500)
             coEvery { linkProbe.probe(worse.url, any()) } returns
                 LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 100)
 
-            val result = useCase(listOf(worse, best))
+            val result = useCase(ownerId, mediaId, null, null)
 
             expectThat(result)
-                .isA<Async.Success<ResolvedDownloadableStream>>()
-                .get { data.primary.stream }
-                .isEqualTo(best)
+                .isA<Async.Success<RankedDownloadCandidate>>()
+                .get { data.stream.url }
+                .isEqualTo(best.url)
         }
 
     @Test
-    fun `invoke should fall back to the next candidate when the top one is unreachable`() =
+    fun `invoke should mark unreachable candidates dead and fall back to the next one`() =
         runTest {
             val unreachable = stream("1080p")
             val reachable = stream("720p")
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns
+                linksWith(unreachable, reachable)
 
             coEvery { linkProbe.probe(unreachable.url, any()) } returns
                 LinkProbeResult(isReachable = false, contentLength = null, bytesPerSecond = null)
             coEvery { linkProbe.probe(reachable.url, any()) } returns
                 LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 200)
 
-            val result = useCase(listOf(unreachable, reachable))
+            val result = useCase(ownerId, mediaId, null, null)
 
             expectThat(result)
-                .isA<Async.Success<ResolvedDownloadableStream>>()
-                .get { data.primary.stream }
-                .isEqualTo(reachable)
+                .isA<Async.Success<RankedDownloadCandidate>>()
+                .get { data.stream.url }
+                .isEqualTo(reachable.url)
+            coVerify { mediaLinksRepository.setLinkStatus(unreachable.url, ownerId, isDead = true) }
         }
 
     @Test
-    fun `invoke should return the remaining ranked candidates as fallbacks`() =
+    fun `invoke should mark a probed HLS candidate as such`() =
         runTest {
-            val best = stream("1080p")
-            val second = stream("720p")
-            val third = stream("480p")
-
-            coEvery { linkProbe.probe(best.url, any()) } returns
-                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 500)
-            coEvery { linkProbe.probe(second.url, any()) } returns
-                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 300)
-            coEvery { linkProbe.probe(third.url, any()) } returns
-                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 100)
-
-            val result = useCase(listOf(third, second, best))
-
-            expectThat(result)
-                .isA<Async.Success<ResolvedDownloadableStream>>()
-                .get { data.fallbacks.map { it.stream } }
-                .isEqualTo(listOf(second, third))
-        }
-
-    @Test
-    fun `invoke should mark a probed HLS candidate as such on both primary and fallbacks`() =
-        runTest {
-            val hlsStream = stream("hls")
-            val progressiveStream = stream("progressive")
-
-            coEvery { linkProbe.probe(hlsStream.url, any()) } returns
+            val hls = stream("hls")
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns linksWith(hls)
+            coEvery { linkProbe.probe(hls.url, any()) } returns
                 LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 500, isHls = true)
-            coEvery { linkProbe.probe(progressiveStream.url, any()) } returns
-                LinkProbeResult(isReachable = true, contentLength = null, bytesPerSecond = 300, isHls = false)
 
-            val result = useCase(listOf(progressiveStream, hlsStream))
+            val result = useCase(ownerId, mediaId, null, null)
 
-            val success = expectThat(result).isA<Async.Success<ResolvedDownloadableStream>>().subject
-            expectThat(success.data.primary.isHls).isTrue()
-            expectThat(
-                success.data.fallbacks
-                    .single()
-                    .isHls
-            ).isFalse()
+            val success = expectThat(result).isA<Async.Success<RankedDownloadCandidate>>().subject
+            expectThat(success.data.isHls).isTrue()
         }
 
     @Test
-    fun `invoke should return failure after exhausting the fallback attempt limit`() =
+    fun `invoke should mark every dead candidate and return failure when nothing reachable remains`() =
         runTest {
-            val streams = listOf(stream("1080p"), stream("720p"), stream("480p"), stream("360p"))
+            val streams = listOf(stream("1080p"), stream("720p"), stream("480p"))
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns
+                linksWith(*streams.toTypedArray())
             streams.forEach { s ->
                 coEvery { linkProbe.probe(s.url, any()) } returns
                     LinkProbeResult(isReachable = false, contentLength = null, bytesPerSecond = null)
             }
 
-            val result = useCase(streams)
+            val result = useCase(ownerId, mediaId, null, null)
 
             expectThat(result).isA<Async.Failure>()
+            streams.forEach { s ->
+                coVerify { mediaLinksRepository.setLinkStatus(s.url, ownerId, isDead = true) }
+            }
         }
 }

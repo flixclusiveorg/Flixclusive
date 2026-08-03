@@ -3,7 +3,6 @@ package com.flixclusive.data.downloads.repository
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
-import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
@@ -11,13 +10,13 @@ import com.hippo.unifile.UniFile
 import kotlinx.coroutines.flow.Flow
 
 interface MediaDownloadRepository {
-    fun observeItem(id: Long): Flow<DownloadItem?>
+    fun observeItem(id: String): Flow<DownloadItem?>
 
     fun observeAllItems(): Flow<List<DownloadItem>>
 
-    suspend fun getItem(id: Long): DownloadItem?
+    suspend fun getItem(id: String): DownloadItem?
 
-    suspend fun queue(item: DownloadItem): Long
+    suspend fun queue(item: DownloadItem)
 
     suspend fun getOldestQueuedItem(): DownloadItem?
 
@@ -32,31 +31,43 @@ interface MediaDownloadRepository {
     ): Flow<List<DownloadItem>>
 
     suspend fun updateState(
-        id: Long,
+        id: String,
         state: DownloadItemState,
         phase: DownloadPhase?,
     )
 
     suspend fun markError(
-        id: Long,
+        id: String,
         message: String,
     )
 
-    suspend fun markSubtitleError(
-        id: Long,
-        message: String,
-    )
-
-    suspend fun resetChunks(id: Long)
+    suspend fun resetChunks(id: String)
 
     /**
-     * Switches [id] to its next persisted fallback stream candidate, resetting stream progress.
-     * Returns the candidate that was switched to, or `null` if none remain.
+     * Persists [sourceUrl]/[isHls] together and resets stream progress — the single write path
+     * keeping [DownloadItem.sourceUrl] and [DownloadItem.isHlsStream] in lockstep, so no caller can
+     * update one without the other.
      */
-    suspend fun advanceStreamCandidate(id: Long): DownloadStreamCandidate?
+    suspend fun updateSource(
+        id: String,
+        sourceUrl: String?,
+        isHls: Boolean,
+    )
+
+    suspend fun updateStreamFilePath(
+        id: String,
+        streamFilePath: String?,
+    )
+
+    suspend fun setTotalSubtitlesCount(
+        id: String,
+        count: Int,
+    )
+
+    suspend fun incrementDownloadedSubtitlesCount(id: String)
 
     suspend fun runTransfer(
-        id: Long,
+        id: String,
         phase: DownloadPhase,
         url: String,
         headers: Map<String, String>,
@@ -71,7 +82,7 @@ interface MediaDownloadRepository {
      * length up front, unlike byte-range chunks.
      */
     suspend fun runHlsTransfer(
-        id: Long,
+        id: String,
         segments: List<HlsSegmentInfo>,
         startIndex: Int,
         headers: Map<String, String>,
@@ -79,11 +90,11 @@ interface MediaDownloadRepository {
     ): MediaTransferResult
 
     fun requestInterrupt(
-        id: Long,
+        id: String,
         reason: DownloadInterruptReason,
     )
 
-    fun consumeInterruptReason(id: Long): DownloadInterruptReason?
+    fun consumeInterruptReason(id: String): DownloadInterruptReason?
 
-    suspend fun delete(id: Long)
+    suspend fun delete(id: String)
 }

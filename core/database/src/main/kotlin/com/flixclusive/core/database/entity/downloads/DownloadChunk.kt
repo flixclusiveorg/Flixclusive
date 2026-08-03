@@ -22,7 +22,7 @@ import androidx.room.PrimaryKey
 data class DownloadChunk(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val downloadItemId: Long,
+    val downloadItemId: String,
     val chunkIndex: Int,
     val rangeStart: Long,
     val rangeEnd: Long,

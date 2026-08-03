@@ -415,5 +415,12 @@
         <item quantity="one">%1$d episode</item>
         <item quantity="other">%1$d episodes</item>
     </plurals>
+    <string name="download_progress_video_label">Video</string>
+    <string name="download_progress_subtitles_label">Subtitles</string>
+    <string name="download_progress_segments_format">%1$d / %2$d segments</string>
+    <plurals name="download_subtitles_count">
+        <item quantity="one">%1$d subtitle</item>
+        <item quantity="other">%1$d subtitles</item>
+    </plurals>
 </resources>
 

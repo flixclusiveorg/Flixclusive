@@ -13,7 +13,7 @@ interface DownloadChunkDao {
     suspend fun insertAll(chunks: List<DownloadChunk>): List<Long>
 
     @Query("SELECT * FROM download_chunks WHERE downloadItemId = :downloadItemId ORDER BY chunkIndex ASC")
-    suspend fun getChunksForItem(downloadItemId: Long): List<DownloadChunk>
+    suspend fun getChunksForItem(downloadItemId: String): List<DownloadChunk>
 
     @Query("UPDATE download_chunks SET bytesDownloaded = :bytesDownloaded, status = :status WHERE id = :id")
     suspend fun updateProgress(
@@ -23,5 +23,5 @@ interface DownloadChunkDao {
     )
 
     @Query("DELETE FROM download_chunks WHERE downloadItemId = :downloadItemId")
-    suspend fun deleteChunksForItem(downloadItemId: Long)
+    suspend fun deleteChunksForItem(downloadItemId: String)
 }

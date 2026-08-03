@@ -23,7 +23,6 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
@@ -37,7 +36,6 @@ import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadBatchUseCase
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
-import com.flixclusive.domain.provider.usecase.get.GetDownloadableMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
@@ -109,7 +107,6 @@ class MediaScreenViewModel @AssistedInject constructor(
     private val toggleListItemOnTrackerList: ToggleListItemOnTrackerListUseCase,
     private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
     private val syncFromScrobblers: SyncFromScrobblersUseCase,
-    private val getDownloadableMediaLinks: GetDownloadableMediaLinksUseCase,
     private val queueMediaDownload: QueueMediaDownloadUseCase,
     private val queueMediaDownloadBatch: QueueMediaDownloadBatchUseCase,
     private val mediaDownloadController: MediaDownloadController,
@@ -401,18 +398,9 @@ class MediaScreenViewModel @AssistedInject constructor(
 
         downloadOverrides.update { it + (key to Async.Loading) }
 
-        val resolved = episodesToQueue.mapAsync { episode -> episode to getDownloadableMediaLinks(show, episode) }
-        val requests = resolved.mapNotNull { (episode, result) ->
-            (result as? Async.Success)?.data?.let { data ->
-                MediaDownloadRequest(media = show, episode = episode, streams = data.streams, subtitle = data.subtitle)
-            }
-        }
-
-        if (requests.isEmpty()) {
-            val message = resolved.firstNotNullOfOrNull { (_, result) -> (result as? Async.Failure)?.message }
-                ?: UiText.from(R.string.download_batch_failed_message)
-            downloadOverrides.update { it + (key to Async.Failure(message)) }
-            return
+        val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
+        val requests = episodesToQueue.map { episode ->
+            MediaDownloadRequest(media = show, episode = episode, ownerId = ownerId)
         }
 
         queueMediaDownloadBatch(requests)
@@ -426,14 +414,8 @@ class MediaScreenViewModel @AssistedInject constructor(
     ) {
         downloadOverrides.update { it + (key to Async.Loading) }
 
-        val links = getDownloadableMediaLinks(media, episode)
-        if (links is Async.Failure) {
-            downloadOverrides.update { it + (key to Async.Failure(links.message, links.cause)) }
-            return
-        }
-
-        val data = (links as Async.Success).data
-        val queued = queueMediaDownload(media, episode, data.streams, data.subtitle)
+        val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
+        val queued = queueMediaDownload(media, episode, ownerId)
         if (queued is Async.Failure) {
             downloadOverrides.update { it + (key to Async.Failure(queued.message, queued.cause)) }
             return

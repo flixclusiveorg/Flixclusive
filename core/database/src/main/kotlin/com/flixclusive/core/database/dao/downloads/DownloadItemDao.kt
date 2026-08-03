@@ -8,23 +8,22 @@ import androidx.room.Update
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
-import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
 @Dao
 interface DownloadItemDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(item: DownloadItem): Long
+    suspend fun insert(item: DownloadItem)
 
     @Update
     suspend fun update(item: DownloadItem)
 
     @Query("SELECT * FROM download_items WHERE id = :id")
-    suspend fun get(id: Long): DownloadItem?
+    suspend fun get(id: String): DownloadItem?
 
     @Query("SELECT * FROM download_items WHERE id = :id")
-    fun getAsFlow(id: Long): Flow<DownloadItem?>
+    fun getAsFlow(id: String): Flow<DownloadItem?>
 
     @Query("SELECT * FROM download_items ORDER BY createdAt DESC")
     fun getAllAsFlow(): Flow<List<DownloadItem>>
@@ -59,7 +58,7 @@ interface DownloadItemDao {
         """,
     )
     suspend fun updateState(
-        id: Long,
+        id: String,
         state: DownloadItemState,
         phase: DownloadPhase?,
         updatedAt: Date,
@@ -73,7 +72,7 @@ interface DownloadItemDao {
         """,
     )
     suspend fun updateStreamProgress(
-        id: Long,
+        id: String,
         bytesDownloaded: Long,
         totalBytes: Long,
         updatedAt: Date,
@@ -82,49 +81,51 @@ interface DownloadItemDao {
     @Query(
         """
         UPDATE download_items
-        SET subtitleBytesDownloaded = :bytesDownloaded, subtitleTotalBytes = :totalBytes, updatedAt = :updatedAt
-        WHERE id = :id
-        """,
-    )
-    suspend fun updateSubtitleProgress(
-        id: Long,
-        bytesDownloaded: Long,
-        totalBytes: Long,
-        updatedAt: Date,
-    )
-
-    @Query(
-        """
-        UPDATE download_items
-        SET streamUrl = :streamUrl, streamHeaders = :streamHeaders,
-            streamFallbackCandidates = :streamFallbackCandidates, isHlsStream = :isHlsStream,
+        SET sourceUrl = :sourceUrl, isHlsStream = :isHlsStream,
             streamBytesDownloaded = 0, streamTotalBytes = 0, updatedAt = :updatedAt
         WHERE id = :id
         """,
     )
-    suspend fun updateStreamSource(
-        id: Long,
-        streamUrl: String,
-        streamHeaders: Map<String, String>?,
-        streamFallbackCandidates: List<DownloadStreamCandidate>?,
+    suspend fun updateSource(
+        id: String,
+        sourceUrl: String?,
         isHlsStream: Boolean,
+        updatedAt: Date,
+    )
+
+    @Query("UPDATE download_items SET streamFilePath = :streamFilePath, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateStreamFilePath(
+        id: String,
+        streamFilePath: String?,
+        updatedAt: Date,
+    )
+
+    @Query("UPDATE download_items SET totalSubtitlesCount = :count, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun setTotalSubtitlesCount(
+        id: String,
+        count: Int,
+        updatedAt: Date,
+    )
+
+    @Query(
+        """
+        UPDATE download_items
+        SET downloadedSubtitlesCount = downloadedSubtitlesCount + 1, updatedAt = :updatedAt
+        WHERE id = :id
+        """,
+    )
+    suspend fun incrementDownloadedSubtitlesCount(
+        id: String,
         updatedAt: Date,
     )
 
     @Query("UPDATE download_items SET errorMessage = :errorMessage, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateError(
-        id: Long,
+        id: String,
         errorMessage: String?,
         updatedAt: Date,
     )
 
-    @Query("UPDATE download_items SET subtitleError = :subtitleError, updatedAt = :updatedAt WHERE id = :id")
-    suspend fun updateSubtitleError(
-        id: Long,
-        subtitleError: String?,
-        updatedAt: Date,
-    )
-
     @Query("DELETE FROM download_items WHERE id = :id")
-    suspend fun delete(id: Long)
+    suspend fun delete(id: String)
 }

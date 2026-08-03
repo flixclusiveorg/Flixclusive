@@ -50,6 +50,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.Acti
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Movie
 import com.flixclusive.model.media.Show
@@ -141,7 +142,7 @@ private fun DownloadItem.toPlayableEpisode(): Episode? {
         number = episode,
         season = season,
         isReleased = true,
-        title = episodeTitle,
+        title = CacheLinksFormatUtil.getFormattedTitle(season, episode),
     )
 }
 
@@ -158,11 +159,11 @@ private fun DownloadsTweakScreenContent(
     onQueryChange: (String) -> Unit,
     onToggleStateFilter: (DownloadStateFilter) -> Unit,
     onToggleTypeFilter: (MediaType) -> Unit,
-    onPause: (Long) -> Unit,
-    onResume: (Long) -> Unit,
-    onStop: (Long) -> Unit,
-    onRetry: (Long) -> Unit,
-    onDelete: (Long) -> Unit,
+    onPause: (String) -> Unit,
+    onResume: (String) -> Unit,
+    onStop: (String) -> Unit,
+    onRetry: (String) -> Unit,
+    onDelete: (String) -> Unit,
     onOpen: (DownloadItem) -> Unit,
     onPauseBatch: (String, Int) -> Unit,
     onStopBatch: (String, Int) -> Unit,
@@ -369,7 +370,7 @@ internal fun DownloadItemState.label(): String = when (this) {
 private fun DownloadsTweakScreenPreview() {
     val items = List(3) { i ->
         DownloadItem(
-            id = i.toLong(),
+            ownerId = "owner",
             mediaId = "media-$i",
             mediaTitle = "Example Movie $i",
             mediaType = MediaType.MOVIE,

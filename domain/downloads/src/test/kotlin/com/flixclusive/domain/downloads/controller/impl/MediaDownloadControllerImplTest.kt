@@ -1,9 +1,15 @@
 package com.flixclusive.domain.downloads.controller.impl
 
+import android.content.Context
+import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
-import com.flixclusive.core.database.entity.downloads.DownloadStreamCandidate
+import com.flixclusive.core.database.entity.media.DBMedia
+import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.provider.CachedSubtitle
+import com.flixclusive.core.database.entity.provider.MediaLinksWithData
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
@@ -16,9 +22,13 @@ import com.flixclusive.data.downloads.hls.ResolvedHlsPlaylist
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
+import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.downloads.controller.MediaDownloadServiceController
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
+import com.flixclusive.domain.downloads.usecase.RankedDownloadCandidate
+import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
 import com.flixclusive.model.media.common.MediaType
+import com.flixclusive.model.provider.link.Stream
 import com.hippo.unifile.UniFile
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -38,6 +48,8 @@ class MediaDownloadControllerImplTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var mediaDownloadRepository: MediaDownloadRepository
+    private lateinit var mediaLinksRepository: MediaLinksRepository
+    private lateinit var resolveDownloadableStreamUseCase: ResolveDownloadableStreamUseCase
     private lateinit var downloadDirectoryRepository: DownloadDirectoryRepository
     private lateinit var getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase
     private lateinit var hlsManifestResolver: HlsManifestResolver
@@ -47,27 +59,67 @@ class MediaDownloadControllerImplTest {
 
     private val directory = mockk<UniFile>(relaxed = true)
     private val subtitlesDirectory = mockk<UniFile>(relaxed = true)
-    private val streamFile = mockk<UniFile>()
-    private val subtitleFile = mockk<UniFile>()
+    private val streamFile = mockk<UniFile>(relaxed = true)
+    private val subtitleFile = mockk<UniFile>(relaxed = true)
+
+    private val ownerId = "owner-1"
+    private val mediaId = "media-1"
+    private val itemId = "item-1"
+
+    private val media = DBMedia(
+        id = mediaId,
+        title = "Test Movie",
+        providerId = "test-provider",
+        adult = false,
+        type = MediaType.MOVIE,
+        overview = null,
+        posterImage = null,
+        language = null,
+        rating = null,
+        backdropImage = null,
+        releaseDate = null,
+    )
 
     private fun testItem(
-        id: Long = 1,
+        id: String = itemId,
         state: DownloadItemState = DownloadItemState.QUEUED,
         phase: DownloadPhase? = null,
-        subtitleUrl: String? = null,
+        sourceUrl: String? = "https://example.com/stream.mp4",
         isHlsStream: Boolean = false,
+        streamFilePath: String? = null,
         streamBytesDownloaded: Long = 0,
+        downloadedSubtitlesCount: Int = 0,
+        totalSubtitlesCount: Int = 0,
     ) = DownloadItem(
         id = id,
-        mediaId = "media-1",
+        ownerId = ownerId,
+        mediaId = mediaId,
         mediaTitle = "Test Movie",
         mediaType = MediaType.MOVIE,
         state = state,
         phase = phase,
-        streamUrl = "https://example.com/stream.mp4",
-        subtitleUrl = subtitleUrl,
+        sourceUrl = sourceUrl,
         isHlsStream = isHlsStream,
+        streamFilePath = streamFilePath,
         streamBytesDownloaded = streamBytesDownloaded,
+        downloadedSubtitlesCount = downloadedSubtitlesCount,
+        totalSubtitlesCount = totalSubtitlesCount,
+    )
+
+    private fun cachedStream(url: String) = CachedStream(
+        url = url,
+        label = "test",
+        providerId = "test-provider",
+        ownerId = ownerId,
+        mediaId = mediaId,
+    )
+
+    private fun cachedSubtitle(label: String, url: String) = CachedSubtitle(
+        url = url,
+        label = label,
+        providerId = "test-provider",
+        ownerId = ownerId,
+        mediaId = mediaId,
     )
 
     private fun setConcurrencyLimit(limit: Int) {
@@ -79,6 +131,8 @@ class MediaDownloadControllerImplTest {
     @Before
     fun setup() {
         mediaDownloadRepository = mockk(relaxed = true)
+        mediaLinksRepository = mockk(relaxed = true)
+        resolveDownloadableStreamUseCase = mockk()
         downloadDirectoryRepository = mockk()
         getDownloadDirectoryUseCase = mockk()
         hlsManifestResolver = mockk()
@@ -86,15 +140,19 @@ class MediaDownloadControllerImplTest {
         dataStoreManager = mockk()
         setConcurrencyLimit(3)
         coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns null
-        coEvery { mediaDownloadRepository.advanceStreamCandidate(any()) } returns null
+        coEvery { mediaLinksRepository.getLinks(any(), any(), any(), any()) } returns emptyList()
 
         every { downloadDirectoryRepository.getOrCreateFile(directory, any()) } returns streamFile
         every { downloadDirectoryRepository.getOrCreateSubtitlesDirectory(directory) } returns subtitlesDirectory
         every { downloadDirectoryRepository.getOrCreateFile(subtitlesDirectory, any()) } returns subtitleFile
+        every { downloadDirectoryRepository.resolveFile(any()) } returns null
         every { streamFile.length() } returns 200_000L
 
         controller = MediaDownloadControllerImpl(
+            context = mockk<Context>(),
             mediaDownloadRepository = mediaDownloadRepository,
+            mediaLinksRepository = mediaLinksRepository,
+            resolveDownloadableStreamUseCase = resolveDownloadableStreamUseCase,
             downloadDirectoryRepository = downloadDirectoryRepository,
             getDownloadDirectoryUseCase = getDownloadDirectoryUseCase,
             hlsManifestResolver = hlsManifestResolver,
@@ -107,173 +165,264 @@ class MediaDownloadControllerImplTest {
     @Test
     fun `start should mark item FAILED when the download directory cannot be resolved`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns null
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
-            coVerify { mediaDownloadRepository.markError(1, any()) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null) }
+            coVerify { mediaDownloadRepository.markError(itemId, any()) }
         }
 
     @Test
-    fun `start should complete directly when there is no subtitle to fetch`() =
+    fun `start should complete directly when there are no valid cached subtitles`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(subtitleUrl = null)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Completed
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
             coVerify {
                 mediaDownloadRepository.updateState(
-                    1,
+                    itemId,
                     DownloadItemState.DOWNLOADING_STREAM,
                     DownloadPhase.STREAM
                 )
             }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STREAM_COMPLETE, null) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.COMPLETED, null) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.STREAM_COMPLETE, null) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
             coVerify(
                 exactly = 0
-            ) { mediaDownloadRepository.updateState(1, DownloadItemState.FETCHING_SUBTITLES, any()) }
+            ) { mediaDownloadRepository.updateState(itemId, DownloadItemState.FETCHING_SUBTITLES, any()) }
         }
 
     @Test
     fun `start should ensure the media download service is running before transferring`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(subtitleUrl = null)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Completed
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
             verify { mediaDownloadServiceController.ensureRunning() }
         }
 
     @Test
-    fun `start should fetch subtitles after the stream completes when a subtitle url is set`() =
+    fun `start should persist the destination file path when creating it for the first time`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns
-                testItem(subtitleUrl = "https://example.com/subs.srt")
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(streamFilePath = null)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
-            } returns MediaTransferResult.Completed
-            coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.SUBTITLES, any(), any(), subtitleFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Completed
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STREAM_COMPLETE, null) }
+            coVerify { mediaDownloadRepository.updateStreamFilePath(itemId, any()) }
+        }
+
+    @Test
+    fun `start should reuse the persisted stream file path on resume instead of re-deriving the file name`() =
+        runTest(testDispatcher) {
+            val existingFile = mockk<UniFile>(relaxed = true)
+            every { existingFile.length() } returns 200_000L
+            every { downloadDirectoryRepository.resolveFile("content://tree/existing.mp4") } returns existingFile
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(streamFilePath = "content://tree/existing.mp4")
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), existingFile, any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            verify(exactly = 0) { downloadDirectoryRepository.getOrCreateFile(directory, any()) }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateStreamFilePath(any(), any()) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
+        }
+
+    @Test
+    fun `start should resolve a fresh cached link when the item has no source url yet`() =
+        runTest(testDispatcher) {
+            val resolvedUrl = "https://example.com/resolved.mp4"
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returnsMany
+                listOf(testItem(sourceUrl = null), testItem(sourceUrl = resolvedUrl))
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery { resolveDownloadableStreamUseCase(ownerId, mediaId, null, null) } returns
+                Async.Success(RankedDownloadCandidate(Stream(name = "1080p", url = resolvedUrl), isHls = false))
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, resolvedUrl, any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateSource(itemId, resolvedUrl, false) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
+        }
+
+    @Test
+    fun `start should mark item FAILED when resolution finds nothing reachable and never persisted a source url`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(sourceUrl = null)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery { resolveDownloadableStreamUseCase(ownerId, mediaId, null, null) } returns
+                Async.Failure(UiText.from("nothing reachable"))
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.markError(itemId, "nothing reachable") }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null) }
+            coVerify(exactly = 0) { mediaDownloadRepository.runTransfer(any(), any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `start should fetch subtitles after the stream completes when valid cached subtitles exist`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns
+                listOf(MediaLinksWithData(media = media, subtitles = listOf(cachedSubtitle("en", "https://s/en.srt"))))
+            coEvery {
+                mediaDownloadRepository.runTransfer(
+                    itemId,
+                    DownloadPhase.SUBTITLES,
+                    "https://s/en.srt",
+                    any(),
+                    subtitleFile,
+                    any()
+                )
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.STREAM_COMPLETE, null) }
             coVerify {
                 mediaDownloadRepository.updateState(
-                    1,
+                    itemId,
                     DownloadItemState.FETCHING_SUBTITLES,
                     DownloadPhase.SUBTITLES
                 )
             }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.COMPLETED, null) }
-            coVerify { mediaDownloadRepository.resetChunks(1) }
+            coVerify { mediaDownloadRepository.setTotalSubtitlesCount(itemId, 1) }
+            coVerify { mediaDownloadRepository.incrementDownloadedSubtitlesCount(itemId) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
         }
 
     @Test
-    fun `start should complete with a subtitle error instead of failing the whole item when subtitle fetch fails`() =
+    fun `start should reach COMPLETED with a partial subtitle count when one of several subtitles fails`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns
-                testItem(subtitleUrl = "https://example.com/subs.srt")
+            val subtitleOk = cachedSubtitle("en", "https://s/en.srt")
+            val subtitleFailing = cachedSubtitle("es", "https://s/es.srt")
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Completed
-            coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.SUBTITLES, any(), any(), subtitleFile, any())
-            } returns MediaTransferResult.Failed(IOException("subtitle host down"))
-
-            controller.start(1)
-            advanceUntilIdle()
-
-            coVerify { mediaDownloadRepository.markSubtitleError(1, any()) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.COMPLETED, null) }
-            coVerify(exactly = 0) { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, any()) }
-        }
-
-    @Test
-    fun `start should mark item FAILED when the stream transfer fails`() =
-        runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
-            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
-            coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
-            } returns MediaTransferResult.Failed(IOException("boom"))
-
-            controller.start(1)
-            advanceUntilIdle()
-
-            coVerify { mediaDownloadRepository.markError(1, "boom") }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
-        }
-
-    @Test
-    fun `start should switch to the next fallback candidate and retry when the stream transfer fails`() =
-        runTest(testDispatcher) {
-            val fallback = DownloadStreamCandidate(url = "https://example.com/fallback.mp4")
-            val refreshedItem = testItem().copy(streamUrl = fallback.url)
-
-            coEvery { mediaDownloadRepository.getItem(1) } returnsMany listOf(testItem(), refreshedItem)
-            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns
+                listOf(MediaLinksWithData(media = media, subtitles = listOf(subtitleOk, subtitleFailing)))
             coEvery {
                 mediaDownloadRepository.runTransfer(
-                    1,
-                    DownloadPhase.STREAM,
-                    "https://example.com/stream.mp4",
+                    itemId,
+                    DownloadPhase.SUBTITLES,
+                    subtitleOk.url,
                     any(),
-                    streamFile,
+                    subtitleFile,
                     any()
                 )
-            } returns MediaTransferResult.Failed(IOException("boom"))
-            coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, fallback.url, any(), streamFile, any())
             } returns MediaTransferResult.Completed
-            coEvery { mediaDownloadRepository.advanceStreamCandidate(1) } returns fallback
-            every { streamFile.delete() } returns true
+            coEvery {
+                mediaDownloadRepository.runTransfer(
+                    itemId,
+                    DownloadPhase.SUBTITLES,
+                    subtitleFailing.url,
+                    any(),
+                    subtitleFile,
+                    any()
+                )
+            } returns MediaTransferResult.Failed(IOException("es host down"))
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.advanceStreamCandidate(1) }
-            coVerify { mediaDownloadRepository.resetChunks(1) }
-            coVerify {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, fallback.url, any(), streamFile, any())
-            }
-            coVerify(exactly = 0) { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, any()) }
+            coVerify { mediaDownloadRepository.setTotalSubtitlesCount(itemId, 2) }
+            coVerify(exactly = 1) { mediaDownloadRepository.incrementDownloadedSubtitlesCount(itemId) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, any()) }
         }
 
     @Test
-    fun `start should mark item FAILED after exhausting all fallback candidates`() =
+    fun `start should mark item FAILED when the stream transfer fails and no other cached link is reachable`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            val primaryUrl = "https://example.com/stream.mp4"
+            val clearedItem = testItem(sourceUrl = null, streamFilePath = null)
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returnsMany
+                listOf(testItem(), clearedItem, clearedItem)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, primaryUrl, any(), streamFile, any())
             } returns MediaTransferResult.Failed(IOException("boom"))
-            coEvery { mediaDownloadRepository.advanceStreamCandidate(1) } returns null
+            coEvery { resolveDownloadableStreamUseCase(ownerId, mediaId, null, null) } returns
+                Async.Failure(UiText.from("boom"))
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.advanceStreamCandidate(1) }
-            coVerify { mediaDownloadRepository.markError(1, "boom") }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
+            coVerify { mediaLinksRepository.setLinkStatus(primaryUrl, ownerId, isDead = true) }
+            coVerify { mediaDownloadRepository.markError(itemId, "boom") }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null) }
+        }
+
+    @Test
+    fun `start should mark the dead link, re-resolve, and resume on the runner-up when the stream transfer fails`() =
+        runTest(testDispatcher) {
+            val primaryUrl = "https://example.com/stream.mp4"
+            val fallbackUrl = "https://example.com/fallback.mp4"
+            val clearedItem = testItem(sourceUrl = null, streamFilePath = null)
+            val resolvedItem = testItem(sourceUrl = fallbackUrl, streamFilePath = null)
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returnsMany
+                listOf(testItem(), clearedItem, resolvedItem)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, primaryUrl, any(), streamFile, any())
+            } returns MediaTransferResult.Failed(IOException("boom"))
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, fallbackUrl, any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+            coEvery { resolveDownloadableStreamUseCase(ownerId, mediaId, null, null) } returns
+                Async.Success(RankedDownloadCandidate(Stream(name = "fallback", url = fallbackUrl), isHls = false))
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaLinksRepository.setLinkStatus(primaryUrl, ownerId, isDead = true) }
+            coVerify { mediaDownloadRepository.updateSource(itemId, null, false) }
+            coVerify { mediaDownloadRepository.updateSource(itemId, fallbackUrl, false) }
+            coVerify {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, fallbackUrl, any(), streamFile, any())
+            }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, any()) }
         }
 
     @Test
@@ -288,21 +437,21 @@ class MediaDownloadControllerImplTest {
                     encryptionIv = null
                 )
             )
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(isHlsStream = true)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(isHlsStream = true)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
                 hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
             } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
             coEvery {
-                mediaDownloadRepository.runHlsTransfer(1, segments, 0, emptyMap(), streamFile)
+                mediaDownloadRepository.runHlsTransfer(itemId, segments, 0, emptyMap(), streamFile)
             } returns MediaTransferResult.Completed
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.runHlsTransfer(1, segments, 0, emptyMap(), streamFile) }
+            coVerify { mediaDownloadRepository.runHlsTransfer(itemId, segments, 0, emptyMap(), streamFile) }
             coVerify(exactly = 0) { mediaDownloadRepository.runTransfer(any(), any(), any(), any(), any(), any()) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.COMPLETED, null) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
         }
 
     @Test
@@ -318,234 +467,267 @@ class MediaDownloadControllerImplTest {
                 )
             }
             coEvery {
-                mediaDownloadRepository.getItem(1)
+                mediaDownloadRepository.getItem(itemId)
             } returns testItem(isHlsStream = true, streamBytesDownloaded = 3)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
                 hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
             } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
             coEvery {
-                mediaDownloadRepository.runHlsTransfer(1, segments, 3, emptyMap(), streamFile)
+                mediaDownloadRepository.runHlsTransfer(itemId, segments, 3, emptyMap(), streamFile)
             } returns MediaTransferResult.Completed
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.runHlsTransfer(1, segments, 3, emptyMap(), streamFile) }
+            coVerify { mediaDownloadRepository.runHlsTransfer(itemId, segments, 3, emptyMap(), streamFile) }
         }
 
     @Test
     fun `start should fall through to the next candidate when HLS resolution fails`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(isHlsStream = true)
+            val clearedItem = testItem(sourceUrl = null, isHlsStream = false, streamFilePath = null)
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returnsMany
+                listOf(testItem(isHlsStream = true), clearedItem, clearedItem)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
                 hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
             } returns HlsResolutionResult.Failed("manifest not found")
-            coEvery { mediaDownloadRepository.advanceStreamCandidate(1) } returns null
+            coEvery { resolveDownloadableStreamUseCase(ownerId, mediaId, null, null) } returns
+                Async.Failure(UiText.from("manifest not found"))
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.advanceStreamCandidate(1) }
-            coVerify { mediaDownloadRepository.markError(1, "manifest not found") }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
+            coVerify { mediaDownloadRepository.markError(itemId, "manifest not found") }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null) }
         }
 
     @Test
     fun `start should mark item FAILED when a completed transfer produced a suspiciously small file`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Completed
             every { streamFile.length() } returns 10L
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.FAILED, null) }
-            coVerify(exactly = 0) { mediaDownloadRepository.updateState(1, DownloadItemState.STREAM_COMPLETE, any()) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null) }
+            coVerify(
+                exactly = 0
+            ) { mediaDownloadRepository.updateState(itemId, DownloadItemState.STREAM_COMPLETE, any()) }
         }
 
     @Test
     fun `start should mark item PAUSED when interrupted by a pause request`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Cancelled
-            coEvery { mediaDownloadRepository.consumeInterruptReason(1) } returns DownloadInterruptReason.PAUSE
+            coEvery { mediaDownloadRepository.consumeInterruptReason(itemId) } returns DownloadInterruptReason.PAUSE
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.PAUSED, DownloadPhase.STREAM) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, DownloadPhase.STREAM) }
             coVerify(exactly = 0) { directory.delete() }
         }
 
     @Test
     fun `start should mark item STOPPED and delete the directory when interrupted by a stop request`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Cancelled
-            coEvery { mediaDownloadRepository.consumeInterruptReason(1) } returns DownloadInterruptReason.STOP
+            coEvery { mediaDownloadRepository.consumeInterruptReason(itemId) } returns DownloadInterruptReason.STOP
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
             coVerify { directory.delete() }
-            coVerify { mediaDownloadRepository.resetChunks(1) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STOPPED, null) }
+            coVerify { mediaDownloadRepository.resetChunks(itemId) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, null) }
         }
 
     @Test
     fun `start should resume directly into the subtitle phase when the item was paused mid-subtitle`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
                 testItem(
                     state = DownloadItemState.PAUSED,
                     phase = DownloadPhase.SUBTITLES,
-                    subtitleUrl = "https://example.com/subs.srt"
+                    downloadedSubtitlesCount = 1,
+                    totalSubtitlesCount = 2,
                 )
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            val remainingSubtitle = cachedSubtitle("es", "https://s/es.srt")
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns
+                listOf(
+                    MediaLinksWithData(
+                        media = media,
+                        subtitles = listOf(cachedSubtitle("en", "https://s/en.srt"), remainingSubtitle),
+                    )
+                )
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.SUBTITLES, any(), any(), subtitleFile, any())
+                mediaDownloadRepository.runTransfer(
+                    itemId,
+                    DownloadPhase.SUBTITLES,
+                    remainingSubtitle.url,
+                    any(),
+                    subtitleFile,
+                    any()
+                )
             } returns MediaTransferResult.Completed
 
-            controller.start(1)
+            controller.start(itemId)
             advanceUntilIdle()
 
             coVerify(
                 exactly = 0
-            ) { mediaDownloadRepository.updateState(1, DownloadItemState.DOWNLOADING_STREAM, any()) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.COMPLETED, null) }
+            ) { mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, any()) }
+            coVerify(
+                exactly = 0
+            ) {
+                mediaDownloadRepository.runTransfer(
+                    itemId,
+                    DownloadPhase.SUBTITLES,
+                    "https://s/en.srt",
+                    any(),
+                    any(),
+                    any()
+                )
+            }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
         }
 
     @Test
     fun `retry should reset chunks and requeue before restarting the download`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(state = DownloadItemState.FAILED)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(state = DownloadItemState.FAILED)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), streamFile, any())
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Completed
 
-            controller.retry(1)
+            controller.retry(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.resetChunks(1) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.QUEUED, null) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.COMPLETED, null) }
+            coVerify { mediaDownloadRepository.resetChunks(itemId) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.QUEUED, null) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
         }
 
     @Test
     fun `delete should remove the directory and the persisted item`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem()
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
 
-            controller.delete(1)
+            controller.delete(itemId)
             advanceUntilIdle()
 
             coVerify { directory.delete() }
-            coVerify { mediaDownloadRepository.delete(1) }
+            coVerify { mediaDownloadRepository.delete(itemId) }
         }
 
     @Test
     fun `pause on a queued item should transition it directly to PAUSED without an interrupt flag`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(state = DownloadItemState.QUEUED)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(state = DownloadItemState.QUEUED)
 
-            controller.pause(1)
+            controller.pause(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.PAUSED, null) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, null) }
             coVerify(exactly = 0) { mediaDownloadRepository.requestInterrupt(any(), any()) }
         }
 
     @Test
     fun `stop on a queued item should clean up and mark STOPPED directly without an interrupt flag`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(state = DownloadItemState.QUEUED)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(state = DownloadItemState.QUEUED)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
 
-            controller.stop(1)
+            controller.stop(itemId)
             advanceUntilIdle()
 
             coVerify { directory.delete() }
-            coVerify { mediaDownloadRepository.resetChunks(1) }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STOPPED, null) }
+            coVerify { mediaDownloadRepository.resetChunks(itemId) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, null) }
             coVerify(exactly = 0) { mediaDownloadRepository.requestInterrupt(any(), any()) }
         }
 
     @Test
     fun `stop on a paused item should clean up and mark STOPPED directly`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
                 testItem(state = DownloadItemState.PAUSED, phase = DownloadPhase.STREAM)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
 
-            controller.stop(1)
+            controller.stop(itemId)
             advanceUntilIdle()
 
             coVerify { directory.delete() }
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STOPPED, null) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, null) }
         }
 
     @Test
     fun `pause on an actively downloading item should request an interrupt instead of transitioning state directly`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(1) } returns
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
                 testItem(state = DownloadItemState.DOWNLOADING_STREAM)
 
-            controller.pause(1)
+            controller.pause(itemId)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.requestInterrupt(1, DownloadInterruptReason.PAUSE) }
-            coVerify(exactly = 0) { mediaDownloadRepository.updateState(1, DownloadItemState.PAUSED, any()) }
+            coVerify { mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE) }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, any()) }
         }
 
     @Test
     fun `pauseBatch should pause every item returned for that media and season`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getBatch("media-1", 1) } returns
+            coEvery { mediaDownloadRepository.getBatch(mediaId, 1) } returns
                 listOf(
-                    testItem(id = 1, state = DownloadItemState.QUEUED),
-                    testItem(id = 2, state = DownloadItemState.QUEUED)
+                    testItem(id = "item-1", state = DownloadItemState.QUEUED),
+                    testItem(id = "item-2", state = DownloadItemState.QUEUED)
                 )
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(id = 1)
-            coEvery { mediaDownloadRepository.getItem(2) } returns testItem(id = 2)
+            coEvery { mediaDownloadRepository.getItem("item-1") } returns testItem(id = "item-1")
+            coEvery { mediaDownloadRepository.getItem("item-2") } returns testItem(id = "item-2")
 
-            controller.pauseBatch("media-1", 1)
+            controller.pauseBatch(mediaId, 1)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.PAUSED, null) }
-            coVerify { mediaDownloadRepository.updateState(2, DownloadItemState.PAUSED, null) }
+            coVerify { mediaDownloadRepository.updateState("item-1", DownloadItemState.PAUSED, null) }
+            coVerify { mediaDownloadRepository.updateState("item-2", DownloadItemState.PAUSED, null) }
         }
 
     @Test
     fun `stopBatch should stop every item returned for that media and season`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getBatch("media-1", 1) } returns
+            coEvery { mediaDownloadRepository.getBatch(mediaId, 1) } returns
                 listOf(
-                    testItem(id = 1, state = DownloadItemState.QUEUED),
-                    testItem(id = 2, state = DownloadItemState.QUEUED)
+                    testItem(id = "item-1", state = DownloadItemState.QUEUED),
+                    testItem(id = "item-2", state = DownloadItemState.QUEUED)
                 )
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(id = 1)
-            coEvery { mediaDownloadRepository.getItem(2) } returns testItem(id = 2)
+            coEvery { mediaDownloadRepository.getItem("item-1") } returns testItem(id = "item-1")
+            coEvery { mediaDownloadRepository.getItem("item-2") } returns testItem(id = "item-2")
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
 
-            controller.stopBatch("media-1", 1)
+            controller.stopBatch(mediaId, 1)
             advanceUntilIdle()
 
-            coVerify { mediaDownloadRepository.updateState(1, DownloadItemState.STOPPED, null) }
-            coVerify { mediaDownloadRepository.updateState(2, DownloadItemState.STOPPED, null) }
+            coVerify { mediaDownloadRepository.updateState("item-1", DownloadItemState.STOPPED, null) }
+            coVerify { mediaDownloadRepository.updateState("item-2", DownloadItemState.STOPPED, null) }
         }
 
     @Test
@@ -555,38 +737,46 @@ class MediaDownloadControllerImplTest {
 
             val item1Gate = CompletableDeferred<Unit>()
 
-            coEvery { mediaDownloadRepository.getItem(1) } returns testItem(id = 1)
-            coEvery { mediaDownloadRepository.getItem(2) } returns testItem(id = 2)
+            coEvery { mediaDownloadRepository.getItem("item-1") } returns testItem(id = "item-1")
+            coEvery { mediaDownloadRepository.getItem("item-2") } returns testItem(id = "item-2")
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             coEvery {
-                mediaDownloadRepository.runTransfer(1, DownloadPhase.STREAM, any(), any(), any(), any())
+                mediaDownloadRepository.runTransfer("item-1", DownloadPhase.STREAM, any(), any(), any(), any())
             } coAnswers {
                 item1Gate.await()
                 MediaTransferResult.Completed
             }
             coEvery {
-                mediaDownloadRepository.runTransfer(2, DownloadPhase.STREAM, any(), any(), any(), any())
+                mediaDownloadRepository.runTransfer("item-2", DownloadPhase.STREAM, any(), any(), any(), any())
             } returns MediaTransferResult.Completed
-            coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns testItem(id = 2) andThen null
+            coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns testItem(id = "item-2") andThen null
 
-            controller.start(1)
-            controller.start(2)
+            controller.start("item-1")
+            controller.start("item-2")
             advanceUntilIdle()
 
             // Item 1 is still mid-transfer (blocked on item1Gate), so item 2 must not have gotten a slot.
             coVerify(exactly = 1) {
-                mediaDownloadRepository.updateState(1, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
+                mediaDownloadRepository.updateState(
+                    "item-1",
+                    DownloadItemState.DOWNLOADING_STREAM,
+                    DownloadPhase.STREAM
+                )
             }
             coVerify(
                 exactly = 0
-            ) { mediaDownloadRepository.updateState(2, DownloadItemState.DOWNLOADING_STREAM, any()) }
+            ) { mediaDownloadRepository.updateState("item-2", DownloadItemState.DOWNLOADING_STREAM, any()) }
 
             item1Gate.complete(Unit)
             advanceUntilIdle()
 
             // Once item 1 finishes and frees its slot, dispatchNext() should pick item 2 up.
             coVerify(exactly = 1) {
-                mediaDownloadRepository.updateState(2, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
+                mediaDownloadRepository.updateState(
+                    "item-2",
+                    DownloadItemState.DOWNLOADING_STREAM,
+                    DownloadPhase.STREAM
+                )
             }
         }
 }

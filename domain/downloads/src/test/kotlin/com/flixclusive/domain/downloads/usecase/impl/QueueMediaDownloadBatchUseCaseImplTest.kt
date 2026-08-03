@@ -7,7 +7,6 @@ import com.flixclusive.domain.downloads.model.MediaDownloadRequest
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
-import com.flixclusive.model.provider.link.Stream
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -33,13 +32,14 @@ class QueueMediaDownloadBatchUseCaseImplTest {
         totalSeasons = 1,
     )
 
+    private val ownerId = "owner-1"
+
     private fun episode(number: Int) = Episode(id = "ep-$number", number = number, season = 1, isReleased = true)
 
     private fun request(number: Int) = MediaDownloadRequest(
         media = testShow,
         episode = episode(number),
-        streams = listOf(Stream(name = "1080p", url = "https://example.com/$number.mp4")),
-        subtitle = null,
+        ownerId = ownerId,
     )
 
     @Before
@@ -52,28 +52,28 @@ class QueueMediaDownloadBatchUseCaseImplTest {
     @Test
     fun `invoke should queue every request and start each successfully queued item`() =
         runTest {
-            coEvery { queueMediaDownloadUseCase(testShow, episode(1), any(), null) } returns Async.Success(10L)
-            coEvery { queueMediaDownloadUseCase(testShow, episode(2), any(), null) } returns Async.Success(20L)
+            coEvery { queueMediaDownloadUseCase(testShow, episode(1), ownerId) } returns Async.Success("item-10")
+            coEvery { queueMediaDownloadUseCase(testShow, episode(2), ownerId) } returns Async.Success("item-20")
 
             val results = useCase(listOf(request(1), request(2)))
 
             expectThat(results).hasSize(2)
-            coVerify { mediaDownloadController.start(10L) }
-            coVerify { mediaDownloadController.start(20L) }
+            coVerify { mediaDownloadController.start("item-10") }
+            coVerify { mediaDownloadController.start("item-20") }
         }
 
     @Test
     fun `invoke should not start items whose queuing failed`() =
         runTest {
-            coEvery { queueMediaDownloadUseCase(testShow, episode(1), any(), null) } returns Async.Success(10L)
-            coEvery { queueMediaDownloadUseCase(testShow, episode(2), any(), null) } returns
+            coEvery { queueMediaDownloadUseCase(testShow, episode(1), ownerId) } returns Async.Success("item-10")
+            coEvery { queueMediaDownloadUseCase(testShow, episode(2), ownerId) } returns
                 Async.Failure(UiText.from("no links"))
 
             val results = useCase(listOf(request(1), request(2)))
 
-            expectThat(results[0]).isA<Async.Success<Long>>()
+            expectThat(results[0]).isA<Async.Success<String>>()
             expectThat(results[1]).isA<Async.Failure>()
             coVerify(exactly = 1) { mediaDownloadController.start(any()) }
-            coVerify { mediaDownloadController.start(10L) }
+            coVerify { mediaDownloadController.start("item-10") }
         }
 }

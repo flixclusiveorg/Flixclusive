@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.screen.downloads
 
+import android.text.format.Formatter
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,13 +21,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
-import com.flixclusive.feature.mobile.settings.screen.links.util.CacheLinksFormatUtil
+import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
 import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -43,7 +46,7 @@ internal fun DownloadItemCard(
     modifier: Modifier = Modifier,
 ) {
     val isDimmed = item.state == DownloadItemState.STOPPED
-    val progress = item.progress()
+    val isShowingProgress = item.state.isTransferring() || item.state == DownloadItemState.PAUSED
 
     Surface(
         modifier = modifier
@@ -81,6 +84,14 @@ internal fun DownloadItemCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                     )
+
+                    if (item.state == DownloadItemState.COMPLETED) {
+                        Text(
+                            text = item.completedSummary(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        )
+                    }
                 }
 
                 DownloadItemActions(
@@ -94,25 +105,60 @@ internal fun DownloadItemCard(
                 )
             }
 
-            if (item.state.isTransferring() && progress != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(CircleShape),
-                )
-            } else if (item.state == DownloadItemState.PAUSED && progress != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(CircleShape),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                )
+            if (isShowingProgress) {
+                val streamProgress = item.streamProgress()
+                if (streamProgress != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DownloadProgressRow(
+                        label = stringResource(LocaleR.string.download_progress_video_label),
+                        progress = streamProgress,
+                        valueText = item.streamValueText(),
+                    )
+                }
+
+                val subtitlesProgress = item.subtitlesProgress()
+                if (subtitlesProgress != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    DownloadProgressRow(
+                        label = stringResource(LocaleR.string.download_progress_subtitles_label),
+                        progress = subtitlesProgress,
+                        valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun DownloadProgressRow(
+    label: String,
+    progress: Float,
+    valueText: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.width(72.dp),
+        )
+
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp)
+                .clip(CircleShape),
+        )
+
+        Text(
+            text = valueText,
+            style = MaterialTheme.typography.labelSmall,
+        )
     }
 }
 
@@ -201,15 +247,45 @@ private fun DownloadItemState.isTransferring(): Boolean = this == DownloadItemSt
     this == DownloadItemState.STREAM_COMPLETE ||
     this == DownloadItemState.FETCHING_SUBTITLES
 
-private fun DownloadItem.progress(): Float? {
-    val (downloaded, total) = if (state == DownloadItemState.FETCHING_SUBTITLES) {
-        subtitleBytesDownloaded to subtitleTotalBytes
-    } else {
-        streamBytesDownloaded to streamTotalBytes
+private fun DownloadItem.streamProgress(): Float? {
+    if (streamTotalBytes <= 0) return null
+    return (streamBytesDownloaded.toFloat() / streamTotalBytes.toFloat()).coerceIn(0f, 1f)
+}
+
+private fun DownloadItem.subtitlesProgress(): Float? {
+    if (totalSubtitlesCount <= 0) return null
+    return (downloadedSubtitlesCount.toFloat() / totalSubtitlesCount.toFloat()).coerceIn(0f, 1f)
+}
+
+@Composable
+private fun DownloadItem.streamValueText(): String {
+    if (isHlsStream) {
+        return stringResource(
+            LocaleR.string.download_progress_segments_format,
+            streamBytesDownloaded.toInt(),
+            streamTotalBytes.toInt(),
+        )
     }
 
-    if (total <= 0) return null
-    return (downloaded.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+    val context = LocalContext.current
+    val downloaded = Formatter.formatShortFileSize(context, streamBytesDownloaded)
+    val total = Formatter.formatShortFileSize(context, streamTotalBytes)
+    return "$downloaded / $total"
+}
+
+@Composable
+private fun DownloadItem.completedSummary(): String {
+    val context = LocalContext.current
+    val size = Formatter.formatShortFileSize(context, streamTotalBytes)
+
+    if (totalSubtitlesCount <= 0) return size
+
+    val subtitleCount = pluralStringResource(
+        LocaleR.plurals.download_subtitles_count,
+        downloadedSubtitlesCount,
+        downloadedSubtitlesCount,
+    )
+    return "$size • $subtitleCount"
 }
 
 @Composable

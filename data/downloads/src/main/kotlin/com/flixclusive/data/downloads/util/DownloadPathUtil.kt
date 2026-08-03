@@ -20,8 +20,7 @@ object DownloadPathUtil {
         episodeNumber
     )
 
-    fun buildFileTitle(mediaTitle: String, episodeTitle: String?): String =
-        episodeTitle?.takeIf { it.isNotBlank() } ?: mediaTitle
+    fun buildFileTitle(mediaTitle: String): String = mediaTitle
 
     fun buildStreamFileName(fileTitle: String, extension: String): String =
         "${sanitizeFileName(fileTitle)}.$extension"

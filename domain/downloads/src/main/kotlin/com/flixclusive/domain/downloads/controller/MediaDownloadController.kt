@@ -1,17 +1,17 @@
 package com.flixclusive.domain.downloads.controller
 
 interface MediaDownloadController {
-    fun start(itemId: Long)
+    fun start(itemId: String)
 
-    fun pause(itemId: Long)
+    fun pause(itemId: String)
 
-    fun resume(itemId: Long)
+    fun resume(itemId: String)
 
-    fun stop(itemId: Long)
+    fun stop(itemId: String)
 
-    fun retry(itemId: Long)
+    fun retry(itemId: String)
 
-    fun delete(itemId: Long)
+    fun delete(itemId: String)
 
     fun pauseBatch(
         mediaId: String,

@@ -77,7 +77,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.Comm
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.feature.mobile.settings.screen.links.util.CacheLinksFormatUtil
+import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
 import com.flixclusive.feature.mobile.settings.screen.links.util.LinkUtil.toRelativeTime
 import com.flixclusive.feature.mobile.settings.screen.links.util.PreviewData
 import com.flixclusive.model.media.MediaMetadata

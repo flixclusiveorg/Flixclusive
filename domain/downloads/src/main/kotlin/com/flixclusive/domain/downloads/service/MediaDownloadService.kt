@@ -55,7 +55,7 @@ class MediaDownloadService : Service() {
     /** Ids of [DownloadItemState.FAILED] items already notified, so re-emissions of the same
      * failure (e.g. from an unrelated item's progress update) don't re-alert. Cleared once the
      * item is retried/deleted and no longer reports as failed. */
-    private val notifiedFailureIds = mutableSetOf<Long>()
+    private val notifiedFailureIds = mutableSetOf<String>()
 
     companion object {
         private const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
@@ -72,15 +72,15 @@ class MediaDownloadService : Service() {
             ContextCompat.startForegroundService(context, Intent(context, MediaDownloadService::class.java))
         }
 
-        fun pause(context: Context, itemId: Long) = sendAction(context, ACTION_PAUSE, itemId)
+        fun pause(context: Context, itemId: String) = sendAction(context, ACTION_PAUSE, itemId)
 
-        fun resume(context: Context, itemId: Long) = sendAction(context, ACTION_RESUME, itemId)
+        fun resume(context: Context, itemId: String) = sendAction(context, ACTION_RESUME, itemId)
 
-        fun stop(context: Context, itemId: Long) = sendAction(context, ACTION_STOP, itemId)
+        fun stop(context: Context, itemId: String) = sendAction(context, ACTION_STOP, itemId)
 
-        fun retry(context: Context, itemId: Long) = sendAction(context, ACTION_RETRY, itemId)
+        fun retry(context: Context, itemId: String) = sendAction(context, ACTION_RETRY, itemId)
 
-        private fun sendAction(context: Context, action: String, itemId: Long) {
+        private fun sendAction(context: Context, action: String, itemId: String) {
             val intent = Intent(context, MediaDownloadService::class.java).apply {
                 this.action = action
                 putExtra(EXTRA_ITEM_ID, itemId)
@@ -101,7 +101,7 @@ class MediaDownloadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val itemId = intent?.getLongExtra(EXTRA_ITEM_ID, -1)?.takeIf { it >= 0 }
+        val itemId = intent?.getStringExtra(EXTRA_ITEM_ID)
 
         if (itemId != null) {
             when (intent.action) {
@@ -141,7 +141,7 @@ class MediaDownloadService : Service() {
                 safeStartForeground(SUMMARY_NOTIFICATION_ID, buildSummaryNotification(activeItems.size))
 
                 activeItems.forEach { item ->
-                    notificationManager.notify(item.id.toInt(), buildItemNotification(item))
+                    notificationManager.notify(item.notificationId(), buildItemNotification(item))
                 }
             }
         }
@@ -155,7 +155,7 @@ class MediaDownloadService : Service() {
 
         failedItems.forEach { item ->
             if (notifiedFailureIds.add(item.id)) {
-                notificationManager.notify(item.id.toInt(), buildErrorNotification(item))
+                notificationManager.notify(item.notificationId(), buildErrorNotification(item))
             }
         }
     }
@@ -219,12 +219,11 @@ class MediaDownloadService : Service() {
             .build()
 
     private fun buildItemNotification(item: DownloadItem): Notification {
-        val title = item.episodeTitle?.takeIf { it.isNotBlank() } ?: item.mediaTitle
         val (progress, statusText) = progressAndStatusFor(item)
 
         val builder = NotificationCompat
             .Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(title)
+            .setContentTitle(item.displayTitle())
             .setContentText(statusText)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setGroup(NOTIFICATION_GROUP_KEY)
@@ -250,12 +249,11 @@ class MediaDownloadService : Service() {
     }
 
     private fun buildErrorNotification(item: DownloadItem): Notification {
-        val title = item.episodeTitle?.takeIf { it.isNotBlank() } ?: item.mediaTitle
         val message = item.errorMessage?.takeIf { it.isNotBlank() } ?: "Download failed"
 
         return NotificationCompat
             .Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(title)
+            .setContentTitle(item.displayTitle())
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setSmallIcon(android.R.drawable.stat_notify_error)
@@ -266,21 +264,35 @@ class MediaDownloadService : Service() {
             .build()
     }
 
+    /** Falls back to the media title, with the `SxxExx` tag appended for episodes — downloads
+     * don't persist an episode title of their own (see [DownloadItem]). */
+    private fun DownloadItem.displayTitle(): String {
+        val season = seasonNumber
+        val episode = episodeNumber
+        if (season == null || episode == null) return mediaTitle
+
+        val tag = "S${season.toString().padStart(2, '0')}E${episode.toString().padStart(2, '0')}"
+        return "$mediaTitle • $tag"
+    }
+
+    private fun DownloadItem.notificationId(): Int = id.hashCode()
+
     private fun progressAndStatusFor(item: DownloadItem): Pair<Int?, String> =
         when (item.state) {
             DownloadItemState.DOWNLOADING_STREAM -> percentOf(item.streamBytesDownloaded, item.streamTotalBytes)
                 .let { it to "Downloading video… $it%" }
-            DownloadItemState.FETCHING_SUBTITLES -> percentOf(item.subtitleBytesDownloaded, item.subtitleTotalBytes)
-                .let { it to "Downloading subtitles… $it%" }
+            DownloadItemState.FETCHING_SUBTITLES ->
+                percentOf(item.downloadedSubtitlesCount.toLong(), item.totalSubtitlesCount.toLong())
+                    .let { it to "Downloading subtitles… ${item.downloadedSubtitlesCount}/${item.totalSubtitlesCount}" }
             DownloadItemState.PAUSED -> null to "Paused"
             DownloadItemState.STREAM_COMPLETE -> null to "Preparing subtitles…"
             else -> null to "Queued"
         }
 
-    private fun percentOf(bytesDownloaded: Long, totalBytes: Long): Int =
-        if (totalBytes <= 0) 0 else ((bytesDownloaded * 100) / totalBytes).toInt().coerceIn(0, 100)
+    private fun percentOf(current: Long, total: Long): Int =
+        if (total <= 0) 0 else ((current * 100) / total).toInt().coerceIn(0, 100)
 
-    private fun actionPendingIntent(action: String, itemId: Long): PendingIntent {
+    private fun actionPendingIntent(action: String, itemId: String): PendingIntent {
         val intent = Intent(this, MediaDownloadService::class.java).apply {
             this.action = action
             putExtra(EXTRA_ITEM_ID, itemId)

@@ -37,18 +37,8 @@ class DownloadPathUtilTest {
     }
 
     @Test
-    fun `buildFileTitle should use episode title when present`() {
-        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle, "Pilot")).isEqualTo("Pilot")
-    }
-
-    @Test
-    fun `buildFileTitle should fall back to media title when episode title is blank`() {
-        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle, "")).isEqualTo(mediaTitle)
-    }
-
-    @Test
-    fun `buildFileTitle should fall back to media title when episode title is null`() {
-        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle, null)).isEqualTo(mediaTitle)
+    fun `buildFileTitle should return the media title`() {
+        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle)).isEqualTo(mediaTitle)
     }
 
     @Test

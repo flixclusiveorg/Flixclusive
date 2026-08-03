@@ -13,12 +13,12 @@ internal class QueueMediaDownloadBatchUseCaseImpl @Inject constructor(
     private val queueMediaDownloadUseCase: QueueMediaDownloadUseCase,
     private val mediaDownloadController: MediaDownloadController,
 ) : QueueMediaDownloadBatchUseCase {
-    override suspend fun invoke(requests: List<MediaDownloadRequest>): List<Async<Long>> =
+    override suspend fun invoke(requests: List<MediaDownloadRequest>): List<Async<String>> =
         coroutineScope {
             requests
                 .map { request ->
                     async {
-                        queueMediaDownloadUseCase(request.media, request.episode, request.streams, request.subtitle)
+                        queueMediaDownloadUseCase(request.media, request.episode, request.ownerId)
                     }
                 }.map { it.await() }
                 .onEach { result ->
