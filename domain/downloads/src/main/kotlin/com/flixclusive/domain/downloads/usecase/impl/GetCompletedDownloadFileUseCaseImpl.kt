@@ -3,6 +3,7 @@ package com.flixclusive.domain.downloads.usecase.impl
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
+import com.flixclusive.data.downloads.util.DownloadPathUtil
 import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
 import com.flixclusive.domain.downloads.usecase.CompletedSubtitleFile
 import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
@@ -17,9 +18,15 @@ internal class GetCompletedDownloadFileUseCaseImpl @Inject constructor(
 
         val file = downloadDirectoryRepository.resolveFile(streamFilePath) ?: return null
         val subtitles = downloadDirectoryRepository.listSubtitleFiles(file).map { subtitleFile ->
+            val fileName = subtitleFile.name.orEmpty()
+            val extension = fileName
+                .substringAfterLast('.', "")
+                .ifBlank { DownloadPathUtil.DEFAULT_SUBTITLE_EXTENSION }
+
             CompletedSubtitleFile(
                 uri = subtitleFile.uri,
-                language = languageFromFileName(subtitleFile.name.orEmpty()),
+                language = languageFromFileName(fileName),
+                extension = extension,
             )
         }
 

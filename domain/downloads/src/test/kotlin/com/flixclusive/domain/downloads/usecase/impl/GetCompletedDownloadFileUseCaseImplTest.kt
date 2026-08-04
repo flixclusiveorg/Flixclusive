@@ -101,7 +101,7 @@ class GetCompletedDownloadFileUseCaseImplTest {
         }
 
     @Test
-    fun `invoke should surface sibling subtitle files with their language parsed from the file name`() =
+    fun `invoke should surface sibling subtitle files with their language and extension parsed from the file name`() =
         runTest {
             val item = testItem()
             val subtitleFile = mockk<UniFile>()
@@ -116,7 +116,47 @@ class GetCompletedDownloadFileUseCaseImplTest {
             val result = useCase(item)
 
             expectThat(result?.subtitles).isEqualTo(
-                listOf(CompletedSubtitleFile(uri = subtitleUri, language = "English"))
+                listOf(CompletedSubtitleFile(uri = subtitleUri, language = "English", extension = "srt"))
+            )
+        }
+
+    @Test
+    fun `invoke should parse a non-srt extension off the subtitle file name`() =
+        runTest {
+            val item = testItem()
+            val subtitleFile = mockk<UniFile>()
+            val subtitleUri = mockk<Uri>()
+            every { downloadDirectoryRepository.resolveFile(item.streamFilePath!!) } returns streamFile
+            every { downloadDirectoryRepository.listSubtitleFiles(streamFile) } returns listOf(subtitleFile)
+            every { streamFile.uri } returns streamUri
+            every { streamFile.type } returns "video/mp4"
+            every { subtitleFile.uri } returns subtitleUri
+            every { subtitleFile.name } returns "Test Movie (French).vtt"
+
+            val result = useCase(item)
+
+            expectThat(result?.subtitles).isEqualTo(
+                listOf(CompletedSubtitleFile(uri = subtitleUri, language = "French", extension = "vtt"))
+            )
+        }
+
+    @Test
+    fun `invoke should fall back to the default subtitle extension when the file name has no extension`() =
+        runTest {
+            val item = testItem()
+            val subtitleFile = mockk<UniFile>()
+            val subtitleUri = mockk<Uri>()
+            every { downloadDirectoryRepository.resolveFile(item.streamFilePath!!) } returns streamFile
+            every { downloadDirectoryRepository.listSubtitleFiles(streamFile) } returns listOf(subtitleFile)
+            every { streamFile.uri } returns streamUri
+            every { streamFile.type } returns "video/mp4"
+            every { subtitleFile.uri } returns subtitleUri
+            every { subtitleFile.name } returns "Test Movie (German)"
+
+            val result = useCase(item)
+
+            expectThat(result?.subtitles).isEqualTo(
+                listOf(CompletedSubtitleFile(uri = subtitleUri, language = "Test Movie (German)", extension = "srt"))
             )
         }
 }

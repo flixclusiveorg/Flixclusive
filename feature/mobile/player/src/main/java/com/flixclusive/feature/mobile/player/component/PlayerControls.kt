@@ -112,7 +112,7 @@ internal fun PlayerControls(
     playerPrefs: PlayerPreferences,
     subtitlesPrefs: SubtitlesPreferences,
     currentResizeMode: ResizeMode,
-    currentProvider: () -> ProviderMetadata,
+    currentProvider: () -> ProviderMetadata?,
     providers: () -> List<ProviderMetadata>,
     servers: () -> List<PlayerServer>,
     currentServer: () -> Int,
@@ -136,7 +136,11 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
     var savedSpeed by remember { mutableFloatStateOf(0f) }
     var volumeSliderHideJob by remember { mutableStateOf<Job?>(null) }
-    val key = remember(currentEpisode, currentProvider) { currentEpisode?.id + currentProvider().id }
+    // Keyed on the resolved provider id (a value), not the `currentProvider` lambda itself —
+    // PlayerScreen.kt allocates a fresh lambda on every recomposition, which used to invalidate
+    // this `remember` (and everything keyed off it below) every frame.
+    val currentProviderId = currentProvider()?.id
+    val key = remember(currentEpisode, currentProviderId) { currentEpisode?.id + currentProviderId }
 
     val scope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
@@ -437,6 +441,12 @@ internal fun PlayerControls(
                             onShowEpisodesPanel = currentEpisode?.let {
                                 { uiMode = UiMode.EPISODES }
                             },
+                            // No servers/providers to switch between for local playback.
+                            onShowServersPanel = if (currentProvider() != null) {
+                                { uiMode = UiMode.SERVERS }
+                            } else {
+                                null
+                            },
                         )
                     }
 
@@ -523,13 +533,14 @@ internal fun PlayerControls(
                     }
 
                     AnimatedPanel(
-                        visible = uiMode.isServers
+                        visible = uiMode.isServers && currentProvider() != null
                     ) {
                         ServersScreen(
                             servers = servers,
                             currentServer = currentServer,
                             onServerChange = onServerChange,
-                            currentProvider = currentProvider,
+                            // Non-null: this panel only renders when currentProvider() != null.
+                            currentProvider = { currentProvider()!! },
                             providers = providers,
                             onProviderChange = onProviderChange,
                             onDismiss = { uiMode = UiMode.NONE },

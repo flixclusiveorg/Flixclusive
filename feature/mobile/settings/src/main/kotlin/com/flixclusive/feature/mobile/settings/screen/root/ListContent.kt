@@ -288,8 +288,7 @@ private fun ListContentHeader(
                     .background(
                         MaterialTheme.colorScheme.onSurface,
                         MaterialTheme.shapes.small,
-                    )
-                    .padding(3.dp)
+                    ).padding(3.dp)
             )
         }
 

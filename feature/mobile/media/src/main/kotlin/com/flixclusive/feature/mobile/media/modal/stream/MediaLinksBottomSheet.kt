@@ -76,6 +76,7 @@ import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.provider.CachedStream
 import com.flixclusive.core.database.entity.provider.CachedSubtitle
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.common.components.GradientLinearProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.getActivity
@@ -166,8 +167,10 @@ internal fun MediaLinksBottomSheet(
             .debounce(1000L.milliseconds) // Debounce to prevent rapid navigation if links change quickly
             .collectLatest {
                 navigator.showPlayerSplashScreen(
-                    media = uiState.metadata,
-                    episode = uiState.episode,
+                    PlaybackRequest.FromProvider(
+                        media = uiState.metadata,
+                        episode = uiState.episode,
+                    ),
                 )
             }
     }
@@ -184,16 +187,20 @@ internal fun MediaLinksBottomSheet(
         onResetAndRetry = viewModel::onResetAndRetry,
         onSkipLoading = {
             navigator.showPlayerSplashScreen(
-                media = uiState.metadata,
-                episode = uiState.episode,
+                PlaybackRequest.FromProvider(
+                    media = uiState.metadata,
+                    episode = uiState.episode,
+                ),
             )
         },
         onPlayLink = {
             navigator.showPlayerSplashScreen(
-                media = uiState.metadata,
-                episode = uiState.episode,
-                initialStreamUrl = it.url,
-                initialHeaders = it.customHeaders
+                PlaybackRequest.FromProvider(
+                    media = uiState.metadata,
+                    episode = uiState.episode,
+                    preferredStreamUrl = it.url,
+                    headers = it.customHeaders,
+                ),
             )
         },
     )

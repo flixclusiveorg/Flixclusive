@@ -6,6 +6,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadItem
 data class CompletedSubtitleFile(
     val uri: Uri,
     val language: String,
+    val extension: String,
 )
 
 data class CompletedDownloadFile(

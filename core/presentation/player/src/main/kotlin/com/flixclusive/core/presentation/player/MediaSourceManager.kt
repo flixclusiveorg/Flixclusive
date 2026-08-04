@@ -31,25 +31,34 @@ class MediaSourceManager(
     ): MediaSource {
         val subtitleSources = subtitles.mapNotNull { createSubtitleMediaSource(it) }
 
-        val video = createStreamMediaSource(url = server.url)
+        val video = createStreamMediaSource(server)
         return MergingMediaSource(video, *subtitleSources.toTypedArray())
     }
 
-    private fun createStreamMediaSource(url: String): MediaSource {
-        val mediaItem = createMediaItem(url)
-        val dataSourceFactory = dataSourceFactory.remote
+    private fun createStreamMediaSource(server: PlayerServer): MediaSource {
+        val mediaItem = createMediaItem(server.url)
+
+        // A non-remote server is a file already on disk (SAF content:// or file://) — never an
+        // HLS/DASH manifest — so it skips URL sniffing entirely and goes straight through
+        // ProgressiveMediaSource on the local data source, which is the one that can actually
+        // open content:// (dataSourceFactory.remote is OkHttp-backed and cannot).
+        if (server.source != TrackSource.REMOTE) {
+            return ProgressiveMediaSource.Factory(dataSourceFactory.local).createMediaSource(mediaItem)
+        }
+
+        val remoteDataSourceFactory = dataSourceFactory.remote
 
         return when {
-            MimeTypeParser.isM3U8(url) -> {
-                HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            MimeTypeParser.isM3U8(server.url) -> {
+                HlsMediaSource.Factory(remoteDataSourceFactory).createMediaSource(mediaItem)
             }
 
-            url.contains(".mpd", ignoreCase = true) -> {
-                DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            server.url.contains(".mpd", ignoreCase = true) -> {
+                DashMediaSource.Factory(remoteDataSourceFactory).createMediaSource(mediaItem)
             }
 
             else -> {
-                ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+                ProgressiveMediaSource.Factory(remoteDataSourceFactory).createMediaSource(mediaItem)
             }
         }
     }
@@ -69,7 +78,7 @@ class MediaSourceManager(
 
         val subtitleMediaItem = MediaItem.SubtitleConfiguration
             .Builder(subtitle.url.toUri())
-            .setMimeType(subtitle.toMimeType())
+            .setMimeType(subtitle.mimeType ?: subtitle.toMimeType())
             .setLanguage(subtitle.label)
             .setLabel(subtitle.label)
             .build()

@@ -46,6 +46,7 @@ import com.flixclusive.core.presentation.player.extensions.switchTrack
 import com.flixclusive.core.presentation.player.model.CueWithTiming
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
+import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.presentation.player.ui.PiPEvent
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getLoadControl
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getRenderers
@@ -185,8 +186,10 @@ class AppPlayer(
         )
 
         infoLog("Preparing the player...")
-        server.headers?.let {
-            dataSourceFactory.setRequestProperties(it)
+        if (server.source == TrackSource.REMOTE) {
+            server.headers?.let {
+                dataSourceFactory.setRequestProperties(it)
+            }
         }
 
         mediaSourceManager.currentMediaSource = mediaSource

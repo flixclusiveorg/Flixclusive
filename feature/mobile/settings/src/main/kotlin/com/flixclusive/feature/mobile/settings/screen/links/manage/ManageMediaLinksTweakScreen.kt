@@ -66,6 +66,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -118,10 +119,12 @@ internal fun ManageMediaLinksTweakScreen(
                 is ManageMediaLinksTweakEvent.PlayLink -> {
                     if (event.media !is PartialMedia) {
                         navigator.showPlayerSplashScreen(
-                            media = event.media,
-                            episode = event.episode,
-                            initialStreamUrl = event.link.url,
-                            initialHeaders = event.link.customHeaders
+                            PlaybackRequest.FromProvider(
+                                media = event.media,
+                                episode = event.episode,
+                                preferredStreamUrl = event.link.url,
+                                headers = event.link.customHeaders,
+                            ),
                         )
                     }
                 }

@@ -19,13 +19,18 @@ internal object MimeTypeParser {
             url.endsWith(".m3u")
     }
 
-    fun PlayerSubtitle.toMimeType(): String? {
+    /**
+     * Guesses a subtitle's MIME type from its URL/label before any bytes are read. Always returns
+     * a value in [com.flixclusive.core.presentation.player.renderer.CustomSubtitleDecoderFactory.supportedMimeTypes] —
+     * a null return here made [com.flixclusive.core.presentation.player.renderer.CustomSubtitleDecoderFactory.supportsFormat]
+     * decline the track outright, before [com.flixclusive.core.presentation.player.renderer.CustomSubtitleParser]
+     * ever got a chance to sniff the real bytes and self-correct a wrong guess.
+     */
+    fun PlayerSubtitle.toMimeType(): String {
         val isLocalSubtitle = url.contains("content://")
         val uri = if (isLocalSubtitle) label else url
 
         return when {
-            uri.endsWith("srt", true) || uri.contains("srt", true) -> MimeTypes.APPLICATION_SUBRIP
-
             uri.endsWith("vtt", true) || uri.contains("vtt", true) -> MimeTypes.TEXT_VTT
 
             uri.endsWith("ssa", true) || uri.contains("ssa", true) -> MimeTypes.TEXT_SSA
@@ -33,7 +38,10 @@ internal object MimeTypeParser {
             (uri.endsWith("ttml", true) || uri.contains("ttml", true)) ||
                 (uri.endsWith("xml", true) || uri.contains("xml", true)) -> MimeTypes.APPLICATION_TTML
 
-            else -> null
+            // Also the default: srt is both the most common format and the download pipeline's
+            // own fallback extension (DownloadPathUtil.DEFAULT_SUBTITLE_EXTENSION), so an
+            // unrecognized guess is more likely SubRip than anything else.
+            else -> MimeTypes.APPLICATION_SUBRIP
         }
     }
 }

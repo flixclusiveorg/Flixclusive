@@ -21,8 +21,10 @@ dependencies {
     implementation(projects.corePresentationPlayer)
     implementation(projects.coreStrings)
     implementation(projects.dataDatabase)
+    implementation(projects.dataDownloads)
     implementation(projects.dataProvider)
     implementation(projects.domainDatabase)
+    implementation(projects.domainDownloads)
     implementation(projects.domainProvider)
 
     implementation(libs.coil.compose)

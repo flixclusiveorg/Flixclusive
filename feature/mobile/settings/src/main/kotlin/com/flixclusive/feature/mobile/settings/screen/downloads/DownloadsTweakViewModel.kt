@@ -6,7 +6,6 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.domain.downloads.controller.MediaDownloadController
-import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
 import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
 import com.flixclusive.model.media.common.MediaType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -105,8 +104,11 @@ internal class DownloadsTweakViewModel @Inject constructor(
 
     fun onOpen(item: DownloadItem) {
         viewModelScope.launch {
-            val file = getCompletedDownloadFile(item) ?: return@launch
-            _event.emit(DownloadsTweakEvent.OpenFile(item, file))
+            // Precondition, not a value we forward — the player resolves the file itself from
+            // itemId. Checking here means a missing file shows nothing instead of opening a
+            // player that immediately pops.
+            getCompletedDownloadFile(item) ?: return@launch
+            _event.emit(DownloadsTweakEvent.OpenFile(item.id))
         }
     }
 
@@ -136,7 +138,6 @@ private fun <T> Set<T>.toggle(value: T): Set<T> = if (value in this) this - valu
 
 internal sealed class DownloadsTweakEvent {
     data class OpenFile(
-        val item: DownloadItem,
-        val file: CompletedDownloadFile,
+        val itemId: String
     ) : DownloadsTweakEvent()
 }

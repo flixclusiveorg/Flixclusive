@@ -12,6 +12,8 @@ interface MediaLinksRepository {
 
     suspend fun upsertMedia(media: MediaMetadata)
 
+    suspend fun getMedia(mediaId: String): MediaMetadata?
+
     suspend fun getLinks(
         ownerId: String,
         mediaId: String,

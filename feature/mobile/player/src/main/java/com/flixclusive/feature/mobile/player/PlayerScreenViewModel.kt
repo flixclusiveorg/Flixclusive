@@ -15,9 +15,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
-import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
-import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toDBMediaExternalIds
-import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.provider.MediaLinksWithData
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -30,15 +28,19 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.WatchProgressRepository
+import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
+import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
+import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
@@ -46,11 +48,14 @@ import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUse
 import com.flixclusive.domain.provider.usecase.tracker.SyncToScrobblersUseCase
 import com.flixclusive.domain.provider.util.LinkMatcher.getIndexOfPreferredQuality
 import com.flixclusive.feature.mobile.player.util.extensions.isSameEpisode
+import com.flixclusive.feature.mobile.player.util.extensions.toEpisode
+import com.flixclusive.feature.mobile.player.util.extensions.toFallbackMedia
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerServer
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerServers
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerSubtitles
-import com.flixclusive.model.media.Movie
+import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.tracker.ScrobbleAction
@@ -92,6 +97,8 @@ import kotlin.time.Duration.Companion.seconds
 internal class PlayerScreenViewModel @Inject constructor(
     private val appDispatchers: AppDispatchers,
     private val mediaLinksRepository: MediaLinksRepository,
+    private val mediaDownloadRepository: MediaDownloadRepository,
+    private val getCompletedDownloadFile: GetCompletedDownloadFileUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
     private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
@@ -107,6 +114,35 @@ internal class PlayerScreenViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val navArgs = savedStateHandle.navArgs<PlayerScreenNavArgs>()
+
+    /** The [PlaybackRequest.FromProvider] request, when [navArgs] declares provider playback. */
+    private val providerRequest: PlaybackRequest.FromProvider?
+        get() = navArgs.request as? PlaybackRequest.FromProvider
+
+    /** Non-null only for [PlaybackRequest.FromDownload]-driven playback. Resolved
+     * synchronously — like the two DataStore-prefs [runBlocking] reads below — so [media] stays
+     * non-null and every one of its existing readers is untouched by local playback. */
+    private data class LocalPlayback(
+        val item: DownloadItem,
+        val file: CompletedDownloadFile?,
+        val media: MediaMetadata,
+        val episode: Episode?,
+    )
+
+    private val localPlayback: LocalPlayback? =
+        (navArgs.request as? PlaybackRequest.FromDownload)?.let { request ->
+            runBlocking {
+                val item = mediaDownloadRepository.getItem(request.downloadItemId) ?: return@runBlocking null
+                LocalPlayback(
+                    item = item,
+                    file = getCompletedDownloadFile(item),
+                    media = mediaLinksRepository.getMedia(item.mediaId) ?: item.toFallbackMedia(),
+                    episode = item.toEpisode(),
+                )
+            }
+        }
+
+    private val isLocalPlayback get() = localPlayback != null
 
     private val _playerErrors = MutableSharedFlow<UiText>()
     val playerErrors = _playerErrors.asSharedFlow()
@@ -160,7 +196,16 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
     }
 
-    private val media get() = navArgs.media
+    /** The media actually being played — resolved locally from [localPlayback] for a download,
+     * [PlaybackRequest.FromProvider.media] otherwise. Exposed (not private) because
+     * [PlayerScreen] needs the resolved, guaranteed-non-null value to render. */
+    val media: MediaMetadata
+        get() = localPlayback?.media
+            ?: providerRequest?.media
+            // Unreachable: DownloadsTweakViewModel.onOpen gates on the file resolving before
+            // navigating a FromDownload request, so mediaDownloadRepository.getItem() above
+            // cannot fail in practice.
+            ?: error("PlaybackRequest.FromDownload failed to resolve local playback")
 
     private val _providers = MutableStateFlow<Async<List<ProviderMetadata>>>(Async.Loading)
     val providers = _providers.asStateFlow()
@@ -168,11 +213,15 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val _servers = MutableStateFlow<Async<List<PlayerServer>>>(Async.Loading)
     val servers = _servers.asStateFlow()
 
+    /** The episode being played — [LocalPlayback.episode] resolved from the [DownloadItem] for
+     * local playback, [PlaybackRequest.FromProvider.episode] otherwise. */
+    private val initialEpisode = localPlayback?.episode ?: providerRequest?.episode
+
     private val _uiState = MutableStateFlow(
         value = PlayerUiState(
-            currentProvider = navArgs.media.providerId,
-            currentEpisode = navArgs.episode,
-            currentSeason = navArgs.episode?.season,
+            currentProvider = media.providerId,
+            currentEpisode = initialEpisode,
+            currentSeason = initialEpisode?.season,
         )
     )
 
@@ -184,7 +233,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = navArgs.episode
+            initialValue = initialEpisode
         )
 
     val canSkipLoading = servers
@@ -265,7 +314,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     fun onServerChange(serverIndex: Int) {
-        if (changeServerJob?.isActive == true) return
+        if (isLocalPlayback || changeServerJob?.isActive == true) return
 
         changeServerJob = viewModelScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
@@ -301,7 +350,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     fun onProviderChange(providerId: String) {
-        if (changeProviderJob?.isActive == true) return
+        if (isLocalPlayback || changeProviderJob?.isActive == true) return
 
         queueNextEpisodeJob?.cancel()
         changeEpisodeJob?.cancel()
@@ -351,6 +400,8 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     fun onSkipProviderLoading() {
+        if (isLocalPlayback) return
+
         val state = _uiState.value.loadLinksState
         if (state !is LoadLinksState.Extracting && state !is LoadLinksState.Success) return
 
@@ -389,6 +440,8 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     fun onServerFail(server: String) {
+        if (isLocalPlayback) return
+
         appDispatchers.ioScope.launch {
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             mediaLinksRepository.setLinkStatus(server, ownerId = userId, isDead = true)
@@ -562,7 +615,10 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     private suspend fun getNextEpisode(episode: Episode?): Episode? {
-        if (episode == null) return null
+        // A local download has no provider to resolve the show's episode list from — its
+        // `media` is a PartialMedia, never a real Show. Offline next-episode support is a
+        // separate feature; see MediaDownloadRepository.getBatch/observeByMedia.
+        if (episode == null || isLocalPlayback) return null
 
         return getNextEpisode(
             show = media as Show,
@@ -574,15 +630,18 @@ internal class PlayerScreenViewModel @Inject constructor(
     private fun getDefaultWatchProgress(): WatchProgress {
         val userId = runBlocking { userSessionDataStore.currentUserId.filterNotNull().first() }
 
-        return when (media) {
-            is Movie -> MovieProgress(
+        // A class check (`when (media) { is Movie -> ...`) would throw for a PartialMedia — the
+        // type a locally-resolved download's media always is. Switch on the type enum instead,
+        // which every MediaMetadata implementation reports correctly regardless of its class.
+        return when (media.type) {
+            MediaType.MOVIE -> MovieProgress(
                 mediaId = media.id,
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
             )
 
-            is Show -> EpisodeProgress(
+            MediaType.SHOW -> EpisodeProgress(
                 mediaId = media.id,
                 ownerId = userId,
                 progress = 0L,
@@ -590,8 +649,6 @@ internal class PlayerScreenViewModel @Inject constructor(
                 seasonNumber = selectedEpisode.value!!.season,
                 episodeNumber = selectedEpisode.value!!.number,
             )
-
-            else -> throw IllegalStateException("Unsupported media type: $media")
         }
     }
 
@@ -631,7 +688,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
                             val isQueueingNextEpisode =
                                 currentPosition >= (duration * playerPrefs.thresholdForNextEpisodeQueue)
-                            if (navArgs.media is Show && isQueueingNextEpisode) {
+                            if (media is Show && isQueueingNextEpisode) {
                                 onQueueNextEpisode()
                             }
 
@@ -725,6 +782,11 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     private fun initialize() {
+        if (isLocalPlayback) {
+            initializeLocalPlayback()
+            return
+        }
+
         viewModelScope.launch {
             launch {
                 userSessionDataStore.currentUserId
@@ -737,7 +799,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                             ).mapLatest { list ->
                                 var foundMetadataProvider = false
                                 val mappedList = list.fastMapNotNull { provider ->
-                                    if (provider.id == navArgs.media.providerId) {
+                                    if (provider.id == media.providerId) {
                                         foundMetadataProvider = true
                                         return@fastMapNotNull provider.metadata
                                     }
@@ -749,7 +811,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
                                 if (!foundMetadataProvider) {
                                     val metadata = getProviderMetadata(
-                                        id = navArgs.media.providerId
+                                        id = media.providerId
                                     ) ?: return@mapLatest emptyList() // Fails player and navigate back
 
                                     return@mapLatest mappedList + listOf(metadata)
@@ -768,49 +830,29 @@ internal class PlayerScreenViewModel @Inject constructor(
             launch {
                 val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
-                // App is supposed to ALWAYS load and save cache first before starting player.
-                // So, if cache here is null, it means that the media being played is locally hosted.
                 val cache = mediaLinksRepository.getLinksByProvider(
                     ownerId = userId,
                     mediaId = media.id,
                     providerId = media.providerId,
                     episodeNumber = selectedEpisode.value?.number,
                     seasonNumber = selectedEpisode.value?.season
-                ) ?: MediaLinksWithData(
-                    subtitles = emptyList(),
-                    media = navArgs.media.toDBMedia().copy(providerId = KEY_LOCAL_PROVIDER),
-                    externalIds = navArgs.media.toDBMediaExternalIds(),
-                    streams = buildList {
-                        if (navArgs.initialStreamUrl != null) {
-                            add(
-                                CachedStream(
-                                    url = navArgs.initialStreamUrl,
-                                    label = navArgs.initialStreamUrl,
-                                    customHeaders = navArgs.initialHeaders?.headers,
-                                    providerId = KEY_LOCAL_PROVIDER,
-                                    ownerId = userId,
-                                    mediaId = navArgs.media.id,
-                                )
-                            )
-                        }
-                    },
                 )
 
-                if (cache.streams.isEmpty()) {
+                if (cache == null || cache.streams.isEmpty()) {
                     _playerErrors.emit(UiText.from(R.string.error_no_valid_servers_found))
                     return@launch
                 }
 
                 _servers.update { Async.Success(cache.streams.toPlayerServers()) }
 
-                val nextEpisode = getNextEpisode(navArgs.episode)
+                val nextEpisode = getNextEpisode(initialEpisode)
                 _uiState.update { it.copy(nextEpisode = nextEpisode) }
 
                 withContext(appDispatchers.main) {
                     player.prepare(
                         cache = cache,
-                        startPositionMs = getSavedStartPositionMs(navArgs.episode),
-                        preferredServer = navArgs.initialStreamUrl
+                        startPositionMs = getSavedStartPositionMs(initialEpisode),
+                        preferredServer = providerRequest?.preferredStreamUrl
                     )
                 }
             }
@@ -844,9 +886,41 @@ internal class PlayerScreenViewModel @Inject constructor(
             }
         }
     }
-}
 
-private const val KEY_LOCAL_PROVIDER = "key_local_provider"
+    /** Local playback never touches [mediaLinksRepository]'s link-cache methods,
+     * [providerRepository], or [getProviderMetadata] — the file and its metadata are already
+     * fully resolved in [localPlayback]. There is exactly one "server" (the file itself) and no
+     * providers, mirroring that in [_servers]/[_providers]. */
+    private fun initializeLocalPlayback() {
+        val playback = requireNotNull(localPlayback)
+
+        viewModelScope.launch {
+            _providers.update { Async.Success(emptyList()) }
+
+            val file = playback.file
+            if (file == null) {
+                _playerErrors.emit(UiText.from(R.string.error_no_valid_servers_found))
+                return@launch
+            }
+
+            val server = file.toPlayerServer(label = playback.item.mediaTitle)
+            val subtitles = file.toPlayerSubtitles()
+
+            _servers.update { Async.Success(listOf(server)) }
+            _uiState.update { it.copy(currentServer = 0) }
+
+            withContext(appDispatchers.main) {
+                player.prepare(
+                    server = server,
+                    subtitles = subtitles,
+                    startPositionMs = getSavedStartPositionMs(playback.episode),
+                )
+            }
+
+            updateWatchProgress()
+        }
+    }
+}
 
 @Immutable
 internal data class PlayerUiState(

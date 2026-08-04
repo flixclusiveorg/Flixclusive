@@ -2,6 +2,8 @@ package com.flixclusive.data.provider.repository.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.dao.provider.CachedMediaLinkDao
+import com.flixclusive.core.database.entity.media.DBMedia.Companion.toMediaMetadata
+import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.toExternalIdMap
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.provider.CachedStream
 import com.flixclusive.core.database.entity.provider.CachedSubtitle
@@ -22,6 +24,11 @@ internal class MediaLinksRepositoryImpl @Inject constructor(
         withContext(appDispatchers.io) {
             cachedMediaLinkDao.upsertMedia(media)
         }
+    }
+
+    override suspend fun getMedia(mediaId: String): MediaMetadata? = withContext(appDispatchers.io) {
+        val media = cachedMediaLinkDao.getMediaById(mediaId) ?: return@withContext null
+        media.toMediaMetadata(cachedMediaLinkDao.getExternalIdsByMediaId(mediaId).toExternalIdMap())
     }
 
     override suspend fun upsertLink(link: CachedMediaLink) {

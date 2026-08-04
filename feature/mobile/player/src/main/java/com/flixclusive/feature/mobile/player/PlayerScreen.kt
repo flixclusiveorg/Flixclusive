@@ -24,6 +24,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.extensions.showToast
@@ -115,29 +116,33 @@ internal fun PlayerScreen(
             }
     }
 
-    LaunchedEffect(viewModel) {
-        val providersFlow = viewModel.providers
-            .filterIsInstance<Async.Success<List<ProviderMetadata>>>()
-            .mapLatest { it.data }
-            .distinctUntilChanged()
+    // Local playback (a downloaded file) has no providers at all — that's the mode, not a
+    // failure — so this "no providers, go back" guard only applies to provider playback.
+    if (args.request is PlaybackRequest.FromProvider) {
+        LaunchedEffect(viewModel) {
+            val providersFlow = viewModel.providers
+                .filterIsInstance<Async.Success<List<ProviderMetadata>>>()
+                .mapLatest { it.data }
+                .distinctUntilChanged()
 
-        val currentProviderFlow = viewModel.uiState
-            .mapLatest { it.currentProvider }
-            .distinctUntilChanged()
+            val currentProviderFlow = viewModel.uiState
+                .mapLatest { it.currentProvider }
+                .distinctUntilChanged()
 
-        combine(
-            providersFlow,
-            currentProviderFlow
-        ) { providers, currentProviderId ->
-            providers to currentProviderId
-        }.collectLatest { (providers, currentProviderId) ->
-            val currentProvider = providers.fastFirstOrNull { it.id == currentProviderId }
-            if (providers.isNotEmpty() || currentProvider != null) {
-                cancel()
-                return@collectLatest
+            combine(
+                providersFlow,
+                currentProviderFlow
+            ) { providers, currentProviderId ->
+                providers to currentProviderId
+            }.collectLatest { (providers, currentProviderId) ->
+                val currentProvider = providers.fastFirstOrNull { it.id == currentProviderId }
+                if (providers.isNotEmpty() || currentProvider != null) {
+                    cancel()
+                    return@collectLatest
+                }
+
+                showErrorAndGoBack(resources.getString(R.string.error_no_providers))
             }
-
-            showErrorAndGoBack(resources.getString(R.string.error_no_providers))
         }
     }
 
@@ -150,7 +155,7 @@ internal fun PlayerScreen(
         }
     }
 
-    if (currentProvider == null) {
+    if (currentProvider == null && args.request is PlaybackRequest.FromProvider) {
         BackHandler {
             navigator.navigateBack()
 
@@ -169,12 +174,12 @@ internal fun PlayerScreen(
 
     PlayerScreenContent(
         player = viewModel.player,
-        media = args.media,
+        media = viewModel.media,
         playerPreferences = playerPreferences,
         subtitlesPreferences = subtitlesPreferences,
         snackbarState = snackbarState,
         currentEpisode = currentEpisode,
-        currentProvider = { currentProvider!! },
+        currentProvider = { currentProvider },
         providers = { (providers as? Async.Success)?.data ?: emptyList() },
         servers = { (servers as? Async.Success)?.data ?: emptyList() },
         currentSeason = { currentSeason },
@@ -211,7 +216,7 @@ internal fun PlayerScreenContent(
     servers: () -> List<PlayerServer>,
     currentSeason: () -> SeasonWithProgress?,
     currentServer: () -> Int,
-    currentProvider: () -> ProviderMetadata,
+    currentProvider: () -> ProviderMetadata?,
     providers: () -> List<ProviderMetadata>,
     loadLinksState: () -> LoadLinksState,
     canSkipLoading: () -> Boolean,
