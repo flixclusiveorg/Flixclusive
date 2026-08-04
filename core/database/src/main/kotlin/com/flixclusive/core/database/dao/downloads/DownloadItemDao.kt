@@ -50,6 +50,11 @@ interface DownloadItemDao {
         seasonNumber: Int,
     ): Flow<List<DownloadItem>>
 
+    /** Every downloaded item for a media — across all seasons, for a show — used to synthesize
+     * an offline season/episode list for local playback. */
+    @Query("SELECT * FROM download_items WHERE mediaId = :mediaId ORDER BY seasonNumber ASC, episodeNumber ASC")
+    fun getByMediaAsFlow(mediaId: String): Flow<List<DownloadItem>>
+
     @Query(
         """
         UPDATE download_items

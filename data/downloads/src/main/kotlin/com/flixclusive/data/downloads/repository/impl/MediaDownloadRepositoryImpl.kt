@@ -55,6 +55,8 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         seasonNumber: Int,
     ): Flow<List<DownloadItem>> = downloadItemDao.getBatchAsFlow(mediaId, seasonNumber)
 
+    override fun observeByMedia(mediaId: String): Flow<List<DownloadItem>> = downloadItemDao.getByMediaAsFlow(mediaId)
+
     override suspend fun updateState(
         id: String,
         state: DownloadItemState,

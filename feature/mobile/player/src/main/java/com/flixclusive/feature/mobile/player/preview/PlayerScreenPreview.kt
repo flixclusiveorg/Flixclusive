@@ -158,6 +158,7 @@ private fun PlayerScreenBasePreview() {
                 onBack = { player.release() },
                 media = tvShow,
                 currentSeason = { currentSeason },
+                seasons = { tvShow.seasons.filter { it.isReleased } },
                 currentEpisode = currentEpisode,
                 onEpisodeChange = {},
                 onSeasonChange = {},

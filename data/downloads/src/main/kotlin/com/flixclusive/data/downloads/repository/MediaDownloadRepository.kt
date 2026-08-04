@@ -30,6 +30,10 @@ interface MediaDownloadRepository {
         seasonNumber: Int,
     ): Flow<List<DownloadItem>>
 
+    /** Every downloaded item for a media, across all seasons — used to synthesize an offline
+     * season/episode list for local playback. */
+    fun observeByMedia(mediaId: String): Flow<List<DownloadItem>>
+
     suspend fun updateState(
         id: String,
         state: DownloadItemState,

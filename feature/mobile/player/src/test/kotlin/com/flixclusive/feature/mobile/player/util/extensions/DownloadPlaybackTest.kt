@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.player.util.extensions
 
 import androidx.media3.common.MimeTypes
 import com.flixclusive.core.database.entity.downloads.DownloadItem
+import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
 import com.flixclusive.domain.downloads.usecase.CompletedSubtitleFile
@@ -10,6 +11,7 @@ import io.mockk.mockk
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isA
+import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNull
 
@@ -18,6 +20,7 @@ class DownloadPlaybackTest {
         seasonNumber: Int? = null,
         episodeNumber: Int? = null,
         mediaType: MediaType = MediaType.MOVIE,
+        state: DownloadItemState = DownloadItemState.COMPLETED,
     ) = DownloadItem(
         ownerId = "owner",
         mediaId = "media-1",
@@ -25,6 +28,7 @@ class DownloadPlaybackTest {
         mediaType = mediaType,
         seasonNumber = seasonNumber,
         episodeNumber = episodeNumber,
+        state = state,
     )
 
     @Test
@@ -107,5 +111,46 @@ class DownloadPlaybackTest {
         expectThat(result.id).isEqualTo(item.mediaId)
         expectThat(result.title).isEqualTo(item.mediaTitle)
         expectThat(result.posterImage).isNull()
+    }
+
+    @Test
+    fun `toLocalSeasons should group completed episode downloads by season, sorted`() {
+        val items = listOf(
+            downloadItem(seasonNumber = 2, episodeNumber = 1, mediaType = MediaType.SHOW),
+            downloadItem(seasonNumber = 1, episodeNumber = 2, mediaType = MediaType.SHOW),
+            downloadItem(seasonNumber = 1, episodeNumber = 1, mediaType = MediaType.SHOW),
+        )
+
+        val result = items.toLocalSeasons()
+
+        expectThat(result.map { it.number }).isEqualTo(listOf(1, 2))
+        expectThat(result[0].episodes.map { it.number }).isEqualTo(listOf(1, 2))
+        expectThat(result[1].episodes.map { it.number }).isEqualTo(listOf(1))
+    }
+
+    @Test
+    fun `toLocalSeasons should exclude downloads that are not completed`() {
+        val items = listOf(
+            downloadItem(seasonNumber = 1, episodeNumber = 1, mediaType = MediaType.SHOW),
+            downloadItem(
+                seasonNumber = 1,
+                episodeNumber = 2,
+                mediaType = MediaType.SHOW,
+                state = DownloadItemState.DOWNLOADING_STREAM,
+            ),
+        )
+
+        val result = items.toLocalSeasons()
+
+        expectThat(result.single().episodes.map { it.number }).isEqualTo(listOf(1))
+    }
+
+    @Test
+    fun `toLocalSeasons should exclude movie downloads with no season or episode number`() {
+        val items = listOf(downloadItem(mediaType = MediaType.MOVIE))
+
+        val result = items.toLocalSeasons()
+
+        expectThat(result).isEmpty()
     }
 }

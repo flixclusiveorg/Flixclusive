@@ -16,6 +16,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.downloads.DownloadItem
+import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.provider.MediaLinksWithData
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -41,6 +42,8 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
 import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
 import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
+import com.flixclusive.domain.provider.model.EpisodeWithProgress
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
@@ -50,6 +53,7 @@ import com.flixclusive.domain.provider.util.LinkMatcher.getIndexOfPreferredQuali
 import com.flixclusive.feature.mobile.player.util.extensions.isSameEpisode
 import com.flixclusive.feature.mobile.player.util.extensions.toEpisode
 import com.flixclusive.feature.mobile.player.util.extensions.toFallbackMedia
+import com.flixclusive.feature.mobile.player.util.extensions.toLocalSeasons
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerServer
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerServers
 import com.flixclusive.feature.mobile.player.util.extensions.toPlayerSubtitles
@@ -57,6 +61,7 @@ import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.tracker.ScrobbleAction
 import com.ramcosta.composedestinations.generated.player.navArgs
@@ -65,9 +70,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -247,12 +254,34 @@ internal class PlayerScreenViewModel @Inject constructor(
             initialValue = false,
         )
 
+    /** The seasons available for episode switching, regardless of mode — a provider's real
+     * [Show.seasons], or a synthesized list of completed downloads for local playback. Fed
+     * straight into [com.flixclusive.feature.mobile.player.component.episode.EpisodesScreen] via
+     * [com.flixclusive.feature.mobile.player.component.PlayerControls], which only ever needed a
+     * `List<Season>`, never a real `Show`. */
+    val availableSeasons: StateFlow<List<Season>> = if (isLocalPlayback) {
+        mediaDownloadRepository
+            .observeByMedia(media.id)
+            .map { it.toLocalSeasons() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList(),
+            )
+    } else {
+        MutableStateFlow((media as? Show)?.seasons?.filter { it.isReleased }.orEmpty()).asStateFlow()
+    }
+
     val seasonToDisplay = uiState
         .mapNotNull {
-            if (media !is Show) return@mapNotNull null
+            if (!isLocalPlayback && media !is Show) return@mapNotNull null
             it.currentSeason
         }.distinctUntilChanged()
         .flatMapLatest { selectedSeason ->
+            if (isLocalPlayback) {
+                return@flatMapLatest observeLocalSeasonWithProgress(selectedSeason)
+            }
+
             val metadata = media as Show
             getSeasonWithWatchProgress(metadata, selectedSeason)
                 .dropWhile { it is Async.Loading }
@@ -483,6 +512,11 @@ internal class PlayerScreenViewModel @Inject constructor(
         changeEpisodeJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
+            if (isLocalPlayback) {
+                changeLocalEpisode(episode, startPositionMs)
+                return@launch
+            }
+
             val cache = loadLinks(
                 providerId = _uiState.value.currentProvider,
                 episode = episode,
@@ -503,6 +537,41 @@ internal class PlayerScreenViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    /** [onEpisodeChange] for a downloaded sibling episode — finds it via [MediaDownloadRepository.getBatch]
+     * for [episode]'s season, resolves its file, and re-prepares directly. A no-op (stays on the
+     * current episode) if that sibling isn't a completed download or its file has gone missing. */
+    private suspend fun changeLocalEpisode(
+        episode: Episode,
+        startPositionMs: Long,
+    ) {
+        val item = mediaDownloadRepository
+            .getBatch(mediaId = media.id, seasonNumber = episode.season)
+            .find { it.episodeNumber == episode.number && it.state == DownloadItemState.COMPLETED }
+            ?: return
+        val file = getCompletedDownloadFile(item) ?: return
+
+        val server = file.toPlayerServer(label = item.mediaTitle)
+        val subtitles = file.toPlayerSubtitles()
+
+        _servers.update { Async.Success(listOf(server)) }
+        _uiState.update { it.copy(currentServer = 0) }
+
+        withContext(appDispatchers.main) {
+            player.prepare(
+                server = server,
+                subtitles = subtitles,
+                startPositionMs = startPositionMs,
+            )
+        }
+
+        _uiState.update {
+            it.copy(
+                currentEpisode = episode,
+                nextEpisode = getNextEpisode(episode)
+            )
         }
     }
 
@@ -615,16 +684,66 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     private suspend fun getNextEpisode(episode: Episode?): Episode? {
-        // A local download has no provider to resolve the show's episode list from — its
-        // `media` is a PartialMedia, never a real Show. Offline next-episode support is a
-        // separate feature; see MediaDownloadRepository.getBatch/observeByMedia.
-        if (episode == null || isLocalPlayback) return null
+        if (episode == null) return null
+
+        if (isLocalPlayback) {
+            return getNextLocalEpisode(episode)
+        }
 
         return getNextEpisode(
             show = media as Show,
             season = episode.season,
             episode = episode.number,
         )
+    }
+
+    /** The [getNextEpisode] equivalent for a downloaded sibling: same season, next episode
+     * number; if there isn't one, the first episode of the next downloaded season. Queried
+     * fresh via [MediaDownloadRepository.observeByMedia] rather than through [availableSeasons] —
+     * that StateFlow's first emission can race this call (e.g. right at [initializeLocalPlayback]),
+     * and a one-shot DB read here is cheap enough not to need the cached value. */
+    private suspend fun getNextLocalEpisode(episode: Episode): Episode? {
+        val seasons = mediaDownloadRepository.observeByMedia(media.id).first().toLocalSeasons()
+        val currentSeason = seasons.find { it.number == episode.season }
+
+        currentSeason?.episodes?.find { it.number == episode.number + 1 }?.let { return it }
+
+        return seasons
+            .filter { it.number > episode.season }
+            .minByOrNull { it.number }
+            ?.episodes
+            ?.minByOrNull { it.number }
+    }
+
+    /** The offline equivalent of [GetSeasonWithWatchProgressUseCase] for local playback: pairs
+     * the synthesized downloaded-episode list with real watch progress, without any provider
+     * call. */
+    private fun observeLocalSeasonWithProgress(seasonNumber: Int): Flow<SeasonWithProgress?> {
+        val progressFlow = userSessionDataStore.currentUserId
+            .filterNotNull()
+            .flatMapLatest { userId ->
+                watchProgressRepository.getSeasonProgressAsFlow(
+                    tvShowId = media.id,
+                    seasonNumber = seasonNumber,
+                    ownerId = userId,
+                )
+            }
+
+        return combine(
+            mediaDownloadRepository.observeByMedia(media.id).map { it.toLocalSeasons() },
+            progressFlow,
+        ) { seasons, progressList ->
+            val season = seasons.find { it.number == seasonNumber } ?: return@combine null
+            SeasonWithProgress(
+                season = season,
+                episodes = season.episodes.map { episode ->
+                    EpisodeWithProgress(
+                        episode = episode,
+                        watchProgress = progressList.find { it.episodeNumber == episode.number },
+                    )
+                },
+            )
+        }
     }
 
     private fun getDefaultWatchProgress(): WatchProgress {
@@ -907,7 +1026,9 @@ internal class PlayerScreenViewModel @Inject constructor(
             val subtitles = file.toPlayerSubtitles()
 
             _servers.update { Async.Success(listOf(server)) }
-            _uiState.update { it.copy(currentServer = 0) }
+
+            val nextEpisode = getNextEpisode(playback.episode)
+            _uiState.update { it.copy(currentServer = 0, nextEpisode = nextEpisode) }
 
             withContext(appDispatchers.main) {
                 player.prepare(

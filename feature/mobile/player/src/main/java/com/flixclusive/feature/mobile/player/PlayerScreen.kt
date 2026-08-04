@@ -72,6 +72,7 @@ internal fun PlayerScreen(
 
     val currentEpisode by viewModel.selectedEpisode.collectAsStateWithLifecycle()
     val currentSeason by viewModel.seasonToDisplay.collectAsStateWithLifecycle()
+    val availableSeasons by viewModel.availableSeasons.collectAsStateWithLifecycle()
 
     val servers by viewModel.servers.collectAsStateWithLifecycle()
 
@@ -183,6 +184,7 @@ internal fun PlayerScreen(
         providers = { (providers as? Async.Success)?.data ?: emptyList() },
         servers = { (servers as? Async.Success)?.data ?: emptyList() },
         currentSeason = { currentSeason },
+        seasons = { availableSeasons },
         currentServer = { uiState.currentServer },
         loadLinksState = { uiState.loadLinksState },
         canSkipLoading = { canSkipLoading },
@@ -215,6 +217,7 @@ internal fun PlayerScreenContent(
     currentEpisode: Episode?,
     servers: () -> List<PlayerServer>,
     currentSeason: () -> SeasonWithProgress?,
+    seasons: () -> List<Season>,
     currentServer: () -> Int,
     currentProvider: () -> ProviderMetadata?,
     providers: () -> List<ProviderMetadata>,
@@ -260,6 +263,7 @@ internal fun PlayerScreenContent(
             subtitlesPrefs = subtitlesPreferences,
             currentEpisode = currentEpisode,
             currentSeason = currentSeason,
+            seasons = seasons,
             currentResizeMode = resizeMode,
             servers = servers,
             currentServer = currentServer,

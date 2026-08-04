@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.player.util.extensions
 import androidx.compose.ui.util.fastMap
 import androidx.media3.common.MimeTypes
 import com.flixclusive.core.database.entity.downloads.DownloadItem
+import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
@@ -10,6 +11,7 @@ import com.flixclusive.domain.downloads.usecase.CompletedDownloadFile
 import com.flixclusive.domain.downloads.usecase.CompletedSubtitleFile
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 
 /** Maps a resolved local file to the single [PlayerServer] local playback offers — there is no
  * server/provider choice for a downloaded file, only the file itself. */
@@ -56,6 +58,23 @@ internal fun DownloadItem.toEpisode(): Episode? {
         title = "S${season.toString().padStart(2, '0')}E${episode.toString().padStart(2, '0')}",
     )
 }
+
+/** Synthesizes an offline season list from a media's downloaded siblings, for offline episode
+ * switching. Only completed episode downloads are included (movies have no season/episode
+ * number and are filtered out). [com.flixclusive.feature.mobile.player.component.episode.EpisodesScreen]
+ * only needs a `List<Season>`, not a real `Show` — this is the local-playback equivalent of what
+ * a provider's season list gives it. */
+internal fun List<DownloadItem>.toLocalSeasons(): List<Season.Full> = this
+    .filter { it.state == DownloadItemState.COMPLETED && it.seasonNumber != null && it.episodeNumber != null }
+    .groupBy { it.seasonNumber!! }
+    .map { (seasonNumber, items) ->
+        Season.Full(
+            id = "${items.first().mediaId}-s$seasonNumber",
+            number = seasonNumber,
+            isReleased = true,
+            episodes = items.sortedBy { it.episodeNumber }.mapNotNull { it.toEpisode() },
+        )
+    }.sortedBy { it.number }
 
 /** Minimal stand-in [PartialMedia] used only when a completed download's `media` row is somehow
  * missing (see [com.flixclusive.data.provider.repository.MediaLinksRepository.getMedia]) — every

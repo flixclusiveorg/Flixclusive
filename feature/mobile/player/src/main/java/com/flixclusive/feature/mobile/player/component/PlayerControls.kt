@@ -52,7 +52,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastFilter
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
@@ -93,7 +92,6 @@ import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleSyncScre
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.feature.mobile.player.util.UiMode
 import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
@@ -122,6 +120,7 @@ internal fun PlayerControls(
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
     currentSeason: () -> SeasonWithProgress?,
+    seasons: () -> List<Season>,
     onUpdateWatchProgress: () -> Unit,
     modifier: Modifier = Modifier,
     currentEpisode: Episode? = null,
@@ -507,22 +506,14 @@ internal fun PlayerControls(
 
                     AnimatedPanel(
                         visible = uiMode.isEpisodes &&
-                            media is Show &&
+                            seasons().isNotEmpty() &&
                             currentEpisode != null &&
                             onEpisodeChange != null &&
                             onSeasonChange != null
                     ) {
-                        val filteredSeasons by remember(media) {
-                            derivedStateOf {
-                                (media as Show)
-                                    .seasons
-                                    .fastFilter { it.isReleased }
-                            }
-                        }
-
                         EpisodesScreen(
                             currentSeason = currentSeason,
-                            seasons = filteredSeasons,
+                            seasons = seasons(),
                             currentEpisode = currentEpisode!!,
                             onSeasonChange = onSeasonChange!!::invoke,
                             onEpisodeClick = onEpisodeChange!!::invoke,
