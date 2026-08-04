@@ -50,7 +50,7 @@
     <string name="add_to_list">Add to list</string>
     <string name="advanced">Advanced</string>
     <string name="appearance">Appearance</string>
-    <string name="application">APPLICATION</string>
+    <string name="label_misc">Miscellaneous</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="authors">Authors</string>

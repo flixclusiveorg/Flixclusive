@@ -2,7 +2,7 @@
 <resources>
     <string name="report_a_bug">Report a bug</string>
     <string name="github">GITHUB</string>
-    <string name="feature_request">Request a feature!</string>
+    <string name="feature_request">Request a feature</string>
     <string name="label_links_size">%1$d links</string>
     <string name="label_links_filter_count">Count</string>
     <string name="label_links_filter_title">Title</string>
