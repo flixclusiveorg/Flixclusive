@@ -413,7 +413,7 @@
     <string name="download_type_show">Show</string>
     <string name="download_search_placeholder">Search downloads</string>
     <string name="download_empty_title">No downloads yet</string>
-    <string name="download_empty_description">Downloaded movies and episodes will show up here</string>
+    <string name="download_empty_description">Tired of buffering? Try downloading something!</string>
     <string name="download_action_pause_content_desc">Pause download</string>
     <string name="download_action_resume_content_desc">Resume download</string>
     <string name="download_action_stop_content_desc">Stop download</string>
