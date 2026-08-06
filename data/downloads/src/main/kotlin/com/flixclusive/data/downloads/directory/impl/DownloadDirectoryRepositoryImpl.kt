@@ -39,7 +39,7 @@ internal class DownloadDirectoryRepositoryImpl @Inject constructor(
     override fun resolveFile(uri: String): UniFile? = UniFile.fromUri(context, uri.toUri())?.takeIf { it.exists() }
 
     override fun listSubtitleFiles(streamFile: UniFile): List<UniFile> {
-        val parent = streamFile.getParentFile() ?: return emptyList()
+        val parent = streamFile.parentFile ?: return emptyList()
         val subtitlesDirectory = parent.findFile(SUBTITLES_FOLDER_NAME) ?: return emptyList()
 
         return subtitlesDirectory.listFiles()?.toList() ?: emptyList()
