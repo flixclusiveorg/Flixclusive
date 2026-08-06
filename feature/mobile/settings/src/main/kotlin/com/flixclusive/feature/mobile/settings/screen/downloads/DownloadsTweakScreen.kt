@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -130,7 +131,6 @@ private fun DownloadsTweakScreenContent(
     onPauseBatch: (String, Int) -> Unit,
     onStopBatch: (String, Int) -> Unit,
 ) {
-    var expandedBatches by remember { mutableStateOf(setOf<String>()) }
     var isSearching by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -167,8 +167,6 @@ private fun DownloadsTweakScreenContent(
 
             DownloadsEntriesList(
                 entries = entries,
-                expandedBatches = expandedBatches,
-                onToggleExpand = { key -> expandedBatches = expandedBatches.toggleBatch(key) },
                 onPause = onPause,
                 onResume = onResume,
                 onStop = onStop,
@@ -250,8 +248,6 @@ private fun AnimatedFilterChip(
 @Composable
 private fun DownloadsEntriesList(
     entries: Async<List<DownloadListEntry>>,
-    expandedBatches: Set<String>,
-    onToggleExpand: (String) -> Unit,
     onPause: (String) -> Unit,
     onResume: (String) -> Unit,
     onStop: (String) -> Unit,
@@ -305,20 +301,24 @@ private fun DownloadsEntriesList(
                             modifier = Modifier.animateItem()
                         )
 
-                        is DownloadListEntry.Batch -> DownloadBatchGroup(
-                            entry = entry,
-                            isExpanded = entry.batchKey() in expandedBatches,
-                            onToggleExpand = { onToggleExpand(entry.batchKey()) },
-                            onPauseBatch = { onPauseBatch(entry.mediaId, entry.seasonNumber) },
-                            onStopBatch = { onStopBatch(entry.mediaId, entry.seasonNumber) },
-                            onPause = onPause,
-                            onResume = onResume,
-                            onStop = onStop,
-                            onRetry = onRetry,
-                            onDelete = onDelete,
-                            onOpen = onOpen,
-                            modifier = Modifier.animateItem()
-                        )
+                        is DownloadListEntry.Batch -> {
+                            var isExpanded by rememberSaveable { mutableStateOf(false) }
+
+                            DownloadBatchGroup(
+                                entry = entry,
+                                isExpanded = isExpanded,
+                                onToggleExpand = { isExpanded = !isExpanded },
+                                onPauseBatch = { onPauseBatch(entry.mediaId, entry.seasonNumber) },
+                                onStopBatch = { onStopBatch(entry.mediaId, entry.seasonNumber) },
+                                onPause = onPause,
+                                onResume = onResume,
+                                onStop = onStop,
+                                onRetry = onRetry,
+                                onDelete = onDelete,
+                                onOpen = onOpen,
+                                modifier = Modifier.animateItem()
+                            )
+                        }
                     }
                 }
             }
@@ -326,14 +326,10 @@ private fun DownloadsEntriesList(
     }
 }
 
-private fun Set<String>.toggleBatch(key: String): Set<String> = if (key in this) this - key else this + key
-
 private fun DownloadListEntry.key(): String = when (this) {
     is DownloadListEntry.Single -> "single-${item.id}"
-    is DownloadListEntry.Batch -> "batch-${batchKey()}"
+    is DownloadListEntry.Batch -> "batch-$mediaId-$seasonNumber"
 }
-
-private fun DownloadListEntry.Batch.batchKey(): String = "$mediaId-$seasonNumber"
 
 @Composable
 private fun DownloadStateFilter.label(): String = when (this) {
