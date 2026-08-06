@@ -14,6 +14,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
+import com.flixclusive.core.database.entity.downloads.combinedProgress
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
@@ -314,10 +315,15 @@ class MediaScreenViewModel @AssistedInject constructor(
     }
 
     private fun deriveDownloadStatus(items: List<DownloadItem>): MediaDownloadStatus {
-        if (items.isEmpty()) return MediaDownloadStatus.NOT_DOWNLOADED
-        if (items.any { !it.state.isTerminal }) return MediaDownloadStatus.IN_PROGRESS
-        if (items.all { it.state == DownloadItemState.COMPLETED }) return MediaDownloadStatus.DOWNLOADED
-        return MediaDownloadStatus.NOT_DOWNLOADED
+        if (items.isEmpty()) return MediaDownloadStatus.NotDownloaded
+        if (items.any { !it.state.isTerminal }) {
+            // Averaged across the whole batch for a show's season aggregate; a single-item list
+            // (movie, or one episode) just reads as that item's own progress.
+            val progress = items.map { it.combinedProgress() }.average().toFloat()
+            return MediaDownloadStatus(MediaDownloadStatus.DownloadState.IN_PROGRESS, progress)
+        }
+        if (items.all { it.state == DownloadItemState.COMPLETED }) return MediaDownloadStatus.Downloaded
+        return MediaDownloadStatus.NotDownloaded
     }
 
     /** Toggles the download shown on [com.flixclusive.feature.mobile.media.component.HeaderButtons]. */
@@ -944,10 +950,25 @@ enum class MediaScreenState {
     Success,
 }
 
-enum class MediaDownloadStatus {
-    NOT_DOWNLOADED,
-    IN_PROGRESS,
-    DOWNLOADED,
+/**
+ * @param progress 0f–1f, meaningful only while [state] is [DownloadState.IN_PROGRESS] — the
+ * combined stream+subtitle progress (see [com.flixclusive.core.database.entity.downloads.combinedProgress])
+ * of a single item, or the average across every item in a batch (a show's season aggregate).
+ */
+data class MediaDownloadStatus(
+    val state: DownloadState,
+    val progress: Float = 0f,
+) {
+    enum class DownloadState {
+        NOT_DOWNLOADED,
+        IN_PROGRESS,
+        DOWNLOADED,
+    }
+
+    companion object {
+        val NotDownloaded = MediaDownloadStatus(DownloadState.NOT_DOWNLOADED)
+        val Downloaded = MediaDownloadStatus(DownloadState.DOWNLOADED, progress = 1f)
+    }
 }
 
 /** Identifies which download this ViewModel's transient override state (`downloadOverrides`) belongs to. */

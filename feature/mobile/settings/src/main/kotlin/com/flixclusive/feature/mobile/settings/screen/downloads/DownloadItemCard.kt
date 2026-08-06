@@ -115,11 +115,12 @@ internal fun DownloadItemCard(
 
             // Shown whenever there's data to report, regardless of the item's current phase —
             // e.g. the stream row stays visible once fetching subtitles starts, not just while
-            // DOWNLOADING_STREAM is active, and vice versa.
+            // DOWNLOADING_STREAM is active, and vice versa. Hidden once STOPPED, though — a
+            // stopped item isn't going anywhere, so its last progress isn't worth showing.
             val hasStreamProgress by remember {
                 derivedStateOf { item.streamTotalBytes > 0 }
             }
-            if (hasStreamProgress) {
+            if (hasStreamProgress && !isDimmed) {
                 Spacer(modifier = Modifier.height(8.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_video_label),
@@ -128,7 +129,7 @@ internal fun DownloadItemCard(
                 )
             }
 
-            if (item.totalSubtitlesCount > 0) {
+            if (item.totalSubtitlesCount > 0 && !isDimmed) {
                 Spacer(modifier = Modifier.height(4.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_subtitles_label),

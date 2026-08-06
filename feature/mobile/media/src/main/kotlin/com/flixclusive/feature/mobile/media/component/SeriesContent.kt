@@ -108,7 +108,7 @@ internal fun LazyGridScope.seriesContent(
                     onClick = { onClick(item.episode) },
                     onLongClick = onLongClick,
                     downloadStatus = episodeDownloadStatuses[item.number]
-                        ?: Async.Success(MediaDownloadStatus.NOT_DOWNLOADED),
+                        ?: Async.Success(MediaDownloadStatus.NotDownloaded),
                     onToggleDownload = { onToggleEpisodeDownload(item.episode) },
                     modifier = Modifier
                         .fillMaxWidth()

@@ -588,7 +588,7 @@ private fun MediaScreenBasePreview() {
                         null
                     }
                 },
-                downloadStatus = Async.Success(MediaDownloadStatus.NOT_DOWNLOADED),
+                downloadStatus = Async.Success(MediaDownloadStatus.NotDownloaded),
                 episodeDownloadStatuses = emptyMap(),
                 query = { query },
                 libraryListStates = { Async.Success(lists) },

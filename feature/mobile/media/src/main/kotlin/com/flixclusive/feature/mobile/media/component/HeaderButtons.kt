@@ -24,9 +24,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
@@ -237,19 +240,20 @@ private fun DownloadButton(
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isCompactOrMedium = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
-    val label = when (status) {
-        MediaDownloadStatus.NOT_DOWNLOADED -> stringResource(LocaleR.string.label_download)
-        MediaDownloadStatus.IN_PROGRESS -> stringResource(LocaleR.string.download_action_stop_content_desc)
-        MediaDownloadStatus.DOWNLOADED -> stringResource(R.string.downloaded)
+    val label = when (status.state) {
+        MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> stringResource(LocaleR.string.label_download)
+        MediaDownloadStatus.DownloadState.IN_PROGRESS ->
+            stringResource(LocaleR.string.download_action_stop_content_desc)
+        MediaDownloadStatus.DownloadState.DOWNLOADED -> stringResource(R.string.downloaded)
     }
 
-    val drawable = when (status) {
-        MediaDownloadStatus.NOT_DOWNLOADED -> UiCommonR.drawable.download
-        MediaDownloadStatus.IN_PROGRESS -> UiCommonR.drawable.round_stop_24
-        MediaDownloadStatus.DOWNLOADED -> UiCommonR.drawable.download_done
+    val drawable = when (status.state) {
+        MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> UiCommonR.drawable.download
+        MediaDownloadStatus.DownloadState.IN_PROGRESS -> UiCommonR.drawable.round_stop_24
+        MediaDownloadStatus.DownloadState.DOWNLOADED -> UiCommonR.drawable.download_done
     }
 
-    val tint = if (status == MediaDownloadStatus.NOT_DOWNLOADED) {
+    val tint = if (status.state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED) {
         MaterialTheme.colorScheme.onSurface.copy(0.6F)
     } else {
         LocalContentColor.current
@@ -257,13 +261,13 @@ private fun DownloadButton(
 
     PlainTooltipBox(description = label) {
         if (!isCompactOrMedium) {
-            val colors = if (status == MediaDownloadStatus.NOT_DOWNLOADED) {
+            val colors = if (status.state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED) {
                 ButtonDefaults.outlinedButtonColors()
             } else {
                 ButtonDefaults.buttonColors()
             }
 
-            val border = if (status == MediaDownloadStatus.NOT_DOWNLOADED) {
+            val border = if (status.state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED) {
                 BorderStroke(
                     width = 2.dp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F)
@@ -277,12 +281,13 @@ private fun DownloadButton(
                 shape = MaterialTheme.shapes.small,
                 colors = colors,
                 border = border,
-                enabled = status != MediaDownloadStatus.DOWNLOADED,
+                enabled = status.state != MediaDownloadStatus.DownloadState.DOWNLOADED,
                 contentPadding = PaddingValues(vertical = 10.dp, horizontal = 15.dp)
             ) {
-                AdaptiveIcon(
-                    painter = painterResource(drawable),
-                    contentDescription = label,
+                DownloadButtonIcon(
+                    status = status,
+                    drawable = drawable,
+                    label = label,
                     tint = tint,
                     dp = 18.dp,
                 )
@@ -290,12 +295,13 @@ private fun DownloadButton(
         } else {
             IconButton(
                 onClick = onClick,
-                enabled = status != MediaDownloadStatus.DOWNLOADED,
+                enabled = status.state != MediaDownloadStatus.DownloadState.DOWNLOADED,
                 modifier = Modifier.padding(3.dp),
             ) {
-                AdaptiveIcon(
-                    painter = painterResource(drawable),
-                    contentDescription = label,
+                DownloadButtonIcon(
+                    status = status,
+                    drawable = drawable,
+                    label = label,
                     tint = tint,
                     dp = 30.dp,
                 )
@@ -303,6 +309,49 @@ private fun DownloadButton(
         }
     }
 }
+
+/**
+ * The download icon, plus — while [MediaDownloadStatus.DownloadState.IN_PROGRESS] — a determinate
+ * ring drawn outside it reporting [MediaDownloadStatus.progress], so the icon itself stays fully
+ * legible instead of being covered by the ring.
+ */
+@Composable
+private fun DownloadButtonIcon(
+    status: MediaDownloadStatus,
+    drawable: Int,
+    label: String,
+    tint: Color,
+    dp: Dp,
+) {
+    if (status.state != MediaDownloadStatus.DownloadState.IN_PROGRESS) {
+        AdaptiveIcon(
+            painter = painterResource(drawable),
+            contentDescription = label,
+            tint = tint,
+            dp = dp,
+        )
+        return
+    }
+
+    Box(
+        modifier = Modifier.size(dp + DownloadProgressRingPadding * 2),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            progress = { status.progress },
+            strokeWidth = 2.dp,
+            modifier = Modifier.matchParentSize(),
+        )
+        AdaptiveIcon(
+            painter = painterResource(drawable),
+            contentDescription = label,
+            tint = tint,
+            dp = dp,
+        )
+    }
+}
+
+private val DownloadProgressRingPadding = 6.dp
 
 @Composable
 private fun PlayButton(
@@ -591,7 +640,7 @@ private fun HeaderButtonsPreview() {
     val metadata = remember { DummyDataForPreview.getMovie() }
     var isInLibrary by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf<WatchProgress?>(null) }
-    var downloadStatus by remember { mutableStateOf(MediaDownloadStatus.NOT_DOWNLOADED) }
+    var downloadStatus by remember { mutableStateOf(MediaDownloadStatus.NotDownloaded) }
 
     LaunchedEffect(true) {
         delay(1500)
@@ -649,10 +698,11 @@ private fun HeaderButtonsPreview() {
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onRetryFetchLists = {},
                     onToggleDownload = {
-                        downloadStatus = when (downloadStatus) {
-                            MediaDownloadStatus.NOT_DOWNLOADED -> MediaDownloadStatus.IN_PROGRESS
-                            MediaDownloadStatus.IN_PROGRESS -> MediaDownloadStatus.DOWNLOADED
-                            MediaDownloadStatus.DOWNLOADED -> MediaDownloadStatus.NOT_DOWNLOADED
+                        downloadStatus = when (downloadStatus.state) {
+                            MediaDownloadStatus.DownloadState.NOT_DOWNLOADED ->
+                                MediaDownloadStatus(MediaDownloadStatus.DownloadState.IN_PROGRESS, progress = 0.4f)
+                            MediaDownloadStatus.DownloadState.IN_PROGRESS -> MediaDownloadStatus.Downloaded
+                            MediaDownloadStatus.DownloadState.DOWNLOADED -> MediaDownloadStatus.NotDownloaded
                         }
                     },
                     onPlay = {},
