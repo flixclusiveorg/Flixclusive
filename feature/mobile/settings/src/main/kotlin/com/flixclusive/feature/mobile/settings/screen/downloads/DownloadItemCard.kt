@@ -136,6 +136,16 @@ internal fun DownloadItemCard(
                     valueText = { "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}" },
                 )
             }
+
+            // Bottom-left, below whichever progress row(s) are showing — visible for the whole
+            // downloading/fetching-subtitles phase rather than only while a nonzero rate is
+            // available, so it never flickers in and out as fresh rate samples land.
+            val isActivelyDownloading = item.state == DownloadItemState.DOWNLOADING_STREAM ||
+                item.state == DownloadItemState.FETCHING_SUBTITLES
+            if (isActivelyDownloading) {
+                Spacer(modifier = Modifier.height(4.dp))
+                DownloadSpeedRow(speedText = item.downloadSpeedText(context))
+            }
         }
     }
 }
@@ -159,6 +169,7 @@ private fun DownloadProgressRow(
 
         LinearProgressIndicator(
             progress = progress,
+            drawStopIndicator = {},
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 8.dp)
@@ -168,6 +179,42 @@ private fun DownloadProgressRow(
         Text(
             text = valueText(),
             style = MaterialTheme.typography.labelSmall,
+        )
+    }
+}
+
+@Composable
+private fun DownloadSpeedRow(
+    speedText: String,
+    modifier: Modifier = Modifier,
+) {
+    val contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(UiCommonR.drawable.download),
+            contentDescription = null,
+            modifier = Modifier.size(12.dp),
+            tint = contentColor,
+        )
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        Text(
+            text = "•",
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor,
+        )
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        Text(
+            text = speedText,
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor,
         )
     }
 }
@@ -275,6 +322,27 @@ private fun DownloadItem.streamValueText(context: Context): String {
     val downloaded = Formatter.formatShortFileSize(context, streamBytesDownloaded)
     val total = Formatter.formatShortFileSize(context, streamTotalBytes)
     return "$downloaded / $total"
+}
+
+/** `"1.2 MB/s"` (or `"3 segments/s"` while [DownloadItemState.DOWNLOADING_STREAM] on an HLS
+ * stream), or a "Calculating…" placeholder rather than hiding — matching browser download
+ * managers — while [DownloadItem.downloadBytesPerSecond] has no prior sample to diff against yet
+ * (e.g. the very first progress tick). Subtitle transfers are always plain file downloads, so
+ * they're never rendered as segments/s even when the video itself was HLS. */
+private fun DownloadItem.downloadSpeedText(context: Context): String {
+    if (downloadBytesPerSecond <= 0) {
+        return context.getString(LocaleR.string.download_progress_speed_calculating)
+    }
+
+    val isSegments = state == DownloadItemState.DOWNLOADING_STREAM && isHlsStream
+    return if (isSegments) {
+        context.getString(LocaleR.string.download_progress_speed_segments_format, downloadBytesPerSecond)
+    } else {
+        context.getString(
+            LocaleR.string.download_progress_speed_format,
+            Formatter.formatShortFileSize(context, downloadBytesPerSecond),
+        )
+    }
 }
 
 @Composable

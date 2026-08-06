@@ -31,14 +31,22 @@ data class DownloadItem(
     val sourceUrl: String? = null,
     /** Whether [sourceUrl] is an HLS manifest rather than a direct file — determines which
      * transfer engine downloads it and how [streamBytesDownloaded]/[streamTotalBytes] are
-     * interpreted (segments written/total, not bytes, for HLS). Rewritten every time [sourceUrl]
-     * changes so the two can never disagree. */
+     * interpreted (segments, not bytes, for HLS). Only ever describes the video stream —
+     * [downloadBytesPerSecond] stays byte-based for subtitles regardless of this flag. Rewritten
+     * every time [sourceUrl] changes so the two can never disagree. */
     val isHlsStream: Boolean = false,
     /** SAF document URI (resolved via [com.hippo.unifile.UniFile]) of the downloaded video file
      * on disk. Sibling subtitle files live in that file's parent's `subtitles/` folder. */
     val streamFilePath: String? = null,
     val streamBytesDownloaded: Long = 0,
     val streamTotalBytes: Long = 0,
+    /** Transfer rate since the previous throttled progress write, for whichever transfer is
+     * currently active — the video stream (bytes/sec, or segments/sec if [isHlsStream]) or a
+     * single subtitle file (always bytes/sec). Only meaningful while [state] is
+     * [DownloadItemState.DOWNLOADING_STREAM] or [DownloadItemState.FETCHING_SUBTITLES]; not reset
+     * when either phase ends, so it's the caller's responsibility not to display a stale value
+     * once nothing is actively transferring. */
+    val downloadBytesPerSecond: Long = 0,
     val downloadedSubtitlesCount: Int = 0,
     val totalSubtitlesCount: Int = 0,
     val errorMessage: String? = null,

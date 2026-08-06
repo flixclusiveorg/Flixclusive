@@ -418,7 +418,10 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         item: DownloadItem,
         directory: UniFile,
     ) {
-        mediaDownloadRepository.resetChunks(itemId)
+        // deleteChunks, not resetChunks: the video finished, but streamBytesDownloaded/
+        // streamTotalBytes still need to keep reporting the final video size through subtitle
+        // fetching and on into COMPLETED — resetChunks would zero them right back out.
+        mediaDownloadRepository.deleteChunks(itemId)
         runSubtitlePhase(itemId, item, directory)
     }
 
@@ -469,7 +472,10 @@ internal class MediaDownloadControllerImpl @Inject constructor(
                 return applyInterrupt(itemId, pendingInterrupt, DownloadPhase.SUBTITLES, directory)
             }
 
-            mediaDownloadRepository.resetChunks(itemId)
+            // deleteChunks, not resetChunks — same reason as advancePastStreamComplete: only the
+            // stale chunk bookkeeping from the previous subtitle should be cleared here, not the
+            // video's already-final streamBytesDownloaded/streamTotalBytes.
+            mediaDownloadRepository.deleteChunks(itemId)
 
             val fileName = DownloadPathUtil.buildSubtitleFileName(
                 "${DownloadPathUtil.buildFileTitle(item.mediaTitle)} (${subtitle.label})",

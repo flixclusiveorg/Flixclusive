@@ -73,7 +73,7 @@ class DownloadDaoTest {
         }
 
     @Test
-    fun updateStreamProgressShouldPersistByteCountsWithoutTouchingOtherFields() =
+    fun updateStreamProgressShouldPersistByteCountsAndSpeedWithoutTouchingOtherFields() =
         runTest {
             downloadItemDao.insert(testItem)
 
@@ -81,20 +81,48 @@ class DownloadDaoTest {
                 testItem.id,
                 bytesDownloaded = 512,
                 totalBytes = 1024,
+                bytesPerSecond = 256,
                 updatedAt = Date(),
             )
 
             val result = downloadItemDao.get(testItem.id)
             expectThat(result?.streamBytesDownloaded).isEqualTo(512)
             expectThat(result?.streamTotalBytes).isEqualTo(1024)
+            expectThat(result?.downloadBytesPerSecond).isEqualTo(256)
             expectThat(result?.mediaTitle).isEqualTo("Test Movie")
+        }
+
+    @Test
+    fun updateDownloadRateShouldPersistSpeedWithoutTouchingStreamByteCounts() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            downloadItemDao.updateStreamProgress(
+                testItem.id,
+                bytesDownloaded = 512,
+                totalBytes = 1024,
+                bytesPerSecond = 256,
+                updatedAt = Date(),
+            )
+
+            downloadItemDao.updateDownloadRate(testItem.id, bytesPerSecond = 128, updatedAt = Date())
+
+            val result = downloadItemDao.get(testItem.id)
+            expectThat(result?.downloadBytesPerSecond).isEqualTo(128)
+            expectThat(result?.streamBytesDownloaded).isEqualTo(512)
+            expectThat(result?.streamTotalBytes).isEqualTo(1024)
         }
 
     @Test
     fun updateSourceShouldAlwaysWriteSourceUrlAndIsHlsStreamTogetherAndResetBytesDownloaded() =
         runTest {
             downloadItemDao.insert(testItem)
-            downloadItemDao.updateStreamProgress(testItem.id, bytesDownloaded = 512, totalBytes = 1024, Date())
+            downloadItemDao.updateStreamProgress(
+                testItem.id,
+                bytesDownloaded = 512,
+                totalBytes = 1024,
+                bytesPerSecond = 256,
+                Date(),
+            )
 
             downloadItemDao.updateSource(
                 testItem.id,

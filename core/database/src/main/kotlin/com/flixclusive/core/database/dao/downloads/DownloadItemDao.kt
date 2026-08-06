@@ -72,7 +72,8 @@ interface DownloadItemDao {
     @Query(
         """
         UPDATE download_items
-        SET streamBytesDownloaded = :bytesDownloaded, streamTotalBytes = :totalBytes, updatedAt = :updatedAt
+        SET streamBytesDownloaded = :bytesDownloaded, streamTotalBytes = :totalBytes,
+            downloadBytesPerSecond = :bytesPerSecond, updatedAt = :updatedAt
         WHERE id = :id
         """,
     )
@@ -80,6 +81,24 @@ interface DownloadItemDao {
         id: String,
         bytesDownloaded: Long,
         totalBytes: Long,
+        bytesPerSecond: Long,
+        updatedAt: Date,
+    )
+
+    /** Narrower sibling of [updateStreamProgress] for a subtitle transfer's rate — subtitles
+     * report completion as a count ([downloadedSubtitlesCount]/[totalSubtitlesCount]), not
+     * bytes, so this leaves [DownloadItem.streamBytesDownloaded]/[DownloadItem.streamTotalBytes]
+     * alone and only updates [DownloadItem.downloadBytesPerSecond]. */
+    @Query(
+        """
+        UPDATE download_items
+        SET downloadBytesPerSecond = :bytesPerSecond, updatedAt = :updatedAt
+        WHERE id = :id
+        """,
+    )
+    suspend fun updateDownloadRate(
+        id: String,
+        bytesPerSecond: Long,
         updatedAt: Date,
     )
 

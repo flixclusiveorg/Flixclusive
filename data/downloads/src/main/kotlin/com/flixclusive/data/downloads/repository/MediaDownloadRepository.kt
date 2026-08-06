@@ -45,7 +45,19 @@ interface MediaDownloadRepository {
         message: String,
     )
 
+    /** Clears [id]'s chunk bookkeeping and resets [DownloadItem.streamBytesDownloaded]/
+     * [DownloadItem.streamTotalBytes]/[DownloadItem.downloadBytesPerSecond] to `0` — for when the
+     * item is about to restart a transfer from scratch and the displayed progress should reset
+     * too (retry, stop, a dead-link re-resolve). Use [deleteChunks] instead when clearing chunk
+     * rows between transfers that shouldn't disturb what's already been reported (e.g. moving
+     * from the video into the subtitle phase, where the video's final size should keep showing).
+     */
     suspend fun resetChunks(id: String)
+
+    /** Deletes [id]'s [com.flixclusive.core.database.entity.downloads.DownloadChunk] rows only —
+     * unlike [resetChunks], leaves [DownloadItem.streamBytesDownloaded]/[DownloadItem.streamTotalBytes]/
+     * [DownloadItem.downloadBytesPerSecond] untouched. */
+    suspend fun deleteChunks(id: String)
 
     /**
      * Persists [sourceUrl]/[isHls] together and resets stream progress to `0`/[totalBytes] — the

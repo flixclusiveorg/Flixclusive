@@ -186,11 +186,20 @@ class MediaDownloadRepositoryImplTest {
         }
 
     @Test
-    fun `resetChunks should also zero the stream progress columns`() =
+    fun `resetChunks should also zero the stream progress and speed columns`() =
         runTest {
             repository.resetChunks(itemId)
 
-            coVerify { downloadItemDao.updateStreamProgress(itemId, 0, 0, any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 0, 0, 0, any()) }
+        }
+
+    @Test
+    fun `deleteChunks should delete chunks without touching stream progress`() =
+        runTest {
+            repository.deleteChunks(itemId)
+
+            coVerify { downloadChunkDao.deleteChunksForItem(itemId) }
+            coVerify(exactly = 0) { downloadItemDao.updateStreamProgress(any(), any(), any(), any(), any()) }
         }
 
     @Test
@@ -270,7 +279,7 @@ class MediaDownloadRepositoryImplTest {
                 1000L
             )
 
-            coVerify { downloadItemDao.updateStreamProgress(itemId, any(), 1000L, any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, any(), 1000L, any(), any()) }
         }
 
     @Test
@@ -293,7 +302,53 @@ class MediaDownloadRepositoryImplTest {
                 null
             )
 
-            coVerify(exactly = 0) { downloadItemDao.updateStreamProgress(itemId, any(), any(), any()) }
+            coVerify(exactly = 0) { downloadItemDao.updateStreamProgress(itemId, any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `runTransfer progress callback should still write a download rate for the SUBTITLES phase`() =
+        runTest {
+            val chunk = DownloadChunk(id = 1, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = 999)
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returns listOf(chunk)
+            coEvery { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) } coAnswers {
+                val onProgress = arg<suspend (Long, Long, DownloadChunkStatus) -> Unit>(5)
+                onProgress(1, 1000, DownloadChunkStatus.COMPLETED)
+                MediaTransferResult.Completed
+            }
+
+            repository.runTransfer(
+                itemId,
+                DownloadPhase.SUBTITLES,
+                "https://example.com/subs.srt",
+                emptyMap(),
+                destinationFile,
+                null
+            )
+
+            coVerify { downloadItemDao.updateDownloadRate(itemId, any(), any()) }
+        }
+
+    @Test
+    fun `runTransfer progress callback should not write a download rate for the STREAM phase`() =
+        runTest {
+            val chunk = DownloadChunk(id = 1, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = 999)
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returns listOf(chunk)
+            coEvery { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) } coAnswers {
+                val onProgress = arg<suspend (Long, Long, DownloadChunkStatus) -> Unit>(5)
+                onProgress(1, 1000, DownloadChunkStatus.COMPLETED)
+                MediaTransferResult.Completed
+            }
+
+            repository.runTransfer(
+                itemId,
+                DownloadPhase.STREAM,
+                "https://example.com/file",
+                emptyMap(),
+                destinationFile,
+                1000L
+            )
+
+            coVerify(exactly = 0) { downloadItemDao.updateDownloadRate(any(), any(), any()) }
         }
 
     @Test
@@ -343,6 +398,33 @@ class MediaDownloadRepositoryImplTest {
 
             repository.runHlsTransfer(itemId, segments, 0, emptyMap(), destinationFile)
 
-            coVerify { downloadItemDao.updateStreamProgress(itemId, 1L, 4L, any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 1L, 4L, any(), any()) }
+        }
+
+    @Test
+    fun `runHlsTransfer progress callback rate should be zero on the item's first ever sample`() =
+        runTest {
+            val segments =
+                listOf(
+                    HlsSegmentInfo(
+                        url = "https://example.com/0.ts",
+                        byteRangeOffset = 0,
+                        byteRangeLength = -1,
+                        encryptionKeyUri = null,
+                        encryptionIv = null
+                    )
+                )
+            coEvery {
+                hlsTransferEngine.transfer(segments, 0, emptyMap(), destinationFile, any(), any())
+            } coAnswers {
+                val onSegmentWritten = arg<suspend (Int, Int) -> Unit>(5)
+                onSegmentWritten(1, 4)
+                MediaTransferResult.Completed
+            }
+
+            // No prior write for itemId exists yet, so there's nothing to diff a rate against.
+            repository.runHlsTransfer(itemId, segments, 0, emptyMap(), destinationFile)
+
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 1L, 4L, 0L, any()) }
         }
 }

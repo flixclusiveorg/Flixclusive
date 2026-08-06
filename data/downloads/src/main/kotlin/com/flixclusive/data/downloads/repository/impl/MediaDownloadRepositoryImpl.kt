@@ -31,6 +31,10 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     private val interruptFlags = ConcurrentHashMap<String, DownloadInterruptReason>()
     private val lastProgressWriteTimes = ConcurrentHashMap<String, Long>()
 
+    /** The bytes-(or segments-, for HLS)-downloaded value written at [lastProgressWriteTimes]'s
+     * timestamp for the same id — the previous sample [computeRate] diffs against. */
+    private val lastProgressValues = ConcurrentHashMap<String, Long>()
+
     override fun observeItem(id: String): Flow<DownloadItem?> = downloadItemDao.getAsFlow(id)
 
     override fun observeAllItems(): Flow<List<DownloadItem>> = downloadItemDao.getAllAsFlow()
@@ -73,11 +77,20 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     }
 
     override suspend fun resetChunks(id: String) {
-        downloadChunkDao.deleteChunksForItem(id)
+        deleteChunks(id)
         // Also zeroes the segment-count progress HLS items keep in the same columns, so a manual
         // retry restarts an HLS download instead of silently resuming it (matching the byte-range
         // engine, where deleting chunks already forces a from-scratch replan).
-        downloadItemDao.updateStreamProgress(id, 0, 0, Date())
+        downloadItemDao.updateStreamProgress(id, bytesDownloaded = 0, totalBytes = 0, bytesPerSecond = 0, Date())
+    }
+
+    override suspend fun deleteChunks(id: String) {
+        downloadChunkDao.deleteChunksForItem(id)
+        // Chunks are gone, so any in-flight rate sample no longer has a valid baseline to diff
+        // against — without this, the first write after a resumed/restarted transfer would diff
+        // against bytes/timing from a since-discarded run and read as a huge stale-timed sample.
+        lastProgressWriteTimes.remove(id)
+        lastProgressValues.remove(id)
     }
 
     override suspend fun updateSource(
@@ -175,29 +188,56 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         val isFinal = segmentsWritten >= totalSegments
         if (!isFinal && now - lastWrite < PROGRESS_WRITE_THROTTLE_MS) return
 
+        val rate = computeRate(id, segmentsWritten.toLong(), now, lastWrite)
         lastProgressWriteTimes[id] = now
-        downloadItemDao.updateStreamProgress(id, segmentsWritten.toLong(), totalSegments.toLong(), Date())
+        lastProgressValues[id] = segmentsWritten.toLong()
+        downloadItemDao.updateStreamProgress(id, segmentsWritten.toLong(), totalSegments.toLong(), rate, Date())
     }
 
     /** Only [DownloadPhase.STREAM] transfers write to [DownloadItem.streamBytesDownloaded] —
      * subtitles track completion as a count ([DownloadItem.downloadedSubtitlesCount]), not bytes,
-     * even though they reuse this same chunked engine for their own resumable transfer. */
+     * even though they reuse this same chunked engine for their own resumable transfer. Both
+     * phases still write [DownloadItem.downloadBytesPerSecond]: whichever transfer is currently
+     * active gets a live speed. */
     private suspend fun writeAggregatedProgressThrottled(
         id: String,
         phase: DownloadPhase,
         totalBytes: Long?,
         status: DownloadChunkStatus,
     ) {
-        if (phase != DownloadPhase.STREAM) return
-
         val now = System.currentTimeMillis()
         val lastWrite = lastProgressWriteTimes[id] ?: 0L
         val shouldWrite = status != DownloadChunkStatus.DOWNLOADING || now - lastWrite >= PROGRESS_WRITE_THROTTLE_MS
         if (!shouldWrite) return
 
-        lastProgressWriteTimes[id] = now
         val totalDownloaded = downloadChunkDao.getChunksForItem(id).sumOf { it.bytesDownloaded }
-        downloadItemDao.updateStreamProgress(id, totalDownloaded, totalBytes ?: 0, Date())
+        val rate = computeRate(id, totalDownloaded, now, lastWrite)
+        lastProgressWriteTimes[id] = now
+        lastProgressValues[id] = totalDownloaded
+
+        if (phase == DownloadPhase.STREAM) {
+            downloadItemDao.updateStreamProgress(id, totalDownloaded, totalBytes ?: 0, rate, Date())
+        } else {
+            downloadItemDao.updateDownloadRate(id, rate, Date())
+        }
+    }
+
+    /** Bytes-(or segments-)per-second since the previous throttled write for [id], derived from
+     * the same [lastProgressWriteTimes]/[lastProgressValues] bookkeeping the throttle itself
+     * uses — no separate timing state needed. Zero on an item's first sample (nothing to diff
+     * against yet, [lastWrite] is `0`) or if the clock hasn't meaningfully advanced. */
+    private fun computeRate(
+        id: String,
+        currentValue: Long,
+        now: Long,
+        lastWrite: Long,
+    ): Long {
+        val lastValue = lastProgressValues[id] ?: return 0L
+        val deltaMs = now - lastWrite
+        if (lastWrite <= 0L || deltaMs <= 0L) return 0L
+
+        val delta = (currentValue - lastValue).coerceAtLeast(0L)
+        return (delta * 1000L) / deltaMs
     }
 
     override fun requestInterrupt(
@@ -211,6 +251,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
 
     override suspend fun delete(id: String) {
         lastProgressWriteTimes.remove(id)
+        lastProgressValues.remove(id)
         downloadItemDao.delete(id)
     }
 

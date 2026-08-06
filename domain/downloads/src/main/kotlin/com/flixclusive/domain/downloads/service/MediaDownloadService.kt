@@ -88,22 +88,6 @@ class MediaDownloadService : Service() {
         fun ensureStarted(context: Context) {
             ContextCompat.startForegroundService(context, Intent(context, MediaDownloadService::class.java))
         }
-
-        fun pause(context: Context, itemId: String) = sendAction(context, ACTION_PAUSE, itemId)
-
-        fun resume(context: Context, itemId: String) = sendAction(context, ACTION_RESUME, itemId)
-
-        fun stop(context: Context, itemId: String) = sendAction(context, ACTION_STOP, itemId)
-
-        fun retry(context: Context, itemId: String) = sendAction(context, ACTION_RETRY, itemId)
-
-        private fun sendAction(context: Context, action: String, itemId: String) {
-            val intent = Intent(context, MediaDownloadService::class.java).apply {
-                this.action = action
-                putExtra(EXTRA_ITEM_ID, itemId)
-            }
-            ContextCompat.startForegroundService(context, intent)
-        }
     }
 
     override fun onCreate() {
@@ -398,22 +382,27 @@ class MediaDownloadService : Service() {
         when (item.state) {
             DownloadItemState.DOWNLOADING_STREAM -> {
                 val percent = percentOf(item.streamBytesDownloaded, item.streamTotalBytes)
+                val speedSuffix = formatSpeedSuffix(item.downloadBytesPerSecond, isSegments = item.isHlsStream)
                 val text = when {
                     // HLS reuses these same columns for a segment count, not a byte count — running
                     // it through formatSize() would render a handful of segments as a bogus "1 KB".
                     item.isHlsStream && item.streamTotalBytes > 0 ->
-                        "Downloading video… ${item.streamBytesDownloaded}/${item.streamTotalBytes} segments"
+                        "HLS: ${item.streamBytesDownloaded}/${item.streamTotalBytes} segments$speedSuffix"
                     item.streamTotalBytes > 0 ->
-                        "Downloading video… ${formatSize(
+                        "${formatSize(
                             item.streamBytesDownloaded
-                        )} / ${formatSize(item.streamTotalBytes)}"
-                    else -> "Downloading video… ${formatSize(item.streamBytesDownloaded)}"
+                        )} / ${formatSize(item.streamTotalBytes)}$speedSuffix"
+                    else -> formatSize(item.streamBytesDownloaded) + speedSuffix
                 }
                 percent to text
             }
-            DownloadItemState.FETCHING_SUBTITLES ->
-                percentOf(item.downloadedSubtitlesCount.toLong(), item.totalSubtitlesCount.toLong())
-                    .let { it to "Downloading subtitles… ${item.downloadedSubtitlesCount}/${item.totalSubtitlesCount}" }
+            DownloadItemState.FETCHING_SUBTITLES -> {
+                val percent = percentOf(item.downloadedSubtitlesCount.toLong(), item.totalSubtitlesCount.toLong())
+                // Subtitle transfers are always plain file downloads, regardless of whether the
+                // stream itself was HLS — never render this one as "segments/s".
+                val speedSuffix = formatSpeedSuffix(item.downloadBytesPerSecond, isSegments = false)
+                percent to "${item.downloadedSubtitlesCount}/${item.totalSubtitlesCount}$speedSuffix"
+            }
             DownloadItemState.PAUSED -> null to "Paused"
             DownloadItemState.STREAM_COMPLETE -> null to "Preparing subtitles…"
             else -> null to "Queued"
@@ -423,6 +412,20 @@ class MediaDownloadService : Service() {
         if (total <= 0) 0 else ((current * 100) / total).toInt().coerceIn(0, 100)
 
     private fun formatSize(bytes: Long): String = Formatter.formatShortFileSize(this, bytes)
+
+    /** `" • 1.2 MB/s"` (or `" • 3 segments/s"` for HLS). Never hides — a rate of `0`, e.g. on the
+     * very first progress tick before there's a prior sample to diff against, renders as
+     * `" • Calculating speed…"` instead of vanishing, matching how browser download managers show
+     * a live placeholder rather than blanking the row while a speed estimate isn't ready yet. */
+    private fun formatSpeedSuffix(bytesPerSecond: Long, isSegments: Boolean): String {
+        if (bytesPerSecond <= 0) return " • Calculating speed…"
+
+        return if (isSegments) {
+            " • $bytesPerSecond segments/s"
+        } else {
+            " • ${formatSize(bytesPerSecond)}/s"
+        }
+    }
 
     private fun actionPendingIntent(action: String, itemId: String): PendingIntent {
         val intent = Intent(this, MediaDownloadService::class.java).apply {

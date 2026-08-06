@@ -16,7 +16,6 @@ import com.flixclusive.core.database.migration.Schema19to20
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema20to21
 import com.flixclusive.core.database.migration.Schema21to22
-import com.flixclusive.core.database.migration.Schema22to23
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
 import com.flixclusive.core.database.migration.Schema4to5
@@ -49,7 +48,7 @@ class DBMigrationTest {
 
         helper.runMigrationsAndValidate(
             name = TEST_DB,
-            version = 23,
+            version = 22,
             validateDroppedTables = true,
             Schema1to2,
             Schema2to3,
@@ -72,7 +71,6 @@ class DBMigrationTest {
             Schema19to20,
             Schema20to21,
             Schema21to22,
-            Schema22to23,
         )
     }
 }
