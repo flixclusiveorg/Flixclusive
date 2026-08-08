@@ -42,6 +42,16 @@ data class DataPreferences(
      * Items beyond this limit stay queued (FIFO by queue time) until a slot frees up.
      */
     val downloadConcurrencyLimit: Int = DEFAULT_DOWNLOAD_CONCURRENCY_LIMIT,
+    /**
+     * Whether downloads may only start *by themselves* on an unmetered connection. This governs the
+     * automatic paths — picking interrupted downloads back up after a force close, and pulling the
+     * next queued item into a free slot — never an explicit tap: asking for a download and being
+     * silently ignored is worse than spending the data. Items held back stay queued and start as
+     * soon as an unmetered connection is back.
+     *
+     * Defaults to on, since the alternative default spends someone's data allowance without asking.
+     */
+    val downloadOnWifiOnly: Boolean = true,
 ) : UserPreferences
 
 private const val DEFAULT_AUTO_BACKUP_FREQUENCY_DAYS = 7

@@ -287,6 +287,8 @@
     <string name="label_no_cached_media">No cached media yet</string>
     <string name="dead_link_retention_days_title">Dead link retention period</string>
     <string name="dead_link_retention_days_desc">Remove dead links after %1$d day(s). Set to 0 to remove them immediately on the next cleanup.</string>
+    <string name="download_wifi_only_title">Resume on Wi-Fi only</string>
+    <string name="download_wifi_only_desc">Downloads only pick themselves back up on an unmetered connection. Starting or resuming one yourself always works.</string>
     <string name="download_link_selection_mode_title">Link selection priority</string>
     <string name="download_link_selection_mode_desc">How to rank candidate links when starting a download. Speed is always the tiebreaker.</string>
     <string name="download_link_selection_mode_quality_first">Closest to preferred quality</string>

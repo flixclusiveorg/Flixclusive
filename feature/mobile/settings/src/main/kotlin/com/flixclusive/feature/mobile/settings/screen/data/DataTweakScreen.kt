@@ -79,6 +79,14 @@ private fun getDownloadTweaks(
     return TweakGroup(
         title = stringResource(LocaleR.string.downloads),
         tweaks = persistentListOf(
+            TweakUI.SwitchTweak(
+                title = stringResource(LocaleR.string.download_wifi_only_title),
+                description = { resources.getString(LocaleR.string.download_wifi_only_desc) },
+                value = { dataPreferences().downloadOnWifiOnly },
+                onTweaked = { wifiOnly ->
+                    onUpdatePreferences { it.copy(downloadOnWifiOnly = wifiOnly) }
+                },
+            ),
             TweakUI.ListTweak(
                 title = stringResource(LocaleR.string.download_link_selection_mode_title),
                 description = { resources.getString(LocaleR.string.download_link_selection_mode_desc) },

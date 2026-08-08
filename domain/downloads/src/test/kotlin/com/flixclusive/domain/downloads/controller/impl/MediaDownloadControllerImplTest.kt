@@ -13,6 +13,7 @@ import com.flixclusive.core.database.entity.provider.MediaLinksWithData
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.network.monitor.NetworkMonitor
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.hls.HlsManifestResolver
@@ -56,6 +57,7 @@ class MediaDownloadControllerImplTest {
     private lateinit var hlsManifestResolver: HlsManifestResolver
     private lateinit var mediaDownloadServiceController: MediaDownloadServiceController
     private lateinit var dataStoreManager: DataStoreManager
+    private lateinit var networkMonitor: NetworkMonitor
     private lateinit var controller: MediaDownloadControllerImpl
 
     private val directory = mockk<UniFile>(relaxed = true)
@@ -123,10 +125,26 @@ class MediaDownloadControllerImplTest {
         mediaId = mediaId,
     )
 
-    private fun setConcurrencyLimit(limit: Int) {
+    private var preferences = DataPreferences()
+
+    private fun stubPreferences() {
         every {
             dataStoreManager.getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
-        } returns flowOf(DataPreferences(downloadConcurrencyLimit = limit))
+        } returns flowOf(preferences)
+    }
+
+    private fun setConcurrencyLimit(limit: Int) {
+        preferences = preferences.copy(downloadConcurrencyLimit = limit)
+        stubPreferences()
+    }
+
+    private fun setWifiOnly(enabled: Boolean) {
+        preferences = preferences.copy(downloadOnWifiOnly = enabled)
+        stubPreferences()
+    }
+
+    private fun setMetered(metered: Boolean) {
+        every { networkMonitor.isMetered } returns flowOf(metered)
     }
 
     @Before
@@ -139,7 +157,12 @@ class MediaDownloadControllerImplTest {
         hlsManifestResolver = mockk()
         mediaDownloadServiceController = mockk(relaxed = true)
         dataStoreManager = mockk()
+        networkMonitor = mockk()
+        preferences = DataPreferences()
         setConcurrencyLimit(3)
+        // Unmetered by default so the Wi-Fi-only gate never interferes with tests that aren't
+        // about it; the gating tests set this explicitly.
+        setMetered(false)
         coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns null
         // Relaxed mocks default an unstubbed enum-returning call to its first declared constant
         // rather than null, so without this every runSubtitlePhase() per-file interrupt pre-check
@@ -161,6 +184,7 @@ class MediaDownloadControllerImplTest {
             downloadDirectoryRepository = downloadDirectoryRepository,
             getDownloadDirectoryUseCase = getDownloadDirectoryUseCase,
             hlsManifestResolver = hlsManifestResolver,
+            networkMonitor = networkMonitor,
             mediaDownloadServiceController = mediaDownloadServiceController,
             dataStoreManager = dataStoreManager,
             appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher),
@@ -872,6 +896,52 @@ class MediaDownloadControllerImplTest {
 
             // Nothing is in flight at process start, so no id is shielded from the sweep.
             coVerify { mediaDownloadRepository.requeueInterruptedItems(emptyList()) }
+            coVerify {
+                mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
+            }
+        }
+
+    @Test
+    fun `resumeInterrupted should do nothing on a metered connection when wifi-only is on`() =
+        runTest(testDispatcher) {
+            setWifiOnly(true)
+            setMetered(true)
+            coEvery { mediaDownloadRepository.requeueInterruptedItems(any()) } returns 1
+
+            controller.resumeInterrupted()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { mediaDownloadRepository.requeueInterruptedItems(any()) }
+        }
+
+    @Test
+    fun `resumeInterrupted should sweep on a metered connection when wifi-only is off`() =
+        runTest(testDispatcher) {
+            setWifiOnly(false)
+            setMetered(true)
+            coEvery { mediaDownloadRepository.requeueInterruptedItems(any()) } returns 0
+
+            controller.resumeInterrupted()
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.requeueInterruptedItems(any()) }
+        }
+
+    @Test
+    fun `an explicit start should still run on a metered connection when wifi-only is on`() =
+        runTest(testDispatcher) {
+            // The whole point of the gate being auto-only: a tap must never be silently swallowed.
+            setWifiOnly(true)
+            setMetered(true)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
             coVerify {
                 mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
             }

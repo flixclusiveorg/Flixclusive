@@ -10,6 +10,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
+import com.flixclusive.core.network.monitor.NetworkMonitor
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.hls.HlsManifestResolver
 import com.flixclusive.data.downloads.hls.HlsResolutionResult
@@ -46,6 +47,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     private val downloadDirectoryRepository: DownloadDirectoryRepository,
     private val getDownloadDirectoryUseCase: GetDownloadDirectoryUseCase,
     private val hlsManifestResolver: HlsManifestResolver,
+    private val networkMonitor: NetworkMonitor,
     private val mediaDownloadServiceController: MediaDownloadServiceController,
     private val dataStoreManager: DataStoreManager,
     private val appDispatchers: AppDispatchers,
@@ -74,6 +76,10 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     override fun resumeInterrupted() {
         scope.launch {
+            // Left as-is rather than requeued when held back: the rows stay in whatever state the
+            // dead process left them, and the next sweep on an unmetered connection recovers them.
+            if (!isAutoStartAllowed()) return@launch
+
             val live = dispatchMutex.withLock { activeItemIds.toList() }
             mediaDownloadRepository.requeueInterruptedItems(live)
             // Unconditional: the sweep may have found nothing, but plain QUEUED rows that never got
@@ -173,6 +179,20 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             .downloadConcurrencyLimit
             .coerceAtLeast(1)
 
+    /**
+     * Whether a download is allowed to start *on its own* right now. Gates only the automatic
+     * paths — the post-force-close sweep and the queue dispatcher. An explicit start/resume/retry
+     * deliberately bypasses this: a tap that silently does nothing is worse than the data it spends.
+     */
+    private suspend fun isAutoStartAllowed(): Boolean {
+        val wifiOnly = dataStoreManager
+            .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
+            .first()
+            .downloadOnWifiOnly
+
+        return !wifiOnly || !networkMonitor.isMetered.first()
+    }
+
     private suspend fun currentLinkSortDirection(): DownloadLinkSortDirection =
         dataStoreManager
             .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
@@ -210,6 +230,8 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     /** Fills every free concurrency slot with the oldest QUEUED items, FIFO, until none remain or the limit is hit. */
     private suspend fun dispatchNext() {
+        if (!isAutoStartAllowed()) return
+
         while (true) {
             val next = dispatchMutex.withLock {
                 if (activeItemIds.size >= currentConcurrencyLimit()) return
