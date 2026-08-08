@@ -261,4 +261,53 @@ class DownloadDaoTest {
             expectThat(batch[0].episodeNumber).isEqualTo(1)
             expectThat(batch[1].episodeNumber).isEqualTo(2)
         }
+
+    @Test
+    fun requeueByStatesShouldRequeueMatchingItemsWithTheGivenPhaseAndClearTheirRate() =
+        runTest {
+            downloadItemDao.insert(
+                testItem.copy(
+                    id = "downloading",
+                    state = DownloadItemState.DOWNLOADING_STREAM,
+                    downloadBytesPerSecond = 5_000,
+                )
+            )
+            downloadItemDao.insert(testItem.copy(id = "paused", state = DownloadItemState.PAUSED))
+
+            val requeued = downloadItemDao.requeueByStates(
+                from = listOf(DownloadItemState.DOWNLOADING_STREAM),
+                to = DownloadItemState.QUEUED,
+                phase = DownloadPhase.STREAM,
+                excludedIds = emptyList(),
+                updatedAt = Date(),
+            )
+
+            expectThat(requeued).isEqualTo(1)
+            val result = downloadItemDao.get("downloading")
+            expectThat(result?.state).isEqualTo(DownloadItemState.QUEUED)
+            expectThat(result?.phase).isEqualTo(DownloadPhase.STREAM)
+            expectThat(result?.downloadBytesPerSecond).isEqualTo(0L)
+            // A state the sweep doesn't list is the user's own choice and must survive it.
+            expectThat(downloadItemDao.get("paused")?.state).isEqualTo(DownloadItemState.PAUSED)
+        }
+
+    @Test
+    fun requeueByStatesShouldSkipExcludedIds() =
+        runTest {
+            downloadItemDao.insert(testItem.copy(id = "live", state = DownloadItemState.FETCHING_SUBTITLES))
+            downloadItemDao.insert(testItem.copy(id = "orphaned", state = DownloadItemState.STREAM_COMPLETE))
+
+            val requeued = downloadItemDao.requeueByStates(
+                from = listOf(DownloadItemState.FETCHING_SUBTITLES, DownloadItemState.STREAM_COMPLETE),
+                to = DownloadItemState.QUEUED,
+                phase = DownloadPhase.SUBTITLES,
+                excludedIds = listOf("live"),
+                updatedAt = Date(),
+            )
+
+            expectThat(requeued).isEqualTo(1)
+            expectThat(downloadItemDao.get("live")?.state).isEqualTo(DownloadItemState.FETCHING_SUBTITLES)
+            expectThat(downloadItemDao.get("orphaned")?.state).isEqualTo(DownloadItemState.QUEUED)
+            expectThat(downloadItemDao.get("orphaned")?.phase).isEqualTo(DownloadPhase.SUBTITLES)
+        }
 }

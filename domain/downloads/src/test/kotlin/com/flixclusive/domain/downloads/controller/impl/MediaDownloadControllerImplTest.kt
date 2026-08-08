@@ -38,6 +38,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -427,9 +428,10 @@ class MediaDownloadControllerImplTest {
                     any()
                 )
             } returns MediaTransferResult.Completed
-            // No interrupt pending before subtitle1, but one lands right after it completes.
+            // First null is the stream phase's own pre-transfer checkpoint, second is the one
+            // before subtitle1 — then a pause lands right after subtitle1 completes.
             coEvery { mediaDownloadRepository.consumeInterruptReason(itemId) } returnsMany
-                listOf(null, DownloadInterruptReason.PAUSE)
+                listOf(null, null, DownloadInterruptReason.PAUSE)
 
             controller.start(itemId)
             advanceUntilIdle()
@@ -682,6 +684,38 @@ class MediaDownloadControllerImplTest {
         }
 
     @Test
+    fun `start should resume into the subtitle phase for an item requeued as QUEUED with the SUBTITLES phase`() =
+        runTest(testDispatcher) {
+            // The shape resumeInterrupted() leaves a STREAM_COMPLETE/FETCHING_SUBTITLES row in: the
+            // video is already fully written, so re-entering the stream phase would refetch all of it.
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(
+                    state = DownloadItemState.QUEUED,
+                    phase = DownloadPhase.SUBTITLES,
+                    downloadedSubtitlesCount = 0,
+                    totalSubtitlesCount = 1,
+                )
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            val subtitle = cachedSubtitle("en", "https://s/en.srt")
+            coEvery { mediaLinksRepository.getLinks(ownerId, mediaId, null, null) } returns
+                listOf(MediaLinksWithData(media = media, subtitles = listOf(subtitle)))
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.SUBTITLES, subtitle.url, any(), any(), any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify(
+                exactly = 0
+            ) { mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, any()) }
+            coVerify(
+                exactly = 0
+            ) { mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any()) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
+        }
+
+    @Test
     fun `retry should reset chunks and requeue before restarting the download`() =
         runTest(testDispatcher) {
             coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(state = DownloadItemState.FAILED)
@@ -755,8 +789,7 @@ class MediaDownloadControllerImplTest {
     @Test
     fun `pause on an actively downloading item should request an interrupt instead of transitioning state directly`() =
         runTest(testDispatcher) {
-            coEvery { mediaDownloadRepository.getItem(itemId) } returns
-                testItem(state = DownloadItemState.DOWNLOADING_STREAM)
+            startGatedTransfer()
 
             controller.pause(itemId)
             advanceUntilIdle()
@@ -764,6 +797,117 @@ class MediaDownloadControllerImplTest {
             coVerify { mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE) }
             coVerify(exactly = 0) { mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, any()) }
         }
+
+    @Test
+    fun `stop on an actively downloading item should request an interrupt instead of transitioning state directly`() =
+        runTest(testDispatcher) {
+            startGatedTransfer()
+
+            controller.stop(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.STOP) }
+            coVerify(exactly = 0) { mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, any()) }
+        }
+
+    @Test
+    fun `stop on an item left DOWNLOADING_STREAM by a dead process should clean up and mark STOPPED`() =
+        runTest(testDispatcher) {
+            // Nothing was ever dispatched for this id, so no transfer is polling the interrupt flag —
+            // routing the stop through one would leave the row frozen as DOWNLOADING_STREAM forever.
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(state = DownloadItemState.DOWNLOADING_STREAM, phase = DownloadPhase.STREAM)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+
+            controller.stop(itemId)
+            advanceUntilIdle()
+
+            coVerify { directory.delete() }
+            coVerify { mediaDownloadRepository.resetChunks(itemId) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, null) }
+            coVerify(exactly = 0) { mediaDownloadRepository.requestInterrupt(any(), any()) }
+        }
+
+    @Test
+    fun `pause on an item left FETCHING_SUBTITLES by a dead process should transition it to PAUSED directly`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(state = DownloadItemState.FETCHING_SUBTITLES, phase = DownloadPhase.SUBTITLES)
+
+            controller.pause(itemId)
+            advanceUntilIdle()
+
+            // Keeps the phase, so resuming picks the subtitles back up instead of the whole video.
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, DownloadPhase.SUBTITLES) }
+            coVerify(exactly = 0) { mediaDownloadRepository.requestInterrupt(any(), any()) }
+        }
+
+    @Test
+    fun `pause on an orphaned STREAM_COMPLETE item should record the subtitle phase to resume at`() =
+        runTest(testDispatcher) {
+            // STREAM_COMPLETE carries no phase of its own, so pausing it verbatim would resume into
+            // the stream phase and refetch a video that is already fully written.
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(state = DownloadItemState.STREAM_COMPLETE, phase = null)
+
+            controller.pause(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, DownloadPhase.SUBTITLES) }
+        }
+
+    @Test
+    fun `resumeInterrupted should requeue the items a dead process left behind and dispatch them`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.requeueInterruptedItems(any()) } returns 1
+            coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns testItem() andThen null
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+
+            controller.resumeInterrupted()
+            advanceUntilIdle()
+
+            // Nothing is in flight at process start, so no id is shielded from the sweep.
+            coVerify { mediaDownloadRepository.requeueInterruptedItems(emptyList()) }
+            coVerify {
+                mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
+            }
+        }
+
+    @Test
+    fun `resumeInterrupted should leave an item that is already being transferred alone`() =
+        runTest(testDispatcher) {
+            startGatedTransfer()
+
+            controller.resumeInterrupted()
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.requeueInterruptedItems(listOf(itemId)) }
+        }
+
+    /**
+     * Starts [itemId] and parks it mid-transfer, so it is genuinely dispatched — the state both
+     * interrupt paths actually branch on, and the one a plain DB row can't stand in for.
+     */
+    private suspend fun TestScope.startGatedTransfer() {
+        coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+        coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+        coEvery {
+            mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+        } coAnswers {
+            CompletableDeferred<Unit>().await()
+            MediaTransferResult.Completed
+        }
+
+        controller.start(itemId)
+        advanceUntilIdle()
+
+        coEvery { mediaDownloadRepository.getItem(itemId) } returns
+            testItem(state = DownloadItemState.DOWNLOADING_STREAM, phase = DownloadPhase.STREAM)
+    }
 
     @Test
     fun `pauseBatch should pause every item returned for that media and season`() =

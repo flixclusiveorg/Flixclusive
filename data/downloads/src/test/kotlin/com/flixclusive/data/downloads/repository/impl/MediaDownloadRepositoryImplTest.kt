@@ -13,8 +13,10 @@ import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.hippo.unifile.UniFile
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -24,6 +26,7 @@ import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
+import strikt.assertions.isGreaterThan
 import strikt.assertions.isNull
 
 class MediaDownloadRepositoryImplTest {
@@ -352,7 +355,29 @@ class MediaDownloadRepositoryImplTest {
         }
 
     @Test
-    fun `runHlsTransfer should delegate to the hls transfer engine and clear any pending interrupt`() =
+    fun `runHlsTransfer should delegate to the hls transfer engine`() =
+        runTest {
+            val segments =
+                listOf(
+                    HlsSegmentInfo(
+                        url = "https://example.com/0.ts",
+                        byteRangeOffset = 0,
+                        byteRangeLength = -1,
+                        encryptionKeyUri = null,
+                        encryptionIv = null
+                    )
+                )
+            coEvery {
+                hlsTransferEngine.transfer(segments, 2, emptyMap(), destinationFile, any(), any())
+            } returns MediaTransferResult.Completed
+
+            val result = repository.runHlsTransfer(itemId, segments, 2, emptyMap(), destinationFile)
+
+            expectThat(result).isEqualTo(MediaTransferResult.Completed)
+        }
+
+    @Test
+    fun `runHlsTransfer should cancel up front on a pending interrupt, leaving it for the caller`() =
         runTest {
             val segments =
                 listOf(
@@ -365,15 +390,138 @@ class MediaDownloadRepositoryImplTest {
                     )
                 )
             repository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE)
-            coEvery {
-                hlsTransferEngine.transfer(segments, 2, emptyMap(), destinationFile, any(), any())
-            } returns MediaTransferResult.Completed
 
             val result = repository.runHlsTransfer(itemId, segments, 2, emptyMap(), destinationFile)
 
-            expectThat(result).isEqualTo(MediaTransferResult.Completed)
-            expectThat(repository.consumeInterruptReason(itemId)).isNull()
+            expectThat(result).isEqualTo(MediaTransferResult.Cancelled)
+            coVerify(exactly = 0) { hlsTransferEngine.transfer(any(), any(), any(), any(), any(), any()) }
+            // Left set, not wiped: the caller consumes it to decide between PAUSED and STOPPED.
+            expectThat(repository.consumeInterruptReason(itemId)).isEqualTo(DownloadInterruptReason.PAUSE)
         }
+
+    @Test
+    fun `runTransfer should cancel up front on a pending interrupt, leaving it for the caller`() =
+        runTest {
+            repository.requestInterrupt(itemId, DownloadInterruptReason.STOP)
+
+            val result = repository.runTransfer(
+                itemId,
+                DownloadPhase.STREAM,
+                "https://example.com/file",
+                emptyMap(),
+                destinationFile,
+                1000L
+            )
+
+            expectThat(result).isEqualTo(MediaTransferResult.Cancelled)
+            coVerify(exactly = 0) { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) }
+            expectThat(repository.consumeInterruptReason(itemId)).isEqualTo(DownloadInterruptReason.STOP)
+        }
+
+    @Test
+    fun `requeueInterruptedItems should requeue stream and subtitle phases into the phase each resumes at`() =
+        runTest {
+            coEvery { downloadItemDao.requeueByStates(any(), any(), any(), any(), any()) } returns 1
+
+            val requeued = repository.requeueInterruptedItems(listOf("live-item"))
+
+            expectThat(requeued).isEqualTo(2)
+            coVerify {
+                downloadItemDao.requeueByStates(
+                    listOf(DownloadItemState.DOWNLOADING_STREAM),
+                    DownloadItemState.QUEUED,
+                    DownloadPhase.STREAM,
+                    listOf("live-item"),
+                    any(),
+                )
+            }
+            coVerify {
+                downloadItemDao.requeueByStates(
+                    listOf(DownloadItemState.FETCHING_SUBTITLES, DownloadItemState.STREAM_COMPLETE),
+                    DownloadItemState.QUEUED,
+                    DownloadPhase.SUBTITLES,
+                    listOf("live-item"),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `progress rate should hold the last measured speed for three stalled samples then report zero`() =
+        runTest {
+            val rates = captureStreamRatesFor(
+                byteTotals = listOf(0L, 4_000L, 4_000L, 4_000L, 4_000L, 4_000L),
+            )
+
+            expectThat(rates).hasSize(6)
+            // Nothing to diff the very first sample against.
+            expectThat(rates[0]).isEqualTo(0L)
+            expectThat(rates[1]).isGreaterThan(0L)
+            // Three consecutive stalled samples replay the last measured speed…
+            expectThat(rates.subList(2, 5)).isEqualTo(listOf(rates[1], rates[1], rates[1]))
+            // …and the fourth gives up on it.
+            expectThat(rates[5]).isEqualTo(0L)
+        }
+
+    @Test
+    fun `progress rate should restart its hold window once bytes start moving again`() =
+        runTest {
+            val rates = captureStreamRatesFor(
+                byteTotals = listOf(0L, 4_000L, 4_000L, 8_000L, 8_000L, 8_000L, 8_000L, 8_000L),
+            )
+
+            // Index 3 moves again, so the two stalled samples before it don't count towards the
+            // window — indices 4..6 hold at the new speed and only index 7 falls back to zero.
+            expectThat(rates[3]).isGreaterThan(0L)
+            expectThat(rates.subList(4, 7)).isEqualTo(listOf(rates[3], rates[3], rates[3]))
+            expectThat(rates[7]).isEqualTo(0L)
+        }
+
+    /**
+     * Drives one STREAM transfer whose chunk total walks through [byteTotals], and returns the rate
+     * persisted for each. Progress is reported as [DownloadChunkStatus.COMPLETED] so every sample
+     * bypasses the one-second write throttle, and each is separated by a real (tiny) sleep because
+     * the repository derives its rate from the wall clock.
+     */
+    private suspend fun captureStreamRatesFor(byteTotals: List<Long>): List<Long> {
+        val rates = mutableListOf<Long>()
+        coEvery { downloadItemDao.updateStreamProgress(itemId, any(), any(), capture(rates), any()) } just Runs
+        coEvery { downloadChunkDao.getChunksForItem(itemId) } returnsMany
+            // The first read is runTransfer's own chunk lookup, before any progress is reported.
+            (listOf(0L) + byteTotals).map { listOf(chunkWith(bytesDownloaded = it)) }
+        coEvery { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) } coAnswers {
+            val onProgress = arg<suspend (Long, Long, DownloadChunkStatus) -> Unit>(5)
+            repeat(byteTotals.size) {
+                Thread.sleep(RATE_SAMPLE_SPACING_MS)
+                onProgress(1, 10_000, DownloadChunkStatus.COMPLETED)
+            }
+            MediaTransferResult.Completed
+        }
+
+        repository.runTransfer(
+            itemId,
+            DownloadPhase.STREAM,
+            "https://example.com/file",
+            emptyMap(),
+            destinationFile,
+            10_000L
+        )
+
+        return rates
+    }
+
+    private fun chunkWith(bytesDownloaded: Long) = DownloadChunk(
+        id = 1,
+        downloadItemId = itemId,
+        chunkIndex = 0,
+        rangeStart = 0,
+        rangeEnd = 9_999,
+        bytesDownloaded = bytesDownloaded,
+    )
+
+    private companion object {
+        const val RATE_SAMPLE_SPACING_MS = 5L
+    }
 
     @Test
     fun `runHlsTransfer progress callback should write segment counts to the item`() =

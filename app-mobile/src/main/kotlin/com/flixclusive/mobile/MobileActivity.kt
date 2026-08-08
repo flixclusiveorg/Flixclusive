@@ -38,6 +38,7 @@ internal class MobileActivity : ComponentActivity() {
         }
 
         observeProviderUpdateInfo()
+        resumeInterruptedDownloads()
         installSplashScreen()
 
         setContent {
@@ -57,6 +58,17 @@ internal class MobileActivity : ComponentActivity() {
         viewModel.hideWebViewDriver()
         viewModel.onReleasePlayerCache()
         super.onDestroy()
+    }
+
+    /** Picks downloads back up after a force close. Gated on STARTED rather than run straight from
+     * [onCreate], since the sweep starts a foreground service and Android 12+ only allows that
+     * while the app is genuinely in the foreground. */
+    private fun resumeInterruptedDownloads() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.onResumeInterruptedDownloads()
+            }
+        }
     }
 
     private fun observeProviderUpdateInfo() {

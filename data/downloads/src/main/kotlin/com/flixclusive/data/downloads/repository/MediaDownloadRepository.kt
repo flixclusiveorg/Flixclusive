@@ -40,6 +40,17 @@ interface MediaDownloadRepository {
         phase: DownloadPhase?,
     )
 
+    /**
+     * Requeues every item left mid-transfer by a process death — [DownloadItemState.DOWNLOADING_STREAM],
+     * [DownloadItemState.FETCHING_SUBTITLES] and [DownloadItemState.STREAM_COMPLETE] — back to
+     * [DownloadItemState.QUEUED] with the phase they should resume into, so the dispatcher picks
+     * them up again. [DownloadItemState.PAUSED] is deliberately left alone: that one was the user's
+     * choice. Items in [excludedIds] are skipped, for when a live transfer is already driving them.
+     *
+     * @return how many rows were requeued.
+     */
+    suspend fun requeueInterruptedItems(excludedIds: List<String>): Int
+
     suspend fun markError(
         id: String,
         message: String,

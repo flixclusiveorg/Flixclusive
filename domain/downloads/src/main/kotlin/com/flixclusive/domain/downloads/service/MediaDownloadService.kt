@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import com.flixclusive.core.strings.R as LocaleR
 
 /**
  * Reuses [com.flixclusive.data.downloads.service.DownloadService]'s notification channel id and
@@ -106,6 +107,11 @@ class MediaDownloadService : Service() {
 
         setupWakeLock()
         startObservingActiveItems()
+
+        // Covers the START_STICKY path: the OS revives this service after a process death with a
+        // null intent and no activity in sight, so nothing else would ever restart the transfers
+        // that death interrupted. Idempotent, and items already being transferred are left alone.
+        mediaDownloadController.resumeInterrupted()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -382,7 +388,7 @@ class MediaDownloadService : Service() {
         when (item.state) {
             DownloadItemState.DOWNLOADING_STREAM -> {
                 val percent = percentOf(item.streamBytesDownloaded, item.streamTotalBytes)
-                val speedSuffix = formatSpeedSuffix(item.downloadBytesPerSecond, isSegments = item.isHlsStream)
+                val speedSuffix = formatSpeedSuffix(item, isSegments = item.isHlsStream)
                 val text = when {
                     // HLS reuses these same columns for a segment count, not a byte count — running
                     // it through formatSize() would render a handful of segments as a bogus "1 KB".
@@ -400,7 +406,7 @@ class MediaDownloadService : Service() {
                 val percent = percentOf(item.downloadedSubtitlesCount.toLong(), item.totalSubtitlesCount.toLong())
                 // Subtitle transfers are always plain file downloads, regardless of whether the
                 // stream itself was HLS — never render this one as "segments/s".
-                val speedSuffix = formatSpeedSuffix(item.downloadBytesPerSecond, isSegments = false)
+                val speedSuffix = formatSpeedSuffix(item, isSegments = false)
                 percent to "${item.downloadedSubtitlesCount}/${item.totalSubtitlesCount}$speedSuffix"
             }
             DownloadItemState.PAUSED -> null to "Paused"
@@ -413,18 +419,23 @@ class MediaDownloadService : Service() {
 
     private fun formatSize(bytes: Long): String = Formatter.formatShortFileSize(this, bytes)
 
-    /** `" • 1.2 MB/s"` (or `" • 3 segments/s"` for HLS). Never hides — a rate of `0`, e.g. on the
-     * very first progress tick before there's a prior sample to diff against, renders as
-     * `" • Calculating speed…"` instead of vanishing, matching how browser download managers show
-     * a live placeholder rather than blanking the row while a speed estimate isn't ready yet. */
-    private fun formatSpeedSuffix(bytesPerSecond: Long, isSegments: Boolean): String {
-        if (bytesPerSecond <= 0) return " • Calculating speed…"
-
-        return if (isSegments) {
-            " • $bytesPerSecond segments/s"
-        } else {
-            " • ${formatSize(bytesPerSecond)}/s"
+    /** `" • 1.2 MB/s"` (or `" • 3 segments/s"` for HLS). Mirrors the download card: the
+     * `"Calculating speed…"` placeholder is only for a download that hasn't moved a byte yet, since
+     * once something has transferred a zero rate means the transfer has genuinely stalled — and
+     * `" • 0 B/s"` says that far more honestly than a placeholder that never resolves. */
+    private fun formatSpeedSuffix(item: DownloadItem, isSegments: Boolean): String {
+        val hasTransferred = item.streamBytesDownloaded > 0 || item.downloadedSubtitlesCount > 0
+        if (item.downloadBytesPerSecond <= 0 && !hasTransferred) {
+            return " • ${getString(LocaleR.string.download_progress_speed_calculating)}"
         }
+
+        val speed = if (isSegments) {
+            getString(LocaleR.string.download_progress_speed_segments_format, item.downloadBytesPerSecond)
+        } else {
+            getString(LocaleR.string.download_progress_speed_format, formatSize(item.downloadBytesPerSecond))
+        }
+
+        return " • $speed"
     }
 
     private fun actionPendingIntent(action: String, itemId: String): PendingIntent {
