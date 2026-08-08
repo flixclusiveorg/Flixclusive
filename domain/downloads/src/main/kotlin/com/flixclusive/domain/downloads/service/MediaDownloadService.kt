@@ -37,6 +37,11 @@ import com.flixclusive.core.strings.R as LocaleR
  * throttle/wake-lock/auto-stop pattern; kept as a separate class per Req 2 since the two services
  * model entirely different states (chunked pause/resume/batch vs. single-shot install downloads)
  * and the original's Intent/extras contract has no room for either.
+ *
+ * Worth knowing before assuming this can run indefinitely: Android 14+ caps `dataSync` foreground
+ * services at roughly six hours a day, after which the system stops the service. Nothing here
+ * detects that yet — a download session long enough to hit it will simply end, and the startup
+ * sweep in [MediaDownloadController.resumeInterrupted] is what picks the pieces back up.
  */
 @AndroidEntryPoint
 class MediaDownloadService : Service() {
@@ -138,6 +143,18 @@ class MediaDownloadService : Service() {
         wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS)
     }
 
+    /**
+     * Re-arms the wake lock while work remains. The lock is deliberately taken with a timeout — one
+     * without is a battery drain that outlives any bug that strands it — but that meant a download
+     * running longer than [WAKE_LOCK_TIMEOUT_MS] silently lost it and the device could sleep
+     * mid-transfer. Renewing from the progress observer costs nothing and bounds the damage of a
+     * stranded lock to one timeout window.
+     */
+    private fun renewWakeLock() {
+        if (!::wakeLock.isInitialized || wakeLock.isHeld) return
+        wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS)
+    }
+
     private fun startObservingActiveItems() {
         observerJob = serviceScope.launch {
             mediaDownloadRepository.observeAllItems().collectLatest { items ->
@@ -160,6 +177,7 @@ class MediaDownloadService : Service() {
                 }
 
                 stopServiceJob?.cancel()
+                renewWakeLock()
                 safeStartForeground(SUMMARY_NOTIFICATION_ID, buildSummaryNotification(activeItems.size))
 
                 // QUEUED items are collapsed into a single count notification instead of one each —
@@ -464,5 +482,7 @@ class MediaDownloadService : Service() {
     }
 }
 
+/** Renewed from the progress observer for as long as work remains — see `renewWakeLock`. Downloads
+ * routinely outlast this on their own. */
 private const val WAKE_LOCK_TIMEOUT_MS = 30 * 60 * 1000L
 private const val SERVICE_STOP_DELAY_MS = 5000L
