@@ -20,8 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +40,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun DownloadItemCard(
-    item: () -> DownloadItem,
+    item: DownloadItem,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onStop: () -> Unit,
@@ -52,17 +50,11 @@ internal fun DownloadItemCard(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val isDimmed by remember {
-        derivedStateOf { item().state == DownloadItemState.STOPPED }
-    }
+    val isDimmed = item.state == DownloadItemState.STOPPED
 
-    /** A stopped or failed item isn't going anywhere, so its last progress reading is noise —
-     * worse, a half-filled bar reads as though the download were still on its way. */
-    val hidesProgress by remember {
-        derivedStateOf {
-            item().state == DownloadItemState.STOPPED || item().state == DownloadItemState.FAILED
-        }
-    }
+    // A stopped or failed item isn't going anywhere, so its last progress reading is noise —
+    // worse, a half-filled bar reads as though the download were still on its way.
+    val hidesProgress = isDimmed || item.state == DownloadItemState.FAILED
 
     Surface(
         modifier = modifier
@@ -74,7 +66,7 @@ internal fun DownloadItemCard(
     ) {
         Column(modifier = Modifier.padding(12.dp).animateContentSize()) {
             Row(verticalAlignment = Alignment.Top) {
-                Crossfade(targetState = item().state, label = "DownloadItemStatusIcon") { state ->
+                Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
                     Icon(
                         painter = painterResource(downloadStateIcon(state)),
                         contentDescription = null,
@@ -93,19 +85,19 @@ internal fun DownloadItemCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = item().mediaTitle,
+                        text = item.mediaTitle,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                     )
 
                     Text(
-                        text = item().subtitleLabel(),
+                        text = item.subtitleLabel(),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                     )
 
-                    if (item().state == DownloadItemState.COMPLETED) {
+                    if (item.state == DownloadItemState.COMPLETED) {
                         Text(
-                            text = item().completedSummary(),
+                            text = item.completedSummary(),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
@@ -113,7 +105,7 @@ internal fun DownloadItemCard(
                 }
 
                 DownloadItemActions(
-                    state = item().state,
+                    state = item.state,
                     onPause = onPause,
                     onResume = onResume,
                     onStop = onStop,
@@ -127,27 +119,21 @@ internal fun DownloadItemCard(
             // e.g. the stream row stays visible once fetching subtitles starts, not just while
             // DOWNLOADING_STREAM is active, and vice versa. See [hidesProgress] for the states
             // that opt out entirely.
-            val hasStreamProgress by remember {
-                derivedStateOf { item().streamTotalBytes > 0 }
-            }
-            if (hasStreamProgress && !hidesProgress) {
+            if (item.streamTotalBytes > 0 && !hidesProgress) {
                 Spacer(modifier = Modifier.height(8.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_video_label),
-                    progress = { item().streamProgress() },
-                    valueText = { item().streamValueText(context) },
+                    progress = { item.streamProgress() },
+                    valueText = remember(item) { item.streamValueText(context) },
                 )
             }
 
-            val hasSubtitles by remember {
-                derivedStateOf { item().totalSubtitlesCount > 0 }
-            }
-            if (hasSubtitles && !hidesProgress) {
+            if (item.totalSubtitlesCount > 0 && !hidesProgress) {
                 Spacer(modifier = Modifier.height(4.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_subtitles_label),
-                    progress = { item().subtitlesProgress() },
-                    valueText = { "${item().downloadedSubtitlesCount} / ${item().totalSubtitlesCount}" },
+                    progress = { item.subtitlesProgress() },
+                    valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
                 )
             }
 
@@ -156,17 +142,13 @@ internal fun DownloadItemCard(
             // as fresh rate samples land. STREAM_COMPLETE counts as active for the same reason:
             // it's the brief handover into subtitle fetching, and dropping the row there made the
             // speed blink out mid-download.
-            val isActivelyDownloading by remember {
-                derivedStateOf {
-                    item().state == DownloadItemState.DOWNLOADING_STREAM ||
-                        item().state == DownloadItemState.STREAM_COMPLETE ||
-                        item().state == DownloadItemState.FETCHING_SUBTITLES
-                }
-            }
+            val isActivelyDownloading = item.state == DownloadItemState.DOWNLOADING_STREAM ||
+                item.state == DownloadItemState.STREAM_COMPLETE ||
+                item.state == DownloadItemState.FETCHING_SUBTITLES
 
             if (isActivelyDownloading) {
                 Text(
-                    text = item().downloadSpeedText(context),
+                    text = remember(item) { item.downloadSpeedText(context) },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     modifier = Modifier
@@ -182,7 +164,7 @@ internal fun DownloadItemCard(
 private fun DownloadProgressRow(
     label: String,
     progress: () -> Float,
-    valueText: () -> String,
+    valueText: String,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -205,7 +187,7 @@ private fun DownloadProgressRow(
         )
 
         Text(
-            text = valueText(),
+            text = valueText,
             style = MaterialTheme.typography.labelSmall,
         )
     }

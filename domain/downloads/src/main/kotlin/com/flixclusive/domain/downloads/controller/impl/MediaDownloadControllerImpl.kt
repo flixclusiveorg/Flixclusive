@@ -79,7 +79,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         scope.launch {
             // Left as-is rather than requeued when held back: the rows stay in whatever state the
             // dead process left them, and the next sweep on an unmetered connection recovers them.
-            if (!isAutoStartAllowed()) return@launch
+            if (!isNetworkAllowed()) return@launch
 
             val live = dispatchMutex.withLock { activeItemIds.toList() }
             mediaDownloadRepository.requeueInterruptedItems(live)
@@ -181,17 +181,24 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             .coerceAtLeast(1)
 
     /**
-     * Whether a download is allowed to start *on its own* right now. Gates only the automatic
-     * paths — the post-force-close sweep and the queue dispatcher. An explicit start/resume/retry
-     * deliberately bypasses this: a tap that silently does nothing is worse than the data it spends.
+     * Whether any transfer may begin on the connection the device is on right now.
+     *
+     * Gates every path that starts a download, explicit taps included — the preference promises
+     * downloads happen on Wi-Fi, not merely that they resume there. A blocked item is still queued
+     * and still listed, so a tap leaves something visible behind rather than appearing to do
+     * nothing, and it starts by itself once an unmetered connection is back.
      */
-    private suspend fun isAutoStartAllowed(): Boolean {
+    private suspend fun isNetworkAllowed(): Boolean {
         val wifiOnly = dataStoreManager
             .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
             .first()
             .downloadOnWifiOnly
 
-        return !wifiOnly || !networkMonitor.isMetered.first()
+        // isMeteredNow(), not isMetered.first(): the flow is shared with WhileSubscribed, so a
+        // one-shot collect replays whatever was last observed rather than reading the connection
+        // the device is on at this moment — which let downloads start on mobile data after a
+        // switch away from Wi-Fi.
+        return !wifiOnly || !networkMonitor.isMeteredNow()
     }
 
     private suspend fun currentLinkSortDirection(): DownloadLinkSortDirection =
@@ -216,6 +223,9 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     /** Runs [itemId] now if a concurrency slot is free; otherwise it stays QUEUED for [dispatchNext] to pick up. */
     private suspend fun dispatchOrQueue(itemId: String) {
+        // Covers start/resume/retry. The item is already persisted as QUEUED by the time it gets
+        // here, so bailing out leaves it listed and waiting rather than losing the request.
+        if (!isNetworkAllowed()) return
         if (!tryReserveSlot(itemId)) return
 
         mediaDownloadServiceController.ensureRunning()
@@ -231,7 +241,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     /** Fills every free concurrency slot with the oldest QUEUED items, FIFO, until none remain or the limit is hit. */
     private suspend fun dispatchNext() {
-        if (!isAutoStartAllowed()) return
+        if (!isNetworkAllowed()) return
 
         while (true) {
             val next = dispatchMutex.withLock {
@@ -512,7 +522,12 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         // A full disk, a revoked folder permission or a dropped connection would fail identically
         // against every other candidate — walking the list would just blacklist all of them and
         // leave a later retry with nothing to try. Stop here and keep the link cache intact.
-        if (TransferFailure.of(result.cause) == TransferFailure.ENVIRONMENT) {
+        //
+        // Connectivity is checked here rather than inside the classifier because being offline
+        // isn't something the exception can tell us: a dead host and an absent network throw alike.
+        val isEnvironmentFault = TransferFailure.of(result.cause) == TransferFailure.ENVIRONMENT ||
+            !networkMonitor.isOnlineNow()
+        if (isEnvironmentFault) {
             return fail(itemId, result.cause.message ?: "Download failed")
         }
 

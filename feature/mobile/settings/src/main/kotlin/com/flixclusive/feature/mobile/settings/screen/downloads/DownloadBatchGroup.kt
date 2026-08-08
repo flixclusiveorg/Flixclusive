@@ -15,8 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +31,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun DownloadBatchGroup(
-    entry: () -> DownloadListEntry.Batch,
+    entry: DownloadListEntry.Batch,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
     onPauseBatch: () -> Unit,
@@ -46,14 +44,13 @@ internal fun DownloadBatchGroup(
     onOpen: (DownloadItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val canPauseBatch by remember {
-        derivedStateOf { entry().items.any { !it.state.isTerminal && it.state != DownloadItemState.PAUSED } }
+    // Keyed on the item list rather than derived: these scan every episode, so they should be
+    // recomputed when that list actually changes and not on each unrelated recomposition.
+    val canPauseBatch = remember(entry.items) {
+        entry.items.any { !it.state.isTerminal && it.state != DownloadItemState.PAUSED }
     }
-    val canStopBatch by remember {
-        derivedStateOf { entry().items.any { !it.state.isTerminal } }
-    }
-
-    val itemsSize by remember { derivedStateOf { entry().items.size } }
+    val canStopBatch = remember(entry.items) { entry.items.any { !it.state.isTerminal } }
+    val itemsSize = entry.items.size
 
     Column(modifier = modifier) {
         Surface(
@@ -68,14 +65,14 @@ internal fun DownloadBatchGroup(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = remember { entry().mediaTitle },
+                            text = entry.mediaTitle,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                         )
 
                         Text(
                             text = stringResource(
                                 LocaleR.string.season_number_format,
-                                remember { entry().seasonNumber }
+                                entry.seasonNumber
                             ) +
                                 " • " +
                                 pluralStringResource(
@@ -128,9 +125,9 @@ internal fun DownloadBatchGroup(
                     .padding(start = 20.dp, top = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                entry().items.forEach { item ->
+                entry.items.forEach { item ->
                     DownloadItemCard(
-                        item = { item },
+                        item = item,
                         onPause = { onPause(item.id) },
                         onResume = { onResume(item.id) },
                         onStop = { onStop(item.id) },

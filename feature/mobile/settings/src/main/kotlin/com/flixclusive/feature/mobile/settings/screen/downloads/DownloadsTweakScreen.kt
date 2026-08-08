@@ -49,13 +49,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.downloads.DownloadItem
-import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
@@ -306,10 +306,13 @@ private fun DownloadsEntriesList(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(entriesProvider(), key = { it.key() }) { entry ->
+                items(
+                    items = entriesProvider(),
+                    key = { it.key() }
+                ) { entry ->
                     when (entry) {
                         is DownloadListEntry.Single -> DownloadItemCard(
-                            item = { entry.item },
+                            item = entry.item,
                             onPause = { onPause(entry.item.id) },
                             onResume = { onResume(entry.item.id) },
                             onStop = { onStop(entry.item.id) },
@@ -323,7 +326,7 @@ private fun DownloadsEntriesList(
                             var isExpanded by rememberSaveable { mutableStateOf(false) }
 
                             DownloadBatchGroup(
-                                entry = { entry },
+                                entry = entry,
                                 isExpanded = isExpanded,
                                 onToggleExpand = { isExpanded = !isExpanded },
                                 onPauseBatch = { onPauseBatch(entry.mediaId, entry.seasonNumber) },

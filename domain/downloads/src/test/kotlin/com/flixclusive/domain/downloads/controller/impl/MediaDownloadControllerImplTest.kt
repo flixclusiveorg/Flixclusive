@@ -144,7 +144,11 @@ class MediaDownloadControllerImplTest {
     }
 
     private fun setMetered(metered: Boolean) {
-        every { networkMonitor.isMetered } returns flowOf(metered)
+        every { networkMonitor.isMeteredNow() } returns metered
+    }
+
+    private fun setOnline(online: Boolean) {
+        every { networkMonitor.isOnlineNow() } returns online
     }
 
     @Before
@@ -163,6 +167,7 @@ class MediaDownloadControllerImplTest {
         // Unmetered by default so the Wi-Fi-only gate never interferes with tests that aren't
         // about it; the gating tests set this explicitly.
         setMetered(false)
+        setOnline(true)
         coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns null
         // Relaxed mocks default an unstubbed enum-returning call to its first declared constant
         // rather than null, so without this every runSubtitlePhase() per-file interrupt pre-check
@@ -740,6 +745,43 @@ class MediaDownloadControllerImplTest {
         }
 
     @Test
+    fun `a transfer failure while offline should not mark the link dead`() =
+        runTest(testDispatcher) {
+            // Offline fails identically against every candidate, so walking the list would empty
+            // the link cache and leave a retry-after-reconnect with nothing to try.
+            setOnline(false)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Failed(IOException("Chunk request failed: 502"))
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { mediaLinksRepository.setLinkStatus(any(), any(), any()) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null) }
+        }
+
+    @Test
+    fun `a transfer failure while online should still mark the link dead`() =
+        runTest(testDispatcher) {
+            setOnline(true)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Failed(IOException("Chunk request failed: 404"))
+            coEvery { resolveDownloadableStreamUseCase(any(), any(), any(), any()) } returns
+                Async.Failure(UiText.from("nothing reachable"))
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaLinksRepository.setLinkStatus("https://example.com/stream.mp4", ownerId, isDead = true) }
+        }
+
+    @Test
     fun `start should reset chunks when the persisted stream file has gone missing`() =
         runTest(testDispatcher) {
             // Deleted from under us by a file manager: the chunk rows still claim bytes that are no
@@ -983,10 +1025,30 @@ class MediaDownloadControllerImplTest {
         }
 
     @Test
-    fun `an explicit start should still run on a metered connection when wifi-only is on`() =
+    fun `an explicit start should not transfer on a metered connection when wifi-only is on`() =
         runTest(testDispatcher) {
-            // The whole point of the gate being auto-only: a tap must never be silently swallowed.
+            // The setting promises downloads happen on Wi-Fi, not just that they resume there — so
+            // a tap is held back too. The row stays QUEUED, so the request is visible, not lost.
             setWifiOnly(true)
+            setMetered(true)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) {
+                mediaDownloadRepository.runTransfer(any(), any(), any(), any(), any(), any())
+            }
+            coVerify(exactly = 0) {
+                mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, any())
+            }
+        }
+
+    @Test
+    fun `an explicit start should run on a metered connection when wifi-only is off`() =
+        runTest(testDispatcher) {
+            setWifiOnly(false)
             setMetered(true)
             coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory

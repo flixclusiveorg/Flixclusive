@@ -116,6 +116,12 @@ internal class NetworkMonitorImpl @Inject constructor(
             replay = 1,
         )
 
+    override fun isMeteredNow(): Boolean =
+        context.getSystemService<ConnectivityManager>()?.isCurrentlyMetered() ?: true
+
+    override fun isOnlineNow(): Boolean =
+        context.getSystemService<ConnectivityManager>()?.isCurrentlyConnected() ?: false
+
     /** No active network, or no capabilities to read, counts as metered — see [NetworkMonitor.isMetered]. */
     @Suppress("DEPRECATION")
     private fun ConnectivityManager.isCurrentlyMetered(): Boolean {
