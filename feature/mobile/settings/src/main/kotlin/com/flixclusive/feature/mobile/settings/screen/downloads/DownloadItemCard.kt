@@ -50,16 +50,16 @@ internal fun DownloadItemCard(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val isDimmed = item.state == DownloadItemState.STOPPED
+    val isStopped = item.state == DownloadItemState.STOPPED
 
-    // A stopped or failed item isn't going anywhere, so its last progress reading is noise —
-    // worse, a half-filled bar reads as though the download were still on its way.
-    val hidesProgress = isDimmed || item.state == DownloadItemState.FAILED
+    val isDownloading = item.state == DownloadItemState.DOWNLOADING_STREAM ||
+        item.state == DownloadItemState.STREAM_COMPLETE ||
+        item.state == DownloadItemState.FETCHING_SUBTITLES
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .graphicsLayer { alpha = if (isDimmed) 0.6f else 1f }
+            .graphicsLayer { alpha = if (isStopped) 0.6f else 1f }
             .clip(MaterialTheme.shapes.medium),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium,
@@ -115,38 +115,25 @@ internal fun DownloadItemCard(
                 )
             }
 
-            // Shown whenever there's data to report, regardless of the item's current phase —
-            // e.g. the stream row stays visible once fetching subtitles starts, not just while
-            // DOWNLOADING_STREAM is active, and vice versa. See [hidesProgress] for the states
-            // that opt out entirely.
-            if (item.streamTotalBytes > 0 && !hidesProgress) {
-                Spacer(modifier = Modifier.height(8.dp))
-                DownloadProgressRow(
-                    label = stringResource(LocaleR.string.download_progress_video_label),
-                    progress = { item.streamProgress() },
-                    valueText = remember(item) { item.streamValueText(context) },
-                )
-            }
+            if (isDownloading) {
+                if (item.streamTotalBytes > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DownloadProgressRow(
+                        label = stringResource(LocaleR.string.download_progress_video_label),
+                        progress = { item.streamProgress() },
+                        valueText = remember(item) { item.streamValueText(context) },
+                    )
+                }
 
-            if (item.totalSubtitlesCount > 0 && !hidesProgress) {
-                Spacer(modifier = Modifier.height(4.dp))
-                DownloadProgressRow(
-                    label = stringResource(LocaleR.string.download_progress_subtitles_label),
-                    progress = { item.subtitlesProgress() },
-                    valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
-                )
-            }
+                if (item.totalSubtitlesCount > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    DownloadProgressRow(
+                        label = stringResource(LocaleR.string.download_progress_subtitles_label),
+                        progress = { item.subtitlesProgress() },
+                        valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
+                    )
+                }
 
-            // Below whichever progress row(s) are showing, and visible for the whole active stretch
-            // rather than only while a nonzero rate is available, so it never flickers in and out
-            // as fresh rate samples land. STREAM_COMPLETE counts as active for the same reason:
-            // it's the brief handover into subtitle fetching, and dropping the row there made the
-            // speed blink out mid-download.
-            val isActivelyDownloading = item.state == DownloadItemState.DOWNLOADING_STREAM ||
-                item.state == DownloadItemState.STREAM_COMPLETE ||
-                item.state == DownloadItemState.FETCHING_SUBTITLES
-
-            if (isActivelyDownloading) {
                 Text(
                     text = remember(item) { item.downloadSpeedText(context) },
                     style = MaterialTheme.typography.labelSmall,
