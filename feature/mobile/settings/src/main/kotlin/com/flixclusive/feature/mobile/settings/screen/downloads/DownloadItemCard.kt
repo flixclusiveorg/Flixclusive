@@ -116,11 +116,20 @@ internal fun DownloadItemCard(
             }
 
             if (isDownloading) {
-                if (item.streamTotalBytes > 0) {
+                // Bytes moving with no known total is normal — a server can decline to send a
+                // content length, and the single-chunk fallback for one that ignores Range has no
+                // total either. Show the row anyway, indeterminate, rather than hiding the whole
+                // download until a number nobody is going to send turns up.
+                val hasStreamProgress = item.streamTotalBytes > 0 || item.streamBytesDownloaded > 0
+                if (hasStreamProgress) {
                     Spacer(modifier = Modifier.height(8.dp))
                     DownloadProgressRow(
                         label = stringResource(LocaleR.string.download_progress_video_label),
-                        progress = { item.streamProgress() },
+                        progress = if (item.streamTotalBytes > 0) {
+                            { item.streamProgress() }
+                        } else {
+                            null
+                        },
                         valueText = remember(item) { item.streamValueText(context) },
                     )
                 }
@@ -147,10 +156,15 @@ internal fun DownloadItemCard(
     }
 }
 
+/**
+ * @param progress `null` when the total isn't known — a server that sends no content length still
+ * transfers bytes, and a bar pinned at 0% would read as a download that never started. The
+ * indeterminate indicator says "moving, length unknown", which is the honest answer.
+ */
 @Composable
 private fun DownloadProgressRow(
     label: String,
-    progress: () -> Float,
+    progress: (() -> Float)?,
     valueText: String,
     modifier: Modifier = Modifier,
 ) {
@@ -164,14 +178,20 @@ private fun DownloadProgressRow(
             modifier = Modifier.width(72.dp),
         )
 
-        LinearProgressIndicator(
-            progress = progress,
-            drawStopIndicator = {},
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 8.dp)
-                .clip(CircleShape),
-        )
+        val indicatorModifier = Modifier
+            .weight(1f)
+            .padding(horizontal = 8.dp)
+            .clip(CircleShape)
+
+        if (progress == null) {
+            LinearProgressIndicator(modifier = indicatorModifier)
+        } else {
+            LinearProgressIndicator(
+                progress = progress,
+                drawStopIndicator = {},
+                modifier = indicatorModifier,
+            )
+        }
 
         Text(
             text = valueText,
@@ -271,8 +291,19 @@ private fun DownloadItem.subtitlesProgress(): Float {
     return (downloadedSubtitlesCount.toFloat() / totalSubtitlesCount.toFloat()).coerceIn(0f, 1f)
 }
 
+/** Drops the "/ total" half when there isn't one — `"512 KB / 0 B"` reads as a download that has
+ * overshot a zero-length file rather than one whose length was never advertised. */
 private fun DownloadItem.streamValueText(context: Context): String {
+    val hasTotal = streamTotalBytes > 0
+
     if (isHlsStream) {
+        if (!hasTotal) {
+            return context.getString(
+                LocaleR.string.download_progress_segments_only_format,
+                streamBytesDownloaded.toInt(),
+            )
+        }
+
         return context.getString(
             LocaleR.string.download_progress_segments_format,
             streamBytesDownloaded.toInt(),
@@ -281,6 +312,8 @@ private fun DownloadItem.streamValueText(context: Context): String {
     }
 
     val downloaded = Formatter.formatShortFileSize(context, streamBytesDownloaded)
+    if (!hasTotal) return downloaded
+
     val total = Formatter.formatShortFileSize(context, streamTotalBytes)
     return "$downloaded / $total"
 }
@@ -313,7 +346,8 @@ private fun DownloadItem.downloadSpeedText(context: Context): String {
 @Composable
 private fun DownloadItem.completedSummary(): String {
     val context = LocalContext.current
-    val size = Formatter.formatShortFileSize(context, streamTotalBytes)
+    val totalSize = if (streamTotalBytes > 0) streamTotalBytes else streamBytesDownloaded
+    val size = Formatter.formatShortFileSize(context, totalSize)
 
     if (totalSubtitlesCount <= 0) return size
 

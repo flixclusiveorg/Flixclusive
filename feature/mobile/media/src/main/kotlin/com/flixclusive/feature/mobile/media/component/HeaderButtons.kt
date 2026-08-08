@@ -362,11 +362,18 @@ private fun DownloadButtonIcon(
         modifier = Modifier.size(dp + DownloadProgressRingPadding * 2),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(
-            progress = { status().progress },
-            strokeWidth = 2.dp,
-            modifier = Modifier.matchParentSize(),
-        )
+        if (status().isProgressKnown) {
+            CircularProgressIndicator(
+                progress = { status().progress },
+                strokeWidth = 2.dp,
+                modifier = Modifier.matchParentSize(),
+            )
+        } else {
+            CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
         AdaptiveIcon(
             painter = painterResource(drawable),
             contentDescription = label,

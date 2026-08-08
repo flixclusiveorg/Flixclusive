@@ -342,8 +342,14 @@ class MediaDownloadService : Service() {
             .setGroup(NOTIFICATION_GROUP_KEY)
             .setOngoing(true)
 
-        if (progress != null) {
-            builder.setProgress(100, progress, false)
+        // An active transfer with no known total gets an indeterminate bar rather than one pinned
+        // at 0% — same reasoning as the download card: bytes are moving, the length just wasn't
+        // advertised, and a permanently empty bar reads as a download that never started.
+        val isTransferring = item.state == DownloadItemState.DOWNLOADING_STREAM ||
+            item.state == DownloadItemState.FETCHING_SUBTITLES
+        when {
+            progress != null -> builder.setProgress(100, progress, false)
+            isTransferring -> builder.setProgress(0, 0, true)
         }
 
         when (item.state) {
@@ -448,8 +454,10 @@ class MediaDownloadService : Service() {
             else -> null to "Queued"
         }
 
-    private fun percentOf(current: Long, total: Long): Int =
-        if (total <= 0) 0 else ((current * 100) / total).toInt().coerceIn(0, 100)
+    /** Null when there is no total to be a percentage of — the caller shows an indeterminate bar
+     * for that rather than a determinate one stuck at zero. */
+    private fun percentOf(current: Long, total: Long): Int? =
+        if (total <= 0) null else ((current * 100) / total).toInt().coerceIn(0, 100)
 
     private fun formatSize(bytes: Long): String = Formatter.formatShortFileSize(this, bytes)
 

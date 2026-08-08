@@ -320,7 +320,17 @@ class MediaScreenViewModel @AssistedInject constructor(
             // Averaged across the whole batch for a show's season aggregate; a single-item list
             // (movie, or one episode) just reads as that item's own progress.
             val progress = items.map { it.combinedProgress() }.average().toFloat()
-            return MediaDownloadStatus(MediaDownloadStatus.DownloadState.IN_PROGRESS, progress)
+            // combinedProgress can only report 0 for a stream whose length was never advertised, so
+            // the ring would sit empty for the whole download. Narrow on purpose: a queued item has
+            // no total either, but it isn't transferring, and a spinning ring would overstate it.
+            val isProgressKnown = items.none {
+                it.state == DownloadItemState.DOWNLOADING_STREAM && it.streamTotalBytes <= 0
+            }
+            return MediaDownloadStatus(
+                state = MediaDownloadStatus.DownloadState.IN_PROGRESS,
+                progress = progress,
+                isProgressKnown = isProgressKnown,
+            )
         }
         if (items.all { it.state == DownloadItemState.COMPLETED }) return MediaDownloadStatus.Downloaded
         return MediaDownloadStatus.NotDownloaded
@@ -958,6 +968,9 @@ enum class MediaScreenState {
 data class MediaDownloadStatus(
     val state: DownloadState,
     val progress: Float = 0f,
+    /** False while a transfer is running whose total size the server never advertised, so [progress]
+     * can't mean anything yet and the ring should spin rather than sit at zero. */
+    val isProgressKnown: Boolean = true,
 ) {
     enum class DownloadState {
         NOT_DOWNLOADED,
