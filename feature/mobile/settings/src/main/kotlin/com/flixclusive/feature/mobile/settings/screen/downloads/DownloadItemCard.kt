@@ -152,18 +152,14 @@ internal fun DownloadItemCard(
                         item().state == DownloadItemState.FETCHING_SUBTITLES
                 }
             }
+
             if (isActivelyDownloading) {
-                val speedText by remember {
-                    derivedStateOf { item().downloadSpeedText(context) }
-                }
-
-                val contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-
                 Text(
-                    text = speedText,
+                    text = item().downloadSpeedText(context),
                     style = MaterialTheme.typography.labelSmall,
-                    color = contentColor,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     modifier = Modifier.align(Alignment.End)
+                        .padding(top = 10.dp)
                 )
             }
         }
