@@ -11,6 +11,7 @@ import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import com.flixclusive.core.network.monitor.NetworkMonitor
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.downloads.directory.DownloadDirectoryRepository
 import com.flixclusive.data.downloads.hls.HlsManifestResolver
 import com.flixclusive.data.downloads.hls.HlsResolutionResult
@@ -31,6 +32,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -58,6 +63,34 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     private val dispatchMutex = Mutex()
     private val activeItemIds = mutableSetOf<String>()
+
+    init {
+        startDispatchingWhenNetworkAllows()
+    }
+
+    /**
+     * Re-runs the dispatcher whenever the connection (or the Wi-Fi-only preference) starts allowing
+     * downloads again.
+     *
+     * Without this the gate is one-way: items blocked on mobile data stay queued with nothing
+     * watching for Wi-Fi, so they only moved when something else happened to call the dispatcher —
+     * in practice the next app launch. Collecting rather than polling also keeps
+     * [NetworkMonitor.isMetered]'s shared upstream alive, so its emissions track the real
+     * connection instead of stopping between one-shot reads.
+     */
+    private fun startDispatchingWhenNetworkAllows() {
+        scope.launch {
+            combine(
+                networkMonitor.isMetered,
+                dataStoreManager
+                    .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
+                    .map { it.downloadOnWifiOnly },
+            ) { metered, wifiOnly -> !wifiOnly || !metered }
+                .distinctUntilChanged()
+                .catch { errorLog("Stopped watching the network for download dispatch: ${it.message}") }
+                .collect { isAllowed -> if (isAllowed) dispatchNext() }
+        }
+    }
 
     override fun start(itemId: String) {
         if (jobs[itemId]?.isActive == true) return
@@ -164,6 +197,21 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         }
     }
 
+    /**
+     * Leaves a download the network gate turned away in the one state the dispatcher picks up from.
+     *
+     * Resuming a [DownloadItemState.PAUSED] item is the case that needs this: it would otherwise
+     * stay paused, and [dispatchNext] only ever pulls queued rows — so the tap would be quietly
+     * forgotten even once Wi-Fi came back. Everything else arrives here already queued. The phase is
+     * carried over so a resume into the subtitle phase doesn't restart the video.
+     */
+    private suspend fun parkUntilNetworkAllows(itemId: String) {
+        val item = mediaDownloadRepository.getItem(itemId) ?: return
+        if (item.state != DownloadItemState.PAUSED) return
+
+        mediaDownloadRepository.updateState(itemId, DownloadItemState.QUEUED, resumePhaseOf(item))
+    }
+
     private suspend fun stopInactiveItem(
         itemId: String,
         item: DownloadItem,
@@ -223,9 +271,8 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     /** Runs [itemId] now if a concurrency slot is free; otherwise it stays QUEUED for [dispatchNext] to pick up. */
     private suspend fun dispatchOrQueue(itemId: String) {
-        // Covers start/resume/retry. The item is already persisted as QUEUED by the time it gets
-        // here, so bailing out leaves it listed and waiting rather than losing the request.
-        if (!isNetworkAllowed()) return
+        // Covers start/resume/retry.
+        if (!isNetworkAllowed()) return parkUntilNetworkAllows(itemId)
         if (!tryReserveSlot(itemId)) return
 
         mediaDownloadServiceController.ensureRunning()

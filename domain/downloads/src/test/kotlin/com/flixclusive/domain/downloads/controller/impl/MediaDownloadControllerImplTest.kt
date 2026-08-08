@@ -37,6 +37,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -145,6 +146,7 @@ class MediaDownloadControllerImplTest {
 
     private fun setMetered(metered: Boolean) {
         every { networkMonitor.isMeteredNow() } returns metered
+        every { networkMonitor.isMetered } returns flowOf(metered)
     }
 
     private fun setOnline(online: Boolean) {
@@ -181,6 +183,14 @@ class MediaDownloadControllerImplTest {
         every { downloadDirectoryRepository.resolveFile(any()) } returns null
         every { streamFile.length() } returns 200_000L
 
+        newController()
+    }
+
+    /**
+     * Rebuilt rather than reused when a test needs different network stubbing: the controller
+     * subscribes to the network in its constructor, so the stubs have to be in place first.
+     */
+    private fun newController() {
         controller = MediaDownloadControllerImpl(
             context = mockk<Context>(),
             mediaDownloadRepository = mediaDownloadRepository,
@@ -1042,6 +1052,55 @@ class MediaDownloadControllerImplTest {
             }
             coVerify(exactly = 0) {
                 mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, any())
+            }
+        }
+
+    @Test
+    fun `a queued item should start by itself once the connection stops being metered`() =
+        runTest(testDispatcher) {
+            // The reported bug: an item held back on mobile data sat there until the app was
+            // relaunched, because nothing watched for Wi-Fi coming back.
+            setWifiOnly(true)
+            val metered = MutableStateFlow(true)
+            every { networkMonitor.isMetered } returns metered
+            every { networkMonitor.isMeteredNow() } answers { metered.value }
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+            newController()
+
+            controller.start(itemId)
+            advanceUntilIdle()
+            coVerify(exactly = 0) {
+                mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, any())
+            }
+
+            coEvery { mediaDownloadRepository.getOldestQueuedItem() } returns testItem() andThen null
+            metered.value = false
+            advanceUntilIdle()
+
+            coVerify {
+                mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
+            }
+        }
+
+    @Test
+    fun `resuming a paused item on a metered connection should queue it rather than lose the tap`() =
+        runTest(testDispatcher) {
+            // dispatchNext only ever pulls queued rows, so leaving this one PAUSED would mean the
+            // tap was silently forgotten even after Wi-Fi returned.
+            setWifiOnly(true)
+            setMetered(true)
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(state = DownloadItemState.PAUSED, phase = DownloadPhase.SUBTITLES)
+
+            controller.resume(itemId)
+            advanceUntilIdle()
+
+            coVerify {
+                mediaDownloadRepository.updateState(itemId, DownloadItemState.QUEUED, DownloadPhase.SUBTITLES)
             }
         }
 
