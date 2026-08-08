@@ -484,8 +484,7 @@ private fun PlayButton(
                     radius = width / 1.6f,
                     center = pos2,
                 )
-            }
-            .focusable()
+            }.focusable()
             .clickable { onClick() },
         propagateMinConstraints = true
     ) {
@@ -511,8 +510,7 @@ private fun PlayButton(
                     .padding(
                         vertical = 10.dp,
                         horizontal = 16.dp
-                    )
-                    .animateContentSize()
+                    ).animateContentSize()
                     .align(Alignment.Center),
             ) {
                 AdaptiveIcon(
