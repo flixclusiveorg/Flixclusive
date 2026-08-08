@@ -15,12 +15,21 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MovieProgressDao {
+    /*
+     * Every read joins `media` rather than selecting the history table alone. MovieProgressWithMetadata
+     * declares its media @Relation non-null, so a history row whose media is missing doesn't come back
+     * empty — it throws, and takes the entire list with it. The foreign key on mediaId is supposed to
+     * make that impossible, but it only guards writes made after it existed and is not enforced during
+     * migrations, so rows predating it survive unnoticed. Joining keeps one bad row from being fatal.
+     */
+
     @Transaction
     @Query(
         """
-        SELECT * FROM movies_watch_history
-        WHERE ownerId = :ownerId
-        ORDER BY createdAt DESC
+        SELECT h.* FROM movies_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.ownerId = :ownerId
+        ORDER BY h.createdAt DESC
         """,
     )
     fun getAll(ownerId: String): List<MovieProgressWithMetadata>
@@ -31,8 +40,10 @@ interface MovieProgressDao {
         ascending: Boolean,
     ): Flow<List<MovieProgressWithMetadata>> {
         val query = """
-            SELECT * FROM movies_watch_history WHERE ownerId = ?
-            ORDER BY $column ${if (ascending) "ASC" else "DESC"}
+            SELECT h.* FROM movies_watch_history AS h
+            INNER JOIN media AS m ON m.id = h.mediaId
+            WHERE h.ownerId = ?
+            ORDER BY h.$column ${if (ascending) "ASC" else "DESC"}
         """.trimIndent()
 
         return getAllAsFlowRaw(
@@ -49,19 +60,43 @@ interface MovieProgressDao {
     fun getAllAsFlowRaw(query: RoomRawQuery): Flow<List<MovieProgressWithMetadata>>
 
     @Transaction
-    @Query("SELECT * FROM movies_watch_history WHERE id = :id")
+    @Query(
+        """
+        SELECT h.* FROM movies_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.id = :id
+        """,
+    )
     suspend fun get(id: Long): MovieProgressWithMetadata?
 
     @Transaction
-    @Query("SELECT * FROM movies_watch_history WHERE mediaId = :id AND ownerId = :ownerId")
+    @Query(
+        """
+        SELECT h.* FROM movies_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.mediaId = :id AND h.ownerId = :ownerId
+        """,
+    )
     suspend fun get(id: String, ownerId: String): MovieProgressWithMetadata?
 
     @Transaction
-    @Query("SELECT * FROM movies_watch_history WHERE id = :id")
+    @Query(
+        """
+        SELECT h.* FROM movies_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.id = :id
+        """,
+    )
     fun getAsFlow(id: Long): Flow<MovieProgressWithMetadata?>
 
     @Transaction
-    @Query("SELECT * FROM movies_watch_history WHERE mediaId = :id AND ownerId = :ownerId")
+    @Query(
+        """
+        SELECT h.* FROM movies_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.mediaId = :id AND h.ownerId = :ownerId
+        """,
+    )
     fun getAsFlow(id: String, ownerId: String): Flow<MovieProgressWithMetadata?>
 
     @Transaction
