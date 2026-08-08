@@ -291,7 +291,7 @@ private fun DownloadsEntriesList(
                 items(entriesProvider(), key = { it.key() }) { entry ->
                     when (entry) {
                         is DownloadListEntry.Single -> DownloadItemCard(
-                            item = entry.item,
+                            item = { entry.item },
                             onPause = { onPause(entry.item.id) },
                             onResume = { onResume(entry.item.id) },
                             onStop = { onStop(entry.item.id) },
@@ -305,7 +305,7 @@ private fun DownloadsEntriesList(
                             var isExpanded by rememberSaveable { mutableStateOf(false) }
 
                             DownloadBatchGroup(
-                                entry = entry,
+                                entry = { entry },
                                 isExpanded = isExpanded,
                                 onToggleExpand = { isExpanded = !isExpanded },
                                 onPauseBatch = { onPauseBatch(entry.mediaId, entry.seasonNumber) },

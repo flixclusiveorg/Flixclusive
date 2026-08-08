@@ -31,7 +31,7 @@ internal fun LazyGridScope.seriesContent(
     selectedSeason: Int,
     seasons: List<Season>,
     seasonToDisplay: Async<SeasonWithProgress>,
-    episodeDownloadStatuses: Map<Int, Async<MediaDownloadStatus>>,
+    episodeDownloadStatuses: () -> Map<Int, Async<MediaDownloadStatus>>,
     onSeasonChange: (Season) -> Unit,
     onClick: (Episode) -> Unit,
     onLongClick: (EpisodeWithProgress) -> Unit,
@@ -107,8 +107,10 @@ internal fun LazyGridScope.seriesContent(
                     episode = item,
                     onClick = { onClick(item.episode) },
                     onLongClick = onLongClick,
-                    downloadStatus = episodeDownloadStatuses[item.number]
-                        ?: Async.Success(MediaDownloadStatus.NotDownloaded),
+                    downloadStatus = {
+                        episodeDownloadStatuses()[item.number]
+                            ?: Async.Success(MediaDownloadStatus.NotDownloaded)
+                    },
                     onToggleDownload = { onToggleEpisodeDownload(item.episode) },
                     modifier = Modifier
                         .fillMaxWidth()

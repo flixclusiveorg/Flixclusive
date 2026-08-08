@@ -25,8 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -42,7 +42,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun DownloadItemCard(
-    item: DownloadItem,
+    item: () -> DownloadItem,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onStop: () -> Unit,
@@ -52,19 +52,21 @@ internal fun DownloadItemCard(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val isDimmed = item.state == DownloadItemState.STOPPED
+    val isDimmed by remember {
+        derivedStateOf { item().state == DownloadItemState.STOPPED }
+    }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .alpha(if (isDimmed) 0.6f else 1f)
+            .graphicsLayer { alpha = if (isDimmed) 0.6f else 1f }
             .clip(MaterialTheme.shapes.medium),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium,
     ) {
         Column(modifier = Modifier.padding(12.dp).animateContentSize()) {
             Row(verticalAlignment = Alignment.Top) {
-                Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
+                Crossfade(targetState = item().state, label = "DownloadItemStatusIcon") { state ->
                     Icon(
                         painter = painterResource(downloadStateIcon(state)),
                         contentDescription = null,
@@ -83,19 +85,19 @@ internal fun DownloadItemCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = item.mediaTitle,
+                        text = item().mediaTitle,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                     )
 
                     Text(
-                        text = item.subtitleLabel(),
+                        text = item().subtitleLabel(),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                     )
 
-                    if (item.state == DownloadItemState.COMPLETED) {
+                    if (item().state == DownloadItemState.COMPLETED) {
                         Text(
-                            text = item.completedSummary(),
+                            text = item().completedSummary(),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
@@ -103,7 +105,7 @@ internal fun DownloadItemCard(
                 }
 
                 DownloadItemActions(
-                    state = item.state,
+                    state = item().state,
                     onPause = onPause,
                     onResume = onResume,
                     onStop = onStop,
@@ -118,34 +120,51 @@ internal fun DownloadItemCard(
             // DOWNLOADING_STREAM is active, and vice versa. Hidden once STOPPED, though — a
             // stopped item isn't going anywhere, so its last progress isn't worth showing.
             val hasStreamProgress by remember {
-                derivedStateOf { item.streamTotalBytes > 0 }
+                derivedStateOf { item().streamTotalBytes > 0 }
             }
             if (hasStreamProgress && !isDimmed) {
                 Spacer(modifier = Modifier.height(8.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_video_label),
-                    progress = { item.streamProgress() },
-                    valueText = { item.streamValueText(context) },
+                    progress = { item().streamProgress() },
+                    valueText = { item().streamValueText(context) },
                 )
             }
 
-            if (item.totalSubtitlesCount > 0 && !isDimmed) {
+            val hasSubtitles by remember {
+                derivedStateOf { item().totalSubtitlesCount > 0 }
+            }
+            if (hasSubtitles && !isDimmed) {
                 Spacer(modifier = Modifier.height(4.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_subtitles_label),
-                    progress = { item.subtitlesProgress() },
-                    valueText = { "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}" },
+                    progress = { item().subtitlesProgress() },
+                    valueText = { "${item().downloadedSubtitlesCount} / ${item().totalSubtitlesCount}" },
                 )
             }
 
             // Bottom-left, below whichever progress row(s) are showing — visible for the whole
             // downloading/fetching-subtitles phase rather than only while a nonzero rate is
             // available, so it never flickers in and out as fresh rate samples land.
-            val isActivelyDownloading = item.state == DownloadItemState.DOWNLOADING_STREAM ||
-                item.state == DownloadItemState.FETCHING_SUBTITLES
+            val isActivelyDownloading by remember {
+                derivedStateOf {
+                    item().state == DownloadItemState.DOWNLOADING_STREAM ||
+                        item().state == DownloadItemState.FETCHING_SUBTITLES
+                }
+            }
             if (isActivelyDownloading) {
-                Spacer(modifier = Modifier.height(4.dp))
-                DownloadSpeedRow(speedText = item.downloadSpeedText(context))
+                val speedText by remember {
+                    derivedStateOf { item().downloadSpeedText(context) }
+                }
+
+                val contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+
+                Text(
+                    text = speedText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor,
+                    modifier = Modifier.align(Alignment.End)
+                )
             }
         }
     }
@@ -180,42 +199,6 @@ private fun DownloadProgressRow(
         Text(
             text = valueText(),
             style = MaterialTheme.typography.labelSmall,
-        )
-    }
-}
-
-@Composable
-private fun DownloadSpeedRow(
-    speedText: String,
-    modifier: Modifier = Modifier,
-) {
-    val contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(UiCommonR.drawable.download),
-            contentDescription = null,
-            modifier = Modifier.size(12.dp),
-            tint = contentColor,
-        )
-
-        Spacer(modifier = Modifier.width(4.dp))
-
-        Text(
-            text = "•",
-            style = MaterialTheme.typography.labelSmall,
-            color = contentColor,
-        )
-
-        Spacer(modifier = Modifier.width(4.dp))
-
-        Text(
-            text = speedText,
-            style = MaterialTheme.typography.labelSmall,
-            color = contentColor,
         )
     }
 }

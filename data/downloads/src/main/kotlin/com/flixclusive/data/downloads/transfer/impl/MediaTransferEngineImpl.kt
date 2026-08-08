@@ -128,7 +128,7 @@ internal class MediaTransferEngineImpl @Inject constructor(
             val pfd = context.contentResolver.openFileDescriptor(destinationFile.uri, "rw")
                 ?: throw IOException("Failed to open ${destinationFile.uri} for writing")
 
-            try {
+            pfd.use { pfd ->
                 FileOutputStream(pfd.fileDescriptor).channel.use { channel ->
                     channel.position(rangeStart)
 
@@ -160,8 +160,6 @@ internal class MediaTransferEngineImpl @Inject constructor(
                         onBytesWritten(written)
                     }
                 }
-            } finally {
-                pfd.close()
             }
         }
     }

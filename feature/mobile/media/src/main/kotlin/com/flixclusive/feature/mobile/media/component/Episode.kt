@@ -28,8 +28,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,7 +81,7 @@ internal fun EpisodeCard(
     episode: EpisodeWithProgress,
     onClick: () -> Unit,
     onLongClick: (EpisodeWithProgress) -> Unit,
-    downloadStatus: Async<MediaDownloadStatus>,
+    downloadStatus: () -> Async<MediaDownloadStatus>,
     onToggleDownload: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -88,8 +90,12 @@ internal fun EpisodeCard(
     val description = episode.overview
         ?: stringResource(R.string.default_overview)
 
-    val isDownloaded = (downloadStatus as? Async.Success)?.data?.state ==
-        MediaDownloadStatus.DownloadState.DOWNLOADED
+    val isDownloaded by remember {
+        derivedStateOf {
+            (downloadStatus() as? Async.Success)?.data?.state ==
+                MediaDownloadStatus.DownloadState.DOWNLOADED
+        }
+    }
 
     Column(
         modifier = modifier
@@ -349,14 +355,21 @@ private fun ExpandableText(
 
 @Composable
 private fun DownloadButton(
-    status: Async<MediaDownloadStatus>,
+    status: () -> Async<MediaDownloadStatus>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (status is Async.Loading) {
+    val isLoading by remember {
+        derivedStateOf {
+            status() is Async.Loading
+        }
+    }
+
+    if (isLoading) {
         Box(
-            modifier = modifier.size(22.dp),
             contentAlignment = Alignment.Center,
+            modifier = modifier
+                .minimumInteractiveComponentSize()
         ) {
             GradientCircularProgressIndicator(
                 size = 18.dp,
@@ -371,8 +384,18 @@ private fun DownloadButton(
         return
     }
 
-    val isFailure = status is Async.Failure
-    val downloadStatus = (status as? Async.Success)?.data ?: MediaDownloadStatus.NotDownloaded
+    val isFailure by remember {
+        derivedStateOf {
+            status() is Async.Failure
+        }
+    }
+
+    val downloadStatus by remember {
+        derivedStateOf {
+            (status() as? Async.Success)?.data ?: MediaDownloadStatus.NotDownloaded
+        }
+    }
+
     val isInProgress = !isFailure && downloadStatus.state == MediaDownloadStatus.DownloadState.IN_PROGRESS
 
     val drawable = when {
@@ -535,7 +558,7 @@ private fun EpisodeCardBasePreview() {
                     }
 
                     EpisodeCard(
-                        downloadStatus = Async.Success(MediaDownloadStatus.Downloaded),
+                        downloadStatus = { Async.Success(MediaDownloadStatus.Downloaded) },
                         episode = episodeWithProgress,
                         onClick = {},
                         onLongClick = {},
