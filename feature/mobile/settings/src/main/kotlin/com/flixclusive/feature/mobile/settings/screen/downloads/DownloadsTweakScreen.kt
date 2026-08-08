@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.downloads.DownloadItem
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
@@ -258,6 +259,23 @@ private fun DownloadsEntriesList(
     onStopBatch: (String, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Deleting takes the downloaded files with it and there is no undo, so the tap only arms the
+    // dialog; nothing is removed until it's confirmed.
+    var pendingDeleteId by remember { mutableStateOf<String?>(null) }
+
+    pendingDeleteId?.let { itemId ->
+        TextAlertDialog(
+            title = stringResource(LocaleR.string.download_delete_confirm_title),
+            message = stringResource(LocaleR.string.download_delete_confirm_message),
+            confirmButtonLabel = stringResource(LocaleR.string.delete),
+            onConfirm = {
+                onDelete(itemId)
+                pendingDeleteId = null
+            },
+            onDismiss = { pendingDeleteId = null },
+        )
+    }
+
     AsyncAnimatedContent(
         targetState = entries,
         modifier = modifier,
@@ -296,7 +314,7 @@ private fun DownloadsEntriesList(
                             onResume = { onResume(entry.item.id) },
                             onStop = { onStop(entry.item.id) },
                             onRetry = { onRetry(entry.item.id) },
-                            onDelete = { onDelete(entry.item.id) },
+                            onDelete = { pendingDeleteId = entry.item.id },
                             onOpen = { onOpen(entry.item) },
                             modifier = Modifier.animateItem()
                         )
@@ -314,7 +332,7 @@ private fun DownloadsEntriesList(
                                 onResume = onResume,
                                 onStop = onStop,
                                 onRetry = onRetry,
-                                onDelete = onDelete,
+                                onDelete = { pendingDeleteId = it },
                                 onOpen = onOpen,
                                 modifier = Modifier.animateItem()
                             )

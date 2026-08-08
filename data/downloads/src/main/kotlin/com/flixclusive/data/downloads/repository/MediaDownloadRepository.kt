@@ -16,7 +16,15 @@ interface MediaDownloadRepository {
 
     suspend fun getItem(id: String): DownloadItem?
 
-    suspend fun queue(item: DownloadItem)
+    /**
+     * Inserts [item], or returns the id of the row already downloading the same media when one
+     * exists. Uniqueness is enforced by the database rather than by a read-then-insert check, so two
+     * taps racing each other can't both slip through.
+     *
+     * @return the id that ended up representing this download — [DownloadItem.id] on a fresh insert,
+     * the incumbent's id otherwise.
+     */
+    suspend fun queue(item: DownloadItem): String
 
     suspend fun getOldestQueuedItem(): DownloadItem?
 

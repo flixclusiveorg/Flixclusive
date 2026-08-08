@@ -1,5 +1,6 @@
 package com.flixclusive.data.downloads.repository.impl
 
+import android.database.sqlite.SQLiteConstraintException
 import com.flixclusive.core.database.dao.downloads.DownloadChunkDao
 import com.flixclusive.core.database.dao.downloads.DownloadItemDao
 import com.flixclusive.core.database.entity.downloads.DownloadChunk
@@ -7,6 +8,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.dedupeKeyOf
 import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
@@ -69,8 +71,21 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
 
     override suspend fun getItem(id: String): DownloadItem? = downloadItemDao.get(id)
 
-    override suspend fun queue(item: DownloadItem) {
-        downloadItemDao.insert(item)
+    override suspend fun queue(item: DownloadItem): String {
+        // Recomputed rather than trusted: dedupeKey is a constructor default, so an item built with
+        // copy() carries whichever key the original had. Deriving it here means the column can never
+        // disagree with the media it is supposed to identify, however the caller assembled the row.
+        val row = item.copy(dedupeKey = dedupeKeyOf(item.mediaId, item.seasonNumber, item.episodeNumber))
+
+        return try {
+            downloadItemDao.insert(row)
+            row.id
+        } catch (_: SQLiteConstraintException) {
+            // The unique dedupeKey index rejected it: something is already downloading this exact
+            // media. Hand back the incumbent so the caller carries on with that one instead of
+            // treating a harmless double tap as an error.
+            downloadItemDao.getByDedupeKey(row.dedupeKey)?.id ?: row.id
+        }
     }
 
     override suspend fun getOldestQueuedItem(): DownloadItem? = downloadItemDao.getOldestByState(

@@ -28,6 +28,10 @@ interface DownloadItemDao {
     @Query("SELECT * FROM download_items ORDER BY createdAt DESC")
     fun getAllAsFlow(): Flow<List<DownloadItem>>
 
+    /** The row already occupying [dedupeKey], if any — what a rejected duplicate insert resolves to. */
+    @Query("SELECT * FROM download_items WHERE dedupeKey = :dedupeKey LIMIT 1")
+    suspend fun getByDedupeKey(dedupeKey: String): DownloadItem?
+
     @Query("SELECT * FROM download_items WHERE state = :state ORDER BY createdAt ASC")
     suspend fun getAllByState(state: DownloadItemState): List<DownloadItem>
 

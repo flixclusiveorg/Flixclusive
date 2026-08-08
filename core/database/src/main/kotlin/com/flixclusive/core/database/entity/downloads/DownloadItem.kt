@@ -13,6 +13,7 @@ import java.util.UUID
         Index(value = ["mediaId"]),
         Index(value = ["state"]),
         Index(value = ["ownerId"]),
+        Index(value = ["dedupeKey"], unique = true),
     ],
 )
 data class DownloadItem(
@@ -23,6 +24,20 @@ data class DownloadItem(
     val mediaType: MediaType,
     val seasonNumber: Int? = null,
     val episodeNumber: Int? = null,
+    /**
+     * What "the same download" means, as a single non-null value so a unique index can enforce it.
+     * Indexing `mediaId`/`seasonNumber`/`episodeNumber` directly would not: SQLite treats NULLs as
+     * distinct, so every movie — which has no season or episode — would slip past the constraint.
+     *
+     * Deliberately excludes [ownerId]. The download directory is keyed on the media alone, so two
+     * profiles downloading the same title already share one file on disk; keying per owner would
+     * permit two rows pointing at that one file, which is the bug this prevents. The practical
+     * consequence is that a download belongs to the device rather than to a profile.
+     *
+     * Derived from the fields above and never recomputed by [copy] — safe only because a queued
+     * item's media, season and episode never change after insert.
+     */
+    val dedupeKey: String = dedupeKeyOf(mediaId, seasonNumber, episodeNumber),
     val state: DownloadItemState = DownloadItemState.QUEUED,
     val phase: DownloadPhase? = null,
     /** Foreign key into `cached_streams.url` — the link this item is currently downloading (or
@@ -89,3 +104,17 @@ fun DownloadItem.combinedProgress(): Float {
 }
 
 private const val STREAM_PROGRESS_WEIGHT = 0.9f
+
+/**
+ * Builds [DownloadItem.dedupeKey]. Kept public so the schema migration that backfills the column can
+ * produce byte-identical values to the ones inserted at runtime — a mismatch would let a duplicate
+ * through the unique index.
+ *
+ * `-1` stands in for a null season or episode so movies get a stable, non-null key; no real season
+ * or episode number is negative, so it can't collide with one.
+ */
+fun dedupeKeyOf(
+    mediaId: String,
+    seasonNumber: Int?,
+    episodeNumber: Int?,
+): String = "$mediaId|${seasonNumber ?: -1}|${episodeNumber ?: -1}"

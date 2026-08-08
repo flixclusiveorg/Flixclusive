@@ -1,5 +1,6 @@
 package com.flixclusive.core.database.dao.downloads
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flixclusive.core.database.AppDatabase
@@ -8,6 +9,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.dedupeKeyOf
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.model.media.common.MediaType
 import kotlinx.coroutines.test.runTest
@@ -34,6 +36,26 @@ class DownloadDaoTest {
         mediaId = "media-1",
         mediaTitle = "Test Movie",
         mediaType = MediaType.MOVIE,
+    )
+
+    /**
+     * A second item with its own identity. Not `testItem.copy(id = …)`: `copy` carries the
+     * original's [DownloadItem.dedupeKey], which the unique index would reject — the key has to be
+     * rebuilt whenever media, season or episode change.
+     */
+    private fun itemFor(
+        id: String,
+        mediaId: String = "media-1",
+        seasonNumber: Int? = null,
+        episodeNumber: Int? = null,
+    ) = DownloadItem(
+        id = id,
+        ownerId = "owner-1",
+        mediaId = mediaId,
+        mediaTitle = "Test Movie",
+        mediaType = if (seasonNumber == null) MediaType.MOVIE else MediaType.SHOW,
+        seasonNumber = seasonNumber,
+        episodeNumber = episodeNumber,
     )
 
     @Before
@@ -215,7 +237,7 @@ class DownloadDaoTest {
     fun getOldestByStateShouldReturnEarliestQueuedItemFirst() =
         runTest {
             downloadItemDao.insert(testItem)
-            val second = testItem.copy(id = "item-2", episodeNumber = 2)
+            val second = itemFor(id = "item-2", mediaId = "media-2")
             downloadItemDao.insert(second)
 
             val result = downloadItemDao.getOldestByState(DownloadItemState.QUEUED)
@@ -228,31 +250,13 @@ class DownloadDaoTest {
         runTest {
             val showId = "show-1"
             downloadItemDao.insert(
-                testItem.copy(
-                    id = "item-1",
-                    mediaId = showId,
-                    mediaType = MediaType.SHOW,
-                    seasonNumber = 1,
-                    episodeNumber = 2,
-                )
+                itemFor(id = "item-1", mediaId = showId, seasonNumber = 1, episodeNumber = 2)
             )
             downloadItemDao.insert(
-                testItem.copy(
-                    id = "item-2",
-                    mediaId = showId,
-                    mediaType = MediaType.SHOW,
-                    seasonNumber = 1,
-                    episodeNumber = 1,
-                )
+                itemFor(id = "item-2", mediaId = showId, seasonNumber = 1, episodeNumber = 1)
             )
             downloadItemDao.insert(
-                testItem.copy(
-                    id = "item-3",
-                    mediaId = showId,
-                    mediaType = MediaType.SHOW,
-                    seasonNumber = 2,
-                    episodeNumber = 1,
-                )
+                itemFor(id = "item-3", mediaId = showId, seasonNumber = 2, episodeNumber = 1)
             )
 
             val batch = downloadItemDao.getBatch(showId, 1)
@@ -266,13 +270,12 @@ class DownloadDaoTest {
     fun requeueByStatesShouldRequeueMatchingItemsWithTheGivenPhaseAndClearTheirRate() =
         runTest {
             downloadItemDao.insert(
-                testItem.copy(
-                    id = "downloading",
-                    state = DownloadItemState.DOWNLOADING_STREAM,
-                    downloadBytesPerSecond = 5_000,
-                )
+                itemFor(id = "downloading", mediaId = "media-downloading")
+                    .copy(state = DownloadItemState.DOWNLOADING_STREAM, downloadBytesPerSecond = 5_000)
             )
-            downloadItemDao.insert(testItem.copy(id = "paused", state = DownloadItemState.PAUSED))
+            downloadItemDao.insert(
+                itemFor(id = "paused", mediaId = "media-paused").copy(state = DownloadItemState.PAUSED),
+            )
 
             val requeued = downloadItemDao.requeueByStates(
                 from = listOf(DownloadItemState.DOWNLOADING_STREAM),
@@ -292,10 +295,58 @@ class DownloadDaoTest {
         }
 
     @Test
+    fun insertShouldRejectASecondItemForTheSameMedia() =
+        runTest {
+            // Two rows for one title resolve to the same file on disk; the unique dedupeKey index
+            // is what stops a double tap creating them.
+            downloadItemDao.insert(itemFor(id = "first", mediaId = "media-9"))
+
+            var rejected = false
+            try {
+                downloadItemDao.insert(itemFor(id = "second", mediaId = "media-9"))
+            } catch (_: SQLiteConstraintException) {
+                rejected = true
+            }
+
+            expectThat(rejected).isTrue()
+            expectThat(downloadItemDao.getByDedupeKey(dedupeKeyOf("media-9", null, null))?.id).isEqualTo("first")
+        }
+
+    @Test
+    fun insertShouldAllowDistinctEpisodesOfTheSameSeason() =
+        runTest {
+            downloadItemDao.insert(itemFor(id = "e1", mediaId = "show-9", seasonNumber = 1, episodeNumber = 1))
+            downloadItemDao.insert(itemFor(id = "e2", mediaId = "show-9", seasonNumber = 1, episodeNumber = 2))
+
+            expectThat(downloadItemDao.getBatch("show-9", 1)).hasSize(2)
+        }
+
+    @Test
+    fun insertShouldRejectASecondMovieForTheSameMedia() =
+        runTest {
+            // The case a plain unique index over (mediaId, seasonNumber, episodeNumber) would miss:
+            // both rows have NULL season and episode, and SQLite treats NULLs as distinct.
+            downloadItemDao.insert(itemFor(id = "movie-a", mediaId = "movie-9"))
+
+            var rejected = false
+            try {
+                downloadItemDao.insert(itemFor(id = "movie-b", mediaId = "movie-9"))
+            } catch (_: SQLiteConstraintException) {
+                rejected = true
+            }
+
+            expectThat(rejected).isTrue()
+        }
+
+    @Test
     fun requeueByStatesShouldSkipExcludedIds() =
         runTest {
-            downloadItemDao.insert(testItem.copy(id = "live", state = DownloadItemState.FETCHING_SUBTITLES))
-            downloadItemDao.insert(testItem.copy(id = "orphaned", state = DownloadItemState.STREAM_COMPLETE))
+            downloadItemDao.insert(
+                itemFor(id = "live", mediaId = "media-live").copy(state = DownloadItemState.FETCHING_SUBTITLES),
+            )
+            downloadItemDao.insert(
+                itemFor(id = "orphaned", mediaId = "media-orphaned").copy(state = DownloadItemState.STREAM_COMPLETE),
+            )
 
             val requeued = downloadItemDao.requeueByStates(
                 from = listOf(DownloadItemState.FETCHING_SUBTITLES, DownloadItemState.STREAM_COMPLETE),

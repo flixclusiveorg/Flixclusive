@@ -151,12 +151,15 @@ internal fun DownloadItemCard(
                 )
             }
 
-            // Bottom-left, below whichever progress row(s) are showing — visible for the whole
-            // downloading/fetching-subtitles phase rather than only while a nonzero rate is
-            // available, so it never flickers in and out as fresh rate samples land.
+            // Below whichever progress row(s) are showing, and visible for the whole active stretch
+            // rather than only while a nonzero rate is available, so it never flickers in and out
+            // as fresh rate samples land. STREAM_COMPLETE counts as active for the same reason:
+            // it's the brief handover into subtitle fetching, and dropping the row there made the
+            // speed blink out mid-download.
             val isActivelyDownloading by remember {
                 derivedStateOf {
                     item().state == DownloadItemState.DOWNLOADING_STREAM ||
+                        item().state == DownloadItemState.STREAM_COMPLETE ||
                         item().state == DownloadItemState.FETCHING_SUBTITLES
                 }
             }

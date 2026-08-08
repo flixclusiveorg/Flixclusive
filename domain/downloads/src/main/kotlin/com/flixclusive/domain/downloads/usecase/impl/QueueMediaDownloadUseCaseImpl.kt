@@ -28,7 +28,8 @@ internal class QueueMediaDownloadUseCaseImpl @Inject constructor(
             sourceUrl = null,
         )
 
-        mediaDownloadRepository.queue(item)
-        return Async.Success(item.id)
+        // Not necessarily item.id: if this media is already queued, the repository hands back the
+        // existing row instead of inserting a second one for the same file on disk.
+        return Async.Success(mediaDownloadRepository.queue(item))
     }
 }

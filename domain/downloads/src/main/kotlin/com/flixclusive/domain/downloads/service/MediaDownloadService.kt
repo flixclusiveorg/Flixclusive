@@ -28,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.strings.R as LocaleR
@@ -78,6 +79,10 @@ class MediaDownloadService : Service() {
      * but cancels the notification outright instead of replacing it, so tapping Stop closes the
      * row immediately rather than leaving it stuck on its last in-progress message. */
     private val dismissedStoppedIds = mutableSetOf<String>()
+
+    /** Item id to the notification id it owns — see `notificationId()`. */
+    private val notificationIds = mutableMapOf<String, Int>()
+    private val nextNotificationId = AtomicInteger(0)
 
     companion object {
         private const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
@@ -206,7 +211,11 @@ class MediaDownloadService : Service() {
     private fun cancelRemovedItemNotifications(items: List<DownloadItem>, notificationManager: NotificationManager) {
         val currentIds = items.map { it.id }.toSet()
         val removedIds = knownItemIds - currentIds
-        removedIds.forEach { id -> notificationManager.cancel(id.hashCode()) }
+        removedIds.forEach { id ->
+            // Removed from the map as well as cancelled: the item is gone for good, so holding its
+            // notification id would leak an entry per deleted download for the service's lifetime.
+            notificationIds.remove(id)?.let(notificationManager::cancel)
+        }
         knownItemIds = currentIds
     }
 
@@ -400,7 +409,14 @@ class MediaDownloadService : Service() {
         return "$mediaTitle • $tag"
     }
 
-    private fun DownloadItem.notificationId(): Int = id.hashCode()
+    /**
+     * A stable, collision-free notification id per item. `id.hashCode()` was neither: two ids can
+     * hash alike and would then share — and overwrite — one notification row. Handing out
+     * sequential ids from a map avoids that; the reserved summary/queued-group ids count down from
+     * [Int.MAX_VALUE], so counting up from zero can't reach them.
+     */
+    private fun DownloadItem.notificationId(): Int =
+        notificationIds.getOrPut(id) { nextNotificationId.getAndIncrement() }
 
     private fun progressAndStatusFor(item: DownloadItem): Pair<Int?, String> =
         when (item.state) {

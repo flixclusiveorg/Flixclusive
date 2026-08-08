@@ -34,7 +34,7 @@ class QueueMediaDownloadUseCaseImplTest {
     @Before
     fun setup() {
         mediaDownloadRepository = mockk()
-        coEvery { mediaDownloadRepository.queue(any()) } returns Unit
+        coEvery { mediaDownloadRepository.queue(any()) } answers { firstArg<DownloadItem>().id }
 
         useCase = QueueMediaDownloadUseCaseImpl(mediaDownloadRepository)
     }
@@ -43,7 +43,7 @@ class QueueMediaDownloadUseCaseImplTest {
     fun `invoke should queue a QUEUED item with no source url for a movie`() =
         runTest {
             val itemSlot = slot<DownloadItem>()
-            coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns Unit
+            coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } answers { firstArg<DownloadItem>().id }
 
             val result = useCase(testMovie, null, ownerId)
 
@@ -61,7 +61,7 @@ class QueueMediaDownloadUseCaseImplTest {
         runTest {
             val episode = Episode(id = "ep-1", number = 2, season = 1, isReleased = true, title = "Pilot")
             val itemSlot = slot<DownloadItem>()
-            coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } returns Unit
+            coEvery { mediaDownloadRepository.queue(capture(itemSlot)) } answers { firstArg<DownloadItem>().id }
 
             useCase(testMovie, episode, ownerId)
 

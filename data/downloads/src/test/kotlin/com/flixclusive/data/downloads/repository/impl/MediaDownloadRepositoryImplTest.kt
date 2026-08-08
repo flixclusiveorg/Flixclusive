@@ -1,5 +1,6 @@
 package com.flixclusive.data.downloads.repository.impl
 
+import android.database.sqlite.SQLiteConstraintException
 import com.flixclusive.core.database.dao.downloads.DownloadChunkDao
 import com.flixclusive.core.database.dao.downloads.DownloadItemDao
 import com.flixclusive.core.database.entity.downloads.DownloadChunk
@@ -7,6 +8,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.dedupeKeyOf
 import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
@@ -480,6 +482,45 @@ class MediaDownloadRepositoryImplTest {
             )
 
             coVerify(exactly = 1) { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `queue should return the incumbent's id when the same media is already queued`() =
+        runTest {
+            // The unique index rejects the insert; a double tap should land on the existing
+            // download rather than surface as an error or a second row for the same file.
+            val incoming = DownloadItem(
+                id = "new",
+                ownerId = "owner-1",
+                mediaId = "m1",
+                mediaTitle = "Movie",
+                mediaType = MediaType.MOVIE,
+            )
+            val incumbent = incoming.copy(id = "existing")
+            coEvery { downloadItemDao.insert(any()) } throws SQLiteConstraintException("UNIQUE constraint failed")
+            coEvery { downloadItemDao.getByDedupeKey(incoming.dedupeKey) } returns incumbent
+
+            expectThat(repository.queue(incoming)).isEqualTo("existing")
+        }
+
+    @Test
+    fun `queue should rebuild the dedupe key so a copied item can't carry a stale one`() =
+        runTest {
+            // copy() keeps the original's key, so an item assembled that way would otherwise be
+            // stored under the wrong identity and slip past the unique index.
+            val stale = DownloadItem(
+                id = "item",
+                ownerId = "owner-1",
+                mediaId = "old-media",
+                mediaTitle = "Movie",
+                mediaType = MediaType.MOVIE,
+            ).copy(mediaId = "new-media")
+            val stored = slot<DownloadItem>()
+            coEvery { downloadItemDao.insert(capture(stored)) } just Runs
+
+            repository.queue(stale)
+
+            expectThat(stored.captured.dedupeKey).isEqualTo(dedupeKeyOf("new-media", null, null))
         }
 
     @Test
