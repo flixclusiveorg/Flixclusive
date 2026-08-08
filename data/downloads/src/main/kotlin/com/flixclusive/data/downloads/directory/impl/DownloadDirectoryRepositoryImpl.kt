@@ -7,6 +7,7 @@ import com.flixclusive.data.downloads.util.DownloadPathUtil
 import com.hippo.unifile.UniFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import com.flixclusive.core.util.log.errorLog
 
 internal class DownloadDirectoryRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
@@ -36,7 +37,19 @@ internal class DownloadDirectoryRepositoryImpl @Inject constructor(
         fileName: String,
     ): UniFile? = directory.findFile(fileName) ?: directory.createFile(fileName)
 
-    override fun resolveFile(uri: String): UniFile? = UniFile.fromUri(context, uri.toUri())?.takeIf { it.exists() }
+    /**
+     * Null for a URI that no longer points at a file we can reach — the user deleted it, the volume
+     * went away, or the folder grant was revoked between sessions. A revoked grant surfaces as a
+     * [SecurityException] from the resolver rather than a missing file, and left unhandled that
+     * would propagate out of a resume as a crash instead of a recoverable "start over".
+     */
+    override fun resolveFile(uri: String): UniFile? =
+        try {
+            UniFile.fromUri(context, uri.toUri())?.takeIf { it.exists() }
+        } catch (e: SecurityException) {
+            errorLog("Lost access to $uri: ${e.message}")
+            null
+        }
 
     override fun listSubtitleFiles(streamFile: UniFile): List<UniFile> {
         val parent = streamFile.parentFile ?: return emptyList()

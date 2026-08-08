@@ -740,6 +740,61 @@ class MediaDownloadControllerImplTest {
         }
 
     @Test
+    fun `start should reset chunks when the persisted stream file has gone missing`() =
+        runTest(testDispatcher) {
+            // Deleted from under us by a file manager: the chunk rows still claim bytes that are no
+            // longer on disk, so resuming would write at offsets into a freshly created empty file.
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(streamFilePath = "content://stale", streamBytesDownloaded = 5_000)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            every { downloadDirectoryRepository.resolveFile("content://stale") } returns null
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.resetChunks(itemId) }
+        }
+
+    @Test
+    fun `start should reset chunks when the persisted stream file is shorter than the recorded progress`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(streamFilePath = "content://partial", streamBytesDownloaded = 5_000)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            every { downloadDirectoryRepository.resolveFile("content://partial") } returns streamFile
+            every { streamFile.length() } returns 100L
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.resetChunks(itemId) }
+        }
+
+    @Test
+    fun `start should not reset chunks when the persisted stream file still backs the recorded progress`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(streamFilePath = "content://good", streamBytesDownloaded = 5_000)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            every { downloadDirectoryRepository.resolveFile("content://good") } returns streamFile
+            every { streamFile.length() } returns 200_000L
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { mediaDownloadRepository.resetChunks(itemId) }
+        }
+
+    @Test
     fun `retry should reset chunks and requeue before restarting the download`() =
         runTest(testDispatcher) {
             coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem(state = DownloadItemState.FAILED)

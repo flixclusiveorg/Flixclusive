@@ -401,15 +401,36 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             )
         }
 
+        // A resumed HLS download indexes into a manifest resolved just now, not the one it started
+        // against. If the playlist has been re-cut since — a different rendition, a rotating or
+        // live playlist — the old segment index points somewhere else entirely and appending from
+        // it would splice two different streams together. A changed segment count is the cheapest
+        // reliable signal that happened; start over when it differs.
+        val previousSegmentCount = item.streamTotalBytes
+        val playlistChanged = previousSegmentCount > 0 && previousSegmentCount != playlist.segments.size.toLong()
+
+        // Recreated rather than just emptied: the HLS engine appends, so the partial segments
+        // already in the file would otherwise be spliced in front of the restarted download.
+        val transferFile = if (playlistChanged) {
+            mediaDownloadRepository.resetChunks(itemId)
+            destinationFile.delete()
+            val recreated = downloadDirectoryRepository.getOrCreateFile(directory, fileName)
+                ?: return fail(itemId, "Unable to create destination file")
+            mediaDownloadRepository.updateStreamFilePath(itemId, recreated.uri.toString())
+            recreated
+        } else {
+            destinationFile
+        }
+
         val result = mediaDownloadRepository.runHlsTransfer(
             id = itemId,
             segments = playlist.segments,
-            startIndex = item.streamBytesDownloaded.toInt(),
+            startIndex = if (playlistChanged) 0 else item.streamBytesDownloaded.toInt(),
             headers = headers,
-            destinationFile = destinationFile,
+            destinationFile = transferFile,
         )
 
-        handleStreamTransferResult(itemId, item, directory, destinationFile, result)
+        handleStreamTransferResult(itemId, item, directory, transferFile, result)
     }
 
     /** Resolves [DownloadItem.streamFilePath] back to its [UniFile] on resume; otherwise creates
@@ -422,7 +443,20 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         fileName: String,
     ): UniFile? {
         item.streamFilePath?.let { path ->
-            downloadDirectoryRepository.resolveFile(path)?.let { return it }
+            val existing = downloadDirectoryRepository.resolveFile(path)
+            if (existing != null) {
+                // The chunk rows claim bytes that have to actually be on disk for a resume to write
+                // at the right offsets. If the file was deleted from under us and recreated, or
+                // truncated, resuming would write into a hole and silently produce a broken video.
+                if (existing.length() < item.streamBytesDownloaded) {
+                    mediaDownloadRepository.resetChunks(itemId)
+                }
+                return existing
+            }
+
+            // The file the progress refers to is gone entirely — start the transfer over rather
+            // than resuming into a freshly created, empty one.
+            mediaDownloadRepository.resetChunks(itemId)
         }
 
         val destinationFile = downloadDirectoryRepository.getOrCreateFile(directory, fileName) ?: return null
