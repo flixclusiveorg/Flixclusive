@@ -342,7 +342,7 @@ private fun MediaScreenContent(
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 ContentTabs(
                                     tabs = tabs,
-                                    currentTabSelected = tabs.indexOf(currentTabSelected),
+                                    currentTabSelected = tabs.indexOf(currentTabSelected).coerceAtLeast(0),
                                     onTabChange = { onTabChange(tabs[it]) },
                                     modifier = Modifier
                                         .padding(top = 20.dp, bottom = 10.dp),
