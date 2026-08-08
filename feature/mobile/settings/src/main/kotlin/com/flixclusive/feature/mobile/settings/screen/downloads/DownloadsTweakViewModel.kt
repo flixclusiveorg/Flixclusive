@@ -111,27 +111,6 @@ internal class DownloadsTweakViewModel @Inject constructor(
             _event.emit(DownloadsTweakEvent.OpenFile(item.id))
         }
     }
-
-    private fun groupIntoEntries(items: List<DownloadItem>): List<DownloadListEntry> {
-        val (groupable, standalone) = items.partition {
-            it.mediaType == MediaType.SHOW && it.seasonNumber != null
-        }
-
-        val batches = groupable
-            .groupBy { it.mediaId to it.seasonNumber }
-            .map { (key, groupItems) ->
-                DownloadListEntry.Batch(
-                    mediaId = key.first,
-                    seasonNumber = key.second!!,
-                    mediaTitle = groupItems.first().mediaTitle,
-                    items = groupItems.sortedBy { it.episodeNumber ?: 0 },
-                )
-            }
-
-        val singles = standalone.map { DownloadListEntry.Single(it) }
-
-        return (batches + singles).sortedByDescending { it.latestUpdatedAt }
-    }
 }
 
 private fun <T> Set<T>.toggle(value: T): Set<T> = if (value in this) this - value else this + value

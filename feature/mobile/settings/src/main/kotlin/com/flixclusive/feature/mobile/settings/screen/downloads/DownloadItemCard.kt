@@ -56,6 +56,14 @@ internal fun DownloadItemCard(
         derivedStateOf { item().state == DownloadItemState.STOPPED }
     }
 
+    /** A stopped or failed item isn't going anywhere, so its last progress reading is noise —
+     * worse, a half-filled bar reads as though the download were still on its way. */
+    val hidesProgress by remember {
+        derivedStateOf {
+            item().state == DownloadItemState.STOPPED || item().state == DownloadItemState.FAILED
+        }
+    }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -117,12 +125,12 @@ internal fun DownloadItemCard(
 
             // Shown whenever there's data to report, regardless of the item's current phase —
             // e.g. the stream row stays visible once fetching subtitles starts, not just while
-            // DOWNLOADING_STREAM is active, and vice versa. Hidden once STOPPED, though — a
-            // stopped item isn't going anywhere, so its last progress isn't worth showing.
+            // DOWNLOADING_STREAM is active, and vice versa. See [hidesProgress] for the states
+            // that opt out entirely.
             val hasStreamProgress by remember {
                 derivedStateOf { item().streamTotalBytes > 0 }
             }
-            if (hasStreamProgress && !isDimmed) {
+            if (hasStreamProgress && !hidesProgress) {
                 Spacer(modifier = Modifier.height(8.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_video_label),
@@ -134,7 +142,7 @@ internal fun DownloadItemCard(
             val hasSubtitles by remember {
                 derivedStateOf { item().totalSubtitlesCount > 0 }
             }
-            if (hasSubtitles && !isDimmed) {
+            if (hasSubtitles && !hidesProgress) {
                 Spacer(modifier = Modifier.height(4.dp))
                 DownloadProgressRow(
                     label = stringResource(LocaleR.string.download_progress_subtitles_label),
@@ -158,7 +166,8 @@ internal fun DownloadItemCard(
                     text = item().downloadSpeedText(context),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                    modifier = Modifier.align(Alignment.End)
+                    modifier = Modifier
+                        .align(Alignment.End)
                         .padding(top = 10.dp)
                 )
             }
