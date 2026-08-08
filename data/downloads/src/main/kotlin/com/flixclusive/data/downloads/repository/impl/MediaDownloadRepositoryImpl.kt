@@ -13,6 +13,7 @@ import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
+import com.flixclusive.data.downloads.transfer.RangeUnsupportedException
 import com.flixclusive.data.downloads.util.ChunkPlanner
 import com.hippo.unifile.UniFile
 import kotlinx.coroutines.flow.Flow
@@ -181,6 +182,49 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
                 downloadChunkDao.getChunksForItem(id)
             }
 
+        val result = runChunkedTransfer(id, phase, url, headers, destinationFile, totalBytes, chunks)
+
+        // The server ignored Range, so the multi-chunk plan can never work against this link. Re-plan
+        // as one open-ended chunk — the same shape used when no content length is known — and try
+        // once more before giving up. Doing it here rather than persisting a per-link "supports
+        // ranges" flag keeps it self-healing and avoids a probe change: the probe measures
+        // throughput by reading the body, which a `bytes=0-0` request would defeat.
+        if (result is MediaTransferResult.Failed && result.cause is RangeUnsupportedException && chunks.size > 1) {
+            downloadChunkDao.deleteChunksForItem(id)
+            downloadChunkDao.insertAll(
+                listOf(
+                    DownloadChunk(
+                        downloadItemId = id,
+                        chunkIndex = 0,
+                        rangeStart = 0,
+                        rangeEnd = ChunkPlanner.OPEN_ENDED_RANGE_END,
+                    ),
+                ),
+            )
+
+            return runChunkedTransfer(
+                id = id,
+                phase = phase,
+                url = url,
+                headers = headers,
+                destinationFile = destinationFile,
+                totalBytes = totalBytes,
+                chunks = downloadChunkDao.getChunksForItem(id),
+            )
+        }
+
+        return result
+    }
+
+    private suspend fun runChunkedTransfer(
+        id: String,
+        phase: DownloadPhase,
+        url: String,
+        headers: Map<String, String>,
+        destinationFile: UniFile,
+        totalBytes: Long?,
+        chunks: List<DownloadChunk>,
+    ): MediaTransferResult {
         startStallWatch(id)
 
         val result = mediaTransferEngine.transfer(
@@ -188,7 +232,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
             url = url,
             headers = headers,
             destinationFile = destinationFile,
-            shouldInterrupt = { interruptFlags.containsKey(id) || hasStalled(id) },
+            shouldInterrupt = { interruptFlags.containsKey(id) || hasStalled(id, phase) },
         ) { chunkId, bytesDownloaded, status ->
             recordMovement(id, chunkId, bytesDownloaded)
             downloadChunkDao.updateProgress(chunkId, bytesDownloaded, status)
@@ -214,7 +258,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
             startIndex = startIndex,
             headers = headers,
             destinationFile = destinationFile,
-            shouldInterrupt = { interruptFlags.containsKey(id) || hasStalled(id) },
+            shouldInterrupt = { interruptFlags.containsKey(id) || hasStalled(id, DownloadPhase.STREAM) },
         ) { segmentsWritten, totalSegments ->
             // Every callback here is a segment landing, so it is movement by definition — no need
             // to diff against a previous value the way the byte-range path does.
@@ -357,7 +401,15 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
      * transfer from the inside; [resolveStalled] then re-labels the resulting cancellation as the
      * failure it really is.
      */
-    private fun hasStalled(id: String): Boolean {
+    private fun hasStalled(
+        id: String,
+        phase: DownloadPhase,
+    ): Boolean {
+        // Subtitles are exempt: the whole file is often smaller than the throughput floor this
+        // watchdog demands, so a slow-but-fine subtitle would trip it on size alone. OkHttp's read
+        // timeout is enough for something that small.
+        if (phase == DownloadPhase.SUBTITLES) return false
+
         val lastMovement = lastMovementTimes[id] ?: return false
         if (System.currentTimeMillis() - lastMovement < STALL_TIMEOUT_MS) return false
 

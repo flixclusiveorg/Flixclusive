@@ -17,6 +17,7 @@ import com.flixclusive.data.downloads.hls.HlsResolutionResult
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
+import com.flixclusive.data.downloads.transfer.TransferFailure
 import com.flixclusive.data.downloads.util.DownloadPathUtil
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.downloads.controller.MediaDownloadController
@@ -472,6 +473,13 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         // link — each failure re-enters runStreamPhase, and only a live transfer polls the flag.
         mediaDownloadRepository.consumeInterruptReason(itemId)?.let { pendingInterrupt ->
             return applyInterrupt(itemId, pendingInterrupt, DownloadPhase.STREAM, directory)
+        }
+
+        // A full disk, a revoked folder permission or a dropped connection would fail identically
+        // against every other candidate — walking the list would just blacklist all of them and
+        // leave a later retry with nothing to try. Stop here and keep the link cache intact.
+        if (TransferFailure.of(result.cause) == TransferFailure.ENVIRONMENT) {
+            return fail(itemId, result.cause.message ?: "Download failed")
         }
 
         item.sourceUrl?.let { deadUrl ->

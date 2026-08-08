@@ -12,6 +12,8 @@ import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
 import com.flixclusive.data.downloads.transfer.MediaTransferEngine
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
+import com.flixclusive.data.downloads.util.ChunkPlanner
+import com.flixclusive.data.downloads.transfer.RangeUnsupportedException
 import com.hippo.unifile.UniFile
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -416,6 +418,68 @@ class MediaDownloadRepositoryImplTest {
             expectThat(result).isEqualTo(MediaTransferResult.Cancelled)
             coVerify(exactly = 0) { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) }
             expectThat(repository.consumeInterruptReason(itemId)).isEqualTo(DownloadInterruptReason.STOP)
+        }
+
+    @Test
+    fun `runTransfer should re-plan as a single chunk when the server ignores Range`() =
+        runTest {
+            // A server answering a ranged request with the whole file can never satisfy a
+            // multi-chunk plan, so the retry has to drop to one open-ended chunk rather than
+            // hammering the same doomed layout.
+            val multiChunk = listOf(
+                DownloadChunk(id = 1, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = 499),
+                DownloadChunk(id = 2, downloadItemId = itemId, chunkIndex = 1, rangeStart = 500, rangeEnd = 999),
+            )
+            val singleChunk = listOf(
+                DownloadChunk(id = 3, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = -1),
+            )
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returnsMany listOf(multiChunk, singleChunk)
+            coEvery {
+                mediaTransferEngine.transfer(multiChunk, any(), any(), any(), any(), any())
+            } returns MediaTransferResult.Failed(RangeUnsupportedException("https://example.com/file"))
+            coEvery {
+                mediaTransferEngine.transfer(singleChunk, any(), any(), any(), any(), any())
+            } returns MediaTransferResult.Completed
+
+            val result = repository.runTransfer(
+                itemId,
+                DownloadPhase.STREAM,
+                "https://example.com/file",
+                emptyMap(),
+                destinationFile,
+                1000L
+            )
+
+            expectThat(result).isEqualTo(MediaTransferResult.Completed)
+            coVerify { downloadChunkDao.deleteChunksForItem(itemId) }
+            val planned = slot<List<DownloadChunk>>()
+            coVerify { downloadChunkDao.insertAll(capture(planned)) }
+            expectThat(planned.captured).hasSize(1)
+            expectThat(planned.captured.first().rangeEnd).isEqualTo(ChunkPlanner.OPEN_ENDED_RANGE_END)
+        }
+
+    @Test
+    fun `runTransfer should not re-plan when a single chunk already failed on Range`() =
+        runTest {
+            // Already one open-ended chunk — there is no simpler layout to fall back to.
+            val singleChunk = listOf(
+                DownloadChunk(id = 1, downloadItemId = itemId, chunkIndex = 0, rangeStart = 0, rangeEnd = -1),
+            )
+            coEvery { downloadChunkDao.getChunksForItem(itemId) } returns singleChunk
+            coEvery {
+                mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any())
+            } returns MediaTransferResult.Failed(RangeUnsupportedException("https://example.com/file"))
+
+            repository.runTransfer(
+                itemId,
+                DownloadPhase.STREAM,
+                "https://example.com/file",
+                emptyMap(),
+                destinationFile,
+                1000L
+            )
+
+            coVerify(exactly = 1) { mediaTransferEngine.transfer(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test

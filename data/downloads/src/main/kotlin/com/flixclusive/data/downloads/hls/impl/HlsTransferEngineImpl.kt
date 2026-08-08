@@ -7,6 +7,7 @@ import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.hls.HlsTransferEngine
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.hippo.unifile.UniFile
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -51,6 +52,10 @@ internal class HlsTransferEngineImpl @Inject constructor(
             var interrupted = false
             var failed = false
 
+            // Written from several workers, read once they've all finished; guarded by fileMutex
+            // alongside the other shared flags.
+            var lastSegmentError: Throwable? = null
+
             // Segments have no known byte length ahead of time, so resuming can't seek to a
             // specific offset the way the byte-range engine does — appending at the file's
             // current end is correct as long as writes only ever happen in segment order, which
@@ -75,9 +80,15 @@ internal class HlsTransferEngineImpl @Inject constructor(
                                     currentIndexIterator.nextInt()
                                 }
 
-                                val bytes = fetchSegmentWithRetries(segments[index], headers, keyCache)
+                                var segmentError: Throwable? = null
+                                val bytes = fetchSegmentWithRetries(segments[index], headers, keyCache) {
+                                    segmentError = it
+                                }
                                 if (bytes == null) {
-                                    fileMutex.withLock { failed = true }
+                                    fileMutex.withLock {
+                                        failed = true
+                                        lastSegmentError = segmentError ?: lastSegmentError
+                                    }
                                     return@launch
                                 }
 
@@ -111,7 +122,11 @@ internal class HlsTransferEngineImpl @Inject constructor(
 
             when {
                 interrupted -> MediaTransferResult.Cancelled
-                failed -> MediaTransferResult.Failed(IOException("One or more HLS segments failed to download"))
+                // The real cause where we have one, so the caller can tell a dead link apart from a
+                // full disk or a dropped connection rather than blaming the link for everything.
+                failed -> MediaTransferResult.Failed(
+                    lastSegmentError ?: IOException("One or more HLS segments failed to download"),
+                )
                 else -> MediaTransferResult.Completed
             }
         }
@@ -120,12 +135,17 @@ internal class HlsTransferEngineImpl @Inject constructor(
         segment: HlsSegmentInfo,
         headers: Map<String, String>,
         keyCache: ConcurrentHashMap<String, ByteArray>,
+        onError: (Throwable) -> Unit,
     ): ByteArray? {
         repeat(MAX_SEGMENT_RETRIES) { attempt ->
             try {
                 return downloadAndDecrypt(segment, headers, keyCache)
+            } catch (e: CancellationException) {
+                // Never retry a torn-down scope.
+                throw e
             } catch (e: Throwable) {
                 errorLog("HLS segment fetch failed (attempt ${attempt + 1}): ${e.message}")
+                onError(e)
             }
         }
         return null
