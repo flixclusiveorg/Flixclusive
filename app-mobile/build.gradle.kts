@@ -141,6 +141,7 @@ dependencies {
     implementation(projects.dataBackup)
     implementation(projects.dataDatabase)
     implementation(projects.dataProvider)
+    implementation(projects.domainDownloads)
     implementation(projects.domainProvider)
 
     implementation(libs.stubs.model.media)

@@ -69,6 +69,28 @@ interface DownloadItemDao {
         updatedAt: Date,
     )
 
+    /**
+     * Bulk-requeues every row still sitting in one of [from] — the states a transfer can only be
+     * left in by the process dying mid-download, since nothing else exits without writing a
+     * terminal or paused state. [phase] is written explicitly rather than preserved so a requeued
+     * row resumes into the right phase, and [excludedIds] shields any item a live coroutine is
+     * still driving (the service can be recreated while downloads are running).
+     */
+    @Query(
+        """
+        UPDATE download_items
+        SET state = :to, phase = :phase, downloadBytesPerSecond = 0, updatedAt = :updatedAt
+        WHERE state IN (:from) AND id NOT IN (:excludedIds)
+        """,
+    )
+    suspend fun requeueByStates(
+        from: List<DownloadItemState>,
+        to: DownloadItemState,
+        phase: DownloadPhase?,
+        excludedIds: List<String>,
+        updatedAt: Date,
+    ): Int
+
     @Query(
         """
         UPDATE download_items

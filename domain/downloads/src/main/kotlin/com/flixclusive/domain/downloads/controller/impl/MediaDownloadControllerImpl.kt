@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,7 +51,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     private val appDispatchers: AppDispatchers,
 ) : MediaDownloadController {
     private val scope by lazy { CoroutineScope(appDispatchers.io + SupervisorJob()) }
-    private val jobs = mutableMapOf<String, Job>()
+    private val jobs = ConcurrentHashMap<String, Job>()
 
     private val dispatchMutex = Mutex()
     private val activeItemIds = mutableSetOf<String>()
@@ -71,29 +72,61 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         }
     }
 
+    override fun resumeInterrupted() {
+        scope.launch {
+            val live = dispatchMutex.withLock { activeItemIds.toList() }
+            mediaDownloadRepository.requeueInterruptedItems(live)
+            // Unconditional: the sweep may have found nothing, but plain QUEUED rows that never got
+            // to start before the process died still need picking up.
+            dispatchNext()
+        }
+    }
+
     override fun pause(itemId: String) {
         scope.launch {
             val item = mediaDownloadRepository.getItem(itemId) ?: return@launch
-            when (item.state) {
-                DownloadItemState.QUEUED -> mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, null)
-                DownloadItemState.DOWNLOADING_STREAM, DownloadItemState.FETCHING_SUBTITLES ->
-                    mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE)
-                else -> Unit
+            if (item.state.isTerminal || item.state == DownloadItemState.PAUSED) return@launch
+
+            if (isDispatched(itemId)) {
+                mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.PAUSE)
+            } else {
+                mediaDownloadRepository.updateState(itemId, DownloadItemState.PAUSED, resumePhaseOf(item))
             }
         }
     }
 
+    /**
+     * The phase [item] should pick back up at. Only [DownloadItemState.STREAM_COMPLETE] needs
+     * translating: it carries no phase of its own, but its video is already fully written, so
+     * resuming it as anything other than subtitles would refetch the whole file.
+     */
+    private fun resumePhaseOf(item: DownloadItem): DownloadPhase? =
+        if (item.state == DownloadItemState.STREAM_COMPLETE) DownloadPhase.SUBTITLES else item.phase
+
     override fun stop(itemId: String) {
         scope.launch {
             val item = mediaDownloadRepository.getItem(itemId) ?: return@launch
-            when (item.state) {
-                DownloadItemState.DOWNLOADING_STREAM, DownloadItemState.FETCHING_SUBTITLES ->
-                    mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.STOP)
-                DownloadItemState.COMPLETED, DownloadItemState.STOPPED -> Unit
-                else -> stopInactiveItem(itemId, item)
+            if (item.state == DownloadItemState.COMPLETED || item.state == DownloadItemState.STOPPED) {
+                return@launch
+            }
+
+            if (isDispatched(itemId)) {
+                mediaDownloadRepository.requestInterrupt(itemId, DownloadInterruptReason.STOP)
+            } else {
+                stopInactiveItem(itemId, item)
             }
         }
     }
+
+    /**
+     * Whether a coroutine is actually driving [itemId] right now. Both interrupt paths key off this
+     * rather than off the persisted state, because the two disagree in each direction: a row can
+     * read DOWNLOADING_STREAM with nothing running (the process died mid-transfer, and the
+     * cooperative interrupt flag would have no one to poll it — the item would freeze), and a row
+     * can read QUEUED while a coroutine is already resolving its links (where tearing the directory
+     * down underneath it would just get overwritten by the still-running transfer).
+     */
+    private suspend fun isDispatched(itemId: String): Boolean = dispatchMutex.withLock { itemId in activeItemIds }
 
     override fun delete(itemId: String) {
         scope.launch {
@@ -170,6 +203,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             runDownload(itemId)
         } finally {
             releaseSlot(itemId)
+            jobs.remove(itemId)
             dispatchNext()
         }
     }
@@ -193,6 +227,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
                     runDownload(next.id)
                 } finally {
                     releaseSlot(next.id)
+                    jobs.remove(next.id)
                     dispatchNext()
                 }
             }
@@ -201,10 +236,19 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     private suspend fun runDownload(itemId: String) {
         val item = mediaDownloadRepository.getItem(itemId) ?: return
+        // A stop that landed while this dispatch was still waiting for its concurrency slot must
+        // not be undone by it. Narrow to STOPPED on purpose: FAILED and COMPLETED are legitimate
+        // states to start from (retry() requeues through here), STOPPED is the one the user
+        // explicitly asked to end.
+        if (item.state == DownloadItemState.STOPPED) return
+
         val directory = resolveDirectory(item) ?: return fail(itemId, "Unable to access download folder")
 
+        // Phase-, not state-driven, so it also covers an item requeued to QUEUED by
+        // resumeInterrupted() after the process died: its video is already fully written, and
+        // re-entering the stream phase would download the whole thing again.
         val resumingSubtitles = item.state == DownloadItemState.FETCHING_SUBTITLES ||
-            (item.state == DownloadItemState.PAUSED && item.phase == DownloadPhase.SUBTITLES)
+            item.phase == DownloadPhase.SUBTITLES
 
         if (resumingSubtitles) {
             return runSubtitlePhase(itemId, item, directory)
@@ -266,6 +310,12 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         directory: UniFile,
         sourceUrl: String,
     ) {
+        // Link resolution and HLS manifest fetching happen before any transfer starts polling the
+        // interrupt flag, so a stop requested during that window is caught here instead.
+        mediaDownloadRepository.consumeInterruptReason(itemId)?.let { pendingInterrupt ->
+            return applyInterrupt(itemId, pendingInterrupt, DownloadPhase.STREAM, directory)
+        }
+
         mediaDownloadRepository.updateState(itemId, DownloadItemState.DOWNLOADING_STREAM, DownloadPhase.STREAM)
 
         if (item.isHlsStream) {
@@ -396,6 +446,12 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         staleDestinationFile: UniFile,
         result: MediaTransferResult.Failed,
     ) {
+        // Without this, a stop is ignored for as long as it takes to walk every surviving cached
+        // link — each failure re-enters runStreamPhase, and only a live transfer polls the flag.
+        mediaDownloadRepository.consumeInterruptReason(itemId)?.let { pendingInterrupt ->
+            return applyInterrupt(itemId, pendingInterrupt, DownloadPhase.STREAM, directory)
+        }
+
         item.sourceUrl?.let { deadUrl ->
             mediaLinksRepository.setLinkStatus(deadUrl, item.ownerId, isDead = true)
         }

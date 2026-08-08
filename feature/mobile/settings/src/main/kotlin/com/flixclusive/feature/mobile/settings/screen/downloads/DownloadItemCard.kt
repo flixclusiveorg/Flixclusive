@@ -309,12 +309,16 @@ private fun DownloadItem.streamValueText(context: Context): String {
 }
 
 /** `"1.2 MB/s"` (or `"3 segments/s"` while [DownloadItemState.DOWNLOADING_STREAM] on an HLS
- * stream), or a "Calculating…" placeholder rather than hiding — matching browser download
- * managers — while [DownloadItem.downloadBytesPerSecond] has no prior sample to diff against yet
- * (e.g. the very first progress tick). Subtitle transfers are always plain file downloads, so
- * they're never rendered as segments/s even when the video itself was HLS. */
+ * stream). The "Calculating…" placeholder is reserved for a download that hasn't moved a byte yet,
+ * where there's genuinely no sample to diff against — matching browser download managers. Once
+ * something has transferred, a zero rate means the transfer has stalled, and `"0 B/s"` reports that
+ * far more honestly than a placeholder that would otherwise never resolve. (Brief stalls don't get
+ * that far: the repository replays the last measured rate for a few samples first.) Subtitle
+ * transfers are always plain file downloads, so they're never rendered as segments/s even when the
+ * video itself was HLS. */
 private fun DownloadItem.downloadSpeedText(context: Context): String {
-    if (downloadBytesPerSecond <= 0) {
+    val hasTransferred = streamBytesDownloaded > 0 || downloadedSubtitlesCount > 0
+    if (downloadBytesPerSecond <= 0 && !hasTransferred) {
         return context.getString(LocaleR.string.download_progress_speed_calculating)
     }
 

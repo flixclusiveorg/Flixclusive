@@ -35,6 +35,14 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
      * timestamp for the same id — the previous sample [computeRate] diffs against. */
     private val lastProgressValues = ConcurrentHashMap<String, Long>()
 
+    /** Last rate [computeRate] actually measured above zero, per id — what [smoothedRate] replays
+     * while a transfer briefly stalls. */
+    private val lastNonZeroRates = ConcurrentHashMap<String, Long>()
+
+    /** How many consecutive zero samples [smoothedRate] has already covered for with
+     * [lastNonZeroRates], per id. */
+    private val heldRateSampleCounts = ConcurrentHashMap<String, Int>()
+
     override fun observeItem(id: String): Flow<DownloadItem?> = downloadItemDao.getAsFlow(id)
 
     override fun observeAllItems(): Flow<List<DownloadItem>> = downloadItemDao.getAllAsFlow()
@@ -78,6 +86,10 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
 
     override suspend fun resetChunks(id: String) {
         deleteChunks(id)
+        // Unlike deleteChunks (which also runs between two subtitle files — exactly the gap the
+        // hold-over exists to ride out), a reset restarts the transfer from nothing, so the speed
+        // it was last running at is no longer worth replaying.
+        clearRateHold(id)
         // Also zeroes the segment-count progress HLS items keep in the same columns, so a manual
         // retry restarts an HLS download instead of silently resuming it (matching the byte-range
         // engine, where deleting chunks already forces a from-scratch replan).
@@ -128,7 +140,11 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         destinationFile: UniFile,
         totalBytes: Long?,
     ): MediaTransferResult {
-        interruptFlags.remove(id)
+        // Honour, don't clear: an interrupt requested during a window between transfers — link
+        // resolution, HLS manifest fetching, the hop from one subtitle file to the next — used to
+        // be wiped here before anything ever polled it, which is how a stop could go missing
+        // entirely. Leaving the flag set lets the caller's handleInterrupted consume it.
+        if (interruptFlags.containsKey(id)) return MediaTransferResult.Cancelled
 
         val existingChunks = downloadChunkDao.getChunksForItem(id)
         val chunks =
@@ -165,7 +181,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         headers: Map<String, String>,
         destinationFile: UniFile,
     ): MediaTransferResult {
-        interruptFlags.remove(id)
+        if (interruptFlags.containsKey(id)) return MediaTransferResult.Cancelled
 
         return hlsTransferEngine.transfer(
             segments = segments,
@@ -188,7 +204,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         val isFinal = segmentsWritten >= totalSegments
         if (!isFinal && now - lastWrite < PROGRESS_WRITE_THROTTLE_MS) return
 
-        val rate = computeRate(id, segmentsWritten.toLong(), now, lastWrite)
+        val rate = smoothedRate(id, computeRate(id, segmentsWritten.toLong(), now, lastWrite))
         lastProgressWriteTimes[id] = now
         lastProgressValues[id] = segmentsWritten.toLong()
         downloadItemDao.updateStreamProgress(id, segmentsWritten.toLong(), totalSegments.toLong(), rate, Date())
@@ -211,7 +227,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         if (!shouldWrite) return
 
         val totalDownloaded = downloadChunkDao.getChunksForItem(id).sumOf { it.bytesDownloaded }
-        val rate = computeRate(id, totalDownloaded, now, lastWrite)
+        val rate = smoothedRate(id, computeRate(id, totalDownloaded, now, lastWrite))
         lastProgressWriteTimes[id] = now
         lastProgressValues[id] = totalDownloaded
 
@@ -240,6 +256,61 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         return (delta * 1000L) / deltaMs
     }
 
+    /**
+     * Smooths [rawRate] so a transfer that is alive but momentarily not moving — a slow HLS
+     * segment, the hop between two subtitle files, a throttled window that happened to catch no
+     * new bytes — doesn't immediately read as stopped. A zero sample replays the last measured
+     * rate for up to [MAX_HELD_RATE_SAMPLES] consecutive writes; past that the transfer really has
+     * stalled, so the hold is dropped and zero is reported honestly.
+     */
+    private fun smoothedRate(
+        id: String,
+        rawRate: Long,
+    ): Long {
+        if (rawRate > 0L) {
+            lastNonZeroRates[id] = rawRate
+            heldRateSampleCounts.remove(id)
+            return rawRate
+        }
+
+        val held = lastNonZeroRates[id] ?: return 0L
+        val timesHeld = heldRateSampleCounts[id] ?: 0
+        if (timesHeld >= MAX_HELD_RATE_SAMPLES) {
+            clearRateHold(id)
+            return 0L
+        }
+
+        heldRateSampleCounts[id] = timesHeld + 1
+        return held
+    }
+
+    private fun clearRateHold(id: String) {
+        lastNonZeroRates.remove(id)
+        heldRateSampleCounts.remove(id)
+    }
+
+    override suspend fun requeueInterruptedItems(excludedIds: List<String>): Int {
+        val now = Date()
+        val requeuedStreams = downloadItemDao.requeueByStates(
+            from = listOf(DownloadItemState.DOWNLOADING_STREAM),
+            to = DownloadItemState.QUEUED,
+            phase = DownloadPhase.STREAM,
+            excludedIds = excludedIds,
+            updatedAt = now,
+        )
+        // STREAM_COMPLETE joins FETCHING_SUBTITLES here rather than resuming as STREAM: its video
+        // is already fully written, so the only work left for either is the subtitle phase.
+        val requeuedSubtitles = downloadItemDao.requeueByStates(
+            from = listOf(DownloadItemState.FETCHING_SUBTITLES, DownloadItemState.STREAM_COMPLETE),
+            to = DownloadItemState.QUEUED,
+            phase = DownloadPhase.SUBTITLES,
+            excludedIds = excludedIds,
+            updatedAt = now,
+        )
+
+        return requeuedStreams + requeuedSubtitles
+    }
+
     override fun requestInterrupt(
         id: String,
         reason: DownloadInterruptReason,
@@ -252,10 +323,12 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     override suspend fun delete(id: String) {
         lastProgressWriteTimes.remove(id)
         lastProgressValues.remove(id)
+        clearRateHold(id)
         downloadItemDao.delete(id)
     }
 
     companion object {
         private const val PROGRESS_WRITE_THROTTLE_MS = 1000L
+        private const val MAX_HELD_RATE_SAMPLES = 3
     }
 }
