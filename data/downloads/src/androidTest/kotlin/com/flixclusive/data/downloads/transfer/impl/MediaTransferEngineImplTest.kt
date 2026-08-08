@@ -7,6 +7,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
+import com.flixclusive.data.downloads.transfer.RangeUnsupportedException
 import com.hippo.unifile.UniFile
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -70,7 +71,7 @@ class MediaTransferEngineImplTest {
         bytesDownloaded: Long = 0,
     ) = DownloadChunk(
         id = id,
-        downloadItemId = 1,
+        downloadItemId = "1",
         chunkIndex = chunkIndex,
         rangeStart = rangeStart,
         rangeEnd = rangeEnd,
@@ -81,7 +82,7 @@ class MediaTransferEngineImplTest {
     fun transferShouldDownloadSingleChunkFullyAndWriteItToDestinationFile() =
         runTest(testDispatcher) {
             val content = "hello world".repeat(100)
-            server.enqueue(MockResponse().setBody(content))
+            server.enqueue(MockResponse().setResponseCode(206).setBody(content))
 
             val progressEvents = mutableListOf<DownloadChunkStatus>()
             val result = engine.transfer(
@@ -101,7 +102,7 @@ class MediaTransferEngineImplTest {
     fun transferShouldStopEarlyAndReportCancelledWhenInterruptedMidDownload() =
         runTest(testDispatcher) {
             val content = "x".repeat(50_000)
-            server.enqueue(MockResponse().setBody(content))
+            server.enqueue(MockResponse().setResponseCode(206).setBody(content))
 
             var bytesSeen = 0L
             val result = engine.transfer(
@@ -125,7 +126,9 @@ class MediaTransferEngineImplTest {
                 "rw"
             ).use { it.write(fullContent.take(alreadyDownloaded.toInt()).toByteArray()) }
 
-            server.enqueue(MockResponse().setBody(fullContent.substring(alreadyDownloaded.toInt())))
+            server.enqueue(
+                MockResponse().setResponseCode(206).setBody(fullContent.substring(alreadyDownloaded.toInt()))
+            )
 
             val result = engine.transfer(
                 chunks = listOf(chunk(rangeEnd = fullContent.length - 1L, bytesDownloaded = alreadyDownloaded)),
@@ -140,6 +143,57 @@ class MediaTransferEngineImplTest {
 
             val recordedRequest = server.takeRequest()
             expectThat(recordedRequest.getHeader("Range")).isEqualTo("bytes=50-${fullContent.length - 1}")
+        }
+
+    @Test
+    fun transferShouldRefuseToWriteAWholeFileResponseAtAChunkOffset() =
+        runTest(testDispatcher) {
+            // A server that ignores Range answers 200 with the entire file. Writing that at each
+            // chunk's own offset produces a large, plausible, corrupt file — big enough to sail
+            // past the minimum-size sanity check — so the transfer has to refuse it outright.
+            val fullContent = ('a'..'z').joinToString("").repeat(400)
+            server.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest) = MockResponse().setBody(fullContent)
+            }
+
+            val secondHalfStart = fullContent.length / 2L
+            val result = engine.transfer(
+                chunks = listOf(
+                    chunk(id = 1, chunkIndex = 0, rangeStart = 0, rangeEnd = secondHalfStart - 1),
+                    chunk(id = 2, chunkIndex = 1, rangeStart = secondHalfStart, rangeEnd = fullContent.length - 1L),
+                ),
+                url = server.url("/file.mp4").toString(),
+                headers = emptyMap(),
+                destinationFile = UniFile.fromFile(destinationFile)!!,
+                shouldInterrupt = { false },
+            ) { _, _, _ -> }
+
+            expectThat(result)
+                .isA<MediaTransferResult.Failed>()
+                .get { cause }
+                .isA<RangeUnsupportedException>()
+            // Nothing was written at the far offset, so no half-corrupt file is left behind.
+            expectThat(destinationFile.length()).isEqualTo(0L)
+        }
+
+    @Test
+    fun transferShouldAcceptAWholeFileResponseForASingleOpenEndedChunk() =
+        runTest(testDispatcher) {
+            // The fallback the repository re-plans to: one open-ended chunk starting at zero can
+            // take a whole-file response safely, so this must still succeed.
+            val content = "hello world".repeat(100)
+            server.enqueue(MockResponse().setBody(content))
+
+            val result = engine.transfer(
+                chunks = listOf(chunk()),
+                url = server.url("/file.mp4").toString(),
+                headers = emptyMap(),
+                destinationFile = UniFile.fromFile(destinationFile)!!,
+                shouldInterrupt = { false },
+            ) { _, _, _ -> }
+
+            expectThat(result).isA<MediaTransferResult.Completed>()
+            expectThat(destinationFile.readText()).isEqualTo(content)
         }
 
     @Test
@@ -168,7 +222,7 @@ class MediaTransferEngineImplTest {
                 override fun dispatch(request: RecordedRequest): MockResponse {
                     val range = request.getHeader("Range")!!.removePrefix("bytes=")
                     val (start, end) = range.split("-").map { it.toInt() }
-                    return MockResponse().setBody(fullContent.substring(start, end + 1))
+                    return MockResponse().setResponseCode(206).setBody(fullContent.substring(start, end + 1))
                 }
             }
 
