@@ -12,7 +12,9 @@ import androidx.media3.extractor.SeekMap
 import java.io.IOException
 
 @UnstableApi
-internal class UnknownSubtitlesExtractor(private val format: Format) : Extractor {
+internal class UnknownSubtitlesExtractor(
+    private val format: Format,
+) : Extractor {
     override fun sniff(input: ExtractorInput): Boolean {
         return true
     }

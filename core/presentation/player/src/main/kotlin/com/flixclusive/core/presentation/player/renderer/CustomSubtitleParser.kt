@@ -16,7 +16,6 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import org.mozilla.universalchardet.UniversalDetector
 
-
 /**
  *
  * Code from: [Cloudstream3 TextRenderer](https://github.com/recloudstream/cloudstream/blob/743527aa4060eddb6649a61b01fb009b3d77a9d2/app/src/main/java/com/lagradost/cloudstream3/ui/subtitles/SubtitlesFragment.kt#L55)
@@ -85,8 +84,6 @@ internal class CustomSubtitleParser(
     ) {
         val customOutput =
             Consumer<CuesWithTiming> { data ->
-                val currentOffset = cuesProvider.offset
-
                 val updatedCues = data.cues.fastMap { cue ->
                     // See https://github.com/google/ExoPlayer/issues/7934
 
@@ -112,7 +109,7 @@ internal class CustomSubtitleParser(
                         // cues =
                         updatedCues,
                         // startTimeUs =
-                        data.startTimeUs + currentOffset.times(1000),
+                        data.startTimeUs,
                         // durationUs =
                         data.durationUs,
                     )

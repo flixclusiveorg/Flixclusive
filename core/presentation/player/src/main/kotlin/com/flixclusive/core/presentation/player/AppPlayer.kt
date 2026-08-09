@@ -32,14 +32,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MergingMediaSource
-import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
-import com.flixclusive.core.presentation.player.extensions.getRenderer
 import com.flixclusive.core.presentation.player.extensions.isLiveError
 import com.flixclusive.core.presentation.player.extensions.isNetworkException
 import com.flixclusive.core.presentation.player.extensions.setStyle
@@ -55,7 +53,7 @@ import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getRend
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
-import io.github.anilbeesetti.nextlib.media3ext.renderer.NextTextRenderer
+import io.github.anilbeesetti.nextlib.media3ext.renderer.subtitleDelayMilliseconds
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
@@ -98,7 +96,7 @@ class AppPlayer(
     private val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
     val errors = _errors.asSharedFlow()
 
-    override var offset by mutableLongStateOf(0L)
+    var offset by mutableLongStateOf(0L)
         private set
 
     val currentCuesWithTiming = mutableStateListOf<CueWithTiming>()
@@ -158,6 +156,7 @@ class AppPlayer(
                 .apply {
                     setHandleAudioBecomingNoisy(true)
                     addListener(listener)
+                    subtitleDelayMilliseconds = offset
                 }
         }
 
@@ -236,30 +235,20 @@ class AppPlayer(
     }
 
     fun changeSubtitleDelay(offset: Long) {
+        if (this.offset == offset) return
+
         this.offset = offset
-        val textRenderer = exoPlayer?.getRenderer<NextTextRenderer>(C.TRACK_TYPE_TEXT)
+        exoPlayer?.subtitleDelayMilliseconds = offset
 
-        // Apply the offset change immediately to the current text renderer
-        if (textRenderer?.state == TextRenderer.STATE_ENABLED ||
-            textRenderer?.state == TextRenderer.STATE_STARTED
-        ) {
-            // Force the text renderer to re-render with the new offset
-            // by resetting its position to the current playback position
-            val currentPos = exoPlayer?.currentPosition ?: 0L
+        // NextTextRenderer shifts the position it hands to TextRenderer, but TextRenderer discards
+        // every cue behind that position as it renders. Delaying subtitles asks it for cues it has
+        // already thrown away, so the stream has to be re-read; only a seek does that.
+        val canRefresh = playbackState != Player.STATE_ENDED &&
+            isCommandAvailable(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM) &&
+            isCurrentMediaItemSeekable
 
-            // The renderer will pick up the new offset from the updated state
-            // when it re-renders the current position
-            try {
-                textRenderer.resetPosition(
-                    currentPos,
-                    false
-                )
-            } catch (e: Exception) {
-                errorLog(e)
-                val seekPos = (currentPos - 50).coerceAtLeast(0L)
-                seekTo(seekPos)
-                seekTo(currentPos)
-            }
+        if (canRefresh) {
+            seekTo(currentPosition)
         }
     }
 

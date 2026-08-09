@@ -52,7 +52,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
@@ -98,6 +97,7 @@ import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 
 @OptIn(UnstableApi::class)
@@ -329,7 +329,7 @@ internal fun PlayerControls(
                     gestureState.showVolumeSlider()
                     volumeSliderHideJob?.cancel()
                     volumeSliderHideJob = scope.launch {
-                        delay(1000L)
+                        delay(1000L.milliseconds)
                         gestureState.hideSliders()
                     }
                 }
@@ -548,19 +548,7 @@ internal fun PlayerControls(
                             scrubState = scrubState,
                             onBack = { uiMode = UiMode.SUBS },
                             onDismiss = { uiMode = UiMode.NONE },
-                            onSave = {
-                                player.changeSubtitleDelay(it)
-
-                                // Force seek to update subtitle timings immediately after changing the offset
-                                val isMediaSeekable = player.isCommandAvailable(
-                                    command = Player.COMMAND_GET_CURRENT_MEDIA_ITEM
-                                ) &&
-                                    player.isCurrentMediaItemSeekable
-
-                                if (isMediaSeekable) {
-                                    player.seekTo(scrubState.progress + 1L)
-                                }
-                            },
+                            onSave = { player.changeSubtitleDelay(it) },
                             modifier = Modifier
                                 .fillMaxSize()
                         )
