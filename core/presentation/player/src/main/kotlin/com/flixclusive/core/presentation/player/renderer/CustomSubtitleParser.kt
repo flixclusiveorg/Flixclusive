@@ -16,6 +16,7 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import org.mozilla.universalchardet.UniversalDetector
 
+
 /**
  *
  * Code from: [Cloudstream3 TextRenderer](https://github.com/recloudstream/cloudstream/blob/743527aa4060eddb6649a61b01fb009b3d77a9d2/app/src/main/java/com/lagradost/cloudstream3/ui/subtitles/SubtitlesFragment.kt#L55)

@@ -2,6 +2,9 @@ package com.flixclusive.core.presentation.player.extensions
 
 import androidx.media3.common.C
 import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.Renderer
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.R
@@ -43,4 +46,16 @@ internal fun AppPlayer.switchTrack(
                 .setOverrideForType(trackSelectionOverride)
                 .build()
         }
+}
+
+@UnstableApi
+internal fun <T : Renderer> ExoPlayer.getRenderer(trackType: @C.TrackType Int): T? {
+    for (i in 0 until rendererCount) {
+        val rendererType = getRendererType(i)
+        if (rendererType == trackType) {
+            return getRenderer(i) as T?
+        }
+    }
+
+    return null
 }

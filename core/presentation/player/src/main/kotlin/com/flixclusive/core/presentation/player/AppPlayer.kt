@@ -39,6 +39,7 @@ import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.presentation.player.extensions.getRenderer
 import com.flixclusive.core.presentation.player.extensions.isLiveError
 import com.flixclusive.core.presentation.player.extensions.isNetworkException
 import com.flixclusive.core.presentation.player.extensions.setStyle
@@ -47,12 +48,14 @@ import com.flixclusive.core.presentation.player.model.CueWithTiming
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
+import com.flixclusive.core.presentation.player.renderer.CustomSubtitleParserFactory
 import com.flixclusive.core.presentation.player.ui.PiPEvent
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getLoadControl
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getRenderers
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
+import io.github.anilbeesetti.nextlib.media3ext.renderer.NextTextRenderer
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
@@ -75,12 +78,14 @@ class AppPlayer(
 ) : CuesProvider,
     Player {
     private val mediaSourceManager: MediaSourceManager by lazy {
-        MediaSourceManager(dataSourceFactory)
+        MediaSourceManager(
+            dataSourceFactory = dataSourceFactory,
+            subtitleParserFactory = CustomSubtitleParserFactory(this)
+        )
     }
     private val listener = InternalPlayerListener()
     private var loudnessEnhancer: LoudnessEnhancer? = null
 
-    private var textRenderer: TextRenderer? = null
     private var mediaSession: MediaSession? = null
 
     /** Backing property for playWhenReady to keep the value when the player is null. */
@@ -131,9 +136,7 @@ class AppPlayer(
                             audioRendererEventListener = audioRendererEventListener,
                             textRendererOutput = textRendererOutput,
                             metadataRendererOutput = metadataRendererOutput,
-                            cuesProvider = this@AppPlayer,
                             decoderPriority = playerPrefs.decoderPriority,
-                            onTextRendererChange = { textRenderer = it },
                         )
                     }
                     playerPrefs.seekAmount.let {
@@ -234,6 +237,7 @@ class AppPlayer(
 
     fun changeSubtitleDelay(offset: Long) {
         this.offset = offset
+        val textRenderer = exoPlayer?.getRenderer<NextTextRenderer>(C.TRACK_TYPE_TEXT)
 
         // Apply the offset change immediately to the current text renderer
         if (textRenderer?.state == TextRenderer.STATE_ENABLED ||
@@ -246,7 +250,7 @@ class AppPlayer(
             // The renderer will pick up the new offset from the updated state
             // when it re-renders the current position
             try {
-                textRenderer?.resetPosition(
+                textRenderer.resetPosition(
                     currentPos,
                     false
                 )
@@ -305,7 +309,6 @@ class AppPlayer(
         removeListener(listener)
         exoPlayer?.release()
         exoPlayer = null
-        textRenderer = null
         loudnessEnhancer?.release()
         loudnessEnhancer = null
         currentCuesWithTiming.clear()

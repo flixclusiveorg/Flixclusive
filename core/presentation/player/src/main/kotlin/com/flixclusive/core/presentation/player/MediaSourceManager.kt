@@ -4,7 +4,7 @@ package com.flixclusive.core.presentation.player
 
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
-import androidx.media3.common.C
+import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.dash.DashMediaSource
@@ -12,16 +12,20 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.exoplayer.source.SingleSampleMediaSource
+import androidx.media3.extractor.ExtractorsFactory
+import androidx.media3.extractor.text.SubtitleExtractor
+import androidx.media3.extractor.text.SubtitleParser
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
+import com.flixclusive.core.presentation.player.renderer.UnknownSubtitlesExtractor
 import com.flixclusive.core.presentation.player.util.MimeTypeParser
 import com.flixclusive.core.presentation.player.util.MimeTypeParser.toMimeType
 
 @OptIn(UnstableApi::class)
 class MediaSourceManager(
     private val dataSourceFactory: AppDataSourceFactory,
+    private val subtitleParserFactory: SubtitleParser.Factory,
 ) {
     var currentMediaSource: MediaSource? = null
 
@@ -88,8 +92,28 @@ class MediaSourceManager(
             else -> dataSourceFactory.local
         }
 
-        return SingleSampleMediaSource
-            .Factory(dataSourceFactory)
-            .createMediaSource(subtitleMediaItem, C.TIME_UNSET)
+        val format = Format
+            .Builder()
+            .setSampleMimeType(subtitleMediaItem.mimeType)
+            .setLanguage(subtitleMediaItem.language)
+            .setSelectionFlags(subtitleMediaItem.selectionFlags)
+            .setRoleFlags(subtitleMediaItem.roleFlags)
+            .setLabel(subtitleMediaItem.label)
+            .setId(subtitleMediaItem.id)
+            .build()
+
+        val extractorsFactory = ExtractorsFactory {
+            arrayOf(
+                if (subtitleParserFactory.supportsFormat(format)) {
+                    SubtitleExtractor(subtitleParserFactory.create(format), format)
+                } else {
+                    UnknownSubtitlesExtractor(format)
+                }
+            )
+        }
+
+        return ProgressiveMediaSource
+            .Factory(dataSourceFactory, extractorsFactory)
+            .createMediaSource(MediaItem.fromUri(subtitleMediaItem.uri))
     }
 }

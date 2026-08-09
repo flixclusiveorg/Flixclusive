@@ -21,8 +21,8 @@ internal object MimeTypeParser {
 
     /**
      * Guesses a subtitle's MIME type from its URL/label before any bytes are read. Always returns
-     * a value in [com.flixclusive.core.presentation.player.renderer.CustomSubtitleDecoderFactory.supportedMimeTypes] —
-     * a null return here made [com.flixclusive.core.presentation.player.renderer.CustomSubtitleDecoderFactory.supportsFormat]
+     * a value in [com.flixclusive.core.presentation.player.renderer.CustomSubtitleParserFactory.supportedMimeTypes] —
+     * a null return here made [com.flixclusive.core.presentation.player.renderer.CustomSubtitleParserFactory.supportsFormat]
      * decline the track outright, before [com.flixclusive.core.presentation.player.renderer.CustomSubtitleParser]
      * ever got a chance to sniff the real bytes and self-correct a wrong guess.
      */

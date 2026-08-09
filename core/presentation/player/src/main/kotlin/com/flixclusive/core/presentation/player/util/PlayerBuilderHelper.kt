@@ -1,6 +1,5 @@
 package com.flixclusive.core.presentation.player.util
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import androidx.annotation.OptIn
@@ -14,11 +13,8 @@ import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
 import androidx.media3.exoplayer.metadata.MetadataOutput
 import androidx.media3.exoplayer.text.TextOutput
-import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 import com.flixclusive.core.datastore.model.user.player.DecoderPriority
-import com.flixclusive.core.presentation.player.CuesProvider
-import com.flixclusive.core.presentation.player.renderer.CustomSubtitleDecoderFactory
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 import kotlin.math.max
 import kotlin.math.min
@@ -34,9 +30,7 @@ internal object PlayerBuilderHelper {
         audioRendererEventListener: AudioRendererEventListener,
         textRendererOutput: TextOutput,
         metadataRendererOutput: MetadataOutput,
-        cuesProvider: CuesProvider,
         decoderPriority: DecoderPriority,
-        onTextRendererChange: (TextRenderer) -> Unit,
     ): Array<Renderer> {
         return NextRenderersFactory(this)
             .setEnableDecoderFallback(true)
@@ -52,29 +46,8 @@ internal object PlayerBuilderHelper {
                 audioRendererEventListener,
                 textRendererOutput,
                 metadataRendererOutput,
-            ).map {
-                if (it is TextRenderer) {
-                    // Pass subtitle offset provider directly to the decoder factory
-                    val decoder = CustomSubtitleDecoderFactory(cuesProvider)
-
-                    val currentTextRenderer = TextRenderer(
-                        textRendererOutput,
-                        eventHandler.looper,
-                        decoder,
-                    ).apply {
-                        // Required to make the decoder work with old subtitles
-                        // Upgrade CustomSubtitleDecoderFactory when media3 supports it
-                        @Suppress("DEPRECATION")
-                        @SuppressLint("UnsafeOptInUsageError")
-                        experimentalSetLegacyDecodingEnabled(true)
-                    }
-
-                    onTextRendererChange(currentTextRenderer)
-                    currentTextRenderer
-                } else {
-                    it
-                }
-            }.toTypedArray()
+            ).map { it }
+            .toTypedArray()
     }
 
     /**
