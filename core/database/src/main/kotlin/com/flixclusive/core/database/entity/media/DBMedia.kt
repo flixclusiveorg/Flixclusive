@@ -10,6 +10,16 @@ import java.io.Serializable
 import java.util.Date
 
 /**
+ * 1 Jan 2200 in epoch milliseconds. Bounds the plausible window in both directions, so it also
+ * spares pre-1970 releases — their timestamps are negative, and an inflated 1950s film reads as
+ * roughly -6.3e14, which a one-sided `> max` test would have walked straight past.
+ *
+ * Shared with [com.flixclusive.core.database.migration.Schema21to22]: the runtime conversion and the
+ * repair migration must agree on the same window, or a row one accepts the other would rewrite.
+ */
+internal const val MAX_PLAUSIBLE_RELEASE_MILLIS = 7_258_118_400_000L
+
+/**
  * Represents a media entity in the database.
  *
  * Stores only stable identity fields. Mutable metadata like ratings, overviews,
@@ -71,7 +81,7 @@ data class DBMedia(
             val millis = when (epoch) {
                 in -MAX_PLAUSIBLE_SECONDS..MAX_PLAUSIBLE_SECONDS -> epoch * 1_000
                 in -MAX_PLAUSIBLE_MILLIS..MAX_PLAUSIBLE_MILLIS -> epoch
-                // Rows written before this fix hold microseconds; Schema23to24 repairs the ones
+                // Rows written before this fix hold microseconds; Schema21to22 repairs the ones
                 // already stored, and this catches any that come back through a provider.
                 in -MAX_PLAUSIBLE_MICROS..MAX_PLAUSIBLE_MICROS -> epoch / 1_000
                 else -> return null
@@ -97,9 +107,7 @@ data class DBMedia(
             )
         }
 
-        /** 1 Jan 2200 in milliseconds — generous for an unreleased title, and the far edge of what
-         * any of the three readings is allowed to produce. */
-        private const val MAX_PLAUSIBLE_MILLIS = 7_258_118_400_000L
+        private const val MAX_PLAUSIBLE_MILLIS = MAX_PLAUSIBLE_RELEASE_MILLIS
         private const val MAX_PLAUSIBLE_SECONDS = MAX_PLAUSIBLE_MILLIS / 1_000
         private const val MAX_PLAUSIBLE_MICROS = MAX_PLAUSIBLE_MILLIS * 1_000
     }

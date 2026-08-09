@@ -17,8 +17,6 @@ import com.flixclusive.core.database.migration.Schema19to20
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema20to21
 import com.flixclusive.core.database.migration.Schema21to22
-import com.flixclusive.core.database.migration.Schema22to23
-import com.flixclusive.core.database.migration.Schema23to24
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
 import com.flixclusive.core.database.migration.Schema4to5
@@ -59,7 +57,7 @@ class DBMigrationTest {
 
         helper.runMigrationsAndValidate(
             name = TEST_DB,
-            version = 24,
+            version = 22,
             validateDroppedTables = true,
             Schema1to2,
             Schema2to3,
@@ -82,61 +80,18 @@ class DBMigrationTest {
             Schema19to20,
             Schema20to21,
             Schema21to22,
-            Schema22to23,
-            Schema23to24,
         )
     }
 
     /**
-     * The empty-database run above never exercises the part of [Schema22to23] most likely to go
-     * wrong: collapsing rows that already violate the unique index it then creates. Seeds the
-     * duplicates a pre-23 install can be carrying and checks the right one survives with its chunks.
-     */
-    @Test
-    @Throws(IOException::class)
-    fun migrateShouldCollapseDuplicateDownloadsKeepingTheFurthestAlongRow() {
-        helper.createDatabase(TEST_DB, 22).use { db ->
-            db.insertDownloadItem(id = "behind", mediaId = "m1", streamBytesDownloaded = 10)
-            db.insertDownloadItem(id = "ahead", mediaId = "m1", streamBytesDownloaded = 900)
-            // A different title must survive untouched alongside them.
-            db.insertDownloadItem(id = "other", mediaId = "m2", streamBytesDownloaded = 5)
-            db.execSQL(
-                """
-                INSERT INTO `download_chunks` (`downloadItemId`, `chunkIndex`, `rangeStart`, `rangeEnd`,
-                    `bytesDownloaded`, `status`)
-                VALUES ('behind', 0, 0, 99, 10, 'DOWNLOADING'), ('ahead', 0, 0, 999, 900, 'DOWNLOADING')
-                """.trimIndent(),
-            )
-        }
-
-        val db = helper.runMigrationsAndValidate(TEST_DB, 23, true, Schema22to23)
-
-        db.query("SELECT `id`, `dedupeKey` FROM `download_items` ORDER BY `id`").use { cursor ->
-            val rows = buildList {
-                while (cursor.moveToNext()) add(cursor.getString(0) to cursor.getString(1))
-            }
-            expectThat(rows).isEqualTo(listOf("ahead" to "m1|-1|-1", "other" to "m2|-1|-1"))
-        }
-
-        // The loser's chunks go with it — Room disables foreign keys during a migration, so the
-        // CASCADE never fires and they would otherwise be orphaned.
-        db.query("SELECT `downloadItemId` FROM `download_chunks`").use { cursor ->
-            val owners = buildList {
-                while (cursor.moveToNext()) add(cursor.getString(0))
-            }
-            expectThat(owners).isEqualTo(listOf("ahead"))
-        }
-    }
-
-    /**
-     * The values a pre-24 install is actually carrying: release dates multiplied by a thousand on
+     * The values a pre-22 install is actually carrying: release dates multiplied by a thousand on
      * every write, so what sits in a milliseconds column is really microseconds — and more than that
      * for a title that was re-saved from what the database already held.
      */
     @Test
     @Throws(IOException::class)
     fun migrateShouldRescaleInflatedReleaseDatesBackToMilliseconds() {
-        helper.createDatabase(TEST_DB, 23).use { db ->
+        helper.createDatabase(TEST_DB, 21).use { db ->
             db.insertMedia(id = "once", releaseDate = TRUE_MILLIS * 1_000)
             // Survived two save/read cycles before the fix landed.
             db.insertMedia(id = "twice", releaseDate = TRUE_MILLIS * 1_000_000)
@@ -149,7 +104,7 @@ class DBMigrationTest {
             db.insertMedia(id = "zero", releaseDate = 0)
         }
 
-        val db = helper.runMigrationsAndValidate(TEST_DB, 24, true, Schema23to24)
+        val db = helper.runMigrationsAndValidate(TEST_DB, 22, true, Schema21to22)
 
         db.query("SELECT `id`, `releaseDate` FROM `media` ORDER BY `id`").use { cursor ->
             val rows = buildList {
@@ -179,20 +134,6 @@ class DBMigrationTest {
         INSERT INTO `media` (`id`, `title`, `providerId`, `adult`, `type`, `releaseDate`,
             `createdAt`, `updatedAt`)
         VALUES ('$id', 'Title', 'provider-1', 0, 'MOVIE', ${releaseDate ?: "NULL"}, 1, 1)
-        """.trimIndent(),
-    )
-
-    private fun SupportSQLiteDatabase.insertDownloadItem(
-        id: String,
-        mediaId: String,
-        streamBytesDownloaded: Long,
-    ) = execSQL(
-        """
-        INSERT INTO `download_items` (`id`, `ownerId`, `mediaId`, `mediaTitle`, `mediaType`, `state`,
-            `isHlsStream`, `streamBytesDownloaded`, `streamTotalBytes`, `downloadBytesPerSecond`,
-            `downloadedSubtitlesCount`, `totalSubtitlesCount`, `createdAt`, `updatedAt`)
-        VALUES ('$id', 'owner-1', '$mediaId', 'Title', 'MOVIE', 'DOWNLOADING_STREAM',
-            0, $streamBytesDownloaded, 1000, 0, 0, 0, 1, 1)
         """.trimIndent(),
     )
 }

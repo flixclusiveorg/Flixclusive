@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 21,
-    "identityHash": "76fb25755f809acd1c18572b2a64852f",
+    "identityHash": "bd06587a63485c6c98f51d25ab130e77",
     "entities": [
       {
         "tableName": "media",
@@ -1280,7 +1280,7 @@
       },
       {
         "tableName": "download_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ownerId` TEXT NOT NULL, `mediaId` TEXT NOT NULL, `mediaTitle` TEXT NOT NULL, `mediaType` TEXT NOT NULL, `seasonNumber` INTEGER, `episodeNumber` INTEGER, `state` TEXT NOT NULL, `phase` TEXT, `sourceUrl` TEXT, `isHlsStream` INTEGER NOT NULL, `streamFilePath` TEXT, `streamBytesDownloaded` INTEGER NOT NULL, `streamTotalBytes` INTEGER NOT NULL, `downloadedSubtitlesCount` INTEGER NOT NULL, `totalSubtitlesCount` INTEGER NOT NULL, `errorMessage` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ownerId` TEXT NOT NULL, `mediaId` TEXT NOT NULL, `mediaTitle` TEXT NOT NULL, `mediaType` TEXT NOT NULL, `seasonNumber` INTEGER, `episodeNumber` INTEGER, `dedupeKey` TEXT NOT NULL, `state` TEXT NOT NULL, `phase` TEXT, `sourceUrl` TEXT, `isHlsStream` INTEGER NOT NULL, `streamFilePath` TEXT, `streamBytesDownloaded` INTEGER NOT NULL, `streamTotalBytes` INTEGER NOT NULL, `downloadBytesPerSecond` INTEGER NOT NULL, `downloadedSubtitlesCount` INTEGER NOT NULL, `totalSubtitlesCount` INTEGER NOT NULL, `errorMessage` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -1323,6 +1323,12 @@
             "affinity": "INTEGER"
           },
           {
+            "fieldPath": "dedupeKey",
+            "columnName": "dedupeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "state",
             "columnName": "state",
             "affinity": "TEXT",
@@ -1358,6 +1364,12 @@
           {
             "fieldPath": "streamTotalBytes",
             "columnName": "streamTotalBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadBytesPerSecond",
+            "columnName": "downloadBytesPerSecond",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -1424,6 +1436,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_download_items_ownerId` ON `${TABLE_NAME}` (`ownerId`)"
+          },
+          {
+            "name": "index_download_items_dedupeKey",
+            "unique": true,
+            "columnNames": [
+              "dedupeKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_download_items_dedupeKey` ON `${TABLE_NAME}` (`dedupeKey`)"
           }
         ]
       },
@@ -1514,7 +1535,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '76fb25755f809acd1c18572b2a64852f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bd06587a63485c6c98f51d25ab130e77')"
     ]
   }
 }
