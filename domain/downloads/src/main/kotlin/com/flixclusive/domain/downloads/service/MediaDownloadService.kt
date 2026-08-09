@@ -21,7 +21,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -53,25 +54,7 @@ class MediaDownloadService : Service() {
     private var observerJob: Job? = null
     private var stopServiceJob: Job? = null
 
-    /** Ids of [DownloadItemState.FAILED] items already notified, so re-emissions of the same
-     * failure (e.g. from an unrelated item's progress update) don't re-alert. Cleared once the
-     * item is retried/deleted and no longer reports as failed. */
-    private val notifiedFailureIds = mutableSetOf<String>()
-
-    /** Ids of [DownloadItemState.COMPLETED] items already notified — mirrors [notifiedFailureIds]
-     * so a completed item's notification is replaced with a "Complete" message once instead of
-     * just vanishing once it drops out of [startObservingActiveItems]'s active-items set. */
-    private val notifiedCompletionIds = mutableSetOf<String>()
-
-    /** Every item id seen in the last emission, so a row that disappears entirely (deleted) can
-     * have its notification explicitly cancelled — nothing else ever does, since Android doesn't
-     * remove a previously-posted notification just because the underlying data went away. */
-    private var knownItemIds: Set<String> = emptySet()
-
-    /** Ids of [DownloadItemState.STOPPED] items already dismissed — mirrors [notifiedFailureIds],
-     * but cancels the notification outright instead of replacing it, so tapping Stop closes the
-     * row immediately rather than leaving it stuck on its last in-progress message. */
-    private val dismissedStoppedIds = mutableSetOf<String>()
+    private val notificationManager: NotificationManager by lazy { getSystemService()!! }
 
     private val notifications by lazy { MediaDownloadNotificationFactory(this) }
 
@@ -152,102 +135,91 @@ class MediaDownloadService : Service() {
 
     private fun startObservingActiveItems() {
         observerJob = serviceScope.launch {
-            mediaDownloadRepository.observeAllItems().collectLatest { items ->
-                val notificationManager: NotificationManager = getSystemService()!!
+            mediaDownloadRepository
+                .observeAllItems()
+                // Terminal states are surfaced by comparing each emission with the one before it.
+                // collect, not collectLatest: dropping an emission mid-flight would lose a
+                // transition permanently, and the body below never suspends anyway.
+                .runningFold(emptyList<DownloadItem>() to emptyList<DownloadItem>()) { (_, previous), current ->
+                    previous to current
+                }.drop(1)
+                .collect { (previous, items) ->
+                    reconcileTerminalNotifications(previous, items)
 
-                cancelRemovedItemNotifications(items, notificationManager)
-                cancelStoppedNotifications(items, notificationManager)
-                notifyNewFailures(items, notificationManager)
-                notifyNewCompletions(items, notificationManager)
+                    // QUEUED counts as active too: a freshly queued item stays QUEUED for the whole
+                    // link-resolution/probing window before its state ever reaches DOWNLOADING_STREAM,
+                    // so excluding it here made the service tear itself down mid-resolution.
+                    val activeItems = items.filter { !it.state.isTerminal }
 
-                // QUEUED counts as active too: a freshly queued item stays QUEUED for the whole
-                // link-resolution/probing window before its state ever reaches DOWNLOADING_STREAM,
-                // so excluding it here made the service tear itself down mid-resolution.
-                val activeItems = items.filter { !it.state.isTerminal }
+                    if (activeItems.isEmpty()) {
+                        notificationManager.cancel(QUEUED_GROUP_NOTIFICATION_ID)
+                        scheduleServiceStop()
+                        return@collect
+                    }
 
-                if (activeItems.isEmpty()) {
-                    notificationManager.cancel(QUEUED_GROUP_NOTIFICATION_ID)
-                    scheduleServiceStop()
-                    return@collectLatest
+                    stopServiceJob?.cancel()
+                    renewWakeLock()
+                    safeStartForeground(SUMMARY_NOTIFICATION_ID, notifications.buildSummary(activeItems.size))
+
+                    // QUEUED items are collapsed into a single count notification instead of one each —
+                    // otherwise a big batch queue floods the shade with rows that have nothing to show
+                    // yet, and (since QUEUED shares the same download icon as an active transfer) reads
+                    // as though everything queued is already downloading.
+                    val (queuedItems, inProgressItems) = activeItems.partition { it.state == DownloadItemState.QUEUED }
+
+                    inProgressItems.forEach { item ->
+                        notificationManager.notify(notifications.notificationId(item), notifications.buildItem(item))
+                    }
+
+                    if (queuedItems.isNotEmpty()) {
+                        queuedItems.forEach { notificationManager.cancel(notifications.notificationId(it)) }
+                        notificationManager.notify(
+                            QUEUED_GROUP_NOTIFICATION_ID,
+                            notifications.buildQueuedGroup(queuedItems.size)
+                        )
+                    } else {
+                        notificationManager.cancel(QUEUED_GROUP_NOTIFICATION_ID)
+                    }
                 }
-
-                stopServiceJob?.cancel()
-                renewWakeLock()
-                safeStartForeground(SUMMARY_NOTIFICATION_ID, notifications.buildSummary(activeItems.size))
-
-                // QUEUED items are collapsed into a single count notification instead of one each —
-                // otherwise a big batch queue floods the shade with rows that have nothing to show
-                // yet, and (since QUEUED shares the same download icon as an active transfer) reads
-                // as though everything queued is already downloading.
-                val (queuedItems, inProgressItems) = activeItems.partition { it.state == DownloadItemState.QUEUED }
-
-                inProgressItems.forEach { item ->
-                    notificationManager.notify(notifications.notificationId(item), notifications.buildItem(item))
-                }
-
-                if (queuedItems.isNotEmpty()) {
-                    queuedItems.forEach { notificationManager.cancel(notifications.notificationId(it)) }
-                    notificationManager.notify(
-                        QUEUED_GROUP_NOTIFICATION_ID,
-                        notifications.buildQueuedGroup(queuedItems.size)
-                    )
-                } else {
-                    notificationManager.cancel(QUEUED_GROUP_NOTIFICATION_ID)
-                }
-            }
         }
     }
 
-    private fun cancelRemovedItemNotifications(items: List<DownloadItem>, notificationManager: NotificationManager) {
-        val currentIds = items.map { it.id }.toSet()
-        val removedIds = knownItemIds - currentIds
-        removedIds.forEach { id ->
-            // Removed from the map as well as cancelled: the item is gone for good, so holding its
-            // notification id would leak an entry per deleted download for the service's lifetime.
+    /**
+     * Surfaces the transitions the active-items path never can.
+     *
+     * STOPPED, FAILED and COMPLETED are terminal, so an item that reaches one is never touched
+     * again by the loop above: its last in-progress notification would sit there stale forever.
+     * Each is handled once, on the emission where the item *became* terminal, which is what
+     * comparing against [previous] gives -- an item that leaves and re-enters a terminal state is
+     * correctly surfaced again.
+     */
+    private fun reconcileTerminalNotifications(
+        previous: List<DownloadItem>,
+        current: List<DownloadItem>,
+    ) {
+        val previousStates = previous.associate { it.id to it.state }
+
+        // Nothing else cancels a notification whose row is gone -- Android does not remove a posted
+        // notification just because the data behind it went away. The reserved id goes too, or the
+        // map would grow by an entry per deleted download for the service's lifetime.
+        val currentIds = current.mapTo(mutableSetOf()) { it.id }
+        previousStates.keys.filterNot { it in currentIds }.forEach { id ->
             notifications.forget(id)?.let(notificationManager::cancel)
         }
-        knownItemIds = currentIds
-    }
 
-    /** Dismisses a [DownloadItemState.STOPPED] item's notification the first time it's seen —
-     * stopped items are terminal, so [startObservingActiveItems] otherwise never touches their
-     * notification again, leaving Stop's last "Downloading…"/"Paused" message stuck forever. */
-    private fun cancelStoppedNotifications(items: List<DownloadItem>, notificationManager: NotificationManager) {
-        val stoppedItems = items.filter { it.state == DownloadItemState.STOPPED }
-        dismissedStoppedIds.retainAll(stoppedItems.map { it.id }.toSet())
+        current.forEach { item ->
+            if (previousStates[item.id] == item.state) return@forEach
 
-        stoppedItems.forEach { item ->
-            if (dismissedStoppedIds.add(item.id)) {
-                notificationManager.cancel(notifications.notificationId(item))
-            }
-        }
-    }
-
-    /** Posts a dismissible error notification the first time an item is seen as [DownloadItemState.FAILED] —
-     * failed items are terminal, so [startObservingActiveItems] otherwise never surfaces them. */
-    private fun notifyNewFailures(items: List<DownloadItem>, notificationManager: NotificationManager) {
-        val failedItems = items.filter { it.state == DownloadItemState.FAILED }
-        notifiedFailureIds.retainAll(failedItems.map { it.id }.toSet())
-
-        failedItems.forEach { item ->
-            if (notifiedFailureIds.add(item.id)) {
-                notificationManager.notify(notifications.notificationId(item), notifications.buildError(item))
-            }
-        }
-    }
-
-    /** Posts a dismissible "Complete" notification the first time an item is seen as
-     * [DownloadItemState.COMPLETED] — completed items are terminal, so [startObservingActiveItems]
-     * otherwise never surfaces them again, and the item's last in-progress notification would
-     * otherwise sit there stale (or disappear entirely once the service stops itself) instead of
-     * reflecting that the download finished. */
-    private fun notifyNewCompletions(items: List<DownloadItem>, notificationManager: NotificationManager) {
-        val completedItems = items.filter { it.state == DownloadItemState.COMPLETED }
-        notifiedCompletionIds.retainAll(completedItems.map { it.id }.toSet())
-
-        completedItems.forEach { item ->
-            if (notifiedCompletionIds.add(item.id)) {
-                notificationManager.notify(notifications.notificationId(item), notifications.buildCompleted(item))
+            when (item.state) {
+                // Cancelled outright rather than replaced, so tapping Stop closes the row
+                // immediately instead of leaving its last in-progress message stuck.
+                DownloadItemState.STOPPED ->
+                    notificationManager.cancel(notifications.notificationId(item))
+                DownloadItemState.FAILED ->
+                    notificationManager.notify(notifications.notificationId(item), notifications.buildError(item))
+                DownloadItemState.COMPLETED ->
+                    notificationManager.notify(notifications.notificationId(item), notifications.buildCompleted(item))
+                else -> Unit
             }
         }
     }
