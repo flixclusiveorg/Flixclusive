@@ -31,11 +31,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -78,6 +80,11 @@ internal class MediaDownloadControllerImpl @Inject constructor(
      * in practice the next app launch. Collecting rather than polling also keeps
      * [NetworkMonitor.isMetered]'s shared upstream alive, so its emissions track the real
      * connection instead of stopping between one-shot reads.
+     *
+     * Failures resubscribe rather than being caught: catching completes the flow, which would
+     * retire the gate for the rest of the process and put us right back at the one-way behaviour
+     * above. The preferences flow throws transiently before a user session exists, which is
+     * precisely when this starts.
      */
     private fun startDispatchingWhenNetworkAllows() {
         scope.launch {
@@ -85,24 +92,48 @@ internal class MediaDownloadControllerImpl @Inject constructor(
                 networkMonitor.isMetered,
                 dataStoreManager
                     .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
-                    .map { it.downloadOnWifiOnly },
+                    .map { it.downloadOnWifiOnly }
+                    .distinctUntilChanged(),
             ) { metered, wifiOnly -> !wifiOnly || !metered }
                 .distinctUntilChanged()
-                .catch { errorLog("Stopped watching the network for download dispatch: ${it.message}") }
-                .collect { isAllowed -> if (isAllowed) dispatchNext() }
+                .retry { cause ->
+                    errorLog("Network watch for download dispatch failed, retrying: ${cause.message}")
+                    delay(NETWORK_WATCH_RETRY_DELAY_MS)
+                    true
+                }.filter { it }
+                .collect { dispatchNext() }
         }
+    }
+
+    /**
+     * Registers [block] as [itemId]'s in-flight job, guaranteeing the map entry is dropped when it
+     * finishes.
+     *
+     * Removal has to hang off the job rather than a `finally` inside it: [dispatchOrQueue] returns
+     * early when the network disallows downloads or no slot is free, and those paths would otherwise
+     * strand a completed Job in a map on a `@Singleton` forever. The two-argument remove is
+     * deliberate — [dispatchNext] can install a new job for an id while the previous one is still
+     * unwinding, and an unconditional remove would evict the newcomer.
+     */
+    private fun launchDownload(
+        itemId: String,
+        block: suspend () -> Unit,
+    ) {
+        val job = scope.launch { block() }
+        jobs[itemId] = job
+        job.invokeOnCompletion { jobs.remove(itemId, job) }
     }
 
     override fun start(itemId: String) {
         if (jobs[itemId]?.isActive == true) return
-        jobs[itemId] = scope.launch { dispatchOrQueue(itemId) }
+        launchDownload(itemId) { dispatchOrQueue(itemId) }
     }
 
     override fun resume(itemId: String) = start(itemId)
 
     override fun retry(itemId: String) {
         if (jobs[itemId]?.isActive == true) return
-        jobs[itemId] = scope.launch {
+        launchDownload(itemId) {
             mediaDownloadRepository.resetChunks(itemId)
             mediaDownloadRepository.updateState(itemId, DownloadItemState.QUEUED, null)
             dispatchOrQueue(itemId)
@@ -287,7 +318,6 @@ internal class MediaDownloadControllerImpl @Inject constructor(
             runDownload(itemId)
         } finally {
             releaseSlot(itemId)
-            jobs.remove(itemId)
             dispatchNext()
         }
     }
@@ -308,12 +338,11 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
             mediaDownloadServiceController.ensureRunning()
 
-            jobs[next.id] = scope.launch {
+            launchDownload(next.id) {
                 try {
                     runDownload(next.id)
                 } finally {
                     releaseSlot(next.id)
-                    jobs.remove(next.id)
                     dispatchNext()
                 }
             }
@@ -739,5 +768,8 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         // Catches a "successful" transfer that actually saved an error page or empty response
         // (e.g. a dead link the initial probe didn't catch) instead of a real video file.
         private const val MIN_VALID_STREAM_FILE_BYTES = 100 * 1024L
+
+        // Spaces out resubscription so an upstream that rethrows immediately cannot spin.
+        private const val NETWORK_WATCH_RETRY_DELAY_MS = 1_000L
     }
 }
