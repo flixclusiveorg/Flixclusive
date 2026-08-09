@@ -94,6 +94,16 @@ private fun getGeneralTweaks(
                     }
                 },
             ),
+            TweakUI.SwitchTweak(
+                title = stringResource(R.string.label_prefs_prefer_local_playback),
+                description = { resources.getString(R.string.desc_prefs_prefer_local_playback) },
+                value = { playerPreferences().isPreferringLocalPlayback },
+                onTweaked = {
+                    onUpdatePreferences { oldValue ->
+                        oldValue.copy(isPreferringLocalPlayback = it)
+                    }
+                },
+            ),
             TweakUI.ListTweak(
                 title = stringResource(LocaleR.string.resize_mode),
                 description = {

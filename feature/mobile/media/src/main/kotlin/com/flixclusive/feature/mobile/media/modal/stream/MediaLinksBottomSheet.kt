@@ -118,9 +118,12 @@ data class MediaLinksBottomSheetArgs(
     val episode: Episode? = null,
 )
 
+/** Whether a *provider* turned up something playable. The downloaded file is excluded on purpose:
+ * every branch this guards ends in provider playback, so counting a local file here would offer to
+ * skip ahead to a provider stream that was never resolved. */
 private val List<CachedMediaLink>.hasPlayableLinks: Boolean
     get() {
-        return fastAny { it is CachedStream && !it.isThirdPartyGateway }
+        return fastAny { it is CachedStream && !it.isThirdPartyGateway && !it.isLocalDownload }
     }
 
 private val List<CachedMediaLink>.hasValidLinks: Boolean
@@ -141,6 +144,9 @@ internal fun MediaLinksBottomSheet(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val playerPrefs by viewModel.playerPrefs.collectAsStateWithLifecycle()
     val links by viewModel.links.collectAsStateWithLifecycle()
+    val providerLinks by viewModel.providerLinks.collectAsStateWithLifecycle()
+    val localLink by viewModel.localLink.collectAsStateWithLifecycle()
+    val localAutoPlay by viewModel.localAutoPlay.collectAsStateWithLifecycle()
 
     val activity = LocalContext.current.getActivity<ComponentActivity>()
     val window = activity.window
@@ -153,12 +159,25 @@ internal fun MediaLinksBottomSheet(
         }
     }
 
-    LaunchedEffect(viewModel, playerPrefs) {
+    // Deliberately not waiting on LoadLinksState: it only reaches Success once a provider has
+    // answered, which never happens with no connection — the one situation a download exists for.
+    LaunchedEffect(localAutoPlay) {
+        val local = localAutoPlay ?: return@LaunchedEffect
+
+        navigator.showPlayerSplashScreen(
+            PlaybackRequest.FromDownload(downloadItemId = local.downloadItemId),
+        )
+    }
+
+    LaunchedEffect(viewModel, playerPrefs, localAutoPlay) {
         combine(
             viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
-            viewModel.links
+            viewModel.providerLinks
         ) { state, links ->
             playerPrefs.isAutoSelectingServer &&
+                // The effect above is taking this one; racing it would send the same tap to a
+                // provider stream a second later.
+                localAutoPlay == null &&
                 !state.isLoading &&
                 links.hasPlayableLinks &&
                 state.isSuccess
@@ -180,7 +199,7 @@ internal fun MediaLinksBottomSheet(
         links = { links },
         canSkipLoading = {
             playerPrefs.isAutoSelectingServer &&
-                links.fastAny { it.isValid } &&
+                providerLinks.fastAny { it.isValid } &&
                 uiState.loadLinksState.isLoading
         },
         canAutoSelectStream = { playerPrefs.isAutoSelectingServer },
@@ -193,15 +212,22 @@ internal fun MediaLinksBottomSheet(
                 ),
             )
         },
-        onPlayLink = {
-            navigator.showPlayerSplashScreen(
-                PlaybackRequest.FromProvider(
-                    media = uiState.metadata,
-                    episode = uiState.episode,
-                    preferredStreamUrl = it.url,
-                    headers = it.customHeaders,
-                ),
-            )
+        onPlayLink = { link ->
+            val local = localLink
+            if (link.isLocalDownload && local != null) {
+                navigator.showPlayerSplashScreen(
+                    PlaybackRequest.FromDownload(downloadItemId = local.downloadItemId),
+                )
+            } else {
+                navigator.showPlayerSplashScreen(
+                    PlaybackRequest.FromProvider(
+                        media = uiState.metadata,
+                        episode = uiState.episode,
+                        preferredStreamUrl = link.url,
+                        headers = link.customHeaders,
+                    ),
+                )
+            }
         },
     )
 }

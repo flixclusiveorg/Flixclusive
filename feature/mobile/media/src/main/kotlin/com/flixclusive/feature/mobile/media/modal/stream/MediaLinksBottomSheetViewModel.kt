@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.provider.LoadLinksState
+import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.DataStoreManager.Companion.getUserPrefsAsFlow
@@ -18,7 +19,9 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.provider.repository.MediaLinksRepository
+import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
@@ -32,6 +35,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -55,6 +59,8 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
     private val getMediaLinks: GetMediaLinksUseCase,
     private val getMediaMetadata: GetMediaMetadataUseCase,
     private val getNextEpisode: GetNextEpisodeUseCase,
+    private val getCompletedDownloadFile: GetCompletedDownloadFileUseCase,
+    private val mediaDownloadRepository: MediaDownloadRepository,
     private val mediaLinksRepository: MediaLinksRepository,
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
@@ -84,7 +90,11 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             initialValue = PlayerPreferences(),
         )
 
-    val links = combine(
+    /** Only what providers resolved. Kept apart from [links] because "is there anything playable
+     * yet" and "may the loading screen be skipped" are questions about the providers alone — a
+     * downloaded file answering them would offer to skip ahead to a provider stream that does not
+     * exist. */
+    val providerLinks = combine(
         userSessionDataStore.currentUserId.filterNotNull(),
         _uiState.map { it.episode }.distinctUntilChanged()
     ) { userId, episode -> userId to episode }
@@ -105,6 +115,97 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),
         )
+
+    /**
+     * The finished download for what is about to be watched, if there is one.
+     *
+     * Resolved from the session and the database alone — never from [_uiState], whose episode is
+     * only filled in after [onFetchMediaLinks] has been to the network. That independence is what
+     * lets a download play with no connection at all.
+     */
+    val localLink = userSessionDataStore.currentUserId
+        .filterNotNull()
+        .mapLatest { userId -> resolveLocalLink(userId) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null,
+        )
+
+    /**
+     * The download to start playing straight away, or null when the sheet should wait for a
+     * provider.
+     *
+     * Combined against the preferences flow itself rather than read off [playerPrefs]: that one is
+     * seeded with `PlayerPreferences()` until DataStore answers, and both flags default to on — so
+     * a sheet that resolved its download first would auto-play it for someone who had turned the
+     * preference off. `combine` withholds a value until the real preferences have arrived.
+     */
+    val localAutoPlay: StateFlow<LocalLink?> = combine(
+        localLink,
+        dataStoreManager.getUserPrefsAsFlow<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY),
+    ) { local, prefs ->
+        local?.takeIf { prefs.isAutoSelectingServer && prefs.isPreferringLocalPlayback }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null,
+    )
+
+    /** What the sheet lists: the downloaded file first, then everything the providers found. */
+    val links: StateFlow<List<CachedMediaLink>> = combine(
+        localLink,
+        providerLinks,
+    ) { local, provider -> listOfNotNull(local?.stream) + provider }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList(),
+        )
+
+    private suspend fun resolveLocalLink(userId: String): LocalLink? {
+        val progress = if (args.media.isShow) {
+            watchProgressRepository.get(
+                id = args.media.id,
+                ownerId = userId,
+                type = args.media.type,
+            ) as? EpisodeProgressWithMetadata
+        } else {
+            null
+        }
+
+        val targets = localPlaybackTargets(
+            isShow = args.media.isShow,
+            navEpisode = args.episode,
+            progressSeason = progress?.watchData?.seasonNumber,
+            progressEpisode = progress?.watchData?.episodeNumber,
+            isProgressCompleted = progress?.watchData?.isCompleted == true,
+        )
+
+        for (target in targets) {
+            val item = mediaDownloadRepository.getCompletedFor(
+                mediaId = args.media.id,
+                seasonNumber = target.seasonNumber,
+                episodeNumber = target.episodeNumber,
+            ) ?: continue
+
+            // A row can outlive its file when the user clears it from outside the app. Resolving it
+            // here is the same precondition DownloadsTweakViewModel.onOpen checks before opening the
+            // player, so a vanished file means no link rather than one that dead-ends.
+            val file = getCompletedDownloadFile(item) ?: continue
+
+            return LocalLink(
+                downloadItemId = item.id,
+                stream = item.toLocalCachedStream(
+                    file = file,
+                    ownerId = userId,
+                    label = context.getString(LocaleR.string.label_downloaded_link),
+                ),
+            )
+        }
+
+        return null
+    }
 
     init {
         onFetchMediaLinks()

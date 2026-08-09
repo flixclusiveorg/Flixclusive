@@ -92,6 +92,14 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         DownloadItemState.QUEUED
     )
 
+    override suspend fun getCompletedFor(
+        mediaId: String,
+        seasonNumber: Int?,
+        episodeNumber: Int?,
+    ): DownloadItem? = downloadItemDao
+        .getByDedupeKey(dedupeKeyOf(mediaId, seasonNumber, episodeNumber))
+        ?.takeIf { it.state == DownloadItemState.COMPLETED }
+
     override suspend fun getBatch(
         mediaId: String,
         seasonNumber: Int,

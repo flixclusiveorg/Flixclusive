@@ -485,6 +485,50 @@ class MediaDownloadRepositoryImplTest {
         }
 
     @Test
+    fun `getCompletedFor should find the episode's row by its dedupe key`() =
+        runTest {
+            val item = DownloadItem(
+                id = "episode",
+                ownerId = "owner-1",
+                mediaId = "m1",
+                mediaTitle = "Show",
+                mediaType = MediaType.SHOW,
+                seasonNumber = 2,
+                episodeNumber = 5,
+                state = DownloadItemState.COMPLETED,
+            )
+            coEvery { downloadItemDao.getByDedupeKey(dedupeKeyOf("m1", 2, 5)) } returns item
+
+            expectThat(repository.getCompletedFor("m1", 2, 5)).isEqualTo(item)
+        }
+
+    @Test
+    fun `getCompletedFor should ignore a download that has not finished`() =
+        runTest {
+            // Half a file is not something the player can be pointed at, so an unfinished row must
+            // read the same as no row at all.
+            val item = DownloadItem(
+                id = "partial",
+                ownerId = "owner-1",
+                mediaId = "m1",
+                mediaTitle = "Movie",
+                mediaType = MediaType.MOVIE,
+                state = DownloadItemState.DOWNLOADING_STREAM,
+            )
+            coEvery { downloadItemDao.getByDedupeKey(dedupeKeyOf("m1", null, null)) } returns item
+
+            expectThat(repository.getCompletedFor("m1", null, null)).isNull()
+        }
+
+    @Test
+    fun `getCompletedFor should return null when nothing was ever downloaded`() =
+        runTest {
+            coEvery { downloadItemDao.getByDedupeKey(any()) } returns null
+
+            expectThat(repository.getCompletedFor("m1", null, null)).isNull()
+        }
+
+    @Test
     fun `queue should return the incumbent's id when the same media is already queued`() =
         runTest {
             // The unique index rejects the insert; a double tap should land on the existing

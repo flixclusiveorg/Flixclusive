@@ -287,6 +287,7 @@
     <string name="label_no_cached_media">No cached media yet</string>
     <string name="dead_link_retention_days_title">Dead link retention period</string>
     <string name="dead_link_retention_days_desc">Remove dead links after %1$d day(s). Set to 0 to remove them immediately on the next cleanup.</string>
+    <string name="label_downloaded_link">Downloaded on this device</string>
     <string name="download_delete_confirm_title">Delete download?</string>
     <string name="download_delete_confirm_message">The downloaded video and its subtitles will be removed from this device. This can\'t be undone.</string>
     <string name="download_wifi_only_title">Download on Wi-Fi only</string>
