@@ -14,7 +14,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
-import com.flixclusive.core.database.entity.downloads.combinedProgress
+import com.flixclusive.feature.mobile.media.util.combinedProgress
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
@@ -962,7 +962,7 @@ enum class MediaScreenState {
 
 /**
  * @param progress 0f–1f, meaningful only while [state] is [DownloadState.IN_PROGRESS] — the
- * combined stream+subtitle progress (see [com.flixclusive.core.database.entity.downloads.combinedProgress])
+ * combined stream+subtitle progress (see [combinedProgress])
  * of a single item, or the average across every item in a batch (a show's season aggregate).
  */
 data class MediaDownloadStatus(
