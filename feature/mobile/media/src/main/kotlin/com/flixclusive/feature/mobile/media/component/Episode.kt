@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,12 +89,8 @@ internal fun EpisodeCard(
     val description = episode.overview
         ?: stringResource(R.string.default_overview)
 
-    val isDownloaded by remember {
-        derivedStateOf {
-            (downloadStatus() as? Async.Success)?.data?.state ==
-                MediaDownloadStatus.DownloadState.DOWNLOADED
-        }
-    }
+    val isDownloaded = (downloadStatus() as? Async.Success)?.data?.state ==
+        MediaDownloadStatus.DownloadState.DOWNLOADED
 
     Column(
         modifier = modifier
@@ -359,13 +354,7 @@ private fun DownloadButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isLoading by remember {
-        derivedStateOf {
-            status() is Async.Loading
-        }
-    }
-
-    if (isLoading) {
+    if (status() is Async.Loading) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = modifier
@@ -384,17 +373,8 @@ private fun DownloadButton(
         return
     }
 
-    val isFailure by remember {
-        derivedStateOf {
-            status() is Async.Failure
-        }
-    }
-
-    val downloadStatus by remember {
-        derivedStateOf {
-            (status() as? Async.Success)?.data ?: MediaDownloadStatus.NotDownloaded
-        }
-    }
+    val isFailure = status() is Async.Failure
+    val downloadStatus = (status() as? Async.Success)?.data ?: MediaDownloadStatus.NotDownloaded
 
     val isInProgress = !isFailure && downloadStatus.state == MediaDownloadStatus.DownloadState.IN_PROGRESS
 

@@ -316,7 +316,7 @@ private fun MediaScreenContent(
                                 metadata = metadata,
                                 watchProgress = watchProgress,
                                 isInLibrary = isInLibrary,
-                                downloadStatus = downloadStatus(),
+                                downloadStatus = downloadStatus,
                                 onPlay = { navigator.showLinkLoaderSheet(metadata) },
                                 onAddToLibrary = { isLibrarySheetOpen = true },
                                 onToggleDownload = onToggleDownload,

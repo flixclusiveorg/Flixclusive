@@ -88,7 +88,7 @@ internal fun HeaderButtons(
     metadata: MediaMetadata,
     watchProgress: WatchProgress?,
     isInLibrary: Async<Boolean>,
-    downloadStatus: Async<MediaDownloadStatus>,
+    downloadStatus: () -> Async<MediaDownloadStatus>,
     onAddToLibrary: () -> Unit,
     onPlay: () -> Unit,
     onRetryFetchLists: () -> Unit,
@@ -172,7 +172,7 @@ internal fun HeaderButtons(
 
         if (metadata.releaseStatus != MediaReleaseStatus.COMING_SOON) {
             AsyncAnimatedContent(
-                targetState = downloadStatus,
+                targetState = downloadStatus(),
                 loadingContent = {
                     GradientCircularProgressIndicator(
                         size = 28.dp,
@@ -193,7 +193,7 @@ internal fun HeaderButtons(
                         activeDrawable = UiCommonR.drawable.warning_outline,
                         state = false,
                         onClick = {
-                            showDownloadWarning = (downloadStatus as? Async.Failure)?.message
+                            showDownloadWarning = (downloadStatus() as? Async.Failure)?.message
                         },
                     )
                 },
@@ -676,7 +676,7 @@ private fun HeaderButtonsPreview() {
                     metadata = metadata,
                     watchProgress = progress,
                     isInLibrary = Async.Loading,
-                    downloadStatus = Async.Loading,
+                    downloadStatus = { Async.Loading },
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onRetryFetchLists = {},
                     onToggleDownload = {},
@@ -687,7 +687,7 @@ private fun HeaderButtonsPreview() {
                     metadata = metadata,
                     watchProgress = progress,
                     isInLibrary = Async.Failure(UiText.from("Failed to load library status")),
-                    downloadStatus = Async.Failure(UiText.from("Failed to load download status")),
+                    downloadStatus = { Async.Failure(UiText.from("Failed to load download status")) },
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onRetryFetchLists = {},
                     onToggleDownload = {},
@@ -708,7 +708,7 @@ private fun HeaderButtonsPreview() {
                         )
                     },
                     isInLibrary = Async.Success(isInLibrary),
-                    downloadStatus = Async.Success(downloadStatus),
+                    downloadStatus = { Async.Success(downloadStatus) },
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onRetryFetchLists = {},
                     onToggleDownload = {
