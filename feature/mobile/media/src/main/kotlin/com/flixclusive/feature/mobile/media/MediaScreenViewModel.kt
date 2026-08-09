@@ -31,11 +31,9 @@ import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
-import com.flixclusive.domain.downloads.controller.MediaDownloadController
-import com.flixclusive.domain.downloads.model.MediaDownloadRequest
-import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadBatchUseCase
-import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
+import com.flixclusive.domain.provider.usecase.download.DownloadTarget
+import com.flixclusive.domain.provider.usecase.download.ToggleMediaDownloadUseCase
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
@@ -82,7 +80,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -111,9 +108,7 @@ class MediaScreenViewModel @AssistedInject constructor(
     private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
     private val syncFromScrobblers: SyncFromScrobblersUseCase,
     private val getMediaLinks: GetMediaLinksUseCase,
-    private val queueMediaDownload: QueueMediaDownloadUseCase,
-    private val queueMediaDownloadBatch: QueueMediaDownloadBatchUseCase,
-    private val mediaDownloadController: MediaDownloadController,
+    private val toggleMediaDownload: ToggleMediaDownloadUseCase,
     private val mediaDownloadRepository: MediaDownloadRepository,
     @Assisted private val navArgMedia: MediaMetadata,
 ) : ViewModel() {
@@ -340,122 +335,45 @@ class MediaScreenViewModel @AssistedInject constructor(
     fun onToggleDownload() {
         val media = _metadata.value ?: return
 
-        viewModelScope.launch {
-            if (media is Show) {
-                toggleSeasonDownload(media)
-            } else {
-                toggleMovieDownload(media)
-            }
+        if (media !is Show) {
+            toggle(DownloadScopeKey.Movie(media.id), DownloadTarget.Single(media))
+            return
         }
+
+        val season = (seasonToDisplay.value as? Async.Success)?.data?.season ?: return
+        toggle(
+            key = DownloadScopeKey.Season(media.id, season.number),
+            target = DownloadTarget.WholeSeason(media, season),
+        )
     }
 
     /** Toggles the download for a single episode, shown on [EpisodeWithProgress]'s episode card. */
     fun onToggleEpisodeDownload(episode: Episode) {
         val show = _metadata.value as? Show ?: return
 
-        viewModelScope.launch {
-            toggleEpisodeDownload(show, episode)
-        }
+        toggle(
+            key = DownloadScopeKey.Episode(show.id, episode.season, episode.number),
+            target = DownloadTarget.Single(show, episode),
+        )
     }
 
-    private suspend fun toggleMovieDownload(media: MediaMetadata) {
-        val existing = mediaDownloadRepository.getFor(media.id, seasonNumber = null, episodeNumber = null)
-
-        when {
-            existing == null -> resolveAndQueue(DownloadScopeKey.Movie(media.id), media, episode = null)
-            !existing.state.isTerminal -> mediaDownloadController.stop(existing.id)
-            existing.state == DownloadItemState.COMPLETED -> Unit
-            else -> mediaDownloadController.retry(existing.id)
-        }
-    }
-
-    private suspend fun toggleEpisodeDownload(show: Show, episode: Episode) {
-        val existing = mediaDownloadRepository.getFor(show.id, episode.season, episode.number)
-
-        when {
-            existing == null -> resolveAndQueue(
-                key = DownloadScopeKey.Episode(show.id, episode.season, episode.number),
-                media = show,
-                episode = episode,
-            )
-            !existing.state.isTerminal -> mediaDownloadController.stop(existing.id)
-            existing.state == DownloadItemState.COMPLETED -> Unit
-            else -> mediaDownloadController.retry(existing.id)
-        }
-    }
-
-    private suspend fun toggleSeasonDownload(show: Show) {
-        val season = (seasonToDisplay.value as? Async.Success)?.data?.season ?: return
-
-        val key = DownloadScopeKey.Season(show.id, season.number)
-        val existingBatch = mediaDownloadRepository.getBatch(show.id, season.number)
-
-        if (existingBatch.any { !it.state.isTerminal }) {
-            mediaDownloadController.stopBatch(show.id, season.number)
-            return
-        }
-
-        val retryable = existingBatch.filter { it.state.isTerminal && it.state != DownloadItemState.COMPLETED }
-        if (retryable.isNotEmpty()) {
-            retryable.forEach { mediaDownloadController.retry(it.id) }
-            return
-        }
-
-        if (existingBatch.isNotEmpty() && existingBatch.all { it.state == DownloadItemState.COMPLETED }) {
-            return
-        }
-
-        val alreadyQueued = existingBatch.mapNotNull { it.episodeNumber }.toSet()
-        val episodesToQueue = season.episodes.filterNot { it.number in alreadyQueued }
-        if (episodesToQueue.isEmpty()) return
-
-        downloadOverrides.update { it + (key to Async.Loading) }
-
-        // Ensure every episode has links cached before queueing, since the download engine
-        // only ever reads from the link cache and never invokes a provider itself. Resolved
-        // sequentially since provider plugins are third-party code with no thread-safety
-        // guarantee, and concurrent resolution would fan out unbounded parallel calls into
-        // the same provider plugin instance across every episode in the season at once.
-        episodesToQueue.forEach { episode -> ensureMediaLinksLoaded(show, episode) }
-
-        val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val requests = episodesToQueue.map { episode ->
-            MediaDownloadRequest(media = show, episode = episode, ownerId = ownerId)
-        }
-
-        queueMediaDownloadBatch(requests)
-        downloadOverrides.update { it - key }
-    }
-
-    private suspend fun resolveAndQueue(
+    /**
+     * Runs [target] while showing progress against [key].
+     *
+     * The override map is presentation state -- it exists so a card can show a spinner between the
+     * tap and the download row appearing -- so it stays here rather than going into the use case.
+     */
+    private fun toggle(
         key: DownloadScopeKey,
-        media: MediaMetadata,
-        episode: Episode?,
+        target: DownloadTarget,
     ) {
-        downloadOverrides.update { it + (key to Async.Loading) }
+        viewModelScope.launch {
+            downloadOverrides.update { it + (key to Async.Loading) }
 
-        // The download engine only ever reads cached links, so trigger the same link-loading
-        // path the Play button uses here to avoid requiring the user to open Play first.
-        val linksResult = ensureMediaLinksLoaded(media, episode)
-        if (linksResult is Async.Failure) {
-            downloadOverrides.update { it + (key to Async.Failure(linksResult.message, linksResult.cause)) }
-            return
-        }
-
-        val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
-        queueMediaDownload(media, episode, ownerId)
-        downloadOverrides.update { it - key }
-    }
-
-    private suspend fun ensureMediaLinksLoaded(
-        media: MediaMetadata,
-        episode: Episode?,
-    ): Async<Unit> {
-        val finalState = getMediaLinks(media, episode).last()
-        return if (finalState.isSuccess) {
-            Async.Success(Unit)
-        } else {
-            Async.Failure(finalState.message)
+            when (val result = toggleMediaDownload(target)) {
+                is Async.Failure -> downloadOverrides.update { it + (key to result) }
+                else -> downloadOverrides.update { it - key }
+            }
         }
     }
 
