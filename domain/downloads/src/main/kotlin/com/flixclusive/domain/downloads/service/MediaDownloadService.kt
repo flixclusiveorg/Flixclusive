@@ -1,9 +1,7 @@
 package com.flixclusive.domain.downloads.service
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -11,9 +9,6 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.text.format.Formatter
-import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -28,10 +23,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
-import com.flixclusive.core.strings.R as LocaleR
 
 /**
  * Reuses [com.flixclusive.data.downloads.service.DownloadService]'s notification channel id and
@@ -80,21 +73,18 @@ class MediaDownloadService : Service() {
      * row immediately rather than leaving it stuck on its last in-progress message. */
     private val dismissedStoppedIds = mutableSetOf<String>()
 
-    /** Item id to the notification id it owns — see `notificationId()`. */
-    private val notificationIds = mutableMapOf<String, Int>()
-    private val nextNotificationId = AtomicInteger(0)
+    private val notifications by lazy { MediaDownloadNotificationFactory(this) }
 
     companion object {
-        private const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
-        private const val ACTION_RESUME = "MEDIA_DOWNLOAD_RESUME"
-        private const val ACTION_STOP = "MEDIA_DOWNLOAD_STOP"
-        private const val ACTION_RETRY = "MEDIA_DOWNLOAD_RETRY"
-        private const val EXTRA_ITEM_ID = "item_id"
+        internal const val ACTION_PAUSE = "MEDIA_DOWNLOAD_PAUSE"
+        internal const val ACTION_RESUME = "MEDIA_DOWNLOAD_RESUME"
+        internal const val ACTION_STOP = "MEDIA_DOWNLOAD_STOP"
+        internal const val ACTION_RETRY = "MEDIA_DOWNLOAD_RETRY"
+        internal const val EXTRA_ITEM_ID = "item_id"
 
         internal const val NOTIFICATION_CHANNEL_ID = "download_channel"
         private const val SUMMARY_NOTIFICATION_ID = Int.MAX_VALUE
         private const val QUEUED_GROUP_NOTIFICATION_ID = Int.MAX_VALUE - 1
-        private const val NOTIFICATION_GROUP_KEY = "media_downloads_group"
 
         fun ensureStarted(context: Context) {
             ContextCompat.startForegroundService(context, Intent(context, MediaDownloadService::class.java))
@@ -105,7 +95,7 @@ class MediaDownloadService : Service() {
         super.onCreate()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel()
+            notifications.createNotificationChannel()
         }
 
         // Must run synchronously here: `startForegroundService()` requires `startForeground()`
@@ -113,7 +103,7 @@ class MediaDownloadService : Service() {
         // RemoteServiceException. The real summary notification below is posted once the item
         // Flow in startObservingActiveItems() emits, but that's async and may resolve to zero
         // active items, which previously left startForeground() uncalled entirely.
-        safeStartForeground(SUMMARY_NOTIFICATION_ID, buildSummaryNotification(0))
+        safeStartForeground(SUMMARY_NOTIFICATION_ID, notifications.buildSummary(0))
 
         setupWakeLock()
         startObservingActiveItems()
@@ -183,7 +173,7 @@ class MediaDownloadService : Service() {
 
                 stopServiceJob?.cancel()
                 renewWakeLock()
-                safeStartForeground(SUMMARY_NOTIFICATION_ID, buildSummaryNotification(activeItems.size))
+                safeStartForeground(SUMMARY_NOTIFICATION_ID, notifications.buildSummary(activeItems.size))
 
                 // QUEUED items are collapsed into a single count notification instead of one each —
                 // otherwise a big batch queue floods the shade with rows that have nothing to show
@@ -192,14 +182,14 @@ class MediaDownloadService : Service() {
                 val (queuedItems, inProgressItems) = activeItems.partition { it.state == DownloadItemState.QUEUED }
 
                 inProgressItems.forEach { item ->
-                    notificationManager.notify(item.notificationId(), buildItemNotification(item))
+                    notificationManager.notify(notifications.notificationId(item), notifications.buildItem(item))
                 }
 
                 if (queuedItems.isNotEmpty()) {
-                    queuedItems.forEach { notificationManager.cancel(it.notificationId()) }
+                    queuedItems.forEach { notificationManager.cancel(notifications.notificationId(it)) }
                     notificationManager.notify(
                         QUEUED_GROUP_NOTIFICATION_ID,
-                        buildQueuedGroupNotification(queuedItems.size)
+                        notifications.buildQueuedGroup(queuedItems.size)
                     )
                 } else {
                     notificationManager.cancel(QUEUED_GROUP_NOTIFICATION_ID)
@@ -214,7 +204,7 @@ class MediaDownloadService : Service() {
         removedIds.forEach { id ->
             // Removed from the map as well as cancelled: the item is gone for good, so holding its
             // notification id would leak an entry per deleted download for the service's lifetime.
-            notificationIds.remove(id)?.let(notificationManager::cancel)
+            notifications.forget(id)?.let(notificationManager::cancel)
         }
         knownItemIds = currentIds
     }
@@ -228,7 +218,7 @@ class MediaDownloadService : Service() {
 
         stoppedItems.forEach { item ->
             if (dismissedStoppedIds.add(item.id)) {
-                notificationManager.cancel(item.notificationId())
+                notificationManager.cancel(notifications.notificationId(item))
             }
         }
     }
@@ -241,7 +231,7 @@ class MediaDownloadService : Service() {
 
         failedItems.forEach { item ->
             if (notifiedFailureIds.add(item.id)) {
-                notificationManager.notify(item.notificationId(), buildErrorNotification(item))
+                notificationManager.notify(notifications.notificationId(item), notifications.buildError(item))
             }
         }
     }
@@ -257,7 +247,7 @@ class MediaDownloadService : Service() {
 
         completedItems.forEach { item ->
             if (notifiedCompletionIds.add(item.id)) {
-                notificationManager.notify(item.notificationId(), buildCompletedNotification(item))
+                notificationManager.notify(notifications.notificationId(item), notifications.buildCompleted(item))
             }
         }
     }
@@ -293,204 +283,6 @@ class MediaDownloadService : Service() {
         } else {
             startForeground(id, notification)
         }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            "Download Service",
-            NotificationManager.IMPORTANCE_LOW,
-        ).apply {
-            description = "Shows download progress"
-        }
-
-        val notificationManager: NotificationManager = getSystemService()!!
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    private fun buildSummaryNotification(activeCount: Int): Notification =
-        NotificationCompat
-            .Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Downloading")
-            .setContentText(
-                when {
-                    activeCount <= 0 -> "Preparing downloads…"
-                    activeCount == 1 -> "1 download in progress"
-                    else -> "$activeCount downloads in progress"
-                },
-            ).setSmallIcon(android.R.drawable.stat_sys_download)
-            .setGroup(NOTIFICATION_GROUP_KEY)
-            .setGroupSummary(true)
-            .setOngoing(true)
-            .build()
-
-    private fun buildItemNotification(item: DownloadItem): Notification {
-        val (progress, statusText) = progressAndStatusFor(item)
-
-        val icon = if (item.state == DownloadItemState.PAUSED) {
-            android.R.drawable.ic_media_pause
-        } else {
-            android.R.drawable.stat_sys_download
-        }
-
-        val builder = NotificationCompat
-            .Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(item.displayTitle())
-            .setContentText(statusText)
-            .setSmallIcon(icon)
-            .setGroup(NOTIFICATION_GROUP_KEY)
-            .setOngoing(true)
-
-        // An active transfer with no known total gets an indeterminate bar rather than one pinned
-        // at 0% — same reasoning as the download card: bytes are moving, the length just wasn't
-        // advertised, and a permanently empty bar reads as a download that never started.
-        val isTransferring = item.state == DownloadItemState.DOWNLOADING_STREAM ||
-            item.state == DownloadItemState.FETCHING_SUBTITLES
-        when {
-            progress != null -> builder.setProgress(100, progress, false)
-            isTransferring -> builder.setProgress(0, 0, true)
-        }
-
-        when (item.state) {
-            DownloadItemState.DOWNLOADING_STREAM, DownloadItemState.FETCHING_SUBTITLES ->
-                builder.addAction(0, "Pause", actionPendingIntent(ACTION_PAUSE, item.id))
-            DownloadItemState.PAUSED ->
-                builder.addAction(0, "Resume", actionPendingIntent(ACTION_RESUME, item.id))
-            else -> Unit
-        }
-
-        if (item.state != DownloadItemState.STOPPED) {
-            builder.addAction(0, "Stop", actionPendingIntent(ACTION_STOP, item.id))
-        }
-
-        return builder.build()
-    }
-
-    private fun buildErrorNotification(item: DownloadItem): Notification {
-        val message = item.errorMessage?.takeIf { it.isNotBlank() } ?: "Download failed"
-
-        return NotificationCompat
-            .Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(item.displayTitle())
-            .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-            .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setGroup(NOTIFICATION_GROUP_KEY)
-            .setOngoing(false)
-            .setAutoCancel(true)
-            .addAction(0, "Retry", actionPendingIntent(ACTION_RETRY, item.id))
-            .build()
-    }
-
-    private fun buildQueuedGroupNotification(count: Int): Notification =
-        NotificationCompat
-            .Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Queued")
-            .setContentText(if (count == 1) "1 download queued" else "$count downloads queued")
-            .setSmallIcon(android.R.drawable.ic_popup_sync)
-            .setGroup(NOTIFICATION_GROUP_KEY)
-            .setOngoing(true)
-            .build()
-
-    private fun buildCompletedNotification(item: DownloadItem): Notification =
-        NotificationCompat
-            .Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(item.displayTitle())
-            .setContentText("Download complete")
-            .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setGroup(NOTIFICATION_GROUP_KEY)
-            .setOngoing(false)
-            .setAutoCancel(true)
-            .build()
-
-    /** Falls back to the media title, with the `SxxExx` tag appended for episodes — downloads
-     * don't persist an episode title of their own (see [DownloadItem]). */
-    private fun DownloadItem.displayTitle(): String {
-        val season = seasonNumber
-        val episode = episodeNumber
-        if (season == null || episode == null) return mediaTitle
-
-        val tag = "S${season.toString().padStart(2, '0')}E${episode.toString().padStart(2, '0')}"
-        return "$mediaTitle • $tag"
-    }
-
-    /**
-     * A stable, collision-free notification id per item. `id.hashCode()` was neither: two ids can
-     * hash alike and would then share — and overwrite — one notification row. Handing out
-     * sequential ids from a map avoids that; the reserved summary/queued-group ids count down from
-     * [Int.MAX_VALUE], so counting up from zero can't reach them.
-     */
-    private fun DownloadItem.notificationId(): Int =
-        notificationIds.getOrPut(id) { nextNotificationId.getAndIncrement() }
-
-    private fun progressAndStatusFor(item: DownloadItem): Pair<Int?, String> =
-        when (item.state) {
-            DownloadItemState.DOWNLOADING_STREAM -> {
-                val percent = percentOf(item.streamBytesDownloaded, item.streamTotalBytes)
-                val speedSuffix = formatSpeedSuffix(item, isSegments = item.isHlsStream)
-                val text = when {
-                    // HLS reuses these same columns for a segment count, not a byte count — running
-                    // it through formatSize() would render a handful of segments as a bogus "1 KB".
-                    item.isHlsStream && item.streamTotalBytes > 0 ->
-                        "HLS: ${item.streamBytesDownloaded}/${item.streamTotalBytes} segments$speedSuffix"
-                    item.streamTotalBytes > 0 ->
-                        "${formatSize(
-                            item.streamBytesDownloaded
-                        )} / ${formatSize(item.streamTotalBytes)}$speedSuffix"
-                    else -> formatSize(item.streamBytesDownloaded) + speedSuffix
-                }
-                percent to text
-            }
-            DownloadItemState.FETCHING_SUBTITLES -> {
-                val percent = percentOf(item.downloadedSubtitlesCount.toLong(), item.totalSubtitlesCount.toLong())
-                // Subtitle transfers are always plain file downloads, regardless of whether the
-                // stream itself was HLS — never render this one as "segments/s".
-                val speedSuffix = formatSpeedSuffix(item, isSegments = false)
-                percent to "${item.downloadedSubtitlesCount}/${item.totalSubtitlesCount}$speedSuffix"
-            }
-            DownloadItemState.PAUSED -> null to "Paused"
-            DownloadItemState.STREAM_COMPLETE -> null to "Preparing subtitles…"
-            else -> null to "Queued"
-        }
-
-    /** Null when there is no total to be a percentage of — the caller shows an indeterminate bar
-     * for that rather than a determinate one stuck at zero. */
-    private fun percentOf(current: Long, total: Long): Int? =
-        if (total <= 0) null else ((current * 100) / total).toInt().coerceIn(0, 100)
-
-    private fun formatSize(bytes: Long): String = Formatter.formatShortFileSize(this, bytes)
-
-    /** `" • 1.2 MB/s"` (or `" • 3 segments/s"` for HLS). Mirrors the download card: the
-     * `"Calculating speed…"` placeholder is only for a download that hasn't moved a byte yet, since
-     * once something has transferred a zero rate means the transfer has genuinely stalled — and
-     * `" • 0 B/s"` says that far more honestly than a placeholder that never resolves. */
-    private fun formatSpeedSuffix(item: DownloadItem, isSegments: Boolean): String {
-        val hasTransferred = item.streamBytesDownloaded > 0 || item.downloadedSubtitlesCount > 0
-        if (item.downloadBytesPerSecond <= 0 && !hasTransferred) {
-            return " • ${getString(LocaleR.string.download_progress_speed_calculating)}"
-        }
-
-        val speed = if (isSegments) {
-            getString(LocaleR.string.download_progress_speed_segments_format, item.downloadBytesPerSecond)
-        } else {
-            getString(LocaleR.string.download_progress_speed_format, formatSize(item.downloadBytesPerSecond))
-        }
-
-        return " • $speed"
-    }
-
-    private fun actionPendingIntent(action: String, itemId: String): PendingIntent {
-        val intent = Intent(this, MediaDownloadService::class.java).apply {
-            this.action = action
-            putExtra(EXTRA_ITEM_ID, itemId)
-        }
-        return PendingIntent.getService(
-            this,
-            "$action-$itemId".hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

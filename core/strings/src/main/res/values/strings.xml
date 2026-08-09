@@ -434,6 +434,29 @@
     <string name="download_progress_segments_only_format">%1$s segments</string>
     <string name="download_progress_speed_format">%1$s/s</string>
     <string name="download_progress_speed_segments_format">%1$d segments/s</string>
+    <!-- Download notifications -->
+    <string name="download_notification_channel_name">Downloads</string>
+    <string name="download_notification_channel_desc">Shows download progress</string>
+    <string name="download_notification_downloading">Downloading</string>
+    <string name="download_notification_preparing">Preparing downloads\u2026</string>
+    <string name="download_notification_preparing_subtitles">Preparing subtitles\u2026</string>
+    <string name="download_notification_failed">Download failed</string>
+    <string name="download_notification_complete">Download complete</string>
+    <string name="download_notification_queued">Queued</string>
+    <plurals name="download_notification_in_progress">
+        <item quantity="one">%1$d download in progress</item>
+        <item quantity="other">%1$d downloads in progress</item>
+    </plurals>
+    <plurals name="download_notification_queued_count">
+        <item quantity="one">%1$d download queued</item>
+        <item quantity="other">%1$d downloads queued</item>
+    </plurals>
+    <string name="label_pause">Pause</string>
+    <string name="label_resume">Resume</string>
+    <string name="label_stop">Stop</string>
+    <string name="download_progress_hls_format">HLS: %1$d/%2$d segments</string>
+    <string name="download_progress_bytes_format">%1$s / %2$s</string>
+    <string name="download_meta_separator_format">%1$s \u2022 %2$s</string>
     <string name="download_progress_speed_calculating">Calculating speed…</string>
     <plurals name="download_subtitles_count">
         <item quantity="one">%1$d subtitle</item>
