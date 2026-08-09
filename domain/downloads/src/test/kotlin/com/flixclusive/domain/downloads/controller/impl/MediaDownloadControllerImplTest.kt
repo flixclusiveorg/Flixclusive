@@ -1035,6 +1035,25 @@ class MediaDownloadControllerImplTest {
         }
 
     @Test
+    fun `resumeInterrupted should not stack a second sweep while one is still in flight`() =
+        runTest(testDispatcher) {
+            coEvery { mediaDownloadRepository.requeueInterruptedItems(any()) } returns 0
+
+            controller.resumeInterrupted()
+            controller.resumeInterrupted()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { mediaDownloadRepository.requeueInterruptedItems(any()) }
+
+            // The guard is about overlap only: once the sweep has finished, a later call must still
+            // be able to run one, or a genuine second interruption would go unrecovered.
+            controller.resumeInterrupted()
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { mediaDownloadRepository.requeueInterruptedItems(any()) }
+        }
+
+    @Test
     fun `an explicit start should not transfer on a metered connection when wifi-only is on`() =
         runTest(testDispatcher) {
             // The setting promises downloads happen on Wi-Fi, not just that they resume there — so

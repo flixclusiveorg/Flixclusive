@@ -63,6 +63,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
 
     private val dispatchMutex = Mutex()
     private val activeItemIds = mutableSetOf<String>()
+    private var resumeSweepJob: Job? = null
 
     init {
         startDispatchingWhenNetworkAllows()
@@ -109,7 +110,12 @@ internal class MediaDownloadControllerImpl @Inject constructor(
     }
 
     override fun resumeInterrupted() {
-        scope.launch {
+        // The activity fires this on every STARTED, and the network gate below now waits on a user
+        // session rather than failing without one — so before the first sign-in each launch would
+        // otherwise park another sweep, and every one of them would run the moment prefs arrive.
+        if (resumeSweepJob?.isActive == true) return
+
+        resumeSweepJob = scope.launch {
             // Left as-is rather than requeued when held back: the rows stay in whatever state the
             // dead process left them, and the next sweep on an unmetered connection recovers them.
             if (!isNetworkAllowed()) return@launch
