@@ -3,6 +3,7 @@ package com.flixclusive.domain.downloads.usecase.impl
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.DataStoreManager.Companion.getUserPrefs
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
@@ -16,7 +17,6 @@ import com.flixclusive.domain.downloads.util.DownloadLinkRanker
 import com.flixclusive.model.provider.link.Stream
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -49,12 +49,8 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
             return Async.Failure(UiText.from(LocaleR.string.download_error_no_links_available))
         }
 
-        val dataPreferences = dataStoreManager
-            .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
-            .first()
-        val playerPreferences = dataStoreManager
-            .getUserPrefsAsFlow(UserPreferences.PLAYER_PREFS_KEY, PlayerPreferences::class)
-            .first()
+        val dataPreferences = dataStoreManager.getUserPrefs<DataPreferences>(UserPreferences.DATA_PREFS_KEY)
+        val playerPreferences = dataStoreManager.getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
 
         val probed = probeAll(streams)
         val ranked = DownloadLinkRanker.rank(

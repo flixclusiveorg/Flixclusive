@@ -5,9 +5,9 @@ import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.core.database.entity.downloads.DownloadPhase
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.DataStoreManager.Companion.getUserPrefs
 import com.flixclusive.core.datastore.model.user.DataPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import com.flixclusive.core.network.monitor.NetworkMonitor
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.downloads.model.DownloadInterruptReason
@@ -18,7 +18,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.combine
@@ -238,12 +237,10 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         mediaDownloadRepository.updateState(itemId, DownloadItemState.STOPPED, null)
     }
 
-    private suspend fun currentConcurrencyLimit(): Int =
-        dataStoreManager
-            .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
-            .first()
-            .downloadConcurrencyLimit
-            .coerceAtLeast(1)
+    private suspend fun dataPrefs(): DataPreferences =
+        dataStoreManager.getUserPrefs(UserPreferences.DATA_PREFS_KEY)
+
+    private suspend fun currentConcurrencyLimit(): Int = dataPrefs().downloadConcurrencyLimit.coerceAtLeast(1)
 
     /**
      * Whether any transfer may begin on the connection the device is on right now.
@@ -254,10 +251,7 @@ internal class MediaDownloadControllerImpl @Inject constructor(
      * nothing, and it starts by itself once an unmetered connection is back.
      */
     private suspend fun isNetworkAllowed(): Boolean {
-        val wifiOnly = dataStoreManager
-            .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
-            .first()
-            .downloadOnWifiOnly
+        val wifiOnly = dataPrefs().downloadOnWifiOnly
 
         // isMeteredNow(), not isMetered.first(): the flow is shared with WhileSubscribed, so a
         // one-shot collect replays whatever was last observed rather than reading the connection
@@ -265,12 +259,6 @@ internal class MediaDownloadControllerImpl @Inject constructor(
         // switch away from Wi-Fi.
         return !wifiOnly || !networkMonitor.isMeteredNow()
     }
-
-    private suspend fun currentLinkSortDirection(): DownloadLinkSortDirection =
-        dataStoreManager
-            .getUserPrefsAsFlow(UserPreferences.DATA_PREFS_KEY, DataPreferences::class)
-            .first()
-            .downloadLinkSortDirection
 
     private suspend fun tryReserveSlot(itemId: String): Boolean =
         dispatchMutex.withLock {
