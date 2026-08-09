@@ -3,7 +3,7 @@ package com.flixclusive.domain.downloads.util
 import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
 import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import com.flixclusive.core.datastore.model.user.player.PlayerQuality
-import com.flixclusive.core.network.download.LinkProbeResult
+import com.flixclusive.data.downloads.probe.LinkProbeResult
 import com.flixclusive.model.provider.link.Stream
 import org.junit.Test
 import strikt.api.expectThat

@@ -1,8 +1,8 @@
-package com.flixclusive.core.network.download.impl
+package com.flixclusive.data.downloads.probe.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.network.download.LinkProbe
-import com.flixclusive.core.network.download.LinkProbeResult
+import com.flixclusive.data.downloads.probe.LinkProbe
+import com.flixclusive.data.downloads.probe.LinkProbeResult
 import com.flixclusive.core.util.log.errorLog
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull

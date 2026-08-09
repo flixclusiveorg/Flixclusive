@@ -1,4 +1,4 @@
-package com.flixclusive.core.network.download
+package com.flixclusive.data.downloads.probe
 
 data class LinkProbeResult(
     val isReachable: Boolean,

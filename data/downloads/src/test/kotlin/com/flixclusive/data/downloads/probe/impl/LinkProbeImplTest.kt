@@ -1,4 +1,4 @@
-package com.flixclusive.core.network.download.impl
+package com.flixclusive.data.downloads.probe.impl
 
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.util.log.LogRule

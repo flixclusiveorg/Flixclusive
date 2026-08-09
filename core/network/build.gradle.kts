@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
     alias(libs.plugins.flixclusive.hilt)
-    alias(libs.plugins.flixclusive.testing)
 }
 
 android {
@@ -21,6 +20,4 @@ dependencies {
     implementation(projects.coreStrings)
     implementation(libs.stubs.util)
     implementation(libs.stubs.model.media)
-
-    testImplementation(projects.coreTesting)
 }

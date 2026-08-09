@@ -10,8 +10,8 @@ import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
 import com.flixclusive.core.datastore.model.user.player.PlayerQuality
-import com.flixclusive.core.network.download.LinkProbe
-import com.flixclusive.core.network.download.LinkProbeResult
+import com.flixclusive.data.downloads.probe.LinkProbe
+import com.flixclusive.data.downloads.probe.LinkProbeResult
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.downloads.usecase.RankedDownloadCandidate
 import com.flixclusive.model.media.common.MediaType
