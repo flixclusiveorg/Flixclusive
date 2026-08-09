@@ -35,10 +35,12 @@ data class DBMedia(
 ) : Serializable {
     companion object {
         fun MediaMetadata.toDBMedia(): DBMedia {
-            val msDate = if (releaseDate != null && releaseDate!! < 1000000000000L) {
-                releaseDate!! * 1000
-            } else {
-                releaseDate
+            val msDate = releaseDate?.let {
+                when {
+                    it < 1_000_000_000_000L -> it * 1_000
+                    it < 1_000_000_000_000_000L -> it
+                    else -> it / 1_000
+                }
             }
 
             return DBMedia(
@@ -52,7 +54,7 @@ data class DBMedia(
                 language = language,
                 rating = rating,
                 backdropImage = backdropImage,
-                releaseDate = Date.from(Instant.ofEpochSecond(msDate ?: 0L)),
+                releaseDate = msDate?.let { Date.from(Instant.ofEpochMilli(it)) },
             )
         }
 
