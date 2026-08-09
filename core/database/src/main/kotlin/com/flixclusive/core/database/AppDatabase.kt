@@ -48,6 +48,7 @@ import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema20to21
 import com.flixclusive.core.database.migration.Schema21to22
 import com.flixclusive.core.database.migration.Schema22to23
+import com.flixclusive.core.database.migration.Schema23to24
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
 import com.flixclusive.core.database.migration.Schema4to5
@@ -79,7 +80,7 @@ internal const val APP_DATABASE = "app_database"
         DownloadChunk::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 23,
+    version = 24,
     exportSchema = true,
 )
 @TypeConverters(
@@ -148,6 +149,7 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema20to21,
                         Schema21to22,
                         Schema22to23,
+                        Schema23to24,
                     ).build()
                     .also { INSTANCE = it }
             }

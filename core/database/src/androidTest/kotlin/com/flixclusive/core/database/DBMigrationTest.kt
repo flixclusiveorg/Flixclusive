@@ -18,6 +18,7 @@ import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema20to21
 import com.flixclusive.core.database.migration.Schema21to22
 import com.flixclusive.core.database.migration.Schema22to23
+import com.flixclusive.core.database.migration.Schema23to24
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
 import com.flixclusive.core.database.migration.Schema4to5
@@ -34,6 +35,12 @@ import strikt.api.expectThat
 import java.io.IOException
 
 private const val TEST_DB = "migration-test"
+
+/** 6 Sep 2010, a perfectly ordinary release date, in epoch milliseconds. */
+private const val TRUE_MILLIS = 1_283_731_200_000L
+
+/** 1 Jan 1950 — negative, to cover releases that predate the epoch. */
+private const val TRUE_MILLIS_1950 = -631_152_000_000L
 
 @RunWith(AndroidJUnit4::class)
 class DBMigrationTest {
@@ -52,7 +59,7 @@ class DBMigrationTest {
 
         helper.runMigrationsAndValidate(
             name = TEST_DB,
-            version = 23,
+            version = 24,
             validateDroppedTables = true,
             Schema1to2,
             Schema2to3,
@@ -76,6 +83,7 @@ class DBMigrationTest {
             Schema20to21,
             Schema21to22,
             Schema22to23,
+            Schema23to24,
         )
     }
 
@@ -119,6 +127,57 @@ class DBMigrationTest {
             expectThat(owners).isEqualTo(listOf("ahead"))
         }
     }
+
+    /**
+     * The values a pre-24 install is actually carrying: release dates multiplied by a thousand on
+     * every write, so what sits in a milliseconds column is really microseconds — and more than that
+     * for a title that was re-saved from what the database already held.
+     */
+    @Test
+    @Throws(IOException::class)
+    fun migrateShouldRescaleInflatedReleaseDatesBackToMilliseconds() {
+        helper.createDatabase(TEST_DB, 23).use { db ->
+            db.insertMedia(id = "once", releaseDate = TRUE_MILLIS * 1_000)
+            // Survived two save/read cycles before the fix landed.
+            db.insertMedia(id = "twice", releaseDate = TRUE_MILLIS * 1_000_000)
+            // Pre-1970 releases inflate downwards; a one-sided upper-bound test would skip them.
+            db.insertMedia(id = "negative", releaseDate = TRUE_MILLIS_1950 * 1_000)
+            // Anything already sane must come through byte-for-byte.
+            db.insertMedia(id = "correct", releaseDate = TRUE_MILLIS)
+            db.insertMedia(id = "absent", releaseDate = null)
+        }
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 24, true, Schema23to24)
+
+        db.query("SELECT `id`, `releaseDate` FROM `media` ORDER BY `id`").use { cursor ->
+            val rows = buildList {
+                while (cursor.moveToNext()) {
+                    add(cursor.getString(0) to if (cursor.isNull(1)) null else cursor.getLong(1))
+                }
+            }
+
+            expectThat(rows).isEqualTo(
+                listOf(
+                    "absent" to null,
+                    "correct" to TRUE_MILLIS,
+                    "negative" to TRUE_MILLIS_1950,
+                    "once" to TRUE_MILLIS,
+                    "twice" to TRUE_MILLIS,
+                ),
+            )
+        }
+    }
+
+    private fun SupportSQLiteDatabase.insertMedia(
+        id: String,
+        releaseDate: Long?,
+    ) = execSQL(
+        """
+        INSERT INTO `media` (`id`, `title`, `providerId`, `adult`, `type`, `releaseDate`,
+            `createdAt`, `updatedAt`)
+        VALUES ('$id', 'Title', 'provider-1', 0, 'MOVIE', ${releaseDate ?: "NULL"}, 1, 1)
+        """.trimIndent(),
+    )
 
     private fun SupportSQLiteDatabase.insertDownloadItem(
         id: String,
