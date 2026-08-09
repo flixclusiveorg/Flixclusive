@@ -42,6 +42,7 @@ internal fun BottomControls(
     modifier: Modifier = Modifier,
     onNext: (() -> Unit)? = null,
     onShowEpisodesPanel: (() -> Unit)? = null,
+    onShowServersPanel: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth()
@@ -86,11 +87,13 @@ internal fun BottomControls(
                 onClick = { onToggleUiPanel(UiMode.SUBS) }
             )
 
-            LabeledButton(
-                icon = painterResource(PlayerR.drawable.round_cloud_queue_24),
-                contentDescription = stringResource(LocaleR.string.servers),
-                onClick = { onToggleUiPanel(UiMode.SERVERS) }
-            )
+            onShowServersPanel?.let { onClick ->
+                LabeledButton(
+                    icon = painterResource(PlayerR.drawable.round_cloud_queue_24),
+                    contentDescription = stringResource(LocaleR.string.servers),
+                    onClick = onClick
+                )
+            }
 
             onNext?.let {
                 LabeledButton(

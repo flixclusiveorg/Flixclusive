@@ -1,7 +1,6 @@
 package com.flixclusive.core.datastore
 
 import android.content.Context
-import androidx.annotation.GuardedBy
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
@@ -24,9 +23,11 @@ import com.flixclusive.core.datastore.util.createUserPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,11 +60,7 @@ internal class DataStoreManagerImpl @Inject constructor(
     private val providerDao: InstalledProviderDao,
     private val repositoryDao: InstalledRepositoryDao,
 ) : DataStoreManager {
-    val lock = Any()
-
-    @GuardedBy("lock")
-    @Volatile
-    private lateinit var userPreferences: DataStore<Preferences>
+    private val userPreferences = MutableStateFlow<DataStore<Preferences>?>(null)
 
     init {
         CoroutineScope(appDispatchers.io).launch {
@@ -85,31 +82,40 @@ internal class DataStoreManagerImpl @Inject constructor(
         userId: String,
         legacyUserId: Int?,
     ) {
-        synchronized(lock) {
-            userPreferences = context.createUserPreferences(
-                userId = userId,
-                produceMigrations = { _ ->
-                    listOf(
-                        UserPreferencesMigration(context = context),
-                        MigrationV220(
-                            context = context,
-                            legacyUserId = legacyUserId ?: 1,
-                            userId = userId,
-                            providerDao = providerDao,
-                            repositoryDao = repositoryDao,
-                        )
+        userPreferences.value = context.createUserPreferences(
+            userId = userId,
+            produceMigrations = { _ ->
+                listOf(
+                    UserPreferencesMigration(context = context),
+                    MigrationV220(
+                        context = context,
+                        legacyUserId = legacyUserId ?: 1,
+                        userId = userId,
+                        providerDao = providerDao,
+                        repositoryDao = repositoryDao,
                     )
-                },
-            )
-        }
+                )
+            },
+        )
     }
+
+    /**
+     * The store of whoever is signed in, waited for rather than assumed present.
+     *
+     * The session is restored asynchronously, so there is a window on every cold start — and the
+     * whole of a fresh install — where no store exists yet. Reads park here until one does instead
+     * of failing. Re-reading it per emission also keeps collectors off a previous user's store,
+     * whose scope [createUserPreferences] cancels on switch.
+     */
+    private fun activeUserPreferences(): Flow<DataStore<Preferences>> = userPreferences.filterNotNull()
 
     override fun <T : UserPreferences> getUserPrefsAsFlow(
         key: Preferences.Key<String>,
         type: KClass<T>
     ): Flow<T> {
-        return synchronized(lock) {
-            userPreferences.data.map { preferences ->
+        return activeUserPreferences()
+            .flatMapLatest { it.data }
+            .map { preferences ->
                 val data = preferences[key]
                 val instance =
                     if (data != null) {
@@ -120,7 +126,6 @@ internal class DataStoreManagerImpl @Inject constructor(
 
                 instance
             }
-        }
     }
 
     override suspend fun <T : UserPreferences> updateUserPrefs(
@@ -129,7 +134,7 @@ internal class DataStoreManagerImpl @Inject constructor(
         transform: suspend (T) -> T
     ) {
         withContext(appDispatchers.io) {
-            userPreferences.edit { preferences ->
+            activeUserPreferences().first().edit { preferences ->
                 val oldValue = preferences[key]
                 val newValue =
                     if (oldValue != null) {

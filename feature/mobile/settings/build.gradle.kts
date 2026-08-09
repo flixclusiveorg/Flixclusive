@@ -20,8 +20,10 @@ dependencies {
     implementation(projects.coreStrings)
     implementation(projects.dataBackup)
     implementation(projects.dataDatabase)
+    implementation(projects.dataDownloads)
     implementation(projects.dataProvider)
     implementation(projects.domainBackup)
+    implementation(projects.domainDownloads)
     implementation(projects.domainProvider)
 
     implementation(libs.compose.activity)

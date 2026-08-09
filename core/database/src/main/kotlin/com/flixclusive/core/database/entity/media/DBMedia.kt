@@ -7,8 +7,17 @@ import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.MediaIdSource
 import com.flixclusive.model.media.common.MediaType
 import java.io.Serializable
-import java.time.Instant
 import java.util.Date
+
+/**
+ * 1 Jan 2200 in epoch milliseconds. Bounds the plausible window in both directions, so it also
+ * spares pre-1970 releases — their timestamps are negative, and an inflated 1950s film reads as
+ * roughly -6.3e14, which a one-sided `> max` test would have walked straight past.
+ *
+ * Shared with [com.flixclusive.core.database.migration.Schema21to22]: the runtime conversion and the
+ * repair migration must agree on the same window, or a row one accepts the other would rewrite.
+ */
+internal const val MAX_PLAUSIBLE_RELEASE_MILLIS = 7_258_118_400_000L
 
 /**
  * Represents a media entity in the database.
@@ -35,12 +44,6 @@ data class DBMedia(
 ) : Serializable {
     companion object {
         fun MediaMetadata.toDBMedia(): DBMedia {
-            val msDate = if (releaseDate != null && releaseDate!! < 1000000000000L) {
-                releaseDate!! * 1000
-            } else {
-                releaseDate
-            }
-
             return DBMedia(
                 id = id,
                 adult = adult,
@@ -52,8 +55,39 @@ data class DBMedia(
                 language = language,
                 rating = rating,
                 backdropImage = backdropImage,
-                releaseDate = Date.from(Instant.ofEpochSecond(msDate ?: 0L)),
+                releaseDate = releaseDate.toReleaseDate(),
             )
+        }
+
+        /**
+         * Reads a provider's release date, which may arrive in seconds or milliseconds, and returns
+         * it as a [Date] — or null when there isn't a usable one.
+         *
+         * The unit is chosen by which reading lands on a believable date rather than by a fixed
+         * cutoff, because the same value has to survive a round trip: [toMediaMetadata] hands back
+         * `Date.time`, so whatever this stores is read straight back into here on the next save. A
+         * plain "below a trillion means seconds" test fails that for anything released before
+         * September 2001 — its milliseconds are below the cutoff too, so each save multiplied it by
+         * another thousand.
+         *
+         * Ambiguity is left only for releases within about twelve weeks of 1 Jan 1970, where both
+         * readings are believable; seconds wins there, being overwhelmingly the more common.
+         */
+        private fun Long?.toReleaseDate(): Date? {
+            // 0 is how an absent date round-trips — toMediaMetadata maps a null column to 0L — so
+            // honouring it would invent a 1 Jan 1970 release the provider never gave.
+            val epoch = this?.takeIf { it != 0L } ?: return null
+
+            val millis = when (epoch) {
+                in -MAX_PLAUSIBLE_SECONDS..MAX_PLAUSIBLE_SECONDS -> epoch * 1_000
+                in -MAX_PLAUSIBLE_MILLIS..MAX_PLAUSIBLE_MILLIS -> epoch
+                // Rows written before this fix hold microseconds; Schema21to22 repairs the ones
+                // already stored, and this catches any that come back through a provider.
+                in -MAX_PLAUSIBLE_MICROS..MAX_PLAUSIBLE_MICROS -> epoch / 1_000
+                else -> return null
+            }
+
+            return Date(millis)
         }
 
         fun DBMedia.toMediaMetadata(externalIds: Map<MediaIdSource, String>): PartialMedia {
@@ -72,6 +106,10 @@ data class DBMedia(
                 externalIds = externalIds,
             )
         }
+
+        private const val MAX_PLAUSIBLE_MILLIS = MAX_PLAUSIBLE_RELEASE_MILLIS
+        private const val MAX_PLAUSIBLE_SECONDS = MAX_PLAUSIBLE_MILLIS / 1_000
+        private const val MAX_PLAUSIBLE_MICROS = MAX_PLAUSIBLE_MILLIS * 1_000
     }
 }
 

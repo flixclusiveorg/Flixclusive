@@ -21,4 +21,5 @@
     <string name="failed_to_toggle_item_on_tracker_list">Failed to toggle item on tracker list %1$s: %2$s</string>
     <string name="failed_to_load_library_status">Error loading library status</string>
     <string name="label_empty_streams">Juiceless glass</string>
+    <string name="failed_to_load_download_status">Error loading download status</string>
 </resources>

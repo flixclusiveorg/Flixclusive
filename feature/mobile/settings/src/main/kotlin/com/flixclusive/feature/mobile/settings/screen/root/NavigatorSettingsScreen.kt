@@ -16,5 +16,7 @@ interface NavigatorSettingsScreen :
 
     fun navigateToProviderManagerScreen()
 
+    fun navigateToDownloadsScreen()
+
     fun navigateToUrl(url: String)
 }

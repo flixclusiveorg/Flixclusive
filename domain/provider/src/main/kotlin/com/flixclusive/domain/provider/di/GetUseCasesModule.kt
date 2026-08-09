@@ -1,5 +1,7 @@
 package com.flixclusive.domain.provider.di
 
+import com.flixclusive.domain.provider.usecase.download.ToggleMediaDownloadUseCase
+import com.flixclusive.domain.provider.usecase.download.impl.ToggleMediaDownloadUseCaseImpl
 import com.flixclusive.domain.provider.usecase.get.GetCatalogProvidersUseCase
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetInstalledProviderUseCase
@@ -74,4 +76,7 @@ internal abstract class GetUseCasesModule {
     abstract fun bindGetCrossMatchedMediaMetadataUseCase(
         impl: GetCrossMatchedMediaMetadataUseCaseImpl,
     ): GetCrossMatchedMediaMetadataUseCase
+
+    @Binds
+    abstract fun bindToggleMediaDownloadUseCase(impl: ToggleMediaDownloadUseCaseImpl): ToggleMediaDownloadUseCase
 }

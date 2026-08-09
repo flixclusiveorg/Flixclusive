@@ -76,6 +76,7 @@ import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.provider.CachedStream
 import com.flixclusive.core.database.entity.provider.CachedSubtitle
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.common.components.GradientLinearProgressIndicator
 import com.flixclusive.core.presentation.common.extensions.getActivity
@@ -117,9 +118,12 @@ data class MediaLinksBottomSheetArgs(
     val episode: Episode? = null,
 )
 
+/** Whether a *provider* turned up something playable. The downloaded file is excluded on purpose:
+ * every branch this guards ends in provider playback, so counting a local file here would offer to
+ * skip ahead to a provider stream that was never resolved. */
 private val List<CachedMediaLink>.hasPlayableLinks: Boolean
     get() {
-        return fastAny { it is CachedStream && !it.isThirdPartyGateway }
+        return fastAny { it is CachedStream && !it.isThirdPartyGateway && !it.isLocalDownload }
     }
 
 private val List<CachedMediaLink>.hasValidLinks: Boolean
@@ -140,6 +144,8 @@ internal fun MediaLinksBottomSheet(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val playerPrefs by viewModel.playerPrefs.collectAsStateWithLifecycle()
     val links by viewModel.links.collectAsStateWithLifecycle()
+    val providerLinks by viewModel.providerLinks.collectAsStateWithLifecycle()
+    val localLink by viewModel.localLink.collectAsStateWithLifecycle()
 
     val activity = LocalContext.current.getActivity<ComponentActivity>()
     val window = activity.window
@@ -155,20 +161,31 @@ internal fun MediaLinksBottomSheet(
     LaunchedEffect(viewModel, playerPrefs) {
         combine(
             viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
-            viewModel.links
-        ) { state, links ->
+            viewModel.providerLinks,
+            viewModel.localLink
+        ) { state, remoteLinks, localLink ->
             playerPrefs.isAutoSelectingServer &&
                 !state.isLoading &&
-                links.hasPlayableLinks &&
-                state.isSuccess
+                (
+                    (remoteLinks.hasPlayableLinks && state.isSuccess) ||
+                        localLink != null
+                )
         }.filter { it }
             .distinctUntilChanged()
             .debounce(1000L.milliseconds) // Debounce to prevent rapid navigation if links change quickly
             .collectLatest {
-                navigator.showPlayerSplashScreen(
-                    media = uiState.metadata,
-                    episode = uiState.episode,
-                )
+                if (playerPrefs.isPreferringLocalPlayback && localLink != null) {
+                    navigator.showPlayerSplashScreen(
+                        PlaybackRequest.FromDownload(downloadItemId = localLink!!.downloadItemId),
+                    )
+                } else if (uiState.loadLinksState.isSuccess) {
+                    navigator.showPlayerSplashScreen(
+                        PlaybackRequest.FromProvider(
+                            media = uiState.metadata,
+                            episode = uiState.episode,
+                        ),
+                    )
+                }
             }
     }
 
@@ -177,24 +194,34 @@ internal fun MediaLinksBottomSheet(
         links = { links },
         canSkipLoading = {
             playerPrefs.isAutoSelectingServer &&
-                links.fastAny { it.isValid } &&
+                providerLinks.fastAny { it.isValid } &&
                 uiState.loadLinksState.isLoading
         },
         canAutoSelectStream = { playerPrefs.isAutoSelectingServer },
         onResetAndRetry = viewModel::onResetAndRetry,
         onSkipLoading = {
             navigator.showPlayerSplashScreen(
-                media = uiState.metadata,
-                episode = uiState.episode,
+                PlaybackRequest.FromProvider(
+                    media = uiState.metadata,
+                    episode = uiState.episode,
+                ),
             )
         },
-        onPlayLink = {
-            navigator.showPlayerSplashScreen(
-                media = uiState.metadata,
-                episode = uiState.episode,
-                initialStreamUrl = it.url,
-                initialHeaders = it.customHeaders
-            )
+        onPlayLink = { link ->
+            if (link.isLocalDownload && localLink != null) {
+                navigator.showPlayerSplashScreen(
+                    PlaybackRequest.FromDownload(downloadItemId = localLink!!.downloadItemId),
+                )
+            } else {
+                navigator.showPlayerSplashScreen(
+                    PlaybackRequest.FromProvider(
+                        media = uiState.metadata,
+                        episode = uiState.episode,
+                        preferredStreamUrl = link.url,
+                        headers = link.customHeaders,
+                    ),
+                )
+            }
         },
     )
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      HlsManifestResolverImplTest exercises real HTTP requests against MockWebServer, which
+      serves plain HTTP on localhost. Android blocks cleartext traffic by default since API 28.
+    -->
+    <application android:usesCleartextTraffic="true" />
+
+</manifest>

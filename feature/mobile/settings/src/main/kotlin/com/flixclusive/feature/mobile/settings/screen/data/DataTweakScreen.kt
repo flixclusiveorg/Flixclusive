@@ -8,6 +8,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.datastore.model.user.DataPreferences
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSelectionMode
+import com.flixclusive.core.datastore.model.user.download.DownloadLinkSortDirection
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakScaffold
@@ -15,6 +17,8 @@ import com.flixclusive.feature.mobile.settings.TweakUI
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlin.math.roundToInt
 import com.flixclusive.core.strings.R as LocaleR
 
 interface NavigatorDataTweakScreen : NavigateBack {
@@ -32,8 +36,6 @@ internal fun DataTweakScreen(
     val cachedLinksCount by viewModel.cachedLinksCount.collectAsStateWithLifecycle()
     val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
 
-    val resources = LocalResources.current
-
     TweakScaffold(
         title = stringResource(LocaleR.string.data),
         description = stringResource(LocaleR.string.data_settings_content_desc),
@@ -43,6 +45,10 @@ internal fun DataTweakScreen(
                 getSearchTweaks(
                     searchHistoryCount = searchHistoryCount,
                     clearSearchHistory = viewModel::clearSearchHistory,
+                ),
+                getDownloadTweaks(
+                    dataPreferences = { dataPreferences },
+                    onUpdatePreferences = viewModel::updateUserPrefs,
                 ),
                 getCachedLinksTweaks(
                     dataPreferences = { dataPreferences },
@@ -61,6 +67,70 @@ internal fun DataTweakScreen(
                 ),
             )
         }
+    )
+}
+
+@Composable
+private fun getDownloadTweaks(
+    dataPreferences: () -> DataPreferences,
+    onUpdatePreferences: (suspend (oldValue: DataPreferences) -> DataPreferences) -> Unit,
+): TweakGroup {
+    val resources = LocalResources.current
+
+    return TweakGroup(
+        title = stringResource(LocaleR.string.downloads),
+        tweaks = persistentListOf(
+            TweakUI.SwitchTweak(
+                title = stringResource(LocaleR.string.download_wifi_only_title),
+                description = { resources.getString(LocaleR.string.download_wifi_only_desc) },
+                value = { dataPreferences().downloadOnWifiOnly },
+                onTweaked = { wifiOnly ->
+                    onUpdatePreferences { it.copy(downloadOnWifiOnly = wifiOnly) }
+                },
+            ),
+            TweakUI.ListTweak(
+                title = stringResource(LocaleR.string.download_link_selection_mode_title),
+                description = { resources.getString(LocaleR.string.download_link_selection_mode_desc) },
+                value = { dataPreferences().downloadLinkSelectionMode },
+                options = persistentMapOf(
+                    DownloadLinkSelectionMode.QUALITY_FIRST to
+                        stringResource(LocaleR.string.download_link_selection_mode_quality_first),
+                    DownloadLinkSelectionMode.SIZE_FIRST to
+                        stringResource(LocaleR.string.download_link_selection_mode_size_first),
+                ),
+                onTweaked = { mode ->
+                    onUpdatePreferences { it.copy(downloadLinkSelectionMode = mode) }
+                },
+            ),
+            TweakUI.ListTweak(
+                title = stringResource(LocaleR.string.download_link_sort_direction_title),
+                description = { resources.getString(LocaleR.string.download_link_sort_direction_desc) },
+                value = { dataPreferences().downloadLinkSortDirection },
+                options = persistentMapOf(
+                    DownloadLinkSortDirection.HIGHEST_FIRST to
+                        stringResource(LocaleR.string.download_link_sort_direction_highest_first),
+                    DownloadLinkSortDirection.LOWEST_FIRST to
+                        stringResource(LocaleR.string.download_link_sort_direction_lowest_first),
+                ),
+                onTweaked = { direction ->
+                    onUpdatePreferences { it.copy(downloadLinkSortDirection = direction) }
+                },
+            ),
+            TweakUI.SliderTweak(
+                title = stringResource(LocaleR.string.download_concurrency_limit_title),
+                description = {
+                    resources.getString(
+                        LocaleR.string.download_concurrency_limit_desc,
+                        dataPreferences().downloadConcurrencyLimit
+                    )
+                },
+                value = { dataPreferences().downloadConcurrencyLimit.toFloat() },
+                range = 1f..5f,
+                onTweaked = { limit ->
+                    onUpdatePreferences { it.copy(downloadConcurrencyLimit = limit.roundToInt()) }
+                },
+            ),
+        )
     )
 }
 

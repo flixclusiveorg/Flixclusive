@@ -28,6 +28,8 @@
     <string name="warning_install_message_second_half">By proceeding with the installation, you acknowledge that you understand the risks involved, and any resulting damage will be your responsibility. Are you sure you want to continue?</string>
     <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
     <string name="no_available_providers">No available providers</string>
+    <string name="download_error_no_links_available">No download links available</string>
+    <string name="download_error_link_resolution_failed">Unable to find a working download link</string>
 
     <!--  Errors with formatting  -->
     <plurals name="warning_install_message_first_half">
@@ -48,7 +50,7 @@
     <string name="add_to_list">Add to list</string>
     <string name="advanced">Advanced</string>
     <string name="appearance">Appearance</string>
-    <string name="application">APPLICATION</string>
+    <string name="label_misc">Miscellaneous</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="authors">Authors</string>
@@ -285,6 +287,21 @@
     <string name="label_no_cached_media">No cached media yet</string>
     <string name="dead_link_retention_days_title">Dead link retention period</string>
     <string name="dead_link_retention_days_desc">Remove dead links after %1$d day(s). Set to 0 to remove them immediately on the next cleanup.</string>
+    <string name="label_downloaded_link">Downloaded on this device</string>
+    <string name="download_delete_confirm_title">Delete download?</string>
+    <string name="download_delete_confirm_message">The downloaded video and its subtitles will be removed from this device. This can\'t be undone.</string>
+    <string name="download_wifi_only_title">Download on Wi-Fi only</string>
+    <string name="download_wifi_only_desc">Downloads only run on an unmetered connection. Anything started on mobile data waits in the queue and begins once you\'re back on Wi-Fi.</string>
+    <string name="download_link_selection_mode_title">Link selection priority</string>
+    <string name="download_link_selection_mode_desc">How to rank candidate links when starting a download. Speed is always the tiebreaker.</string>
+    <string name="download_link_selection_mode_quality_first">Closest to preferred quality</string>
+    <string name="download_link_selection_mode_size_first">By file size</string>
+    <string name="download_link_sort_direction_title">Sort direction</string>
+    <string name="download_link_sort_direction_desc">Which end to prefer: the largest/best-matching file, or when nothing matches exactly, which way to fall back.</string>
+    <string name="download_link_sort_direction_highest_first">Highest first</string>
+    <string name="download_link_sort_direction_lowest_first">Lowest first</string>
+    <string name="download_concurrency_limit_title">Simultaneous downloads</string>
+    <string name="download_concurrency_limit_desc">How many downloads may transfer at once. Anything beyond the limit stays queued, oldest first, until a slot frees up.\n\nCurrent limit: %1$d</string>
     <string name="links_test_done_format">Test complete: %1$d alive, %2$d dead</string>
     <string name="testing_link_format">Testing link %1$d of %2$d…</string>
     <string name="change_avatar_content_desc">Change user\'s avatar</string>
@@ -389,6 +406,68 @@
     <plurals name="episode_runtime">
         <item quantity="one">%1$d Episode</item>
         <item quantity="other">%1$d Episodes</item>
+    </plurals>
+
+    <string name="downloads">Downloads</string>
+    <string name="download_state_queued">Queued</string>
+    <string name="download_state_downloading">Downloading</string>
+    <string name="download_state_paused">Paused</string>
+    <string name="download_state_fetching_subtitles">Fetching subtitles</string>
+    <string name="download_state_completed">Completed</string>
+    <string name="download_state_stopped">Stopped</string>
+    <string name="download_state_failed">Failed</string>
+    <string name="download_type_movie">Movie</string>
+    <string name="download_type_show">Show</string>
+    <string name="download_empty_title">No downloads yet</string>
+    <string name="download_empty_description">Tired of buffering? Try downloading something!</string>
+    <string name="download_action_pause_content_desc">Pause download</string>
+    <string name="download_action_resume_content_desc">Resume download</string>
+    <string name="download_action_stop_content_desc">Stop download</string>
+    <string name="download_action_open_content_desc">Open downloaded file</string>
+    <plurals name="download_batch_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <string name="download_progress_video_label">Video</string>
+    <string name="download_progress_subtitles_label">Subtitles</string>
+    <string name="download_progress_segments_format">%1$d / %2$d segments</string>
+    <string name="download_progress_segments_only_format">%1$s segments</string>
+    <string name="download_progress_speed_format">%1$s/s</string>
+    <string name="download_progress_speed_segments_format">%1$d segments/s</string>
+    <!-- Download failure reasons, persisted with the download row -->
+    <string name="download_error_no_folder">Unable to access download folder</string>
+    <string name="download_error_no_stream_link">No stream link to download</string>
+    <string name="download_error_no_destination_file">Unable to create destination file</string>
+    <string name="download_error_file_too_small">Downloaded file is too small to be valid</string>
+    <string name="download_error_generic">Download failed</string>
+    <string name="download_error_stream_failed">Stream download failed</string>
+    <!-- Download notifications -->
+    <string name="download_notification_channel_name">Downloads</string>
+    <string name="download_notification_channel_desc">Shows download progress</string>
+    <string name="download_notification_downloading">Downloading</string>
+    <string name="download_notification_preparing">Preparing downloads\u2026</string>
+    <string name="download_notification_preparing_subtitles">Preparing subtitles\u2026</string>
+    <string name="download_notification_failed">Download failed</string>
+    <string name="download_notification_complete">Download complete</string>
+    <string name="download_notification_queued">Queued</string>
+    <plurals name="download_notification_in_progress">
+        <item quantity="one">%1$d download in progress</item>
+        <item quantity="other">%1$d downloads in progress</item>
+    </plurals>
+    <plurals name="download_notification_queued_count">
+        <item quantity="one">%1$d download queued</item>
+        <item quantity="other">%1$d downloads queued</item>
+    </plurals>
+    <string name="label_pause">Pause</string>
+    <string name="label_resume">Resume</string>
+    <string name="label_stop">Stop</string>
+    <string name="download_progress_hls_format">HLS: %1$d/%2$d segments</string>
+    <string name="download_progress_bytes_format">%1$s / %2$s</string>
+    <string name="download_meta_separator_format">%1$s \u2022 %2$s</string>
+    <string name="download_progress_speed_calculating">Calculating speed…</string>
+    <plurals name="download_subtitles_count">
+        <item quantity="one">%1$d subtitle</item>
+        <item quantity="other">%1$d subtitles</item>
     </plurals>
 </resources>
 

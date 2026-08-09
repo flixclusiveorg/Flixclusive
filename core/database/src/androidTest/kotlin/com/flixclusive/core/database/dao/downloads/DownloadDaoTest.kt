@@ -1,0 +1,364 @@
+package com.flixclusive.core.database.dao.downloads
+
+import android.database.sqlite.SQLiteConstraintException
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.flixclusive.core.database.AppDatabase
+import com.flixclusive.core.database.entity.downloads.DownloadChunk
+import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
+import com.flixclusive.core.database.entity.downloads.DownloadItem
+import com.flixclusive.core.database.entity.downloads.DownloadItemState
+import com.flixclusive.core.database.entity.downloads.DownloadPhase
+import com.flixclusive.core.database.entity.downloads.dedupeKeyOf
+import com.flixclusive.core.testing.database.DatabaseTestDefaults
+import com.flixclusive.model.media.common.MediaType
+import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import strikt.api.expectThat
+import strikt.assertions.hasSize
+import strikt.assertions.isEmpty
+import strikt.assertions.isEqualTo
+import strikt.assertions.isNull
+import strikt.assertions.isTrue
+import java.util.Date
+
+@RunWith(AndroidJUnit4::class)
+class DownloadDaoTest {
+    private lateinit var database: AppDatabase
+    private lateinit var downloadItemDao: DownloadItemDao
+    private lateinit var downloadChunkDao: DownloadChunkDao
+
+    private val testItem = DownloadItem(
+        ownerId = "owner-1",
+        mediaId = "media-1",
+        mediaTitle = "Test Movie",
+        mediaType = MediaType.MOVIE,
+    )
+
+    /**
+     * A second item with its own identity. Not `testItem.copy(id = …)`: `copy` carries the
+     * original's [DownloadItem.dedupeKey], which the unique index would reject — the key has to be
+     * rebuilt whenever media, season or episode change.
+     */
+    private fun itemFor(
+        id: String,
+        mediaId: String = "media-1",
+        seasonNumber: Int? = null,
+        episodeNumber: Int? = null,
+    ) = DownloadItem(
+        id = id,
+        ownerId = "owner-1",
+        mediaId = mediaId,
+        mediaTitle = "Test Movie",
+        mediaType = if (seasonNumber == null) MediaType.MOVIE else MediaType.SHOW,
+        seasonNumber = seasonNumber,
+        episodeNumber = episodeNumber,
+    )
+
+    @Before
+    fun setup() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        database = DatabaseTestDefaults.createDatabase(context)
+        downloadItemDao = database.downloadItemDao()
+        downloadChunkDao = database.downloadChunkDao()
+    }
+
+    @After
+    fun tearDown() {
+        database.close()
+    }
+
+    @Test
+    fun insertShouldPersistItemAndGetShouldReturnInsertedItem() =
+        runTest {
+            downloadItemDao.insert(testItem)
+
+            val result = downloadItemDao.get(testItem.id)
+
+            expectThat(result?.mediaTitle).isEqualTo("Test Movie")
+            expectThat(result?.state).isEqualTo(DownloadItemState.QUEUED)
+        }
+
+    @Test
+    fun updateStateShouldPersistStateAndPhase() =
+        runTest {
+            downloadItemDao.insert(testItem)
+
+            downloadItemDao.updateState(testItem.id, DownloadItemState.PAUSED, DownloadPhase.STREAM, Date())
+
+            val result = downloadItemDao.get(testItem.id)
+            expectThat(result?.state).isEqualTo(DownloadItemState.PAUSED)
+            expectThat(result?.phase).isEqualTo(DownloadPhase.STREAM)
+        }
+
+    @Test
+    fun updateStreamProgressShouldPersistByteCountsAndSpeedWithoutTouchingOtherFields() =
+        runTest {
+            downloadItemDao.insert(testItem)
+
+            downloadItemDao.updateStreamProgress(
+                testItem.id,
+                bytesDownloaded = 512,
+                totalBytes = 1024,
+                bytesPerSecond = 256,
+                updatedAt = Date(),
+            )
+
+            val result = downloadItemDao.get(testItem.id)
+            expectThat(result?.streamBytesDownloaded).isEqualTo(512)
+            expectThat(result?.streamTotalBytes).isEqualTo(1024)
+            expectThat(result?.downloadBytesPerSecond).isEqualTo(256)
+            expectThat(result?.mediaTitle).isEqualTo("Test Movie")
+        }
+
+    @Test
+    fun updateDownloadRateShouldPersistSpeedWithoutTouchingStreamByteCounts() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            downloadItemDao.updateStreamProgress(
+                testItem.id,
+                bytesDownloaded = 512,
+                totalBytes = 1024,
+                bytesPerSecond = 256,
+                updatedAt = Date(),
+            )
+
+            downloadItemDao.updateDownloadRate(testItem.id, bytesPerSecond = 128, updatedAt = Date())
+
+            val result = downloadItemDao.get(testItem.id)
+            expectThat(result?.downloadBytesPerSecond).isEqualTo(128)
+            expectThat(result?.streamBytesDownloaded).isEqualTo(512)
+            expectThat(result?.streamTotalBytes).isEqualTo(1024)
+        }
+
+    @Test
+    fun updateSourceShouldAlwaysWriteSourceUrlAndIsHlsStreamTogetherAndResetBytesDownloaded() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            downloadItemDao.updateStreamProgress(
+                testItem.id,
+                bytesDownloaded = 512,
+                totalBytes = 1024,
+                bytesPerSecond = 256,
+                Date(),
+            )
+
+            downloadItemDao.updateSource(
+                testItem.id,
+                "https://example.com/video.m3u8",
+                isHlsStream = true,
+                totalBytes = 2048,
+                Date(),
+            )
+
+            val result = downloadItemDao.get(testItem.id)
+            expectThat(result?.sourceUrl).isEqualTo("https://example.com/video.m3u8")
+            expectThat(result?.isHlsStream).isTrue()
+            expectThat(result?.streamBytesDownloaded).isEqualTo(0)
+            expectThat(result?.streamTotalBytes).isEqualTo(2048)
+        }
+
+    @Test
+    fun updateStreamFilePathShouldPersistPath() =
+        runTest {
+            downloadItemDao.insert(testItem)
+
+            downloadItemDao.updateStreamFilePath(testItem.id, "content://tree/document/video.mp4", Date())
+
+            val result = downloadItemDao.get(testItem.id)
+            expectThat(result?.streamFilePath).isEqualTo("content://tree/document/video.mp4")
+        }
+
+    @Test
+    fun incrementDownloadedSubtitlesCountShouldAccumulate() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            downloadItemDao.setTotalSubtitlesCount(testItem.id, 3, Date())
+
+            downloadItemDao.incrementDownloadedSubtitlesCount(testItem.id, Date())
+            downloadItemDao.incrementDownloadedSubtitlesCount(testItem.id, Date())
+
+            val result = downloadItemDao.get(testItem.id)
+            expectThat(result?.totalSubtitlesCount).isEqualTo(3)
+            expectThat(result?.downloadedSubtitlesCount).isEqualTo(2)
+        }
+
+    @Test
+    fun insertAllChunksShouldBeRetrievableOrderedByChunkIndex() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            val chunks = listOf(
+                DownloadChunk(downloadItemId = testItem.id, chunkIndex = 1, rangeStart = 500, rangeEnd = 999),
+                DownloadChunk(downloadItemId = testItem.id, chunkIndex = 0, rangeStart = 0, rangeEnd = 499),
+            )
+
+            downloadChunkDao.insertAll(chunks)
+
+            val result = downloadChunkDao.getChunksForItem(testItem.id)
+            expectThat(result).hasSize(2)
+            expectThat(result[0].chunkIndex).isEqualTo(0)
+            expectThat(result[1].chunkIndex).isEqualTo(1)
+        }
+
+    @Test
+    fun updateProgressShouldPersistChunkBytesAndStatus() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            downloadChunkDao.insertAll(
+                listOf(DownloadChunk(downloadItemId = testItem.id, chunkIndex = 0, rangeStart = 0, rangeEnd = 999))
+            )
+            val chunkId = downloadChunkDao.getChunksForItem(testItem.id).first().id
+
+            downloadChunkDao.updateProgress(chunkId, bytesDownloaded = 1000, status = DownloadChunkStatus.COMPLETED)
+
+            val result = downloadChunkDao.getChunksForItem(testItem.id).first()
+            expectThat(result.bytesDownloaded).isEqualTo(1000)
+            expectThat(result.status).isEqualTo(DownloadChunkStatus.COMPLETED)
+        }
+
+    @Test
+    fun deletingDownloadItemShouldCascadeDeleteItsChunks() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            downloadChunkDao.insertAll(
+                listOf(DownloadChunk(downloadItemId = testItem.id, chunkIndex = 0, rangeStart = 0, rangeEnd = 999))
+            )
+
+            downloadItemDao.delete(testItem.id)
+
+            expectThat(downloadChunkDao.getChunksForItem(testItem.id)).isEmpty()
+            expectThat(downloadItemDao.get(testItem.id)).isNull()
+        }
+
+    @Test
+    fun getOldestByStateShouldReturnEarliestQueuedItemFirst() =
+        runTest {
+            downloadItemDao.insert(testItem)
+            val second = itemFor(id = "item-2", mediaId = "media-2")
+            downloadItemDao.insert(second)
+
+            val result = downloadItemDao.getOldestByState(DownloadItemState.QUEUED)
+
+            expectThat(result?.id).isEqualTo(testItem.id)
+        }
+
+    @Test
+    fun getBatchShouldReturnItemsForSameMediaAndSeasonOrderedByEpisodeNumber() =
+        runTest {
+            val showId = "show-1"
+            downloadItemDao.insert(
+                itemFor(id = "item-1", mediaId = showId, seasonNumber = 1, episodeNumber = 2)
+            )
+            downloadItemDao.insert(
+                itemFor(id = "item-2", mediaId = showId, seasonNumber = 1, episodeNumber = 1)
+            )
+            downloadItemDao.insert(
+                itemFor(id = "item-3", mediaId = showId, seasonNumber = 2, episodeNumber = 1)
+            )
+
+            val batch = downloadItemDao.getBatch(showId, 1)
+
+            expectThat(batch).hasSize(2)
+            expectThat(batch[0].episodeNumber).isEqualTo(1)
+            expectThat(batch[1].episodeNumber).isEqualTo(2)
+        }
+
+    @Test
+    fun requeueByStatesShouldRequeueMatchingItemsWithTheGivenPhaseAndClearTheirRate() =
+        runTest {
+            downloadItemDao.insert(
+                itemFor(id = "downloading", mediaId = "media-downloading")
+                    .copy(state = DownloadItemState.DOWNLOADING_STREAM, downloadBytesPerSecond = 5_000)
+            )
+            downloadItemDao.insert(
+                itemFor(id = "paused", mediaId = "media-paused").copy(state = DownloadItemState.PAUSED),
+            )
+
+            val requeued = downloadItemDao.requeueByStates(
+                from = listOf(DownloadItemState.DOWNLOADING_STREAM),
+                to = DownloadItemState.QUEUED,
+                phase = DownloadPhase.STREAM,
+                excludedIds = emptyList(),
+                updatedAt = Date(),
+            )
+
+            expectThat(requeued).isEqualTo(1)
+            val result = downloadItemDao.get("downloading")
+            expectThat(result?.state).isEqualTo(DownloadItemState.QUEUED)
+            expectThat(result?.phase).isEqualTo(DownloadPhase.STREAM)
+            expectThat(result?.downloadBytesPerSecond).isEqualTo(0L)
+            // A state the sweep doesn't list is the user's own choice and must survive it.
+            expectThat(downloadItemDao.get("paused")?.state).isEqualTo(DownloadItemState.PAUSED)
+        }
+
+    @Test
+    fun insertShouldRejectASecondItemForTheSameMedia() =
+        runTest {
+            // Two rows for one title resolve to the same file on disk; the unique dedupeKey index
+            // is what stops a double tap creating them.
+            downloadItemDao.insert(itemFor(id = "first", mediaId = "media-9"))
+
+            var rejected = false
+            try {
+                downloadItemDao.insert(itemFor(id = "second", mediaId = "media-9"))
+            } catch (_: SQLiteConstraintException) {
+                rejected = true
+            }
+
+            expectThat(rejected).isTrue()
+            expectThat(downloadItemDao.getByDedupeKey(dedupeKeyOf("media-9", null, null))?.id).isEqualTo("first")
+        }
+
+    @Test
+    fun insertShouldAllowDistinctEpisodesOfTheSameSeason() =
+        runTest {
+            downloadItemDao.insert(itemFor(id = "e1", mediaId = "show-9", seasonNumber = 1, episodeNumber = 1))
+            downloadItemDao.insert(itemFor(id = "e2", mediaId = "show-9", seasonNumber = 1, episodeNumber = 2))
+
+            expectThat(downloadItemDao.getBatch("show-9", 1)).hasSize(2)
+        }
+
+    @Test
+    fun insertShouldRejectASecondMovieForTheSameMedia() =
+        runTest {
+            // The case a plain unique index over (mediaId, seasonNumber, episodeNumber) would miss:
+            // both rows have NULL season and episode, and SQLite treats NULLs as distinct.
+            downloadItemDao.insert(itemFor(id = "movie-a", mediaId = "movie-9"))
+
+            var rejected = false
+            try {
+                downloadItemDao.insert(itemFor(id = "movie-b", mediaId = "movie-9"))
+            } catch (_: SQLiteConstraintException) {
+                rejected = true
+            }
+
+            expectThat(rejected).isTrue()
+        }
+
+    @Test
+    fun requeueByStatesShouldSkipExcludedIds() =
+        runTest {
+            downloadItemDao.insert(
+                itemFor(id = "live", mediaId = "media-live").copy(state = DownloadItemState.FETCHING_SUBTITLES),
+            )
+            downloadItemDao.insert(
+                itemFor(id = "orphaned", mediaId = "media-orphaned").copy(state = DownloadItemState.STREAM_COMPLETE),
+            )
+
+            val requeued = downloadItemDao.requeueByStates(
+                from = listOf(DownloadItemState.FETCHING_SUBTITLES, DownloadItemState.STREAM_COMPLETE),
+                to = DownloadItemState.QUEUED,
+                phase = DownloadPhase.SUBTITLES,
+                excludedIds = listOf("live"),
+                updatedAt = Date(),
+            )
+
+            expectThat(requeued).isEqualTo(1)
+            expectThat(downloadItemDao.get("live")?.state).isEqualTo(DownloadItemState.FETCHING_SUBTITLES)
+            expectThat(downloadItemDao.get("orphaned")?.state).isEqualTo(DownloadItemState.QUEUED)
+            expectThat(downloadItemDao.get("orphaned")?.phase).isEqualTo(DownloadPhase.SUBTITLES)
+        }
+}

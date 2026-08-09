@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -196,7 +195,7 @@ class DownloadService : Service() {
                 e.printStackTrace()
                 activeDownloads.remove(downloadId)
                 if (activeDownloads.isEmpty()) {
-                    stopForeground()
+                    stopForegroundCompat()
                     releaseWakeLockIfNeeded()
                     stopSelf()
                 }
@@ -216,7 +215,7 @@ class DownloadService : Service() {
         notificationManager.cancel(notificationId)
 
         if (activeDownloads.isEmpty()) {
-            stopForeground()
+            stopForegroundCompat()
             releaseWakeLockIfNeeded()
             stopSelf()
         }
@@ -227,7 +226,7 @@ class DownloadService : Service() {
         stopServiceJob = serviceScope.launch {
             delay(delayMs.milliseconds) // Wait for 5 seconds before stopping the service
             if (activeDownloads.isEmpty()) {
-                stopForeground()
+                stopForegroundCompat()
                 releaseWakeLockIfNeeded()
                 stopSelf()
             }
@@ -235,22 +234,6 @@ class DownloadService : Service() {
     }
 
     @Suppress("DEPRECATION")
-    private fun stopForeground() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            stopForeground(true)
-        }
-    }
-
-    private fun safeStartForeground(id: Int, notification: Notification) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else {
-            startForeground(id, notification)
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel() {
         val channel = NotificationChannel(

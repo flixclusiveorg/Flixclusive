@@ -3,6 +3,8 @@ package com.flixclusive.core.database.di
 import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
+import com.flixclusive.core.database.dao.downloads.DownloadChunkDao
+import com.flixclusive.core.database.dao.downloads.DownloadItemDao
 import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.provider.CachedMediaLinkDao
@@ -44,4 +46,10 @@ internal object DaoModule {
 
     @Provides
     fun providesCachedMediaLinkDao(database: AppDatabase): CachedMediaLinkDao = database.cachedMediaLinkDao()
+
+    @Provides
+    fun providesDownloadItemDao(database: AppDatabase): DownloadItemDao = database.downloadItemDao()
+
+    @Provides
+    fun providesDownloadChunkDao(database: AppDatabase): DownloadChunkDao = database.downloadChunkDao()
 }

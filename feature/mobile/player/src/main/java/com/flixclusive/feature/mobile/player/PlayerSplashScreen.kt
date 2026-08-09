@@ -18,10 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.mobile.extensions.toggleSystemBars
-import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.model.media.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.spec.DestinationStyle
@@ -29,13 +28,7 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
 interface NavigatorPlayerSplashScreen {
-    fun navigateToPlayerScreen(
-        media: MediaMetadata,
-        episode: Episode?,
-        initialStreamUrl: String?,
-        initialCacheId: String?,
-        initialHeaders: Map<String, String>?
-    )
+    fun navigateToPlayerScreen(request: PlaybackRequest)
 }
 
 @Destination<ExternalModuleGraph>(
@@ -59,13 +52,7 @@ internal fun PlayerSplashScreen(
         delay(600L.milliseconds)
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         delay(600L.milliseconds)
-        navigator.navigateToPlayerScreen(
-            media = args.media,
-            episode = args.episode,
-            initialStreamUrl = args.initialStreamUrl,
-            initialCacheId = args.initialCacheId,
-            initialHeaders = args.initialHeaders?.headers
-        )
+        navigator.navigateToPlayerScreen(args.request)
     }
 
     Box(

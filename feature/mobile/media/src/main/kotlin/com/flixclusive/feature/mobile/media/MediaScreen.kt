@@ -33,7 +33,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,7 +54,6 @@ import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.navigation.navargs.MediaScreenNavArgs
 import com.flixclusive.core.presentation.common.components.MediaCover
-import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -90,7 +88,6 @@ import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
-import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun MediaScreen(
@@ -110,6 +107,8 @@ fun MediaScreen(
     val librarySheetQuery by viewModel.librarySheetQuery.collectAsStateWithLifecycle()
     val libraryListStates by viewModel.libraryLists.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val downloadStatus by viewModel.downloadStatus.collectAsStateWithLifecycle()
+    val episodeDownloadStatuses by viewModel.episodeDownloadStatuses.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -127,6 +126,8 @@ fun MediaScreen(
         metadata = metadata ?: navArgs.media,
         watchProgress = watchProgress,
         seasonToDisplay = seasonToDisplay,
+        downloadStatus = { downloadStatus },
+        episodeDownloadStatuses = { episodeDownloadStatuses },
         snackbarHostState = snackbarHostState,
         query = { librarySheetQuery },
         searchResults = { searchResults },
@@ -138,6 +139,8 @@ fun MediaScreen(
         onRetry = viewModel::onRetry,
         onRetryFetchSeason = viewModel::onRetryFetchSeason,
         onRetryFetchLists = viewModel::onRetryFetchLibraries,
+        onToggleDownload = viewModel::onToggleDownload,
+        onToggleEpisodeDownload = viewModel::onToggleEpisodeDownload,
     )
 }
 
@@ -151,6 +154,8 @@ private fun MediaScreenContent(
     metadata: MediaMetadata,
     watchProgress: WatchProgress?,
     seasonToDisplay: Async<SeasonWithProgress>?,
+    downloadStatus: () -> Async<MediaDownloadStatus>,
+    episodeDownloadStatuses: () -> Map<Int, Async<MediaDownloadStatus>>,
     query: () -> String,
     libraryListStates: () -> Async<List<LibraryListAndState>>,
     searchResults: () -> Async<List<LibraryListAndState>>,
@@ -161,11 +166,11 @@ private fun MediaScreenContent(
     onRetry: () -> Unit,
     onRetryFetchSeason: () -> Unit,
     onRetryFetchLists: () -> Unit,
+    onToggleDownload: () -> Unit,
+    onToggleEpisodeDownload: (Episode) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val context = LocalContext.current
-    val resources = LocalResources.current
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val usePortraitView = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
@@ -311,12 +316,10 @@ private fun MediaScreenContent(
                                 metadata = metadata,
                                 watchProgress = watchProgress,
                                 isInLibrary = isInLibrary,
+                                downloadStatus = downloadStatus,
                                 onPlay = { navigator.showLinkLoaderSheet(metadata) },
                                 onAddToLibrary = { isLibrarySheetOpen = true },
-                                onToggleDownload = {
-                                    // TODO: Implement download
-                                    context.showToast(resources.getString(LocaleR.string.coming_soon))
-                                },
+                                onToggleDownload = onToggleDownload,
                                 onRetryFetchLists = onRetryFetchLists,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -339,7 +342,7 @@ private fun MediaScreenContent(
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 ContentTabs(
                                     tabs = tabs,
-                                    currentTabSelected = tabs.indexOf(currentTabSelected),
+                                    currentTabSelected = tabs.indexOf(currentTabSelected).coerceAtLeast(0),
                                     onTabChange = { onTabChange(tabs[it]) },
                                     modifier = Modifier
                                         .padding(top = 20.dp, bottom = 10.dp),
@@ -361,10 +364,12 @@ private fun MediaScreenContent(
                                 selectedSeason = uiState.selectedSeason,
                                 seasons = metadata.seasons,
                                 seasonToDisplay = seasonToDisplay,
+                                episodeDownloadStatuses = episodeDownloadStatuses,
                                 onSeasonChange = onSeasonChange,
                                 onRetry = onRetryFetchSeason,
                                 onClick = { episode -> navigator.showLinkLoaderSheet(metadata, episode = episode) },
                                 onLongClick = { longClickedEpisode = it },
+                                onToggleEpisodeDownload = onToggleEpisodeDownload,
                             )
                         }
 
@@ -583,6 +588,8 @@ private fun MediaScreenBasePreview() {
                         null
                     }
                 },
+                downloadStatus = { Async.Success(MediaDownloadStatus.NotDownloaded) },
+                episodeDownloadStatuses = { emptyMap() },
                 query = { query },
                 libraryListStates = { Async.Success(lists) },
                 searchResults = {
@@ -594,7 +601,9 @@ private fun MediaScreenBasePreview() {
                 toggleEpisodeOnLibrary = {},
                 onRetry = {},
                 onRetryFetchLists = {},
-                onRetryFetchSeason = {}
+                onRetryFetchSeason = {},
+                onToggleDownload = {},
+                onToggleEpisodeDownload = {},
             )
         }
     }

@@ -1,0 +1,84 @@
+package com.flixclusive.core.database.entity.downloads
+
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import com.flixclusive.model.media.common.MediaType
+import java.util.Date
+import java.util.UUID
+
+@Entity(
+    tableName = "download_items",
+    indices = [
+        Index(value = ["mediaId"]),
+        Index(value = ["state"]),
+        Index(value = ["ownerId"]),
+        Index(value = ["dedupeKey"], unique = true),
+    ],
+)
+data class DownloadItem(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val ownerId: String,
+    val mediaId: String,
+    val mediaTitle: String,
+    val mediaType: MediaType,
+    val seasonNumber: Int? = null,
+    val episodeNumber: Int? = null,
+    /**
+     * What "the same download" means, as a single non-null value so a unique index can enforce it.
+     * Indexing `mediaId`/`seasonNumber`/`episodeNumber` directly would not: SQLite treats NULLs as
+     * distinct, so every movie — which has no season or episode — would slip past the constraint.
+     *
+     * Deliberately excludes [ownerId]. The download directory is keyed on the media alone, so two
+     * profiles downloading the same title already share one file on disk; keying per owner would
+     * permit two rows pointing at that one file, which is the bug this prevents. The practical
+     * consequence is that a download belongs to the device rather than to a profile.
+     *
+     * Derived from the fields above and never recomputed by [copy] — safe only because a queued
+     * item's media, season and episode never change after insert.
+     */
+    val dedupeKey: String = dedupeKeyOf(mediaId, seasonNumber, episodeNumber),
+    val state: DownloadItemState = DownloadItemState.QUEUED,
+    val phase: DownloadPhase? = null,
+    /** Foreign key into `cached_streams.url` — the link this item is currently downloading (or
+     * last downloaded from). Persisted rather than re-resolved so a resume after process death
+     * knows which link produced the partial file already on disk. */
+    val sourceUrl: String? = null,
+    /** Whether [sourceUrl] is an HLS manifest rather than a direct file — determines which
+     * transfer engine downloads it and how [streamBytesDownloaded]/[streamTotalBytes] are
+     * interpreted (segments, not bytes, for HLS). Only ever describes the video stream —
+     * [downloadBytesPerSecond] stays byte-based for subtitles regardless of this flag. Rewritten
+     * every time [sourceUrl] changes so the two can never disagree. */
+    val isHlsStream: Boolean = false,
+    /** SAF document URI (resolved via [com.hippo.unifile.UniFile]) of the downloaded video file
+     * on disk. Sibling subtitle files live in that file's parent's `subtitles/` folder. */
+    val streamFilePath: String? = null,
+    val streamBytesDownloaded: Long = 0,
+    val streamTotalBytes: Long = 0,
+    /** Transfer rate since the previous throttled progress write, for whichever transfer is
+     * currently active — the video stream (bytes/sec, or segments/sec if [isHlsStream]) or a
+     * single subtitle file (always bytes/sec). Only meaningful while [state] is
+     * [DownloadItemState.DOWNLOADING_STREAM] or [DownloadItemState.FETCHING_SUBTITLES]; not reset
+     * when either phase ends, so it's the caller's responsibility not to display a stale value
+     * once nothing is actively transferring. */
+    val downloadBytesPerSecond: Long = 0,
+    val downloadedSubtitlesCount: Int = 0,
+    val totalSubtitlesCount: Int = 0,
+    val errorMessage: String? = null,
+    val createdAt: Date = Date(),
+    val updatedAt: Date = Date(),
+)
+
+/**
+ * Builds [DownloadItem.dedupeKey]. Kept public so the schema migration that backfills the column can
+ * produce byte-identical values to the ones inserted at runtime — a mismatch would let a duplicate
+ * through the unique index.
+ *
+ * `-1` stands in for a null season or episode so movies get a stable, non-null key; no real season
+ * or episode number is negative, so it can't collide with one.
+ */
+fun dedupeKeyOf(
+    mediaId: String,
+    seasonNumber: Int?,
+    episodeNumber: Int?,
+): String = "$mediaId|${seasonNumber ?: -1}|${episodeNumber ?: -1}"
