@@ -145,6 +145,8 @@ class DBMigrationTest {
             // Anything already sane must come through byte-for-byte.
             db.insertMedia(id = "correct", releaseDate = TRUE_MILLIS)
             db.insertMedia(id = "absent", releaseDate = null)
+            // The old conversion had no null path, so "no release date" was written as epoch 0.
+            db.insertMedia(id = "zero", releaseDate = 0)
         }
 
         val db = helper.runMigrationsAndValidate(TEST_DB, 24, true, Schema23to24)
@@ -163,6 +165,7 @@ class DBMigrationTest {
                     "negative" to TRUE_MILLIS_1950,
                     "once" to TRUE_MILLIS,
                     "twice" to TRUE_MILLIS,
+                    "zero" to null,
                 ),
             )
         }

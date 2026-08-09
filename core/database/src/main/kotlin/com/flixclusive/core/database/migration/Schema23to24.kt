@@ -16,6 +16,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * recovers the original instant rather than approximating it. Every row in `media` is swept, not
  * just movies — shows were written through the same conversion and are inflated identically.
  *
+ * Absent dates are cleared in the same sweep. The old conversion had no null path — a title the
+ * provider gave no date for was written as epoch 0 — so those rows read as 1 Jan 1970. `toDBMedia`
+ * now maps 0 back to null, and this brings what is already stored in line with it.
+ *
  * Data-only; the schema is byte-for-byte identical to 23.
  */
 internal object Schema23to24 : Migration(23, 24) {
@@ -33,6 +37,8 @@ internal object Schema23to24 : Migration(23, 24) {
                 """.trimIndent(),
             )
         }
+
+        db.execSQL("UPDATE `media` SET `releaseDate` = NULL WHERE `releaseDate` = 0")
     }
 
     /**
