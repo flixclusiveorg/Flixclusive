@@ -1,8 +1,5 @@
 package com.flixclusive.domain.downloads.usecase.impl
 
-import com.flixclusive.core.common.domain.Async
-import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.domain.downloads.controller.MediaDownloadController
 import com.flixclusive.domain.downloads.model.MediaDownloadRequest
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.model.media.Show
@@ -14,12 +11,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
-import strikt.assertions.hasSize
-import strikt.assertions.isA
+import strikt.assertions.containsExactlyInAnyOrder
 
 class QueueMediaDownloadBatchUseCaseImplTest {
     private lateinit var queueMediaDownloadUseCase: QueueMediaDownloadUseCase
-    private lateinit var mediaDownloadController: MediaDownloadController
     private lateinit var useCase: QueueMediaDownloadBatchUseCaseImpl
 
     private val testShow = Show(
@@ -45,35 +40,20 @@ class QueueMediaDownloadBatchUseCaseImplTest {
     @Before
     fun setup() {
         queueMediaDownloadUseCase = mockk()
-        mediaDownloadController = mockk(relaxed = true)
-        useCase = QueueMediaDownloadBatchUseCaseImpl(queueMediaDownloadUseCase, mediaDownloadController)
+        useCase = QueueMediaDownloadBatchUseCaseImpl(queueMediaDownloadUseCase)
     }
 
     @Test
-    fun `invoke should queue every request and start each successfully queued item`() =
+    fun `invoke should queue every request and return each id`() =
         runTest {
-            coEvery { queueMediaDownloadUseCase(testShow, episode(1), ownerId) } returns Async.Success("item-10")
-            coEvery { queueMediaDownloadUseCase(testShow, episode(2), ownerId) } returns Async.Success("item-20")
+            coEvery { queueMediaDownloadUseCase(testShow, episode(1), ownerId) } returns "item-10"
+            coEvery { queueMediaDownloadUseCase(testShow, episode(2), ownerId) } returns "item-20"
 
             val results = useCase(listOf(request(1), request(2)))
 
-            expectThat(results).hasSize(2)
-            coVerify { mediaDownloadController.start("item-10") }
-            coVerify { mediaDownloadController.start("item-20") }
-        }
-
-    @Test
-    fun `invoke should not start items whose queuing failed`() =
-        runTest {
-            coEvery { queueMediaDownloadUseCase(testShow, episode(1), ownerId) } returns Async.Success("item-10")
-            coEvery { queueMediaDownloadUseCase(testShow, episode(2), ownerId) } returns
-                Async.Failure(UiText.from("no links"))
-
-            val results = useCase(listOf(request(1), request(2)))
-
-            expectThat(results[0]).isA<Async.Success<String>>()
-            expectThat(results[1]).isA<Async.Failure>()
-            coVerify(exactly = 1) { mediaDownloadController.start(any()) }
-            coVerify { mediaDownloadController.start("item-10") }
+            expectThat(results).containsExactlyInAnyOrder("item-10", "item-20")
+            // Starting is the single-item use case's job now, so the batch never does it itself.
+            coVerify { queueMediaDownloadUseCase(testShow, episode(1), ownerId) }
+            coVerify { queueMediaDownloadUseCase(testShow, episode(2), ownerId) }
         }
 }

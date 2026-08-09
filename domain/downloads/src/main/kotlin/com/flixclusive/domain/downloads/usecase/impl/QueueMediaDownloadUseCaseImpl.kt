@@ -1,9 +1,9 @@
 package com.flixclusive.domain.downloads.usecase.impl
 
-import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
+import com.flixclusive.domain.downloads.controller.MediaDownloadController
 import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.tv.Episode
@@ -11,12 +11,13 @@ import javax.inject.Inject
 
 internal class QueueMediaDownloadUseCaseImpl @Inject constructor(
     private val mediaDownloadRepository: MediaDownloadRepository,
+    private val mediaDownloadController: MediaDownloadController,
 ) : QueueMediaDownloadUseCase {
     override suspend fun invoke(
         media: MediaMetadata,
         episode: Episode?,
         ownerId: String,
-    ): Async<String> {
+    ): String {
         val item = DownloadItem(
             ownerId = ownerId,
             mediaId = media.id,
@@ -28,8 +29,6 @@ internal class QueueMediaDownloadUseCaseImpl @Inject constructor(
             sourceUrl = null,
         )
 
-        // Not necessarily item.id: if this media is already queued, the repository hands back the
-        // existing row instead of inserting a second one for the same file on disk.
-        return Async.Success(mediaDownloadRepository.queue(item))
+        return mediaDownloadRepository.queue(item).also(mediaDownloadController::start)
     }
 }

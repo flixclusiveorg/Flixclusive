@@ -443,13 +443,7 @@ class MediaScreenViewModel @AssistedInject constructor(
         }
 
         val ownerId = userSessionDataStore.currentUserId.filterNotNull().first()
-        val queued = queueMediaDownload(media, episode, ownerId)
-        if (queued is Async.Failure) {
-            downloadOverrides.update { it + (key to Async.Failure(queued.message, queued.cause)) }
-            return
-        }
-
-        mediaDownloadController.start((queued as Async.Success).data)
+        queueMediaDownload(media, episode, ownerId)
         downloadOverrides.update { it - key }
     }
 
