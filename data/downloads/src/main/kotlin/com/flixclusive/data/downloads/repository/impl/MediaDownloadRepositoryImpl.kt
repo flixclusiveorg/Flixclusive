@@ -19,7 +19,6 @@ import com.flixclusive.data.downloads.transfer.RangeUnsupportedException
 import com.flixclusive.data.downloads.util.ChunkPlanner
 import com.hippo.unifile.UniFile
 import kotlinx.coroutines.flow.Flow
-import java.io.IOException
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -33,37 +32,8 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     private val hlsTransferEngine: HlsTransferEngine,
 ) : MediaDownloadRepository {
     private val interruptFlags = ConcurrentHashMap<String, DownloadInterruptReason>()
-    private val lastProgressWriteTimes = ConcurrentHashMap<String, Long>()
 
-    /** The bytes-(or segments-, for HLS)-downloaded value written at [lastProgressWriteTimes]'s
-     * timestamp for the same id — the previous sample [computeRate] diffs against. */
-    private val lastProgressValues = ConcurrentHashMap<String, Long>()
-
-    /** Last rate [computeRate] actually measured above zero, per id — what [smoothedRate] replays
-     * while a transfer briefly stalls. */
-    private val lastNonZeroRates = ConcurrentHashMap<String, Long>()
-
-    /** How many consecutive zero samples [smoothedRate] has already covered for with
-     * [lastNonZeroRates], per id. */
-    private val heldRateSampleCounts = ConcurrentHashMap<String, Int>()
-
-    /** When each in-flight transfer last made real headway (see [recordMovement]). OkHttp's own
-     * read timeout only catches a socket that has gone completely silent; a connection that
-     * dribbles out just enough data to keep resetting it would otherwise sit at ~0 B/s forever. */
-    private val lastMovementTimes = ConcurrentHashMap<String, Long>()
-
-    /** Bytes last reported per chunk, nested per item so an item's whole set can be dropped at
-     * once. Lets [recordMovement] spot real progress without re-summing the chunk table on every
-     * 16 KB callback. */
-    private val lastChunkBytes = ConcurrentHashMap<String, ConcurrentHashMap<Long, Long>>()
-
-    /** Total bytes an item had transferred when its stall clock was last reset — the mark the next
-     * [STALL_MIN_PROGRESS_BYTES] is measured from. */
-    private val stallBaselineValues = ConcurrentHashMap<String, Long>()
-
-    /** Ids whose transfer was aborted by [hasStalled] rather than by the user, so the result can
-     * be reported as a failure instead of a cancellation. */
-    private val stalledIds = ConcurrentHashMap.newKeySet<String>()
+    private val tracker = TransferProgressTracker()
 
     override fun observeAllItems(): Flow<List<DownloadItem>> = downloadItemDao.getAllAsFlow()
 
@@ -135,7 +105,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         // Unlike deleteChunks (which also runs between two subtitle files — exactly the gap the
         // hold-over exists to ride out), a reset restarts the transfer from nothing, so the speed
         // it was last running at is no longer worth replaying.
-        clearRateHold(id)
+        tracker.clearRateHold(id)
         // Also zeroes the segment-count progress HLS items keep in the same columns, so a manual
         // retry restarts an HLS download instead of silently resuming it (matching the byte-range
         // engine, where deleting chunks already forces a from-scratch replan).
@@ -147,8 +117,7 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         // Chunks are gone, so any in-flight rate sample no longer has a valid baseline to diff
         // against — without this, the first write after a resumed/restarted transfer would diff
         // against bytes/timing from a since-discarded run and read as a huge stale-timed sample.
-        lastProgressWriteTimes.remove(id)
-        lastProgressValues.remove(id)
+        tracker.clearRateBaseline(id)
     }
 
     override suspend fun updateSource(
@@ -251,21 +220,21 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         totalBytes: Long?,
         chunks: List<DownloadChunk>,
     ): MediaTransferResult {
-        startStallWatch(id)
+        tracker.startStallWatch(id)
 
         val result = mediaTransferEngine.transfer(
             chunks = chunks,
             url = url,
             headers = headers,
             destinationFile = destinationFile,
-            shouldInterrupt = { interruptFlags.containsKey(id) || hasStalled(id, phase) },
+            shouldInterrupt = { interruptFlags.containsKey(id) || tracker.hasStalled(id, phase) },
         ) { chunkId, bytesDownloaded, status ->
-            recordMovement(id, chunkId, bytesDownloaded)
+            tracker.recordMovement(id, chunkId, bytesDownloaded)
             downloadChunkDao.updateProgress(chunkId, bytesDownloaded, status)
             writeAggregatedProgressThrottled(id, phase, totalBytes, status)
         }
 
-        return resolveStalled(id, result)
+        return tracker.resolveStalled(id, result, interrupted = interruptFlags.containsKey(id))
     }
 
     override suspend fun runHlsTransfer(
@@ -277,22 +246,22 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     ): MediaTransferResult {
         if (interruptFlags.containsKey(id)) return MediaTransferResult.Cancelled
 
-        startStallWatch(id)
+        tracker.startStallWatch(id)
 
         val result = hlsTransferEngine.transfer(
             segments = segments,
             startIndex = startIndex,
             headers = headers,
             destinationFile = destinationFile,
-            shouldInterrupt = { interruptFlags.containsKey(id) || hasStalled(id, DownloadPhase.STREAM) },
+            shouldInterrupt = { interruptFlags.containsKey(id) || tracker.hasStalled(id, DownloadPhase.STREAM) },
         ) { segmentsWritten, totalSegments ->
             // Every callback here is a segment landing, so it is movement by definition — no need
             // to diff against a previous value the way the byte-range path does.
-            lastMovementTimes[id] = System.currentTimeMillis()
+            tracker.markMoved(id)
             writeHlsProgressThrottled(id, segmentsWritten, totalSegments)
         }
 
-        return resolveStalled(id, result)
+        return tracker.resolveStalled(id, result, interrupted = interruptFlags.containsKey(id))
     }
 
     private suspend fun writeHlsProgressThrottled(
@@ -301,13 +270,12 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         totalSegments: Int,
     ) {
         val now = System.currentTimeMillis()
-        val lastWrite = lastProgressWriteTimes[id] ?: 0L
+        val lastWrite = tracker.lastWriteAt(id)
         val isFinal = segmentsWritten >= totalSegments
         if (!isFinal && now - lastWrite < PROGRESS_WRITE_THROTTLE_MS) return
 
-        val rate = smoothedRate(id, computeRate(id, segmentsWritten.toLong(), now, lastWrite))
-        lastProgressWriteTimes[id] = now
-        lastProgressValues[id] = segmentsWritten.toLong()
+        val rate = tracker.rateFor(id, segmentsWritten.toLong(), now, lastWrite)
+        tracker.recordWrite(id, now, segmentsWritten.toLong())
         downloadItemDao.updateStreamProgress(id, segmentsWritten.toLong(), totalSegments.toLong(), rate, Date())
     }
 
@@ -323,149 +291,19 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         status: DownloadChunkStatus,
     ) {
         val now = System.currentTimeMillis()
-        val lastWrite = lastProgressWriteTimes[id] ?: 0L
+        val lastWrite = tracker.lastWriteAt(id)
         val shouldWrite = status != DownloadChunkStatus.DOWNLOADING || now - lastWrite >= PROGRESS_WRITE_THROTTLE_MS
         if (!shouldWrite) return
 
         val totalDownloaded = downloadChunkDao.getChunksForItem(id).sumOf { it.bytesDownloaded }
-        val rate = smoothedRate(id, computeRate(id, totalDownloaded, now, lastWrite))
-        lastProgressWriteTimes[id] = now
-        lastProgressValues[id] = totalDownloaded
+        val rate = tracker.rateFor(id, totalDownloaded, now, lastWrite)
+        tracker.recordWrite(id, now, totalDownloaded)
 
         if (phase == DownloadPhase.STREAM) {
             downloadItemDao.updateStreamProgress(id, totalDownloaded, totalBytes ?: 0, rate, Date())
         } else {
             downloadItemDao.updateDownloadRate(id, rate, Date())
         }
-    }
-
-    /** Bytes-(or segments-)per-second since the previous throttled write for [id], derived from
-     * the same [lastProgressWriteTimes]/[lastProgressValues] bookkeeping the throttle itself
-     * uses — no separate timing state needed. Zero on an item's first sample (nothing to diff
-     * against yet, [lastWrite] is `0`) or if the clock hasn't meaningfully advanced. */
-    private fun computeRate(
-        id: String,
-        currentValue: Long,
-        now: Long,
-        lastWrite: Long,
-    ): Long {
-        val lastValue = lastProgressValues[id] ?: return 0L
-        val deltaMs = now - lastWrite
-        if (lastWrite <= 0L || deltaMs <= 0L) return 0L
-
-        val delta = (currentValue - lastValue).coerceAtLeast(0L)
-        return (delta * 1000L) / deltaMs
-    }
-
-    /**
-     * Smooths [rawRate] so a transfer that is alive but momentarily not moving — a slow HLS
-     * segment, the hop between two subtitle files, a throttled window that happened to catch no
-     * new bytes — doesn't immediately read as stopped. A zero sample replays the last measured
-     * rate for up to [MAX_HELD_RATE_SAMPLES] consecutive writes; past that the transfer really has
-     * stalled, so the hold is dropped and zero is reported honestly.
-     */
-    private fun smoothedRate(
-        id: String,
-        rawRate: Long,
-    ): Long {
-        if (rawRate > 0L) {
-            lastNonZeroRates[id] = rawRate
-            heldRateSampleCounts.remove(id)
-            return rawRate
-        }
-
-        val held = lastNonZeroRates[id] ?: return 0L
-        val timesHeld = heldRateSampleCounts[id] ?: 0
-        if (timesHeld >= MAX_HELD_RATE_SAMPLES) {
-            clearRateHold(id)
-            return 0L
-        }
-
-        heldRateSampleCounts[id] = timesHeld + 1
-        return held
-    }
-
-    private fun startStallWatch(id: String) {
-        lastMovementTimes[id] = System.currentTimeMillis()
-        stalledIds.remove(id)
-        // Re-baseline: a resumed transfer picks up at the byte count the last one left off at, so
-        // holding onto those figures would read its first callbacks as "no movement".
-        lastChunkBytes.remove(id)
-        stallBaselineValues.remove(id)
-    }
-
-    /**
-     * Notes where [chunkId] has got to and, if the item as a whole has advanced far enough since
-     * the last reset, restarts its stall clock.
-     *
-     * The bar is [STALL_MIN_PROGRESS_BYTES] rather than a single byte on purpose: a connection
-     * dribbling out a handful of bytes a second keeps a byte-counting watchdog permanently happy
-     * while still reporting 0 B/s and never finishing. Requiring one buffer's worth per window
-     * makes "alive" mean actually moving. Chunks run concurrently and each reports its own running
-     * total, so the item's progress is their sum — a chunk that finishes and stops reporting must
-     * not read as a stall while its siblings are still going.
-     */
-    private fun recordMovement(
-        id: String,
-        chunkId: Long,
-        bytesDownloaded: Long,
-    ) {
-        val perChunk = lastChunkBytes.getOrPut(id) { ConcurrentHashMap() }
-        perChunk[chunkId] = bytesDownloaded
-
-        val total = perChunk.values.sum()
-        val baseline = stallBaselineValues[id]
-        if (baseline != null && total - baseline < STALL_MIN_PROGRESS_BYTES) return
-
-        stallBaselineValues[id] = total
-        lastMovementTimes[id] = System.currentTimeMillis()
-    }
-
-    /**
-     * Whether [id] has gone [STALL_TIMEOUT_MS] without the headway [recordMovement] asks for.
-     * Polled from the engines' `shouldInterrupt`, which is the only hook that can unwind a
-     * transfer from the inside; [resolveStalled] then re-labels the resulting cancellation as the
-     * failure it really is.
-     */
-    private fun hasStalled(
-        id: String,
-        phase: DownloadPhase,
-    ): Boolean {
-        // Subtitles are exempt: the whole file is often smaller than the throughput floor this
-        // watchdog demands, so a slow-but-fine subtitle would trip it on size alone. OkHttp's read
-        // timeout is enough for something that small.
-        if (phase == DownloadPhase.SUBTITLES) return false
-
-        val lastMovement = lastMovementTimes[id] ?: return false
-        if (System.currentTimeMillis() - lastMovement < STALL_TIMEOUT_MS) return false
-
-        stalledIds.add(id)
-        return true
-    }
-
-    private fun resolveStalled(
-        id: String,
-        result: MediaTransferResult,
-    ): MediaTransferResult {
-        lastMovementTimes.remove(id)
-        lastChunkBytes.remove(id)
-        stallBaselineValues.remove(id)
-        val stalled = stalledIds.remove(id)
-
-        // A pause/stop that landed in the same window wins — the user asked for it, and reporting
-        // their own tap back to them as a download error would be nonsense.
-        if (!stalled || result !is MediaTransferResult.Cancelled || interruptFlags.containsKey(id)) {
-            return result
-        }
-
-        return MediaTransferResult.Failed(
-            IOException("Download stalled — no progress for ${STALL_TIMEOUT_MS / 1000} seconds"),
-        )
-    }
-
-    private fun clearRateHold(id: String) {
-        lastNonZeroRates.remove(id)
-        heldRateSampleCounts.remove(id)
     }
 
     override suspend fun requeueInterruptedItems(excludedIds: List<String>): Int {
@@ -500,23 +338,11 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
     override fun consumeInterruptReason(id: String): DownloadInterruptReason? = interruptFlags.remove(id)
 
     override suspend fun delete(id: String) {
-        lastProgressWriteTimes.remove(id)
-        lastProgressValues.remove(id)
-        clearRateHold(id)
+        tracker.forget(id)
         downloadItemDao.delete(id)
     }
 
     companion object {
         private const val PROGRESS_WRITE_THROTTLE_MS = 1000L
-        private const val MAX_HELD_RATE_SAMPLES = 3
-
-        /** Comfortably clear of OkHttp's 10s default read timeout and the engines' three retries,
-         * so this only fires for a connection that stays open while going nowhere. */
-        private const val STALL_TIMEOUT_MS = 60_000L
-
-        /** One transfer buffer. Together with [STALL_TIMEOUT_MS] this sets the floor for "still
-         * downloading" at roughly 273 B/s — dead by any standard for a video file, but far enough
-         * below a genuinely slow connection not to fail one that is still making headway. */
-        private const val STALL_MIN_PROGRESS_BYTES = 16L * 1024
     }
 }
