@@ -434,6 +434,13 @@
     <string name="download_progress_segments_only_format">%1$s segments</string>
     <string name="download_progress_speed_format">%1$s/s</string>
     <string name="download_progress_speed_segments_format">%1$d segments/s</string>
+    <!-- Download failure reasons, persisted with the download row -->
+    <string name="download_error_no_folder">Unable to access download folder</string>
+    <string name="download_error_no_stream_link">No stream link to download</string>
+    <string name="download_error_no_destination_file">Unable to create destination file</string>
+    <string name="download_error_file_too_small">Downloaded file is too small to be valid</string>
+    <string name="download_error_generic">Download failed</string>
+    <string name="download_error_stream_failed">Stream download failed</string>
     <!-- Download notifications -->
     <string name="download_notification_channel_name">Downloads</string>
     <string name="download_notification_channel_desc">Shows download progress</string>

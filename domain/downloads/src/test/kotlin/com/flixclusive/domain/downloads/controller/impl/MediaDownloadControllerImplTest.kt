@@ -196,7 +196,8 @@ class MediaDownloadControllerImplTest {
         controller = MediaDownloadControllerImpl(
             mediaDownloadRepository = mediaDownloadRepository,
             runner = MediaDownloadRunner(
-                context = mockk<Context>(),
+                // Relaxed: the runner resolves its failure messages through getString now.
+                context = mockk<Context>(relaxed = true),
                 mediaDownloadRepository = mediaDownloadRepository,
                 mediaLinksRepository = mediaLinksRepository,
                 resolveDownloadableStreamUseCase = resolveDownloadableStreamUseCase,

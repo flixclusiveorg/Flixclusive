@@ -1,6 +1,7 @@
 package com.flixclusive.domain.downloads.controller.impl
 
 import android.content.Context
+import androidx.annotation.StringRes
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
@@ -28,6 +29,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.flixclusive.core.strings.R as LocaleR
 
 /**
  * Carries one download from its queued row through to a finished file.
@@ -56,7 +58,7 @@ internal class MediaDownloadRunner @Inject constructor(
         // explicitly asked to end.
         if (item.state == DownloadItemState.STOPPED) return
 
-        val directory = resolveDirectory(item) ?: return fail(itemId, "Unable to access download folder")
+        val directory = resolveDirectory(item) ?: return fail(itemId, LocaleR.string.download_error_no_folder)
 
         // Phase-, not state-driven, so it also covers an item requeued to QUEUED by
         // resumeInterrupted() after the process died: its video is already fully written, and
@@ -69,7 +71,7 @@ internal class MediaDownloadRunner @Inject constructor(
         }
 
         val readyItem = if (item.sourceUrl == null) resolveSource(itemId, item) ?: return else item
-        val sourceUrl = readyItem.sourceUrl ?: return fail(itemId, "No stream link to download")
+        val sourceUrl = readyItem.sourceUrl ?: return fail(itemId, LocaleR.string.download_error_no_stream_link)
 
         runStreamPhase(itemId, readyItem, directory, sourceUrl)
     }
@@ -92,7 +94,7 @@ internal class MediaDownloadRunner @Inject constructor(
         )
 
         if (resolved is Async.Failure) {
-            fail(itemId, resolved.message.asString(context))
+            fail(itemId, resolved.message.asString(context), LocaleR.string.download_error_generic)
             return null
         }
 
@@ -145,7 +147,7 @@ internal class MediaDownloadRunner @Inject constructor(
             ),
         )
         val destinationFile = resolveOrCreateStreamFile(itemId, item, directory, fileName)
-            ?: return fail(itemId, "Unable to create destination file")
+            ?: return fail(itemId, LocaleR.string.download_error_no_destination_file)
 
         val result = mediaDownloadRepository.runTransfer(
             id = itemId,
@@ -178,7 +180,7 @@ internal class MediaDownloadRunner @Inject constructor(
             DownloadPathUtil.DEFAULT_STREAM_EXTENSION,
         )
         val destinationFile = resolveOrCreateStreamFile(itemId, item, directory, fileName)
-            ?: return fail(itemId, "Unable to create destination file")
+            ?: return fail(itemId, LocaleR.string.download_error_no_destination_file)
 
         val resolution = hlsManifestResolver.resolve(sourceUrl, headers, currentLinkSortDirection())
         val playlist = when (resolution) {
@@ -206,7 +208,7 @@ internal class MediaDownloadRunner @Inject constructor(
             mediaDownloadRepository.resetChunks(itemId)
             destinationFile.delete()
             val recreated = downloadDirectoryRepository.getOrCreateFile(directory, fileName)
-                ?: return fail(itemId, "Unable to create destination file")
+                ?: return fail(itemId, LocaleR.string.download_error_no_destination_file)
             mediaDownloadRepository.updateStreamFilePath(itemId, recreated.uri.toString())
             recreated
         } else {
@@ -265,7 +267,7 @@ internal class MediaDownloadRunner @Inject constructor(
         when (result) {
             is MediaTransferResult.Completed -> {
                 if (destinationFile.length() < MIN_VALID_STREAM_FILE_BYTES) {
-                    return fail(itemId, "Downloaded file is too small to be valid")
+                    return fail(itemId, LocaleR.string.download_error_file_too_small)
                 }
                 mediaDownloadRepository.updateState(itemId, DownloadItemState.STREAM_COMPLETE, null)
                 advancePastStreamComplete(itemId, item, directory)
@@ -309,7 +311,7 @@ internal class MediaDownloadRunner @Inject constructor(
         val isEnvironmentFault = TransferFailure.of(result.cause) == TransferFailure.ENVIRONMENT ||
             !networkMonitor.isOnlineNow()
         if (isEnvironmentFault) {
-            return fail(itemId, result.cause.message ?: "Download failed")
+            return fail(itemId, result.cause.message, LocaleR.string.download_error_generic)
         }
 
         item.sourceUrl?.let { deadUrl ->
@@ -324,7 +326,7 @@ internal class MediaDownloadRunner @Inject constructor(
         val clearedItem = mediaDownloadRepository.getItem(itemId) ?: return
         val resolvedItem = resolveSource(itemId, clearedItem) ?: return
         val sourceUrl = resolvedItem.sourceUrl
-            ?: return fail(itemId, result.cause.message ?: "Stream download failed")
+            ?: return fail(itemId, result.cause.message, LocaleR.string.download_error_stream_failed)
 
         runStreamPhase(itemId, resolvedItem, directory, sourceUrl)
     }
@@ -452,11 +454,25 @@ internal class MediaDownloadRunner @Inject constructor(
         }
     }
 
+    /**
+     * Marks [itemId] failed with a message the notification renders verbatim.
+     *
+     * Resolved here rather than stored as a code: the column is TEXT, so the text is frozen in
+     * whichever language was active when the download failed. A code would survive a language
+     * change but needs a schema column, which is not worth a migration for a failure message.
+     */
     private suspend fun fail(
         itemId: String,
-        message: String,
+        @StringRes messageRes: Int,
+    ) = fail(itemId, message = null, fallbackRes = messageRes)
+
+    /** As [fail], preferring [message] from the underlying cause when there is one. */
+    private suspend fun fail(
+        itemId: String,
+        message: String?,
+        @StringRes fallbackRes: Int,
     ) {
-        mediaDownloadRepository.markError(itemId, message)
+        mediaDownloadRepository.markError(itemId, message ?: context.getString(fallbackRes))
         mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null)
     }
 
