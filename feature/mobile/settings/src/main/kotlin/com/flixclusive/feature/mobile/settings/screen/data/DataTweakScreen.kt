@@ -18,6 +18,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlin.math.roundToInt
 import com.flixclusive.core.strings.R as LocaleR
 
 interface NavigatorDataTweakScreen : NavigateBack {
@@ -115,19 +116,18 @@ private fun getDownloadTweaks(
                     onUpdatePreferences { it.copy(downloadLinkSortDirection = direction) }
                 },
             ),
-            TweakUI.ListTweak(
+            TweakUI.SliderTweak(
                 title = stringResource(LocaleR.string.download_concurrency_limit_title),
-                description = { resources.getString(LocaleR.string.download_concurrency_limit_desc) },
-                value = { dataPreferences().downloadConcurrencyLimit },
-                options = persistentMapOf(
-                    1 to "1",
-                    2 to "2",
-                    3 to "3",
-                    4 to "4",
-                    5 to "5",
-                ),
+                description = {
+                    resources.getString(
+                        LocaleR.string.download_concurrency_limit_desc,
+                        dataPreferences().downloadConcurrencyLimit
+                    )
+                },
+                value = { dataPreferences().downloadConcurrencyLimit.toFloat() },
+                range = 1f..5f,
                 onTweaked = { limit ->
-                    onUpdatePreferences { it.copy(downloadConcurrencyLimit = limit) }
+                    onUpdatePreferences { it.copy(downloadConcurrencyLimit = limit.roundToInt()) }
                 },
             ),
         )
