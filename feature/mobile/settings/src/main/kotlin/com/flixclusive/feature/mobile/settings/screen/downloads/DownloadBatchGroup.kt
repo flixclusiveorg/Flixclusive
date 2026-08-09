@@ -41,8 +41,6 @@ internal fun DownloadBatchGroup(
     onOpen: (DownloadItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Keyed on the item list rather than derived: these scan every episode, so they should be
-    // recomputed when that list actually changes and not on each unrelated recomposition.
     val canPauseBatch = remember(entry.items) {
         entry.items.any { !it.state.isTerminal && it.state != DownloadItemState.PAUSED }
     }

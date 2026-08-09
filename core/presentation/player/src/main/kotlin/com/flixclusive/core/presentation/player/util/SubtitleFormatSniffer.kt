@@ -17,10 +17,10 @@ import androidx.media3.extractor.text.webvtt.WebvttParser
  * Detects a subtitle's actual format from its decoded text content, and builds the matching
  * Media3 [SubtitleParser] for it.
  *
- * Shared by [com.flixclusive.core.presentation.player.renderer.CustomSubtitleParser], which has
- * real bytes to sniff, and by [MimeTypeParser], which only has a URL/filename to guess from
- * before any bytes are read — that pre-playback guess only needs to be *supported*, since a wrong
- * one self-corrects here once the file is actually opened.
+ * Used by [com.flixclusive.core.presentation.player.renderer.CustomSubtitleParser], which is the
+ * only caller with real bytes to sniff. `MimeTypeParser` guesses from a URL or filename before any
+ * bytes are read; that pre-playback guess only needs to be *supported*, since a wrong one
+ * self-corrects here once the file is actually opened.
  */
 @OptIn(UnstableApi::class)
 internal object SubtitleFormatSniffer {

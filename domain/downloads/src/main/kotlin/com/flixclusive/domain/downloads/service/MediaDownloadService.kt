@@ -122,11 +122,16 @@ class MediaDownloadService : Service() {
     }
 
     /**
-     * Re-arms the wake lock while work remains. The lock is deliberately taken with a timeout — one
-     * without is a battery drain that outlives any bug that strands it — but that meant a download
-     * running longer than [WAKE_LOCK_TIMEOUT_MS] silently lost it and the device could sleep
-     * mid-transfer. Renewing from the progress observer costs nothing and bounds the damage of a
-     * stranded lock to one timeout window.
+     * Re-acquires the wake lock once it has expired, while work remains.
+     *
+     * The lock is deliberately taken with a timeout — one without is a battery drain that outlives
+     * any bug that strands it — but that meant a download running longer than
+     * [WAKE_LOCK_TIMEOUT_MS] silently lost it and the device could sleep mid-transfer.
+     *
+     * Note this re-acquires rather than extends: a still-held lock is left alone, so there is a
+     * window between expiry and the next progress emission where the CPU can sleep. That window is
+     * one progress-write interval, which is the tradeoff for bounding a stranded lock to a single
+     * timeout.
      */
     private fun renewWakeLock() {
         if (!::wakeLock.isInitialized || wakeLock.isHeld) return

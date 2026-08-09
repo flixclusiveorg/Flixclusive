@@ -54,7 +54,5 @@ internal fun groupIntoEntries(items: List<DownloadItem>): List<DownloadListEntry
 
     val singles = standalone.map { DownloadListEntry.Single(it) }
 
-    // Ordered by DownloadListEntry.sortedAt, not by updatedAt: see the doc on that property for
-    // why sorting on progress writes made the list shuffle while downloads ran.
     return (batches + singles).sortedByDescending { it.sortedAt }
 }

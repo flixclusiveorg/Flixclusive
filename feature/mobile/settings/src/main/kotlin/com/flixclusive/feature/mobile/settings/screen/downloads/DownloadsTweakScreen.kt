@@ -171,7 +171,6 @@ private fun DownloadsTweakScreenContent(
     }
 }
 
-/** Isolated so a filter toggle only recomposes this row, not the top bar or the entries list. */
 @Composable
 private fun DownloadsFilterRow(
     stateFilters: Set<DownloadStateFilter>,
@@ -204,7 +203,6 @@ private fun DownloadsFilterRow(
     }
 }
 
-/** Isolated so entries/expansion updates don't force the top bar or filter row to recompose. */
 @Composable
 private fun DownloadsEntriesList(
     entries: Async<List<DownloadListEntry>>,

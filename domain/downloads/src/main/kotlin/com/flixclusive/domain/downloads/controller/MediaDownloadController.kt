@@ -15,7 +15,9 @@ interface MediaDownloadController {
      * Requeues and re-dispatches every download the process died in the middle of, so an app that
      * was force-closed mid-transfer picks up where it left off instead of leaving rows frozen in a
      * state nothing is driving. Safe to call at any time — items currently being transferred are
-     * left alone, and there is nothing to do once a sweep has already run.
+     * left alone, and a sweep already in flight is not started twice. A *completed* sweep does not
+     * block a later one: the activity fires this on every foreground, and a second sweep simply
+     * finds nothing to requeue.
      */
     fun resumeInterrupted()
 
