@@ -65,8 +65,6 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
      * be reported as a failure instead of a cancellation. */
     private val stalledIds = ConcurrentHashMap.newKeySet<String>()
 
-    override fun observeItem(id: String): Flow<DownloadItem?> = downloadItemDao.getAsFlow(id)
-
     override fun observeAllItems(): Flow<List<DownloadItem>> = downloadItemDao.getAllAsFlow()
 
     override suspend fun getItem(id: String): DownloadItem? = downloadItemDao.get(id)

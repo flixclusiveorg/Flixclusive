@@ -10,8 +10,6 @@ import com.hippo.unifile.UniFile
 import kotlinx.coroutines.flow.Flow
 
 interface MediaDownloadRepository {
-    fun observeItem(id: String): Flow<DownloadItem?>
-
     fun observeAllItems(): Flow<List<DownloadItem>>
 
     suspend fun getItem(id: String): DownloadItem?

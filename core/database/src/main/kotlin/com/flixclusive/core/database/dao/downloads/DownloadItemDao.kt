@@ -22,9 +22,6 @@ interface DownloadItemDao {
     @Query("SELECT * FROM download_items WHERE id = :id")
     suspend fun get(id: String): DownloadItem?
 
-    @Query("SELECT * FROM download_items WHERE id = :id")
-    fun getAsFlow(id: String): Flow<DownloadItem?>
-
     @Query("SELECT * FROM download_items ORDER BY createdAt DESC")
     fun getAllAsFlow(): Flow<List<DownloadItem>>
 
