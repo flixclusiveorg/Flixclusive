@@ -156,7 +156,11 @@ internal fun PlayerScreen(
         }
     }
 
-    if (currentProvider == null && args.request is PlaybackRequest.FromProvider) {
+    val media by viewModel.media.collectAsStateWithLifecycle()
+
+    // Local playback resolves its media off the main thread, so hold the same blank frame the
+    // splash screen hands over on until it arrives.
+    if (currentProvider == null && args.request is PlaybackRequest.FromProvider || media == null) {
         BackHandler {
             navigator.navigateBack()
 
@@ -175,7 +179,7 @@ internal fun PlayerScreen(
 
     PlayerScreenContent(
         player = viewModel.player,
-        media = viewModel.media,
+        media = requireNotNull(media),
         playerPreferences = playerPreferences,
         subtitlesPreferences = subtitlesPreferences,
         snackbarState = snackbarState,

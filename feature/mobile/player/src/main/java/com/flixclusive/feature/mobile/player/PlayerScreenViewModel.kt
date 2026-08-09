@@ -126,9 +126,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val providerRequest: PlaybackRequest.FromProvider?
         get() = navArgs.request as? PlaybackRequest.FromProvider
 
-    /** Non-null only for [PlaybackRequest.FromDownload]-driven playback. Resolved
-     * synchronously — like the two DataStore-prefs [runBlocking] reads below — so [media] stays
-     * non-null and every one of its existing readers is untouched by local playback. */
+    /** Everything a [PlaybackRequest.FromDownload] needs, resolved off the main thread. */
     private data class LocalPlayback(
         val item: DownloadItem,
         val file: CompletedDownloadFile?,
@@ -136,20 +134,22 @@ internal class PlayerScreenViewModel @Inject constructor(
         val episode: Episode?,
     )
 
-    private val localPlayback: LocalPlayback? =
-        (navArgs.request as? PlaybackRequest.FromDownload)?.let { request ->
-            runBlocking {
-                val item = mediaDownloadRepository.getItem(request.downloadItemId) ?: return@runBlocking null
-                LocalPlayback(
-                    item = item,
-                    file = getCompletedDownloadFile(item),
-                    media = mediaLinksRepository.getMedia(item.mediaId) ?: item.toFallbackMedia(),
-                    episode = item.toEpisode(),
-                )
-            }
-        }
+    /** The [PlaybackRequest.FromDownload] request, when [navArgs] declares local playback. */
+    private val downloadRequest: PlaybackRequest.FromDownload?
+        get() = navArgs.request as? PlaybackRequest.FromDownload
 
-    private val isLocalPlayback get() = localPlayback != null
+    /**
+     * Which mode we are in is knowable from the nav args alone, so every `isLocalPlayback` gate
+     * answers correctly from the first frame — before [localPlayback] has resolved.
+     */
+    private val isLocalPlayback get() = downloadRequest != null
+
+    /**
+     * Resolving this touches Room twice and asks the storage-access framework for a document, so it
+     * runs in [initialize] rather than in a property initializer. Doing it synchronously would put
+     * all three on the main thread at `hiltViewModel()` time; a slow SAF provider made that an ANR.
+     */
+    private val localPlayback = MutableStateFlow<LocalPlayback?>(null)
 
     private val _playerErrors = MutableSharedFlow<UiText>()
     val playerErrors = _playerErrors.asSharedFlow()
@@ -203,16 +203,21 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
     }
 
-    /** The media actually being played — resolved locally from [localPlayback] for a download,
-     * [PlaybackRequest.FromProvider.media] otherwise. Exposed (not private) because
-     * [PlayerScreen] needs the resolved, guaranteed-non-null value to render. */
-    val media: MediaMetadata
-        get() = localPlayback?.media
-            ?: providerRequest?.media
-            // Unreachable: DownloadsTweakViewModel.onOpen gates on the file resolving before
-            // navigating a FromDownload request, so mediaDownloadRepository.getItem() above
-            // cannot fail in practice.
-            ?: error("PlaybackRequest.FromDownload failed to resolve local playback")
+    /**
+     * The media actually being played — [PlaybackRequest.FromProvider.media] straight away for
+     * provider playback, or the download's metadata once [localPlayback] resolves.
+     *
+     * Null only in the window before a local resolve completes; [PlayerScreen] holds on a blank
+     * frame until it arrives, the same way it already does for provider playback with no provider.
+     */
+    private val _media = MutableStateFlow(providerRequest?.media)
+    val media = _media.asStateFlow()
+
+    /**
+     * [media] for the many readers that run after initialization and can rely on it being resolved.
+     */
+    private val currentMedia: MediaMetadata
+        get() = requireNotNull(_media.value) { "media was read before local playback resolved" }
 
     private val _providers = MutableStateFlow<Async<List<ProviderMetadata>>>(Async.Loading)
     val providers = _providers.asStateFlow()
@@ -220,15 +225,15 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val _servers = MutableStateFlow<Async<List<PlayerServer>>>(Async.Loading)
     val servers = _servers.asStateFlow()
 
-    /** The episode being played — [LocalPlayback.episode] resolved from the [DownloadItem] for
-     * local playback, [PlaybackRequest.FromProvider.episode] otherwise. */
-    private val initialEpisode = localPlayback?.episode ?: providerRequest?.episode
+    /** The episode being played. Local playback fills this in from the [DownloadItem] once
+     * [localPlayback] resolves; provider playback has it from the nav args. */
+    private val initialEpisode get() = localPlayback.value?.episode ?: providerRequest?.episode
 
     private val _uiState = MutableStateFlow(
         value = PlayerUiState(
-            currentProvider = media.providerId,
-            currentEpisode = initialEpisode,
-            currentSeason = initialEpisode?.season,
+            currentProvider = providerRequest?.media?.providerId.orEmpty(),
+            currentEpisode = providerRequest?.episode,
+            currentSeason = providerRequest?.episode?.season,
         )
     )
 
@@ -260,8 +265,9 @@ internal class PlayerScreenViewModel @Inject constructor(
      * [com.flixclusive.feature.mobile.player.component.PlayerControls], which only ever needed a
      * `List<Season>`, never a real `Show`. */
     val availableSeasons: StateFlow<List<Season>> = if (isLocalPlayback) {
-        mediaDownloadRepository
-            .observeByMedia(media.id)
+        localPlayback
+            .filterNotNull()
+            .flatMapLatest { mediaDownloadRepository.observeByMedia(it.media.id) }
             .map { it.toLocalSeasons() }
             .stateIn(
                 scope = viewModelScope,
@@ -269,12 +275,13 @@ internal class PlayerScreenViewModel @Inject constructor(
                 initialValue = emptyList(),
             )
     } else {
-        MutableStateFlow((media as? Show)?.seasons?.filter { it.isReleased }.orEmpty()).asStateFlow()
+        MutableStateFlow((providerRequest?.media as? Show)?.seasons?.filter { it.isReleased }.orEmpty())
+            .asStateFlow()
     }
 
     val seasonToDisplay = uiState
         .mapNotNull {
-            if (!isLocalPlayback && media !is Show) return@mapNotNull null
+            if (!isLocalPlayback && currentMedia !is Show) return@mapNotNull null
             it.currentSeason
         }.distinctUntilChanged()
         .flatMapLatest { selectedSeason ->
@@ -282,7 +289,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 return@flatMapLatest observeLocalSeasonWithProgress(selectedSeason)
             }
 
-            val metadata = media as Show
+            val metadata = currentMedia as Show
             getSeasonWithWatchProgress(metadata, selectedSeason)
                 .dropWhile { it is Async.Loading }
                 .map { state ->
@@ -306,8 +313,8 @@ internal class PlayerScreenViewModel @Inject constructor(
     }.flatMapLatest { (episode, userId) ->
         watchProgressRepository
             .getAsFlow(
-                id = media.id,
-                type = media.type,
+                id = currentMedia.id,
+                type = currentMedia.type,
                 ownerId = userId,
             ).filterNotNull()
             .map {
@@ -316,7 +323,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                     val isSameEpisode = progress.isSameEpisode(
                         otherEpisode = episode?.number ?: -1,
                         otherSeason = episode?.season ?: -1,
-                        otherMediaId = media.id,
+                        otherMediaId = currentMedia.id,
                     )
 
                     if (!isSameEpisode) {
@@ -355,7 +362,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
             val cache = mediaLinksRepository.getLinksByProvider(
                 ownerId = userId,
-                mediaId = media.id,
+                mediaId = currentMedia.id,
                 providerId = currentProvider,
                 seasonNumber = episode?.season,
                 episodeNumber = episode?.number
@@ -444,7 +451,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
             val cache = mediaLinksRepository.getLinksByProvider(
                 ownerId = userId,
-                mediaId = media.id,
+                mediaId = currentMedia.id,
                 providerId = currentProvider,
                 episodeNumber = episode?.number,
                 seasonNumber = episode?.season
@@ -548,7 +555,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         startPositionMs: Long,
     ) {
         val item = mediaDownloadRepository
-            .getBatch(mediaId = media.id, seasonNumber = episode.season)
+            .getBatch(mediaId = currentMedia.id, seasonNumber = episode.season)
             .find { it.episodeNumber == episode.number && it.state == DownloadItemState.COMPLETED }
             ?: return
         val file = getCompletedDownloadFile(item) ?: return
@@ -588,7 +595,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
         val cache = mediaLinksRepository.getLinksByProvider(
             ownerId = userId,
-            mediaId = media.id,
+            mediaId = currentMedia.id,
             providerId = providerId,
             episodeNumber = episode?.number,
             seasonNumber = episode?.season
@@ -599,7 +606,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
 
         val response = getMediaLinks(
-            media = media,
+            media = currentMedia,
             episode = episode,
         )
 
@@ -627,7 +634,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
         return mediaLinksRepository.getLinksByProvider(
             ownerId = userId,
-            mediaId = media.id,
+            mediaId = currentMedia.id,
             providerId = providerId,
             episodeNumber = episode?.number,
             seasonNumber = episode?.season
@@ -691,7 +698,7 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
 
         return getNextEpisode(
-            show = media as Show,
+            show = currentMedia as Show,
             season = episode.season,
             episode = episode.number,
         )
@@ -703,7 +710,7 @@ internal class PlayerScreenViewModel @Inject constructor(
      * that StateFlow's first emission can race this call (e.g. right at [initializeLocalPlayback]),
      * and a one-shot DB read here is cheap enough not to need the cached value. */
     private suspend fun getNextLocalEpisode(episode: Episode): Episode? {
-        val seasons = mediaDownloadRepository.observeByMedia(media.id).first().toLocalSeasons()
+        val seasons = mediaDownloadRepository.observeByMedia(currentMedia.id).first().toLocalSeasons()
         val currentSeason = seasons.find { it.number == episode.season }
 
         currentSeason?.episodes?.find { it.number == episode.number + 1 }?.let { return it }
@@ -723,14 +730,14 @@ internal class PlayerScreenViewModel @Inject constructor(
             .filterNotNull()
             .flatMapLatest { userId ->
                 watchProgressRepository.getSeasonProgressAsFlow(
-                    tvShowId = media.id,
+                    tvShowId = currentMedia.id,
                     seasonNumber = seasonNumber,
                     ownerId = userId,
                 )
             }
 
         return combine(
-            mediaDownloadRepository.observeByMedia(media.id).map { it.toLocalSeasons() },
+            mediaDownloadRepository.observeByMedia(currentMedia.id).map { it.toLocalSeasons() },
             progressFlow,
         ) { seasons, progressList ->
             val season = seasons.find { it.number == seasonNumber } ?: return@combine null
@@ -752,16 +759,16 @@ internal class PlayerScreenViewModel @Inject constructor(
         // A class check (`when (media) { is Movie -> ...`) would throw for a PartialMedia — the
         // type a locally-resolved download's media always is. Switch on the type enum instead,
         // which every MediaMetadata implementation reports correctly regardless of its class.
-        return when (media.type) {
+        return when (currentMedia.type) {
             MediaType.MOVIE -> MovieProgress(
-                mediaId = media.id,
+                mediaId = currentMedia.id,
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
             )
 
             MediaType.SHOW -> EpisodeProgress(
-                mediaId = media.id,
+                mediaId = currentMedia.id,
                 ownerId = userId,
                 progress = 0L,
                 status = WatchStatus.WATCHING,
@@ -807,7 +814,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
                             val isQueueingNextEpisode =
                                 currentPosition >= (duration * playerPrefs.thresholdForNextEpisodeQueue)
-                            if (media is Show && isQueueingNextEpisode) {
+                            if (currentMedia is Show && isQueueingNextEpisode) {
                                 onQueueNextEpisode()
                             }
 
@@ -850,7 +857,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
             if (currentPosition > 60_000L) {
                 setWatchProgress(
-                    media = media,
+                    media = currentMedia,
                     watchProgress = progress,
                 )
             }
@@ -863,7 +870,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
             syncToScrobblers(
                 action = if (isPlaying) ScrobbleAction.START else ScrobbleAction.STOP,
-                media = media,
+                media = currentMedia,
                 episode = selectedEpisode.value,
                 watchProgress = progress,
             ).collect { response ->
@@ -880,13 +887,13 @@ internal class PlayerScreenViewModel @Inject constructor(
         val watchProgress = if (episode == null) {
             watchProgressRepository
                 .get(
-                    id = media.id,
-                    type = media.type,
+                    id = currentMedia.id,
+                    type = currentMedia.type,
                     ownerId = userId,
                 )?.watchData
         } else {
             watchProgressRepository.getEpisodeProgress(
-                tvShowId = media.id,
+                tvShowId = currentMedia.id,
                 seasonNumber = episode.season,
                 episodeNumber = episode.number,
                 ownerId = userId,
@@ -901,8 +908,9 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     private fun initialize() {
-        if (isLocalPlayback) {
-            initializeLocalPlayback()
+        val request = downloadRequest
+        if (request != null) {
+            viewModelScope.launch { initializeLocalPlayback(request) }
             return
         }
 
@@ -918,7 +926,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                             ).mapLatest { list ->
                                 var foundMetadataProvider = false
                                 val mappedList = list.fastMapNotNull { provider ->
-                                    if (provider.id == media.providerId) {
+                                    if (provider.id == currentMedia.providerId) {
                                         foundMetadataProvider = true
                                         return@fastMapNotNull provider.metadata
                                     }
@@ -930,7 +938,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
                                 if (!foundMetadataProvider) {
                                     val metadata = getProviderMetadata(
-                                        id = media.providerId
+                                        id = currentMedia.providerId
                                     ) ?: return@mapLatest emptyList() // Fails player and navigate back
 
                                     return@mapLatest mappedList + listOf(metadata)
@@ -951,8 +959,8 @@ internal class PlayerScreenViewModel @Inject constructor(
 
                 val cache = mediaLinksRepository.getLinksByProvider(
                     ownerId = userId,
-                    mediaId = media.id,
-                    providerId = media.providerId,
+                    mediaId = currentMedia.id,
+                    providerId = currentMedia.providerId,
                     episodeNumber = selectedEpisode.value?.number,
                     seasonNumber = selectedEpisode.value?.season
                 )
@@ -989,7 +997,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                     mediaLinksRepository
                         .observeLinksByProvider(
                             ownerId = userId,
-                            mediaId = media.id,
+                            mediaId = currentMedia.id,
                             providerId = providerId,
                             episodeNumber = episode?.number,
                             seasonNumber = episode?.season
@@ -1010,37 +1018,56 @@ internal class PlayerScreenViewModel @Inject constructor(
      * [providerRepository], or [getProviderMetadata] — the file and its metadata are already
      * fully resolved in [localPlayback]. There is exactly one "server" (the file itself) and no
      * providers, mirroring that in [_servers]/[_providers]. */
-    private fun initializeLocalPlayback() {
-        val playback = requireNotNull(localPlayback)
+    private suspend fun initializeLocalPlayback(request: PlaybackRequest.FromDownload) {
+        _providers.update { Async.Success(emptyList()) }
 
-        viewModelScope.launch {
-            _providers.update { Async.Success(emptyList()) }
-
-            val file = playback.file
-            if (file == null) {
-                _playerErrors.emit(UiText.from(R.string.error_no_valid_servers_found))
-                return@launch
-            }
-
-            val server = file.toPlayerServer(label = playback.item.mediaTitle)
-            val subtitles = file.toPlayerSubtitles()
-
-            _servers.update { Async.Success(listOf(server)) }
-
-            val nextEpisode = getNextEpisode(playback.episode)
-            _uiState.update { it.copy(currentServer = 0, nextEpisode = nextEpisode) }
-
-            withContext(appDispatchers.main) {
-                player.prepare(
-                    server = server,
-                    subtitles = subtitles,
-                    startPositionMs = getSavedStartPositionMs(playback.episode),
-                )
-            }
-
-            updateWatchProgress()
+        val playback = resolveLocalPlayback(request)
+        if (playback == null) {
+            _playerErrors.emit(UiText.from(R.string.error_no_valid_servers_found))
+            return
         }
+
+        localPlayback.value = playback
+        _media.value = playback.media
+        _uiState.update {
+            it.copy(currentEpisode = playback.episode, currentSeason = playback.episode?.season)
+        }
+
+        val file = playback.file
+        if (file == null) {
+            _playerErrors.emit(UiText.from(R.string.error_no_valid_servers_found))
+            return
+        }
+
+        val server = file.toPlayerServer(label = playback.item.mediaTitle)
+        val subtitles = file.toPlayerSubtitles()
+
+        _servers.update { Async.Success(listOf(server)) }
+
+        val nextEpisode = getNextEpisode(playback.episode)
+        _uiState.update { it.copy(currentServer = 0, nextEpisode = nextEpisode) }
+
+        withContext(appDispatchers.main) {
+            player.prepare(
+                server = server,
+                subtitles = subtitles,
+                startPositionMs = getSavedStartPositionMs(playback.episode),
+            )
+        }
+
+        updateWatchProgress()
     }
+
+    private suspend fun resolveLocalPlayback(request: PlaybackRequest.FromDownload): LocalPlayback? =
+        withContext(appDispatchers.io) {
+            val item = mediaDownloadRepository.getItem(request.downloadItemId) ?: return@withContext null
+            LocalPlayback(
+                item = item,
+                file = getCompletedDownloadFile(item),
+                media = mediaLinksRepository.getMedia(item.mediaId) ?: item.toFallbackMedia(),
+                episode = item.toEpisode(),
+            )
+        }
 }
 
 @Immutable
