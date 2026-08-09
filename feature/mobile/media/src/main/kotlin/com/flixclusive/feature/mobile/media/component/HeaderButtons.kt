@@ -237,65 +237,49 @@ private fun DownloadButton(
     onClick: () -> Unit,
 ) {
     val resources = LocalResources.current
-
-    val currentContentColor = LocalContentColor.current
-    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val outlinedButtonColors = ButtonDefaults.outlinedButtonColors()
-    val defaultButtonColors = ButtonDefaults.buttonColors()
+    val state = status().state
+    val isNotDownloaded = state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED
 
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isCompactOrMedium = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
-    val label = remember(status().state) {
-        when (status().state) {
-            MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> resources.getString(LocaleR.string.label_download)
-            MediaDownloadStatus.DownloadState.IN_PROGRESS ->
-                resources.getString(LocaleR.string.download_action_stop_content_desc)
-            MediaDownloadStatus.DownloadState.DOWNLOADED -> resources.getString(R.string.downloaded)
-        }
+    val label = when (state) {
+        MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> resources.getString(LocaleR.string.label_download)
+        MediaDownloadStatus.DownloadState.IN_PROGRESS ->
+            resources.getString(LocaleR.string.download_action_stop_content_desc)
+        MediaDownloadStatus.DownloadState.DOWNLOADED -> resources.getString(R.string.downloaded)
     }
 
-    val drawable = remember(status().state) {
-        when (status().state) {
-            MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> UiCommonR.drawable.download
-            MediaDownloadStatus.DownloadState.IN_PROGRESS -> UiCommonR.drawable.round_stop_24
-            MediaDownloadStatus.DownloadState.DOWNLOADED -> UiCommonR.drawable.download_done
-        }
+    val drawable = when (state) {
+        MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> UiCommonR.drawable.download
+        MediaDownloadStatus.DownloadState.IN_PROGRESS -> UiCommonR.drawable.round_stop_24
+        MediaDownloadStatus.DownloadState.DOWNLOADED -> UiCommonR.drawable.download_done
     }
 
-    val tint = remember(status().state) {
-        if (status().state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED) {
-            onSurfaceColor.copy(0.6F)
-        } else {
-            currentContentColor
-        }
+    val tint = if (isNotDownloaded) {
+        MaterialTheme.colorScheme.onSurface.copy(0.6F)
+    } else {
+        LocalContentColor.current
     }
 
     PlainTooltipBox(description = label) {
         if (!isCompactOrMedium) {
-            val colors = remember(status().state) {
-                if (status().state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED) {
-                    outlinedButtonColors
-                } else {
-                    defaultButtonColors
-                }
+            val colors = if (isNotDownloaded) {
+                ButtonDefaults.outlinedButtonColors()
+            } else {
+                ButtonDefaults.buttonColors()
             }
 
-            val border = remember(status().state) {
-                if (status().state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED) {
-                    BorderStroke(
-                        width = 2.dp,
-                        color = onSurfaceVariantColor.copy(alpha = 0.4F)
-                    )
-                } else {
-                    null
-                }
+            val border = if (isNotDownloaded) {
+                BorderStroke(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F)
+                )
+            } else {
+                null
             }
 
-            val isEnabled = remember(status().state) {
-                status().state != MediaDownloadStatus.DownloadState.DOWNLOADED
-            }
+            val isEnabled = state != MediaDownloadStatus.DownloadState.DOWNLOADED
 
             Button(
                 onClick = onClick,
@@ -316,7 +300,7 @@ private fun DownloadButton(
         } else {
             IconButton(
                 onClick = onClick,
-                enabled = status().state != MediaDownloadStatus.DownloadState.DOWNLOADED,
+                enabled = state != MediaDownloadStatus.DownloadState.DOWNLOADED,
                 modifier = Modifier.padding(3.dp),
             ) {
                 DownloadButtonIcon(
@@ -344,11 +328,7 @@ private fun DownloadButtonIcon(
     tint: Color,
     dp: Dp,
 ) {
-    val isNotInProgress = remember(status().state) {
-        status().state != MediaDownloadStatus.DownloadState.IN_PROGRESS
-    }
-
-    if (isNotInProgress) {
+    if (status().state != MediaDownloadStatus.DownloadState.IN_PROGRESS) {
         AdaptiveIcon(
             painter = painterResource(drawable),
             contentDescription = label,
