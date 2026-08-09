@@ -1,12 +1,5 @@
 package com.flixclusive.feature.mobile.settings.screen.downloads
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,15 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,6 +39,7 @@ import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.feature.mobile.settings.component.AnimatedFilterChip
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
@@ -62,7 +50,6 @@ import com.flixclusive.model.media.common.MediaType
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.flow.collectLatest
-import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 interface NavigatorDownloadsTweakScreen :
@@ -215,36 +202,6 @@ private fun DownloadsFilterRow(
             )
         }
     }
-}
-
-@Composable
-private fun AnimatedFilterChip(
-    selected: Boolean,
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(label) },
-        shape = CircleShape,
-        leadingIcon = {
-            AnimatedVisibility(
-                visible = selected,
-                enter = fadeIn(tween(150)) + expandHorizontally(tween(150)),
-                exit = fadeOut(tween(150)) + shrinkHorizontally(tween(150)),
-            ) {
-                Icon(
-                    painter = painterResource(UiCommonR.drawable.check),
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-        },
-        border = FilterChipDefaults.filterChipBorder(enabled = true, selected = selected),
-        modifier = modifier.animateContentSize(),
-    )
 }
 
 /** Isolated so entries/expansion updates don't force the top bar or filter row to recompose. */
