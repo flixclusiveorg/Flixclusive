@@ -23,19 +23,15 @@ enum class TransferFailure {
     ;
 
     companion object {
-        fun of(cause: Throwable?): TransferFailure {
-            // Walk the chain: OkHttp and the SAF layer both wrap the interesting exception. Bounded
-            // rather than followed to the end, because a cause chain is allowed to be cyclic and an
-            // unbounded walk would hang on one.
-            var current: Throwable? = cause
-            repeat(MAX_CAUSE_DEPTH) {
-                val throwable = current ?: return LINK
-                if (throwable.isEnvironmentFault()) return ENVIRONMENT
-                current = throwable.cause
+        // Walk the chain: OkHttp and the SAF layer both wrap the interesting exception. take()
+        // bounds it, because a cause chain is allowed to be cyclic and an unbounded walk would
+        // hang on one.
+        fun of(cause: Throwable?): TransferFailure =
+            if (generateSequence(cause) { it.cause }.take(MAX_CAUSE_DEPTH).any { it.isEnvironmentFault() }) {
+                ENVIRONMENT
+            } else {
+                LINK
             }
-
-            return LINK
-        }
 
         private fun Throwable.isEnvironmentFault(): Boolean =
             when {

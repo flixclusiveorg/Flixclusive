@@ -52,28 +52,10 @@ internal class LinkProbeImpl @Inject constructor(
         }
     }
 
-    private data class ThroughputSample(
+    private class ThroughputSample(
         val bytesPerSecond: Long?,
         val firstChunk: ByteArray,
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as ThroughputSample
-
-            if (bytesPerSecond != other.bytesPerSecond) return false
-            if (!firstChunk.contentEquals(other.firstChunk)) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = bytesPerSecond?.hashCode() ?: 0
-            result = 31 * result + firstChunk.contentHashCode()
-            return result
-        }
-    }
+    )
 
     private fun readThroughputSample(response: Response): ThroughputSample {
         val source = response.body.source()

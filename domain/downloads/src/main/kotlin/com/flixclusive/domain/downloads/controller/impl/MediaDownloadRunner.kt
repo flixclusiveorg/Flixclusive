@@ -138,8 +138,8 @@ internal class MediaDownloadRunner @Inject constructor(
             return runHlsStreamPhase(itemId, item, directory, sourceUrl)
         }
 
-        val fileName = DownloadPathUtil.buildStreamFileName(
-            DownloadPathUtil.buildFileTitle(item.mediaTitle),
+        val fileName = DownloadPathUtil.buildFileName(
+            item.mediaTitle,
             DownloadPathUtil.extensionFromUrl(
                 sourceUrl,
                 DownloadPathUtil.DEFAULT_STREAM_EXTENSION,
@@ -175,8 +175,8 @@ internal class MediaDownloadRunner @Inject constructor(
     ) {
         val headers = headersForSource(item, sourceUrl)
 
-        val fileName = DownloadPathUtil.buildStreamFileName(
-            DownloadPathUtil.buildFileTitle(item.mediaTitle),
+        val fileName = DownloadPathUtil.buildFileName(
+            item.mediaTitle,
             DownloadPathUtil.DEFAULT_STREAM_EXTENSION,
         )
         val destinationFile = resolveOrCreateStreamFile(itemId, item, directory, fileName)
@@ -395,8 +395,8 @@ internal class MediaDownloadRunner @Inject constructor(
             // video's already-final streamBytesDownloaded/streamTotalBytes.
             mediaDownloadRepository.deleteChunks(itemId)
 
-            val fileName = DownloadPathUtil.buildSubtitleFileName(
-                "${DownloadPathUtil.buildFileTitle(item.mediaTitle)} (${subtitle.label})",
+            val fileName = DownloadPathUtil.buildFileName(
+                "${item.mediaTitle} (${subtitle.label})",
                 DownloadPathUtil.extensionFromUrl(
                     subtitle.url,
                     DownloadPathUtil.DEFAULT_SUBTITLE_EXTENSION,

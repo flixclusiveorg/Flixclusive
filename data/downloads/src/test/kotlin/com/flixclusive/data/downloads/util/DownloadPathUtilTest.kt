@@ -37,18 +37,13 @@ class DownloadPathUtilTest {
     }
 
     @Test
-    fun `buildFileTitle should return the media title`() {
-        expectThat(DownloadPathUtil.buildFileTitle(mediaTitle)).isEqualTo(mediaTitle)
+    fun `buildFileName should append extension to sanitized title`() {
+        expectThat(DownloadPathUtil.buildFileName("Pilot", "mp4")).isEqualTo("Pilot.mp4")
     }
 
     @Test
-    fun `buildStreamFileName should append extension to sanitized title`() {
-        expectThat(DownloadPathUtil.buildStreamFileName("Pilot", "mp4")).isEqualTo("Pilot.mp4")
-    }
-
-    @Test
-    fun `buildSubtitleFileName should append extension to sanitized title`() {
-        expectThat(DownloadPathUtil.buildSubtitleFileName("Pilot", "srt")).isEqualTo("Pilot.srt")
+    fun `buildFileName should append a subtitle extension too`() {
+        expectThat(DownloadPathUtil.buildFileName("Pilot", "srt")).isEqualTo("Pilot.srt")
     }
 
     @Test

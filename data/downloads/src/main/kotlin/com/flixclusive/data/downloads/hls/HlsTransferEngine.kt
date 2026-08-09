@@ -3,7 +3,7 @@ package com.flixclusive.data.downloads.hls
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.hippo.unifile.UniFile
 
-interface HlsTransferEngine {
+internal interface HlsTransferEngine {
     /**
      * Downloads [segments] starting at [startIndex] (for resume — segments before it are assumed
      * already written to [destinationFile]), writing them in order regardless of the order they

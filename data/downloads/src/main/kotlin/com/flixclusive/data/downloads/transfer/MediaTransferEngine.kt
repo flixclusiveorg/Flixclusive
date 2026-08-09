@@ -4,7 +4,7 @@ import com.flixclusive.core.database.entity.downloads.DownloadChunk
 import com.flixclusive.core.database.entity.downloads.DownloadChunkStatus
 import com.hippo.unifile.UniFile
 
-interface MediaTransferEngine {
+internal interface MediaTransferEngine {
     suspend fun transfer(
         chunks: List<DownloadChunk>,
         url: String,

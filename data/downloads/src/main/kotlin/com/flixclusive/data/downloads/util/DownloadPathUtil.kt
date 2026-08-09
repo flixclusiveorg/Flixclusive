@@ -20,12 +20,7 @@ object DownloadPathUtil {
         episodeNumber
     )
 
-    fun buildFileTitle(mediaTitle: String): String = mediaTitle
-
-    fun buildStreamFileName(fileTitle: String, extension: String): String =
-        "${sanitizeFileName(fileTitle)}.$extension"
-
-    fun buildSubtitleFileName(fileTitle: String, extension: String): String =
+    fun buildFileName(fileTitle: String, extension: String): String =
         "${sanitizeFileName(fileTitle)}.$extension"
 
     fun extensionFromUrl(url: String, fallback: String, allowed: Set<String>): String {

@@ -69,7 +69,7 @@ class MediaDownloadService : Service() {
         private const val SUMMARY_NOTIFICATION_ID = Int.MAX_VALUE
         private const val QUEUED_GROUP_NOTIFICATION_ID = Int.MAX_VALUE - 1
 
-        fun ensureStarted(context: Context) {
+        internal fun ensureStarted(context: Context) {
             ContextCompat.startForegroundService(context, Intent(context, MediaDownloadService::class.java))
         }
     }
