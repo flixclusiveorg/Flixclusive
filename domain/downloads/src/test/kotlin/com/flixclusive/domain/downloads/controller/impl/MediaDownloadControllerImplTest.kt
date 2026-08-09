@@ -191,14 +191,21 @@ class MediaDownloadControllerImplTest {
      * subscribes to the network in its constructor, so the stubs have to be in place first.
      */
     private fun newController() {
+        // The runner is built for real, not mocked: these tests drive the public controller API and
+        // assert on repository interactions, so stubbing it out would gut them.
         controller = MediaDownloadControllerImpl(
-            context = mockk<Context>(),
             mediaDownloadRepository = mediaDownloadRepository,
-            mediaLinksRepository = mediaLinksRepository,
-            resolveDownloadableStreamUseCase = resolveDownloadableStreamUseCase,
-            downloadDirectoryRepository = downloadDirectoryRepository,
-            getDownloadDirectoryUseCase = getDownloadDirectoryUseCase,
-            hlsManifestResolver = hlsManifestResolver,
+            runner = MediaDownloadRunner(
+                context = mockk<Context>(),
+                mediaDownloadRepository = mediaDownloadRepository,
+                mediaLinksRepository = mediaLinksRepository,
+                resolveDownloadableStreamUseCase = resolveDownloadableStreamUseCase,
+                downloadDirectoryRepository = downloadDirectoryRepository,
+                getDownloadDirectoryUseCase = getDownloadDirectoryUseCase,
+                hlsManifestResolver = hlsManifestResolver,
+                networkMonitor = networkMonitor,
+                dataStoreManager = dataStoreManager,
+            ),
             networkMonitor = networkMonitor,
             mediaDownloadServiceController = mediaDownloadServiceController,
             dataStoreManager = dataStoreManager,
