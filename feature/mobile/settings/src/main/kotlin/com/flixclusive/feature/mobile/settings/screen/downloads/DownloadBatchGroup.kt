@@ -71,7 +71,7 @@ internal fun DownloadBatchGroup(
 
                         Text(
                             text = stringResource(
-                                LocaleR.string.season_number_format,
+                                LocaleR.string.label_format_untitled_season,
                                 entry.seasonNumber
                             ) +
                                 " • " +

@@ -46,7 +46,7 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
             .map { it.toStream() }
 
         if (streams.isEmpty()) {
-            return Async.Failure(UiText.from(LocaleR.string.no_download_links_available))
+            return Async.Failure(UiText.from(LocaleR.string.download_error_no_links_available))
         }
 
         val dataPreferences = dataStoreManager
@@ -72,7 +72,7 @@ internal class ResolveDownloadableStreamUseCaseImpl @Inject constructor(
             mediaLinksRepository.setLinkStatus(stream.url, ownerId, isDead = true)
         }
 
-        return Async.Failure(UiText.from(LocaleR.string.download_link_resolution_failed))
+        return Async.Failure(UiText.from(LocaleR.string.download_error_link_resolution_failed))
     }
 
     private suspend fun probeAll(streams: List<Stream>): List<Pair<Stream, LinkProbeResult>> =

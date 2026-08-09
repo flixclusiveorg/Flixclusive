@@ -28,8 +28,8 @@
     <string name="warning_install_message_second_half">By proceeding with the installation, you acknowledge that you understand the risks involved, and any resulting damage will be your responsibility. Are you sure you want to continue?</string>
     <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
     <string name="no_available_providers">No available providers</string>
-    <string name="no_download_links_available">No download links available</string>
-    <string name="download_link_resolution_failed">Unable to find a working download link</string>
+    <string name="download_error_no_links_available">No download links available</string>
+    <string name="download_error_link_resolution_failed">Unable to find a working download link</string>
 
     <!--  Errors with formatting  -->
     <plurals name="warning_install_message_first_half">
@@ -416,14 +416,12 @@
     <string name="download_state_failed">Failed</string>
     <string name="download_type_movie">Movie</string>
     <string name="download_type_show">Show</string>
-    <string name="download_search_placeholder">Search downloads</string>
     <string name="download_empty_title">No downloads yet</string>
     <string name="download_empty_description">Tired of buffering? Try downloading something!</string>
     <string name="download_action_pause_content_desc">Pause download</string>
     <string name="download_action_resume_content_desc">Resume download</string>
     <string name="download_action_stop_content_desc">Stop download</string>
     <string name="download_action_open_content_desc">Open downloaded file</string>
-    <string name="season_number_format">Season %1$d</string>
     <plurals name="download_batch_episode_count">
         <item quantity="one">%1$d episode</item>
         <item quantity="other">%1$d episodes</item>
