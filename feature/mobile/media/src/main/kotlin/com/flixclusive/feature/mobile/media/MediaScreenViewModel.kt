@@ -340,7 +340,7 @@ class MediaScreenViewModel @AssistedInject constructor(
     fun onToggleDownload() {
         val media = _metadata.value ?: return
 
-        appDispatchers.ioScope.launch {
+        viewModelScope.launch {
             if (media is Show) {
                 toggleSeasonDownload(media)
             } else {
@@ -353,16 +353,13 @@ class MediaScreenViewModel @AssistedInject constructor(
     fun onToggleEpisodeDownload(episode: Episode) {
         val show = _metadata.value as? Show ?: return
 
-        appDispatchers.ioScope.launch {
+        viewModelScope.launch {
             toggleEpisodeDownload(show, episode)
         }
     }
 
     private suspend fun toggleMovieDownload(media: MediaMetadata) {
-        val existing = mediaDownloadRepository
-            .observeAllItems()
-            .first()
-            .firstOrNull { it.mediaId == media.id && it.seasonNumber == null }
+        val existing = mediaDownloadRepository.getFor(media.id, seasonNumber = null, episodeNumber = null)
 
         when {
             existing == null -> resolveAndQueue(DownloadScopeKey.Movie(media.id), media, episode = null)
@@ -373,9 +370,7 @@ class MediaScreenViewModel @AssistedInject constructor(
     }
 
     private suspend fun toggleEpisodeDownload(show: Show, episode: Episode) {
-        val existing = mediaDownloadRepository
-            .getBatch(show.id, episode.season)
-            .firstOrNull { it.episodeNumber == episode.number }
+        val existing = mediaDownloadRepository.getFor(show.id, episode.season, episode.number)
 
         when {
             existing == null -> resolveAndQueue(

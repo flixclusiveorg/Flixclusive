@@ -27,12 +27,19 @@ interface MediaDownloadRepository {
     suspend fun getOldestQueuedItem(): DownloadItem?
 
     /**
-     * The finished download for exactly this media/episode, or null when there isn't one.
+     * The download for exactly this media/episode in any state, or null when there isn't one.
      *
      * Keyed by [com.flixclusive.core.database.entity.downloads.dedupeKeyOf] rather than by a
      * three-column match, because that key is what the unique index is built on — one row at
      * most can ever answer it.
      */
+    suspend fun getFor(
+        mediaId: String,
+        seasonNumber: Int?,
+        episodeNumber: Int?,
+    ): DownloadItem?
+
+    /** As [getFor], narrowed to a download that actually finished. */
     suspend fun getCompletedFor(
         mediaId: String,
         seasonNumber: Int?,
