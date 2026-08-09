@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,9 +49,9 @@ import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.navigation.settings.SubSettingsNavItem
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.UserAvatar
-import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.settings.R
 import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.getMediumEmphasizedLabel
@@ -70,26 +71,18 @@ internal fun ListContent(
 ) {
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
+        contentPadding = LocalGlobalScaffoldPadding.current,
         modifier = Modifier
             .fillMaxSize()
             .then(modifier),
     ) {
         item {
-            Box(
-                contentAlignment = Alignment.CenterStart,
+            Spacer(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(top = 10.dp, bottom = 30.dp)
                     .padding(horizontal = UserScreenHorizontalPadding),
-            ) {
-                Text(
-                    text = stringResource(id = LocaleR.string.settings),
-                    style = getTopBarHeadlinerTextStyle(),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                )
-            }
+            )
         }
 
         item {
@@ -103,8 +96,16 @@ internal fun ListContent(
             )
         }
 
+        item {
+            MenuItem(
+                icon = painterResource(id = UiCommonR.drawable.download),
+                label = stringResource(id = LocaleR.string.downloads),
+                onClick = navigator::navigateToDownloadsScreen,
+            )
+        }
+
         navigationItems(
-            title = LocaleR.string.application,
+            title = LocaleR.string.settings,
         ) {
             items(SubSettingsNavItem.entries) { navigation ->
                 val iconId = when (navigation) {
@@ -132,7 +133,7 @@ internal fun ListContent(
         }
 
         navigationItems(
-            title = LocaleR.string.application,
+            title = LocaleR.string.label_misc,
         ) {
             items(GithubNavigation.entries) { navigation ->
                 val uriHandler = LocalUriHandler.current
@@ -158,11 +159,12 @@ internal fun ListContent(
 
         item {
             HorizontalDivider(
-                modifier =
-                    Modifier
-                        .padding(vertical = 15.dp),
                 thickness = 1.dp,
                 color = LocalContentColor.current.copy(alpha = 0.2F),
+                modifier = Modifier.padding(
+                    vertical = 15.dp,
+                    horizontal = UserScreenHorizontalPadding,
+                ),
             )
         }
 
@@ -199,7 +201,7 @@ private fun LazyListScope.navigationItems(
                 .padding(horizontal = UserScreenHorizontalPadding),
         ) {
             Text(
-                text = stringResource(title),
+                text = stringResource(title).uppercase(),
                 style = getEmphasizedLabel(letterSpacing = 1.5.sp),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -381,6 +383,8 @@ private fun ListContentPreview() {
                     override fun navigateToProviderManagerScreen() = Unit
 
                     override fun navigateToRepositoryManagerScreen() = Unit
+
+                    override fun navigateToDownloadsScreen() = Unit
 
                     override fun navigateToUrl(url: String) = Unit
 

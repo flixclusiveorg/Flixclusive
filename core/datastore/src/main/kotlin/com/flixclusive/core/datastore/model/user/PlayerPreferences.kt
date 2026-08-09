@@ -16,6 +16,14 @@ data class PlayerPreferences(
     val isPiPModeEnabled: Boolean = true,
     val isUsingVolumeBoost: Boolean = false,
     val isAutoSelectingServer: Boolean = true,
+    /**
+     * Whether a completed download should be the stream that gets played when one exists.
+     *
+     * The downloaded file is offered as a link either way; this only decides whether it is the
+     * one [isAutoSelectingServer] settles on. Defaults to on: someone who downloaded a title
+     * meant to watch that copy rather than spend the bandwidth again.
+     */
+    val isPreferringLocalPlayback: Boolean = true,
     val thresholdForNextEpisodeQueue: Float = 0.8f,
     val audioLanguage: String = "en",
     /** Unset = -1 = Default */

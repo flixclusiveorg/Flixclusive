@@ -66,6 +66,7 @@ import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.database.entity.provider.CachedMediaLink
 import com.flixclusive.core.database.entity.provider.CachedStream
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -77,7 +78,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.Comm
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.feature.mobile.settings.screen.links.util.CacheLinksFormatUtil
+import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
 import com.flixclusive.feature.mobile.settings.screen.links.util.LinkUtil.toRelativeTime
 import com.flixclusive.feature.mobile.settings.screen.links.util.PreviewData
 import com.flixclusive.model.media.MediaMetadata
@@ -118,10 +119,12 @@ internal fun ManageMediaLinksTweakScreen(
                 is ManageMediaLinksTweakEvent.PlayLink -> {
                     if (event.media !is PartialMedia) {
                         navigator.showPlayerSplashScreen(
-                            media = event.media,
-                            episode = event.episode,
-                            initialStreamUrl = event.link.url,
-                            initialHeaders = event.link.customHeaders
+                            PlaybackRequest.FromProvider(
+                                media = event.media,
+                                episode = event.episode,
+                                preferredStreamUrl = event.link.url,
+                                headers = event.link.customHeaders,
+                            ),
                         )
                     }
                 }

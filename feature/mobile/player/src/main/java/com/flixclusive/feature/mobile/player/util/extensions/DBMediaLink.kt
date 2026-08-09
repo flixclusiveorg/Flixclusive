@@ -8,7 +8,7 @@ import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 
 /** Filters alive+non-expired streams, deduplicates names, and maps to [PlayerServer]. */
-internal fun List<CachedStream>.toPlayerServers(): List<PlayerServer> {
+internal fun List<CachedStream>.toPlayerServers(source: TrackSource = TrackSource.REMOTE): List<PlayerServer> {
     val names = mutableMapOf<String, Int>()
     return fastMapNotNull { stream ->
         if (stream.isThirdPartyGateway) return@fastMapNotNull null
@@ -21,23 +21,23 @@ internal fun List<CachedStream>.toPlayerServers(): List<PlayerServer> {
             url = stream.url,
             isDead = stream.isDead,
             headers = stream.customHeaders ?: emptyMap(),
-            source = TrackSource.REMOTE,
+            source = source,
         )
     }
 }
 
-internal fun CachedStream.toPlayerServer(): PlayerServer {
+internal fun CachedStream.toPlayerServer(source: TrackSource = TrackSource.REMOTE): PlayerServer {
     return PlayerServer(
         label = label,
         url = url,
         isDead = isDead,
         headers = customHeaders ?: emptyMap(),
-        source = TrackSource.REMOTE,
+        source = source,
     )
 }
 
 /** Deduplicates subtitle languages and maps to [PlayerSubtitle]. */
-internal fun List<CachedSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
+internal fun List<CachedSubtitle>.toPlayerSubtitles(source: TrackSource = TrackSource.REMOTE): List<PlayerSubtitle> {
     val names = mutableMapOf<String, Int>()
     return fastMapNotNull { subtitle ->
         val count = names[subtitle.label] ?: 0
@@ -47,7 +47,7 @@ internal fun List<CachedSubtitle>.toPlayerSubtitles(): List<PlayerSubtitle> {
             label = label,
             url = subtitle.url,
             isDead = subtitle.isDead,
-            source = TrackSource.REMOTE,
+            source = source,
         )
     }
 }

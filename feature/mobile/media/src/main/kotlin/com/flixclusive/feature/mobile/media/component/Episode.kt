@@ -23,10 +23,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,8 +50,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.common.components.MediaCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
@@ -62,6 +66,7 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiv
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
+import com.flixclusive.feature.mobile.media.MediaDownloadStatus
 import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -75,13 +80,17 @@ internal fun EpisodeCard(
     episode: EpisodeWithProgress,
     onClick: () -> Unit,
     onLongClick: (EpisodeWithProgress) -> Unit,
+    downloadStatus: () -> Async<MediaDownloadStatus>,
+    onToggleDownload: () -> Unit,
     modifier: Modifier = Modifier,
-    isDownloaded: Boolean = false,
 ) {
     val doHapticFeedback = getFeedbackOnLongPress()
 
     val description = episode.overview
         ?: stringResource(R.string.default_overview)
+
+    val isDownloaded = (downloadStatus() as? Async.Success)?.data?.state ==
+        MediaDownloadStatus.DownloadState.DOWNLOADED
 
     Column(
         modifier = modifier
@@ -118,7 +127,8 @@ internal fun EpisodeCard(
             )
 
             DownloadButton(
-                onClick = {},
+                status = downloadStatus,
+                onClick = onToggleDownload,
             )
         }
 
@@ -340,21 +350,87 @@ private fun ExpandableText(
 
 @Composable
 private fun DownloadButton(
+    status: () -> Async<MediaDownloadStatus>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO: Implement download functionality
+    if (status() is Async.Loading) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+                .minimumInteractiveComponentSize()
+        ) {
+            GradientCircularProgressIndicator(
+                size = 18.dp,
+                thickness = 2.dp,
+                colors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.tertiary,
+                ),
+            )
+        }
+
+        return
+    }
+
+    val isFailure = status() is Async.Failure
+    val downloadStatus = (status() as? Async.Success)?.data ?: MediaDownloadStatus.NotDownloaded
+
+    val isInProgress = !isFailure && downloadStatus.state == MediaDownloadStatus.DownloadState.IN_PROGRESS
+
+    val drawable = when {
+        isFailure -> UiCommonR.drawable.warning_outline
+        isInProgress -> UiCommonR.drawable.round_stop_24
+        downloadStatus.state == MediaDownloadStatus.DownloadState.DOWNLOADED -> UiCommonR.drawable.download_done
+        else -> UiCommonR.drawable.download
+    }
+
+    val label = when {
+        isFailure -> stringResource(R.string.failed_to_load_download_status)
+        isInProgress -> stringResource(LocaleR.string.download_action_stop_content_desc)
+        downloadStatus.state == MediaDownloadStatus.DownloadState.DOWNLOADED -> stringResource(R.string.downloaded)
+        else -> stringResource(LocaleR.string.label_download)
+    }
+
+    val tint = if (isFailure) {
+        MaterialTheme.colorScheme.error
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    }
+
     PlainTooltipBox(
         modifier = modifier,
-        description = stringResource(LocaleR.string.label_download),
+        description = label,
     ) {
-        IconButton(onClick = onClick) {
-            AdaptiveIcon(
-                painter = painterResource(UiCommonR.drawable.download),
-                contentDescription = stringResource(LocaleR.string.label_download),
-                dp = 22.dp,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            )
+        IconButton(
+            onClick = onClick,
+            enabled = downloadStatus.state != MediaDownloadStatus.DownloadState.DOWNLOADED,
+        ) {
+            if (isInProgress) {
+                Box(
+                    modifier = Modifier.size(22.dp + 5.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(
+                        progress = { downloadStatus.progress },
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.matchParentSize(),
+                    )
+                    AdaptiveIcon(
+                        painter = painterResource(drawable),
+                        contentDescription = label,
+                        dp = 22.dp,
+                        tint = tint,
+                    )
+                }
+            } else {
+                AdaptiveIcon(
+                    painter = painterResource(drawable),
+                    contentDescription = label,
+                    dp = 22.dp,
+                    tint = tint,
+                )
+            }
         }
     }
 }
@@ -462,10 +538,11 @@ private fun EpisodeCardBasePreview() {
                     }
 
                     EpisodeCard(
-                        isDownloaded = true,
+                        downloadStatus = { Async.Success(MediaDownloadStatus.Downloaded) },
                         episode = episodeWithProgress,
                         onClick = {},
                         onLongClick = {},
+                        onToggleDownload = {},
                     )
                 }
 

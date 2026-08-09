@@ -12,6 +12,10 @@ data class PlayerSubtitle(
     override val isDead: Boolean,
     val url: String,
     val source: TrackSource,
+    /** Known MIME type, when the caller already knows the subtitle's real format (e.g. sniffed
+     * from a downloaded file). Null falls back to [com.flixclusive.core.presentation.player.util.MimeTypeParser.toMimeType]'s
+     * pre-playback guess from the URL/label. */
+    val mimeType: String? = null,
 ) : PlayerTrack {
     override fun equals(other: Any?): Boolean {
         if (other !is PlayerSubtitle) return false

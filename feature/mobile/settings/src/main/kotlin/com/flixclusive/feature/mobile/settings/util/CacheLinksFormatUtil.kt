@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings.screen.links.util
+package com.flixclusive.feature.mobile.settings.util
 
 import com.flixclusive.model.media.MediaMetadata
 

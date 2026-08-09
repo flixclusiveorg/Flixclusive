@@ -9,6 +9,8 @@ import com.flixclusive.core.database.converters.DateConverter
 import com.flixclusive.core.database.converters.StringMapConverter
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
+import com.flixclusive.core.database.dao.downloads.DownloadChunkDao
+import com.flixclusive.core.database.dao.downloads.DownloadItemDao
 import com.flixclusive.core.database.dao.library.LibraryListDao
 import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.provider.CachedMediaLinkDao
@@ -16,6 +18,8 @@ import com.flixclusive.core.database.dao.provider.InstalledProviderDao
 import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
 import com.flixclusive.core.database.dao.watched.MovieProgressDao
+import com.flixclusive.core.database.entity.downloads.DownloadChunk
+import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
@@ -41,6 +45,8 @@ import com.flixclusive.core.database.migration.Schema17to18
 import com.flixclusive.core.database.migration.Schema18to19
 import com.flixclusive.core.database.migration.Schema19to20
 import com.flixclusive.core.database.migration.Schema1to2
+import com.flixclusive.core.database.migration.Schema20to21
+import com.flixclusive.core.database.migration.Schema21to22
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
 import com.flixclusive.core.database.migration.Schema4to5
@@ -68,9 +74,11 @@ internal const val APP_DATABASE = "app_database"
         InstalledProvider::class,
         CachedStream::class,
         CachedSubtitle::class,
+        DownloadItem::class,
+        DownloadChunk::class,
     ],
     views = [LibraryListItemWithMetadata::class],
-    version = 20,
+    version = 22,
     exportSchema = true,
 )
 @TypeConverters(
@@ -95,6 +103,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun installedProviderDao(): InstalledProviderDao
 
     abstract fun cachedMediaLinkDao(): CachedMediaLinkDao
+
+    abstract fun downloadItemDao(): DownloadItemDao
+
+    abstract fun downloadChunkDao(): DownloadChunkDao
 
     companion object {
         @Suppress("ktlint:standard:property-naming")
@@ -132,6 +144,8 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema17to18,
                         Schema18to19,
                         Schema19to20,
+                        Schema20to21,
+                        Schema21to22,
                     ).build()
                     .also { INSTANCE = it }
             }

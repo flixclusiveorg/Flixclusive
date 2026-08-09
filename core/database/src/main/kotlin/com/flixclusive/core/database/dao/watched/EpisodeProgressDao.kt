@@ -15,12 +15,19 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EpisodeProgressDao {
+    /*
+     * Reads returning EpisodeProgressWithMetadata join `media` — see the note on MovieProgressDao for
+     * why a history row without its media is fatal rather than merely empty. Queries returning a bare
+     * EpisodeProgress have no relation to resolve and are left alone.
+     */
+
     @Transaction
     @Query(
         """
-        SELECT * FROM series_watch_history
-        WHERE ownerId = :ownerId
-        ORDER BY createdAt DESC
+        SELECT h.* FROM series_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.ownerId = :ownerId
+        ORDER BY h.createdAt DESC
         """,
     )
     fun getAll(ownerId: String): List<EpisodeProgressWithMetadata>
@@ -31,9 +38,10 @@ interface EpisodeProgressDao {
         ascending: Boolean,
     ): Flow<List<EpisodeProgressWithMetadata>> {
         val query = """
-        SELECT * FROM series_watch_history s1
-        WHERE ownerId = ?
-        AND (seasonNumber, episodeNumber) = (
+        SELECT s1.* FROM series_watch_history s1
+        INNER JOIN media AS m ON m.id = s1.mediaId
+        WHERE s1.ownerId = ?
+        AND (s1.seasonNumber, s1.episodeNumber) = (
             SELECT seasonNumber, episodeNumber
             FROM series_watch_history s2
             WHERE s2.mediaId = s1.mediaId
@@ -41,7 +49,7 @@ interface EpisodeProgressDao {
             ORDER BY seasonNumber DESC, episodeNumber DESC
             LIMIT 1
         )
-        ORDER BY $column ${if (ascending) "ASC" else "DESC"}
+        ORDER BY s1.$column ${if (ascending) "ASC" else "DESC"}
         """.trimIndent()
 
         return getAllAsFlowRaw(
@@ -59,7 +67,13 @@ interface EpisodeProgressDao {
     fun getAllAsFlowRaw(query: RoomRawQuery): Flow<List<EpisodeProgressWithMetadata>>
 
     @Transaction
-    @Query("SELECT * FROM series_watch_history WHERE id = :id")
+    @Query(
+        """
+        SELECT h.* FROM series_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.id = :id
+        """,
+    )
     suspend fun get(id: Long): EpisodeProgressWithMetadata?
 
     /**
@@ -68,16 +82,23 @@ interface EpisodeProgressDao {
     @Transaction
     @Query(
         """
-        SELECT * FROM series_watch_history
-        WHERE mediaId = :mediaId AND ownerId = :ownerId
-        ORDER BY seasonNumber DESC, episodeNumber DESC
+        SELECT h.* FROM series_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.mediaId = :mediaId AND h.ownerId = :ownerId
+        ORDER BY h.seasonNumber DESC, h.episodeNumber DESC
         LIMIT 1
         """,
     )
     suspend fun get(mediaId: String, ownerId: String): EpisodeProgressWithMetadata?
 
     @Transaction
-    @Query("SELECT * FROM series_watch_history WHERE id = :id")
+    @Query(
+        """
+        SELECT h.* FROM series_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.id = :id
+        """,
+    )
     fun getAsFlow(id: Long): Flow<EpisodeProgressWithMetadata?>
 
     /**
@@ -86,9 +107,10 @@ interface EpisodeProgressDao {
     @Transaction
     @Query(
         """
-        SELECT * FROM series_watch_history
-        WHERE mediaId = :itemId AND ownerId = :ownerId
-        ORDER BY seasonNumber DESC, episodeNumber DESC
+        SELECT h.* FROM series_watch_history AS h
+        INNER JOIN media AS m ON m.id = h.mediaId
+        WHERE h.mediaId = :itemId AND h.ownerId = :ownerId
+        ORDER BY h.seasonNumber DESC, h.episodeNumber DESC
         LIMIT 1
         """,
     )

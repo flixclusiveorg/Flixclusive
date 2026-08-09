@@ -5,6 +5,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavDestination
 import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToAddProfileScreen
 import com.flixclusive.core.navigation.navigator.NavigateToAppUpdatesScreen
@@ -32,13 +33,13 @@ import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaPreviewBotto
 import com.flixclusive.feature.mobile.media.navigator.NavigatorMediaScreen
 import com.flixclusive.feature.mobile.onboarding.NavigatorOnboardingScreen
 import com.flixclusive.feature.mobile.player.NavigatorPlayerSplashScreen
-import com.flixclusive.feature.mobile.player.PlayerScreenInitialHeader
 import com.flixclusive.feature.mobile.provider.add.NavigatorAddProviderScreen
 import com.flixclusive.feature.mobile.provider.details.NavigatorProviderDetailsBottomSheet
 import com.flixclusive.feature.mobile.provider.manage.NavigatorProviderManagerScreen
 import com.flixclusive.feature.mobile.search.NavigatorSearchScreen
 import com.flixclusive.feature.mobile.seeAll.NavigatorSeeAllScreen
 import com.flixclusive.feature.mobile.settings.screen.data.NavigatorDataTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.downloads.NavigatorDownloadsTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.manage.NavigatorManageMediaLinksTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.root.NavigatorMediaLinkCardsTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.links.show.NavigatorMediaLinksShowDetailTweakScreen
@@ -87,6 +88,7 @@ import com.ramcosta.composedestinations.generated.providersettings.destinations.
 import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.AppearanceTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.DownloadsTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ManageMediaLinksTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinkCardsTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinksShowDetailTweakScreenDestination
@@ -128,6 +130,7 @@ internal class MobileAppNavigator(
     NavigatorAppUpdatesDialog,
     NavigatorAppUpdatesScreen,
     NavigatorDataTweakScreen,
+    NavigatorDownloadsTweakScreen,
     NavigatorExitApp,
     NavigatorHome,
     NavigatorLibraryDetailsScreen,
@@ -330,6 +333,12 @@ internal class MobileAppNavigator(
         }
     }
 
+    override fun navigateToDownloadsScreen() {
+        runOnResumed {
+            navigator.navigate(DownloadsTweakScreenDestination)
+        }
+    }
+
     override fun navigateToUrl(url: String) {
         uriHandler.openUri(url)
     }
@@ -381,59 +390,25 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun showPlayerSplashScreen(
-        media: MediaMetadata,
-        episode: Episode?,
-        initialStreamUrl: String?,
-        initialCacheId: String?,
-        initialHeaders: Map<String, String>?
-    ) {
+    override fun showPlayerSplashScreen(request: PlaybackRequest) {
         runOnResumed {
             navigator.navigate(
-                PlayerSplashScreenDestination(
-                    media = media,
-                    episode = episode,
-                    initialStreamUrl = initialStreamUrl,
-                    initialCacheId = initialCacheId,
-                    initialHeaders = initialHeaders?.let {
-                        PlayerScreenInitialHeader(headers = it)
-                    }
-                ),
+                PlayerSplashScreenDestination(request = request),
             )
         }
     }
 
-    override fun navigateToPlayerScreen(
-        media: MediaMetadata,
-        episode: Episode?,
-        initialStreamUrl: String?,
-        initialCacheId: String?,
-        initialHeaders: Map<String, String>?
-    ) {
+    override fun navigateToPlayerScreen(request: PlaybackRequest) {
         runOnResumed {
             navigator.navigate(
-                PlayerScreenDestination(
-                    media = media,
-                    episode = episode,
-                    initialStreamUrl = initialStreamUrl,
-                    initialCacheId = initialCacheId,
-                    initialHeaders = initialHeaders?.let {
-                        PlayerScreenInitialHeader(headers = it)
-                    }
-                ),
+                PlayerScreenDestination(request = request),
             ) {
-                // Clear player splash screen from back stack to prevent going back to it
-                popUpTo(
-                    PlayerSplashScreenDestination(
-                        media = media,
-                        episode = episode,
-                        initialStreamUrl = initialStreamUrl,
-                        initialCacheId = initialCacheId,
-                        initialHeaders = initialHeaders?.let {
-                            PlayerScreenInitialHeader(headers = it)
-                        }
-                    )
-                ) {
+                // Clear player splash screen from back stack to prevent going back to it.
+                // Passed as the bare destination spec (route = the pattern "…/{request}"),
+                // not a filled Direction — a filled one would depend on `request` surviving a
+                // Java-serialize -> Bundle -> deserialize -> re-serialize round trip byte-for-byte
+                // to match the route string already on the back stack.
+                popUpTo(PlayerSplashScreenDestination) {
                     inclusive = true
                 }
             }

@@ -67,6 +67,68 @@ internal class NetworkMonitorImpl @Inject constructor(
             replay = 1,
         )
 
+    /**
+     * Unlike [isOnline], which only cares whether *some* internet-capable network exists, this has
+     * to track the network actually carrying traffic — a device on both Wi-Fi and mobile data is
+     * unmetered, and the same Wi-Fi can flip to metered when its owner marks it so. That makes
+     * `onCapabilitiesChanged` the signal rather than availability, and it means re-reading the
+     * active network each time rather than remembering a set.
+     */
+    override val isMetered: Flow<Boolean> = callbackFlow {
+        val connectivityManager = context.getSystemService<ConnectivityManager>()
+        if (connectivityManager == null) {
+            channel.trySend(true)
+            channel.close()
+            return@callbackFlow
+        }
+
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                channel.trySend(connectivityManager.isCurrentlyMetered())
+            }
+
+            override fun onLost(network: Network) {
+                channel.trySend(connectivityManager.isCurrentlyMetered())
+            }
+
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities,
+            ) {
+                channel.trySend(connectivityManager.isCurrentlyMetered())
+            }
+        }
+
+        val request = Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        connectivityManager.registerNetworkCallback(request, callback)
+
+        channel.trySend(connectivityManager.isCurrentlyMetered())
+
+        awaitClose {
+            connectivityManager.unregisterNetworkCallback(callback)
+        }
+    }.conflate()
+        .shareIn(
+            scope = appDispatchers.defaultScope,
+            started = SharingStarted.WhileSubscribed(),
+            replay = 1,
+        )
+
+    override fun isMeteredNow(): Boolean =
+        context.getSystemService<ConnectivityManager>()?.isCurrentlyMetered() ?: true
+
+    override fun isOnlineNow(): Boolean =
+        context.getSystemService<ConnectivityManager>()?.isCurrentlyConnected() ?: false
+
+    /** No active network, or no capabilities to read, counts as metered — see [NetworkMonitor.isMetered]. */
+    @Suppress("DEPRECATION")
+    private fun ConnectivityManager.isCurrentlyMetered(): Boolean {
+        val capabilities = activeNetwork?.let(::getNetworkCapabilities) ?: return true
+        return !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+    }
+
     @Suppress("DEPRECATION")
     private fun ConnectivityManager.isCurrentlyConnected() =
         activeNetwork

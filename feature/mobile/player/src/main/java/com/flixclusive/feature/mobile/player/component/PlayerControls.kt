@@ -52,8 +52,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastFilter
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
@@ -93,13 +91,13 @@ import com.flixclusive.feature.mobile.player.component.subtitle.SubtitleSyncScre
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.feature.mobile.player.util.UiMode
 import com.flixclusive.model.media.MediaMetadata
-import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 
 @OptIn(UnstableApi::class)
@@ -112,7 +110,7 @@ internal fun PlayerControls(
     playerPrefs: PlayerPreferences,
     subtitlesPrefs: SubtitlesPreferences,
     currentResizeMode: ResizeMode,
-    currentProvider: () -> ProviderMetadata,
+    currentProvider: () -> ProviderMetadata?,
     providers: () -> List<ProviderMetadata>,
     servers: () -> List<PlayerServer>,
     currentServer: () -> Int,
@@ -122,6 +120,7 @@ internal fun PlayerControls(
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
     currentSeason: () -> SeasonWithProgress?,
+    seasons: () -> List<Season>,
     onUpdateWatchProgress: () -> Unit,
     modifier: Modifier = Modifier,
     currentEpisode: Episode? = null,
@@ -136,7 +135,11 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
     var savedSpeed by remember { mutableFloatStateOf(0f) }
     var volumeSliderHideJob by remember { mutableStateOf<Job?>(null) }
-    val key = remember(currentEpisode, currentProvider) { currentEpisode?.id + currentProvider().id }
+    // Keyed on the resolved provider id (a value), not the `currentProvider` lambda itself —
+    // PlayerScreen.kt allocates a fresh lambda on every recomposition, which used to invalidate
+    // this `remember` (and everything keyed off it below) every frame.
+    val currentProviderId = currentProvider()?.id
+    val key = remember(currentEpisode, currentProviderId) { currentEpisode?.id + currentProviderId }
 
     val scope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
@@ -326,7 +329,7 @@ internal fun PlayerControls(
                     gestureState.showVolumeSlider()
                     volumeSliderHideJob?.cancel()
                     volumeSliderHideJob = scope.launch {
-                        delay(1000L)
+                        delay(1000L.milliseconds)
                         gestureState.hideSliders()
                     }
                 }
@@ -437,6 +440,12 @@ internal fun PlayerControls(
                             onShowEpisodesPanel = currentEpisode?.let {
                                 { uiMode = UiMode.EPISODES }
                             },
+                            // No servers/providers to switch between for local playback.
+                            onShowServersPanel = if (currentProvider() != null) {
+                                { uiMode = UiMode.SERVERS }
+                            } else {
+                                null
+                            },
                         )
                     }
 
@@ -497,22 +506,14 @@ internal fun PlayerControls(
 
                     AnimatedPanel(
                         visible = uiMode.isEpisodes &&
-                            media is Show &&
+                            seasons().isNotEmpty() &&
                             currentEpisode != null &&
                             onEpisodeChange != null &&
                             onSeasonChange != null
                     ) {
-                        val filteredSeasons by remember(media) {
-                            derivedStateOf {
-                                (media as Show)
-                                    .seasons
-                                    .fastFilter { it.isReleased }
-                            }
-                        }
-
                         EpisodesScreen(
                             currentSeason = currentSeason,
-                            seasons = filteredSeasons,
+                            seasons = seasons(),
                             currentEpisode = currentEpisode!!,
                             onSeasonChange = onSeasonChange!!::invoke,
                             onEpisodeClick = onEpisodeChange!!::invoke,
@@ -523,13 +524,14 @@ internal fun PlayerControls(
                     }
 
                     AnimatedPanel(
-                        visible = uiMode.isServers
+                        visible = uiMode.isServers && currentProvider() != null
                     ) {
                         ServersScreen(
                             servers = servers,
                             currentServer = currentServer,
                             onServerChange = onServerChange,
-                            currentProvider = currentProvider,
+                            // Non-null: this panel only renders when currentProvider() != null.
+                            currentProvider = { currentProvider()!! },
                             providers = providers,
                             onProviderChange = onProviderChange,
                             onDismiss = { uiMode = UiMode.NONE },
@@ -546,19 +548,7 @@ internal fun PlayerControls(
                             scrubState = scrubState,
                             onBack = { uiMode = UiMode.SUBS },
                             onDismiss = { uiMode = UiMode.NONE },
-                            onSave = {
-                                player.changeSubtitleDelay(it)
-
-                                // Force seek to update subtitle timings immediately after changing the offset
-                                val isMediaSeekable = player.isCommandAvailable(
-                                    command = Player.COMMAND_GET_CURRENT_MEDIA_ITEM
-                                ) &&
-                                    player.isCurrentMediaItemSeekable
-
-                                if (isMediaSeekable) {
-                                    player.seekTo(scrubState.progress + 1L)
-                                }
-                            },
+                            onSave = { player.changeSubtitleDelay(it) },
                             modifier = Modifier
                                 .fillMaxSize()
                         )

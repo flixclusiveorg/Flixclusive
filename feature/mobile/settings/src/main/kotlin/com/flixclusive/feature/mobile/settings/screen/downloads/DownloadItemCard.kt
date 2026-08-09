@@ -1,0 +1,371 @@
+package com.flixclusive.feature.mobile.settings.screen.downloads
+
+import android.content.Context
+import android.text.format.Formatter
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.flixclusive.feature.mobile.settings.component.SettingsListCard
+import com.flixclusive.core.database.entity.downloads.DownloadItem
+import com.flixclusive.core.database.entity.downloads.DownloadItemState
+import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
+import com.flixclusive.model.media.common.MediaType
+import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.strings.R as LocaleR
+
+@Composable
+internal fun DownloadItemCard(
+    item: DownloadItem,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onStop: () -> Unit,
+    onRetry: () -> Unit,
+    onDelete: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val isStopped = item.state == DownloadItemState.STOPPED
+
+    val isDownloading = item.state == DownloadItemState.DOWNLOADING_STREAM ||
+        item.state == DownloadItemState.STREAM_COMPLETE ||
+        item.state == DownloadItemState.FETCHING_SUBTITLES
+
+    SettingsListCard(
+        modifier = modifier.graphicsLayer { alpha = if (isStopped) 0.6f else 1f },
+    ) {
+        Column(modifier = Modifier.animateContentSize()) {
+            Row(verticalAlignment = Alignment.Top) {
+                Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
+                    Icon(
+                        painter = painterResource(state.iconRes),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(top = 2.dp),
+                        tint = if (state == DownloadItemState.FAILED) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.mediaTitle,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    )
+
+                    Text(
+                        text = item.subtitleLabel(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+
+                    if (item.state == DownloadItemState.COMPLETED) {
+                        Text(
+                            text = item.completedSummary(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                DownloadItemActions(
+                    state = item.state,
+                    onPause = onPause,
+                    onResume = onResume,
+                    onStop = onStop,
+                    onRetry = onRetry,
+                    onDelete = onDelete,
+                    onOpen = onOpen,
+                )
+            }
+
+            if (isDownloading) {
+                // Bytes moving with no known total is normal — a server can decline to send a
+                // content length, and the single-chunk fallback for one that ignores Range has no
+                // total either. Show the row anyway, indeterminate, rather than hiding the whole
+                // download until a number nobody is going to send turns up.
+                val hasStreamProgress = item.streamTotalBytes > 0 || item.streamBytesDownloaded > 0
+                if (hasStreamProgress) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DownloadProgressRow(
+                        label = stringResource(LocaleR.string.download_progress_video_label),
+                        progress = if (item.streamTotalBytes > 0) {
+                            { item.streamProgress() }
+                        } else {
+                            null
+                        },
+                        valueText = remember(item) { item.streamValueText(context) },
+                    )
+                }
+
+                if (item.totalSubtitlesCount > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    DownloadProgressRow(
+                        label = stringResource(LocaleR.string.download_progress_subtitles_label),
+                        progress = { item.subtitlesProgress() },
+                        valueText = "${item.downloadedSubtitlesCount} / ${item.totalSubtitlesCount}",
+                    )
+                }
+
+                Text(
+                    text = remember(item) { item.downloadSpeedText(context) },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 10.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * @param progress `null` when the total isn't known — a server that sends no content length still
+ * transfers bytes, and a bar pinned at 0% would read as a download that never started. The
+ * indeterminate indicator says "moving, length unknown", which is the honest answer.
+ */
+@Composable
+private fun DownloadProgressRow(
+    label: String,
+    progress: (() -> Float)?,
+    valueText: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.width(72.dp),
+        )
+
+        val indicatorModifier = Modifier
+            .weight(1f)
+            .padding(horizontal = 8.dp)
+            .clip(CircleShape)
+
+        if (progress == null) {
+            LinearProgressIndicator(modifier = indicatorModifier)
+        } else {
+            LinearProgressIndicator(
+                progress = progress,
+                drawStopIndicator = {},
+                modifier = indicatorModifier,
+            )
+        }
+
+        Text(
+            text = valueText,
+            style = MaterialTheme.typography.labelSmall,
+        )
+    }
+}
+
+@Composable
+private fun DownloadItemActions(
+    state: DownloadItemState,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onStop: () -> Unit,
+    onRetry: () -> Unit,
+    onDelete: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        when (state) {
+            DownloadItemState.QUEUED -> {
+                IconAction(
+                    UiCommonR.drawable.round_stop_24,
+                    stringResource(LocaleR.string.download_action_stop_content_desc),
+                    onStop
+                )
+            }
+
+            DownloadItemState.DOWNLOADING_STREAM,
+            DownloadItemState.STREAM_COMPLETE,
+            DownloadItemState.FETCHING_SUBTITLES -> {
+                IconAction(
+                    UiCommonR.drawable.round_pause_24,
+                    stringResource(LocaleR.string.download_action_pause_content_desc),
+                    onPause
+                )
+                IconAction(
+                    UiCommonR.drawable.round_stop_24,
+                    stringResource(LocaleR.string.download_action_stop_content_desc),
+                    onStop
+                )
+            }
+
+            DownloadItemState.PAUSED -> {
+                IconAction(
+                    UiCommonR.drawable.play,
+                    stringResource(LocaleR.string.download_action_resume_content_desc),
+                    onResume
+                )
+                IconAction(
+                    UiCommonR.drawable.round_stop_24,
+                    stringResource(LocaleR.string.download_action_stop_content_desc),
+                    onStop
+                )
+            }
+
+            DownloadItemState.COMPLETED -> {
+                IconAction(
+                    UiCommonR.drawable.play_outline_circle,
+                    stringResource(LocaleR.string.download_action_open_content_desc),
+                    onOpen
+                )
+                IconAction(UiCommonR.drawable.delete_outlined, stringResource(LocaleR.string.delete), onDelete)
+            }
+
+            DownloadItemState.STOPPED,
+            DownloadItemState.FAILED -> {
+                IconAction(UiCommonR.drawable.round_refresh_24, stringResource(LocaleR.string.retry), onRetry)
+                IconAction(UiCommonR.drawable.delete_outlined, stringResource(LocaleR.string.delete), onDelete)
+            }
+        }
+    }
+}
+
+@Composable
+internal fun IconAction(
+    iconId: Int,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(onClick = onClick, modifier = modifier.size(32.dp)) {
+        Icon(
+            painter = painterResource(iconId),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(18.dp),
+        )
+    }
+}
+
+private fun DownloadItem.streamProgress(): Float {
+    if (streamTotalBytes <= 0) return 0f
+    return (streamBytesDownloaded.toFloat() / streamTotalBytes.toFloat()).coerceIn(0f, 1f)
+}
+
+private fun DownloadItem.subtitlesProgress(): Float {
+    if (totalSubtitlesCount <= 0) return 0f
+    return (downloadedSubtitlesCount.toFloat() / totalSubtitlesCount.toFloat()).coerceIn(0f, 1f)
+}
+
+/** Drops the "/ total" half when there isn't one — `"512 KB / 0 B"` reads as a download that has
+ * overshot a zero-length file rather than one whose length was never advertised. */
+private fun DownloadItem.streamValueText(context: Context): String {
+    val hasTotal = streamTotalBytes > 0
+
+    if (isHlsStream) {
+        if (!hasTotal) {
+            return context.getString(
+                LocaleR.string.download_progress_segments_only_format,
+                streamBytesDownloaded.toInt(),
+            )
+        }
+
+        return context.getString(
+            LocaleR.string.download_progress_segments_format,
+            streamBytesDownloaded.toInt(),
+            streamTotalBytes.toInt(),
+        )
+    }
+
+    val downloaded = Formatter.formatShortFileSize(context, streamBytesDownloaded)
+    if (!hasTotal) return downloaded
+
+    val total = Formatter.formatShortFileSize(context, streamTotalBytes)
+    return "$downloaded / $total"
+}
+
+/** The "Calculating…" placeholder is only for a download that has not moved a byte yet, where
+ * there is genuinely no sample to diff against. Once something has transferred, a zero rate means
+ * the transfer has stalled, and `"0 B/s"` says that more honestly than a placeholder that would
+ * never resolve. */
+private fun DownloadItem.downloadSpeedText(context: Context): String {
+    val hasTransferred = streamBytesDownloaded > 0 || downloadedSubtitlesCount > 0
+    if (downloadBytesPerSecond <= 0 && !hasTransferred) {
+        return context.getString(LocaleR.string.download_progress_speed_calculating)
+    }
+
+    val isSegments = state == DownloadItemState.DOWNLOADING_STREAM && isHlsStream
+    return if (isSegments) {
+        context.getString(LocaleR.string.download_progress_speed_segments_format, downloadBytesPerSecond)
+    } else {
+        context.getString(
+            LocaleR.string.download_progress_speed_format,
+            Formatter.formatShortFileSize(context, downloadBytesPerSecond),
+        )
+    }
+}
+
+@Composable
+private fun DownloadItem.completedSummary(): String {
+    val context = LocalContext.current
+    val totalSize = if (streamTotalBytes > 0) streamTotalBytes else streamBytesDownloaded
+    val size = Formatter.formatShortFileSize(context, totalSize)
+
+    if (totalSubtitlesCount <= 0) return size
+
+    val subtitleCount = pluralStringResource(
+        LocaleR.plurals.download_subtitles_count,
+        downloadedSubtitlesCount,
+        downloadedSubtitlesCount,
+    )
+    return "$size • $subtitleCount"
+}
+
+@Composable
+private fun DownloadItem.subtitleLabel(): String {
+    val stateLabel = if (state == DownloadItemState.FAILED && !errorMessage.isNullOrBlank()) {
+        errorMessage.orEmpty()
+    } else {
+        state.label()
+    }
+    val season = seasonNumber
+    val episode = episodeNumber
+
+    if (mediaType == MediaType.SHOW && season != null && episode != null) {
+        val episodeTag = CacheLinksFormatUtil.getFormattedTitle(season, episode)
+        return "$episodeTag • $stateLabel"
+    }
+
+    return stateLabel
+}

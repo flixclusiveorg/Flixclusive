@@ -4,7 +4,7 @@ package com.flixclusive.core.presentation.player
 
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
-import androidx.media3.common.C
+import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.dash.DashMediaSource
@@ -12,16 +12,20 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.exoplayer.source.SingleSampleMediaSource
+import androidx.media3.extractor.ExtractorsFactory
+import androidx.media3.extractor.text.SubtitleExtractor
+import androidx.media3.extractor.text.SubtitleParser
 import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
+import com.flixclusive.core.presentation.player.renderer.UnknownSubtitlesExtractor
 import com.flixclusive.core.presentation.player.util.MimeTypeParser
 import com.flixclusive.core.presentation.player.util.MimeTypeParser.toMimeType
 
 @OptIn(UnstableApi::class)
 class MediaSourceManager(
     private val dataSourceFactory: AppDataSourceFactory,
+    private val subtitleParserFactory: SubtitleParser.Factory,
 ) {
     var currentMediaSource: MediaSource? = null
 
@@ -31,25 +35,34 @@ class MediaSourceManager(
     ): MediaSource {
         val subtitleSources = subtitles.mapNotNull { createSubtitleMediaSource(it) }
 
-        val video = createStreamMediaSource(url = server.url)
+        val video = createStreamMediaSource(server)
         return MergingMediaSource(video, *subtitleSources.toTypedArray())
     }
 
-    private fun createStreamMediaSource(url: String): MediaSource {
-        val mediaItem = createMediaItem(url)
-        val dataSourceFactory = dataSourceFactory.remote
+    private fun createStreamMediaSource(server: PlayerServer): MediaSource {
+        val mediaItem = createMediaItem(server.url)
+
+        // A non-remote server is a file already on disk (SAF content:// or file://) — never an
+        // HLS/DASH manifest — so it skips URL sniffing entirely and goes straight through
+        // ProgressiveMediaSource on the local data source, which is the one that can actually
+        // open content:// (dataSourceFactory.remote is OkHttp-backed and cannot).
+        if (server.source != TrackSource.REMOTE) {
+            return ProgressiveMediaSource.Factory(dataSourceFactory.local).createMediaSource(mediaItem)
+        }
+
+        val remoteDataSourceFactory = dataSourceFactory.remote
 
         return when {
-            MimeTypeParser.isM3U8(url) -> {
-                HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            MimeTypeParser.isM3U8(server.url) -> {
+                HlsMediaSource.Factory(remoteDataSourceFactory).createMediaSource(mediaItem)
             }
 
-            url.contains(".mpd", ignoreCase = true) -> {
-                DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            server.url.contains(".mpd", ignoreCase = true) -> {
+                DashMediaSource.Factory(remoteDataSourceFactory).createMediaSource(mediaItem)
             }
 
             else -> {
-                ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+                ProgressiveMediaSource.Factory(remoteDataSourceFactory).createMediaSource(mediaItem)
             }
         }
     }
@@ -69,7 +82,7 @@ class MediaSourceManager(
 
         val subtitleMediaItem = MediaItem.SubtitleConfiguration
             .Builder(subtitle.url.toUri())
-            .setMimeType(subtitle.toMimeType())
+            .setMimeType(subtitle.mimeType ?: subtitle.toMimeType())
             .setLanguage(subtitle.label)
             .setLabel(subtitle.label)
             .build()
@@ -79,8 +92,28 @@ class MediaSourceManager(
             else -> dataSourceFactory.local
         }
 
-        return SingleSampleMediaSource
-            .Factory(dataSourceFactory)
-            .createMediaSource(subtitleMediaItem, C.TIME_UNSET)
+        val format = Format
+            .Builder()
+            .setSampleMimeType(subtitleMediaItem.mimeType)
+            .setLanguage(subtitleMediaItem.language)
+            .setSelectionFlags(subtitleMediaItem.selectionFlags)
+            .setRoleFlags(subtitleMediaItem.roleFlags)
+            .setLabel(subtitleMediaItem.label)
+            .setId(subtitleMediaItem.id)
+            .build()
+
+        val extractorsFactory = ExtractorsFactory {
+            arrayOf(
+                if (subtitleParserFactory.supportsFormat(format)) {
+                    SubtitleExtractor(subtitleParserFactory.create(format), format)
+                } else {
+                    UnknownSubtitlesExtractor(format)
+                }
+            )
+        }
+
+        return ProgressiveMediaSource
+            .Factory(dataSourceFactory, extractorsFactory)
+            .createMediaSource(MediaItem.fromUri(subtitleMediaItem.uri))
     }
 }

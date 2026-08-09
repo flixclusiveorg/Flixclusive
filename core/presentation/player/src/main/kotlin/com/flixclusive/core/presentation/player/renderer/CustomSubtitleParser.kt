@@ -3,22 +3,15 @@ package com.flixclusive.core.presentation.player.renderer
 import androidx.annotation.OptIn
 import androidx.compose.ui.util.fastMap
 import androidx.media3.common.Format
-import androidx.media3.common.MimeTypes
 import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
-import androidx.media3.extractor.text.dvb.DvbParser
-import androidx.media3.extractor.text.pgs.PgsParser
 import androidx.media3.extractor.text.ssa.SsaParser
-import androidx.media3.extractor.text.subrip.SubripParser
-import androidx.media3.extractor.text.ttml.TtmlParser
-import androidx.media3.extractor.text.tx3g.Tx3gParser
-import androidx.media3.extractor.text.webvtt.Mp4WebvttParser
-import androidx.media3.extractor.text.webvtt.WebvttParser
 import com.flixclusive.core.presentation.player.CuesProvider
 import com.flixclusive.core.presentation.player.model.CueWithTiming.Companion.toCue
+import com.flixclusive.core.presentation.player.util.SubtitleFormatSniffer
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import org.mozilla.universalchardet.UniversalDetector
@@ -71,74 +64,15 @@ internal class CustomSubtitleParser(
     }
 
     /**
-     * This way we read the subtitle file and decide what decoder to use instead of relying fully on mimetype
+     * This way we read the subtitle file and decide what decoder to use instead of relying fully on mimetype.
      *
-     * First we remove all invisible characters at the start, this is an issue in some subtitle files:
-     * - Cntrl is control characters: https://en.wikipedia.org/wiki/Unicode_control_characters
-     * - Cf is formatting characters: https://www.compart.com/en/unicode/category/Cf
+     * Detection itself lives in [SubtitleFormatSniffer], shared with [com.flixclusive.core.presentation.player.util.MimeTypeParser]'s
+     * pre-playback guess.
      * */
     private fun getSubtitleParser(data: String): SubtitleParser? {
-        val controlCharsRegex = Regex("""[\p{Cntrl}\p{Cf}]""")
-        val trimmedText = data.trimStart {
-            it.isWhitespace() || controlCharsRegex.matches(it.toString())
-        }
-
-        val subtitleParser =
-            when {
-                trimmedText.isWebVtt() -> {
-                    WebvttParser()
-                }
-
-                trimmedText.isTtml() -> {
-                    TtmlParser()
-                }
-
-                trimmedText.isSsa() -> {
-                    SsaParser(fallbackFormat?.initializationData)
-                }
-
-                trimmedText.isSrt() -> {
-                    SubripParser()
-                }
-
-                fallbackFormat != null -> {
-                    when (fallbackFormat.sampleMimeType) {
-                        MimeTypes.TEXT_VTT -> WebvttParser()
-
-                        MimeTypes.TEXT_SSA -> SsaParser(fallbackFormat.initializationData)
-
-                        MimeTypes.APPLICATION_MP4VTT -> Mp4WebvttParser()
-
-                        MimeTypes.APPLICATION_TTML -> TtmlParser()
-
-                        MimeTypes.APPLICATION_SUBRIP -> SubripParser()
-
-                        MimeTypes.APPLICATION_TX3G -> Tx3gParser(fallbackFormat.initializationData)
-
-                        MimeTypes.APPLICATION_DVBSUBS -> DvbParser(fallbackFormat.initializationData)
-
-                        MimeTypes.APPLICATION_PGS -> PgsParser()
-
-                        // TODO: These decoders are not converted to parsers yet
-//                            MimeTypes.APPLICATION_CEA608, MimeTypes.APPLICATION_MP4CEA608 -> Cea608Decoder(
-//                                mimeType,
-//                                fallbackFormat.accessibilityChannel,
-//                                Cea608Decoder.MIN_DATA_CHANNEL_TIMEOUT_MS
-//                            )
-//                            MimeTypes.APPLICATION_CEA708 -> Cea708Decoder(
-//                                fallbackFormat.accessibilityChannel,
-//                                fallbackFormat.initializationData
-//                            )
-                        else -> null
-                    }
-                }
-
-                else -> {
-                    null
-                }
-            }
-
-        return subtitleParser
+        val trimmedText = SubtitleFormatSniffer.trimInvisible(data)
+        val mimeType = SubtitleFormatSniffer.sniff(trimmedText) ?: fallbackFormat?.sampleMimeType
+        return SubtitleFormatSniffer.toParser(mimeType, fallbackFormat?.initializationData)
     }
 
     override fun parse(
@@ -150,8 +84,6 @@ internal class CustomSubtitleParser(
     ) {
         val customOutput =
             Consumer<CuesWithTiming> { data ->
-                val currentOffset = cuesProvider.offset
-
                 val updatedCues = data.cues.fastMap { cue ->
                     // See https://github.com/google/ExoPlayer/issues/7934
 
@@ -177,7 +109,7 @@ internal class CustomSubtitleParser(
                         // cues =
                         updatedCues,
                         // startTimeUs =
-                        data.startTimeUs + currentOffset.times(1000),
+                        data.startTimeUs,
                         // durationUs =
                         data.durationUs,
                     )
@@ -277,42 +209,6 @@ internal class CustomSubtitleParser(
             return trimStart()
                 .trim('\uFEFF', '\u200B')
                 .replace(regex, " ")
-        }
-
-        /**
-         * Check if the subtitle string is a WebVTT file
-         * We only check the first 10 characters to avoid issues with BOM or invisible characters
-         * at the start of the file.
-         * */
-        private fun String.isWebVtt(): Boolean {
-            return substring(0, 10).contains("WEBVTT", ignoreCase = true)
-        }
-
-        /**
-         * Check if the subtitle string is a TTML file
-         * We check if it starts with the XML declaration.
-         * TTML files are XML files, so they should start with this declaration.
-         * */
-        private fun String.isTtml(): Boolean {
-            return startsWith("<?xml version=\"", ignoreCase = true)
-        }
-
-        /**
-         * Check if the subtitle string is an SSA file
-         * We check if it starts with the [Script Info] header or Title:
-         * SSA files usually start with one of these lines.
-         * */
-        private fun String.isSsa(): Boolean {
-            return startsWith("[Script Info]", ignoreCase = true) ||
-                startsWith("Title:", ignoreCase = true)
-        }
-
-        /**
-         * Check if the subtitle string is an SRT file
-         * We check if it starts with "1", as SRT files start with the first subtitle number.
-         * */
-        private fun String.isSrt(): Boolean {
-            return startsWith("1", ignoreCase = true)
         }
     }
 }

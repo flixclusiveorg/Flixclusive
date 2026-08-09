@@ -1,15 +1,30 @@
 package com.flixclusive.domain.downloads.di
 
 import com.flixclusive.domain.downloads.controller.DownloadServiceController
+import com.flixclusive.domain.downloads.controller.MediaDownloadController
+import com.flixclusive.domain.downloads.controller.MediaDownloadServiceController
 import com.flixclusive.domain.downloads.controller.impl.DownloadServiceControllerImpl
+import com.flixclusive.domain.downloads.controller.impl.MediaDownloadControllerImpl
+import com.flixclusive.domain.downloads.controller.impl.MediaDownloadServiceControllerImpl
 import com.flixclusive.domain.downloads.usecase.CancelDownloadUseCase
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
+import com.flixclusive.domain.downloads.usecase.GetCompletedDownloadFileUseCase
+import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
+import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadBatchUseCase
+import com.flixclusive.domain.downloads.usecase.QueueMediaDownloadUseCase
+import com.flixclusive.domain.downloads.usecase.ResolveDownloadableStreamUseCase
 import com.flixclusive.domain.downloads.usecase.impl.CancelDownloadUseCaseImpl
 import com.flixclusive.domain.downloads.usecase.impl.DownloadFileUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.GetCompletedDownloadFileUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.GetDownloadDirectoryUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.QueueMediaDownloadBatchUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.QueueMediaDownloadUseCaseImpl
+import com.flixclusive.domain.downloads.usecase.impl.ResolveDownloadableStreamUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -22,4 +37,34 @@ internal abstract class DomainDownloadsModule {
 
     @Binds
     abstract fun bindCancelDownloadUseCase(impl: CancelDownloadUseCaseImpl): CancelDownloadUseCase
+
+    @Binds
+    abstract fun bindGetDownloadDirectoryUseCase(impl: GetDownloadDirectoryUseCaseImpl): GetDownloadDirectoryUseCase
+
+    @Binds
+    abstract fun bindGetCompletedDownloadFileUseCase(
+        impl: GetCompletedDownloadFileUseCaseImpl
+    ): GetCompletedDownloadFileUseCase
+
+    @Binds
+    abstract fun bindResolveDownloadableStreamUseCase(
+        impl: ResolveDownloadableStreamUseCaseImpl
+    ): ResolveDownloadableStreamUseCase
+
+    @Binds
+    abstract fun bindQueueMediaDownloadUseCase(impl: QueueMediaDownloadUseCaseImpl): QueueMediaDownloadUseCase
+
+    @Binds
+    abstract fun bindQueueMediaDownloadBatchUseCase(
+        impl: QueueMediaDownloadBatchUseCaseImpl
+    ): QueueMediaDownloadBatchUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindMediaDownloadController(impl: MediaDownloadControllerImpl): MediaDownloadController
+
+    @Binds
+    abstract fun bindMediaDownloadServiceController(
+        impl: MediaDownloadServiceControllerImpl
+    ): MediaDownloadServiceController
 }

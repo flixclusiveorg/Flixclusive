@@ -24,9 +24,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -49,11 +51,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -69,10 +74,12 @@ import com.flixclusive.core.presentation.mobile.extensions.isWidthCompact
 import com.flixclusive.core.presentation.mobile.extensions.isWidthMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.feature.mobile.media.MediaDownloadStatus
 import com.flixclusive.feature.mobile.media.R
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.MediaReleaseStatus
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -81,17 +88,18 @@ internal fun HeaderButtons(
     metadata: MediaMetadata,
     watchProgress: WatchProgress?,
     isInLibrary: Async<Boolean>,
+    downloadStatus: () -> Async<MediaDownloadStatus>,
     onAddToLibrary: () -> Unit,
     onPlay: () -> Unit,
     onRetryFetchLists: () -> Unit,
+    onToggleDownload: () -> Unit,
     modifier: Modifier = Modifier,
-    isDownloaded: Boolean = false, // TODO: Implement download functionality
-    onToggleDownload: () -> Unit = {}, // TODO: Implement download functionality
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isCompactOrMedium = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
 
     var showLibraryWarning by remember { mutableStateOf<UiText?>(null) }
+    var showDownloadWarning by remember { mutableStateOf<UiText?>(null) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -163,14 +171,42 @@ internal fun HeaderButtons(
         }
 
         if (metadata.releaseStatus != MediaReleaseStatus.COMING_SOON) {
-            ExtraButton(
-                inactiveLabel = LocaleR.string.label_download,
-                activeLabel = R.string.downloaded,
-                inactiveDrawable = UiCommonR.drawable.download,
-                activeDrawable = UiCommonR.drawable.download_done,
-                state = isDownloaded,
-                onClick = onToggleDownload,
-            )
+            AsyncAnimatedContent(
+                targetState = downloadStatus(),
+                loadingContent = {
+                    GradientCircularProgressIndicator(
+                        size = 28.dp,
+                        thickness = 3.dp,
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary,
+                        ),
+                        modifier = Modifier
+                            .padding(horizontal = 13.dp)
+                    )
+                },
+                errorContent = {
+                    ExtraButton(
+                        inactiveLabel = R.string.failed_to_load_download_status,
+                        activeLabel = R.string.failed_to_load_download_status,
+                        inactiveDrawable = UiCommonR.drawable.warning_outline,
+                        activeDrawable = UiCommonR.drawable.warning_outline,
+                        state = false,
+                        onClick = {
+                            showDownloadWarning = (downloadStatus() as? Async.Failure)?.message
+                        },
+                    )
+                },
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) togetherWith
+                        fadeOut(animationSpec = tween(300))
+                },
+            ) { data ->
+                DownloadButton(
+                    status = data,
+                    onClick = onToggleDownload,
+                )
+            }
         }
 
         if (showLibraryWarning != null) {
@@ -182,8 +218,154 @@ internal fun HeaderButtons(
                 message = showLibraryWarning!!.asString(LocalContext.current),
             )
         }
+
+        if (showDownloadWarning != null) {
+            TextAlertDialog(
+                confirmButtonLabel = stringResource(LocaleR.string.retry),
+                onConfirm = onToggleDownload,
+                onDismiss = { showDownloadWarning = null },
+                title = stringResource(R.string.failed_to_load_download_status),
+                message = showDownloadWarning!!.asString(LocalContext.current),
+            )
+        }
     }
 }
+
+@Composable
+private fun DownloadButton(
+    status: () -> MediaDownloadStatus,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val resources = LocalResources.current
+    val state = status().state
+    val isNotDownloaded = state == MediaDownloadStatus.DownloadState.NOT_DOWNLOADED
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val isCompactOrMedium = windowSizeClass.isWidthCompact || windowSizeClass.isWidthMedium
+
+    val label = when (state) {
+        MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> resources.getString(LocaleR.string.label_download)
+        MediaDownloadStatus.DownloadState.IN_PROGRESS ->
+            resources.getString(LocaleR.string.download_action_stop_content_desc)
+        MediaDownloadStatus.DownloadState.DOWNLOADED -> resources.getString(R.string.downloaded)
+    }
+
+    val drawable = when (state) {
+        MediaDownloadStatus.DownloadState.NOT_DOWNLOADED -> UiCommonR.drawable.download
+        MediaDownloadStatus.DownloadState.IN_PROGRESS -> UiCommonR.drawable.round_stop_24
+        MediaDownloadStatus.DownloadState.DOWNLOADED -> UiCommonR.drawable.download_done
+    }
+
+    val tint = if (isNotDownloaded) {
+        MaterialTheme.colorScheme.onSurface.copy(0.6F)
+    } else {
+        LocalContentColor.current
+    }
+
+    PlainTooltipBox(description = label) {
+        if (!isCompactOrMedium) {
+            val colors = if (isNotDownloaded) {
+                ButtonDefaults.outlinedButtonColors()
+            } else {
+                ButtonDefaults.buttonColors()
+            }
+
+            val border = if (isNotDownloaded) {
+                BorderStroke(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F)
+                )
+            } else {
+                null
+            }
+
+            val isEnabled = state != MediaDownloadStatus.DownloadState.DOWNLOADED
+
+            Button(
+                onClick = onClick,
+                shape = MaterialTheme.shapes.small,
+                colors = colors,
+                border = border,
+                enabled = isEnabled,
+                contentPadding = PaddingValues(vertical = 10.dp, horizontal = 15.dp)
+            ) {
+                DownloadButtonIcon(
+                    status = status,
+                    drawable = drawable,
+                    label = label,
+                    tint = tint,
+                    dp = 18.dp,
+                )
+            }
+        } else {
+            IconButton(
+                onClick = onClick,
+                enabled = state != MediaDownloadStatus.DownloadState.DOWNLOADED,
+                modifier = Modifier.padding(3.dp),
+            ) {
+                DownloadButtonIcon(
+                    status = status,
+                    drawable = drawable,
+                    label = label,
+                    tint = tint,
+                    dp = 30.dp,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The download icon, plus — while [MediaDownloadStatus.DownloadState.IN_PROGRESS] — a determinate
+ * ring drawn outside it reporting [MediaDownloadStatus.progress], so the icon itself stays fully
+ * legible instead of being covered by the ring.
+ */
+@Composable
+private fun DownloadButtonIcon(
+    status: () -> MediaDownloadStatus,
+    drawable: Int,
+    label: String,
+    tint: Color,
+    dp: Dp,
+    modifier: Modifier = Modifier,
+) {
+    if (status().state != MediaDownloadStatus.DownloadState.IN_PROGRESS) {
+        AdaptiveIcon(
+            painter = painterResource(drawable),
+            contentDescription = label,
+            tint = tint,
+            dp = dp,
+        )
+        return
+    }
+
+    Box(
+        modifier = Modifier.size(dp + DownloadProgressRingPadding * 2),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (status().isProgressKnown) {
+            CircularProgressIndicator(
+                progress = { status().progress },
+                strokeWidth = 2.dp,
+                modifier = Modifier.matchParentSize(),
+            )
+        } else {
+            CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
+        AdaptiveIcon(
+            painter = painterResource(drawable),
+            contentDescription = label,
+            tint = tint,
+            dp = dp,
+        )
+    }
+}
+
+private val DownloadProgressRingPadding = 6.dp
 
 @Composable
 private fun PlayButton(
@@ -472,11 +654,12 @@ private fun HeaderButtonsPreview() {
     val metadata = remember { DummyDataForPreview.getMovie() }
     var isInLibrary by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf<WatchProgress?>(null) }
+    var downloadStatus by remember { mutableStateOf(MediaDownloadStatus.NotDownloaded) }
 
     LaunchedEffect(true) {
-        delay(1500)
+        delay(1500.milliseconds)
         isInLibrary = true
-        delay(1500)
+        delay(1500.milliseconds)
         progress = MovieProgress(
             mediaId = metadata.id,
             ownerId = "preview-user",
@@ -493,8 +676,10 @@ private fun HeaderButtonsPreview() {
                     metadata = metadata,
                     watchProgress = progress,
                     isInLibrary = Async.Loading,
+                    downloadStatus = { Async.Loading },
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onRetryFetchLists = {},
+                    onToggleDownload = {},
                     onPlay = {},
                 )
 
@@ -502,8 +687,10 @@ private fun HeaderButtonsPreview() {
                     metadata = metadata,
                     watchProgress = progress,
                     isInLibrary = Async.Failure(UiText.from("Failed to load library status")),
+                    downloadStatus = { Async.Failure(UiText.from("Failed to load download status")) },
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onRetryFetchLists = {},
+                    onToggleDownload = {},
                     onPlay = {},
                 )
 
@@ -521,8 +708,17 @@ private fun HeaderButtonsPreview() {
                         )
                     },
                     isInLibrary = Async.Success(isInLibrary),
+                    downloadStatus = { Async.Success(downloadStatus) },
                     onAddToLibrary = { isInLibrary = !isInLibrary },
                     onRetryFetchLists = {},
+                    onToggleDownload = {
+                        downloadStatus = when (downloadStatus.state) {
+                            MediaDownloadStatus.DownloadState.NOT_DOWNLOADED ->
+                                MediaDownloadStatus(MediaDownloadStatus.DownloadState.IN_PROGRESS, progress = 0.4f)
+                            MediaDownloadStatus.DownloadState.IN_PROGRESS -> MediaDownloadStatus.Downloaded
+                            MediaDownloadStatus.DownloadState.DOWNLOADED -> MediaDownloadStatus.NotDownloaded
+                        }
+                    },
                     onPlay = {},
                 )
             }

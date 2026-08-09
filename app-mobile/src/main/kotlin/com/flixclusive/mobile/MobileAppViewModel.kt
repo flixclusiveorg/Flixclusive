@@ -15,6 +15,7 @@ import com.flixclusive.core.network.monitor.NetworkMonitor
 import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.webview.WebViewDriverManager
+import com.flixclusive.domain.downloads.controller.MediaDownloadController
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ProviderResult
 import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
@@ -52,6 +53,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val appDispatchers: AppDispatchers,
     private val playerCache: PlayerCache,
+    private val mediaDownloadController: MediaDownloadController,
     private val initializeProviders: InitializeProvidersUseCase,
     private val checkOutdatedProviders: CheckOutdatedProviderUseCase,
     private val updateProvider: UpdateProviderUseCase,
@@ -194,6 +196,16 @@ internal class MobileAppViewModel @Inject constructor(
                 it.copy(lastSeenChangelogs = version)
             }
         }
+    }
+
+    /**
+     * Restarts any download the app was force-closed in the middle of. Driven from the activity's
+     * STARTED lifecycle rather than from here or the application, because the sweep ends up
+     * starting a foreground service — which Android 12+ only permits while the app is actually in
+     * the foreground.
+     */
+    fun onResumeInterruptedDownloads() {
+        mediaDownloadController.resumeInterrupted()
     }
 
     fun onReleasePlayerCache() {
