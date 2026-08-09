@@ -132,26 +132,6 @@ internal class MediaLinksBottomSheetViewModel @Inject constructor(
             initialValue = null,
         )
 
-    /**
-     * The download to start playing straight away, or null when the sheet should wait for a
-     * provider.
-     *
-     * Combined against the preferences flow itself rather than read off [playerPrefs]: that one is
-     * seeded with `PlayerPreferences()` until DataStore answers, and both flags default to on — so
-     * a sheet that resolved its download first would auto-play it for someone who had turned the
-     * preference off. `combine` withholds a value until the real preferences have arrived.
-     */
-    val localAutoPlay: StateFlow<LocalLink?> = combine(
-        localLink,
-        dataStoreManager.getUserPrefsAsFlow<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY),
-    ) { local, prefs ->
-        local?.takeIf { prefs.isAutoSelectingServer && prefs.isPreferringLocalPlayback }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null,
-    )
-
     /** What the sheet lists: the downloaded file first, then everything the providers found. */
     val links: StateFlow<List<CachedMediaLink>> = combine(
         localLink,

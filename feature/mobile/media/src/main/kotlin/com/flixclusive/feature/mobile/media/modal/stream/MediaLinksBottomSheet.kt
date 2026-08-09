@@ -146,7 +146,6 @@ internal fun MediaLinksBottomSheet(
     val links by viewModel.links.collectAsStateWithLifecycle()
     val providerLinks by viewModel.providerLinks.collectAsStateWithLifecycle()
     val localLink by viewModel.localLink.collectAsStateWithLifecycle()
-    val localAutoPlay by viewModel.localAutoPlay.collectAsStateWithLifecycle()
 
     val activity = LocalContext.current.getActivity<ComponentActivity>()
     val window = activity.window
@@ -159,38 +158,32 @@ internal fun MediaLinksBottomSheet(
         }
     }
 
-    // Deliberately not waiting on LoadLinksState: it only reaches Success once a provider has
-    // answered, which never happens with no connection — the one situation a download exists for.
-    LaunchedEffect(localAutoPlay) {
-        val local = localAutoPlay ?: return@LaunchedEffect
-
-        navigator.showPlayerSplashScreen(
-            PlaybackRequest.FromDownload(downloadItemId = local.downloadItemId),
-        )
-    }
-
-    LaunchedEffect(viewModel, playerPrefs, localAutoPlay) {
+    LaunchedEffect(viewModel, playerPrefs) {
         combine(
             viewModel.uiState.map { it.loadLinksState }.distinctUntilChanged(),
-            viewModel.providerLinks
-        ) { state, links ->
+            viewModel.providerLinks,
+            viewModel.localLink
+        ) { state, remoteLinks, localLink ->
             playerPrefs.isAutoSelectingServer &&
-                // The effect above is taking this one; racing it would send the same tap to a
-                // provider stream a second later.
-                localAutoPlay == null &&
                 !state.isLoading &&
-                links.hasPlayableLinks &&
-                state.isSuccess
+                ((remoteLinks.hasPlayableLinks && state.isSuccess)
+                    || localLink != null)
         }.filter { it }
             .distinctUntilChanged()
             .debounce(1000L.milliseconds) // Debounce to prevent rapid navigation if links change quickly
             .collectLatest {
-                navigator.showPlayerSplashScreen(
-                    PlaybackRequest.FromProvider(
-                        media = uiState.metadata,
-                        episode = uiState.episode,
-                    ),
-                )
+                if (playerPrefs.isPreferringLocalPlayback && localLink != null) {
+                    navigator.showPlayerSplashScreen(
+                        PlaybackRequest.FromDownload(downloadItemId = localLink!!.downloadItemId),
+                    )
+                } else if (uiState.loadLinksState.isSuccess) {
+                    navigator.showPlayerSplashScreen(
+                        PlaybackRequest.FromProvider(
+                            media = uiState.metadata,
+                            episode = uiState.episode,
+                        ),
+                    )
+                }
             }
     }
 
@@ -213,10 +206,9 @@ internal fun MediaLinksBottomSheet(
             )
         },
         onPlayLink = { link ->
-            val local = localLink
-            if (link.isLocalDownload && local != null) {
+            if (link.isLocalDownload && localLink != null) {
                 navigator.showPlayerSplashScreen(
-                    PlaybackRequest.FromDownload(downloadItemId = local.downloadItemId),
+                    PlaybackRequest.FromDownload(downloadItemId = localLink!!.downloadItemId),
                 )
             } else {
                 navigator.showPlayerSplashScreen(
