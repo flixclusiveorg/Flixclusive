@@ -235,6 +235,7 @@ internal fun HeaderButtons(
 private fun DownloadButton(
     status: () -> MediaDownloadStatus,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val resources = LocalResources.current
     val state = status().state
@@ -327,6 +328,7 @@ private fun DownloadButtonIcon(
     label: String,
     tint: Color,
     dp: Dp,
+    modifier: Modifier = Modifier,
 ) {
     if (status().state != MediaDownloadStatus.DownloadState.IN_PROGRESS) {
         AdaptiveIcon(

@@ -347,51 +347,6 @@ private fun DownloadsEntriesList(
     }
 }
 
-private fun DownloadListEntry.key(): String = when (this) {
-    is DownloadListEntry.Single -> "single-${item.id}"
-    is DownloadListEntry.Batch -> "batch-$mediaId-$seasonNumber"
-}
-
-@Composable
-private fun DownloadStateFilter.label(): String = when (this) {
-    DownloadStateFilter.QUEUED -> stringResource(LocaleR.string.download_state_queued)
-    DownloadStateFilter.DOWNLOADING -> stringResource(LocaleR.string.download_state_downloading)
-    DownloadStateFilter.PAUSED -> stringResource(LocaleR.string.download_state_paused)
-    DownloadStateFilter.COMPLETED -> stringResource(LocaleR.string.download_state_completed)
-    DownloadStateFilter.STOPPED -> stringResource(LocaleR.string.download_state_stopped)
-    DownloadStateFilter.FAILED -> stringResource(LocaleR.string.download_state_failed)
-}
-
-@Composable
-private fun MediaType.label(): String = when (this) {
-    MediaType.MOVIE -> stringResource(LocaleR.string.download_type_movie)
-    MediaType.SHOW -> stringResource(LocaleR.string.download_type_show)
-}
-
-@Composable
-internal fun downloadStateIcon(state: DownloadItemState): Int = when (state) {
-    DownloadItemState.QUEUED -> UiCommonR.drawable.time_circle_outlined
-    DownloadItemState.DOWNLOADING_STREAM,
-    DownloadItemState.STREAM_COMPLETE,
-    DownloadItemState.FETCHING_SUBTITLES -> UiCommonR.drawable.download
-    DownloadItemState.PAUSED -> UiCommonR.drawable.time_circle_outlined
-    DownloadItemState.COMPLETED -> UiCommonR.drawable.check
-    DownloadItemState.STOPPED -> UiCommonR.drawable.outlined_trash
-    DownloadItemState.FAILED -> UiCommonR.drawable.round_error_outline_24
-}
-
-@Composable
-internal fun DownloadItemState.label(): String = when (this) {
-    DownloadItemState.QUEUED -> stringResource(LocaleR.string.download_state_queued)
-    DownloadItemState.DOWNLOADING_STREAM,
-    DownloadItemState.STREAM_COMPLETE -> stringResource(LocaleR.string.download_state_downloading)
-    DownloadItemState.FETCHING_SUBTITLES -> stringResource(LocaleR.string.download_state_fetching_subtitles)
-    DownloadItemState.PAUSED -> stringResource(LocaleR.string.download_state_paused)
-    DownloadItemState.COMPLETED -> stringResource(LocaleR.string.download_state_completed)
-    DownloadItemState.STOPPED -> stringResource(LocaleR.string.download_state_stopped)
-    DownloadItemState.FAILED -> stringResource(LocaleR.string.download_state_failed)
-}
-
 @Preview
 @Composable
 private fun DownloadsTweakScreenPreview() {

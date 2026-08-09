@@ -68,7 +68,7 @@ internal fun DownloadItemCard(
             Row(verticalAlignment = Alignment.Top) {
                 Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
                     Icon(
-                        painter = painterResource(downloadStateIcon(state)),
+                        painter = painterResource(state.iconRes),
                         contentDescription = null,
                         modifier = Modifier
                             .size(20.dp)
@@ -209,8 +209,9 @@ private fun DownloadItemActions(
     onRetry: () -> Unit,
     onDelete: () -> Unit,
     onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
         when (state) {
             DownloadItemState.QUEUED -> {
                 IconAction(
@@ -267,12 +268,13 @@ private fun DownloadItemActions(
 }
 
 @Composable
-private fun IconAction(
+internal fun IconAction(
     iconId: Int,
     contentDescription: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    IconButton(onClick = onClick, modifier = Modifier.size(32.dp)) {
+    IconButton(onClick = onClick, modifier = modifier.size(32.dp)) {
         Icon(
             painter = painterResource(iconId),
             contentDescription = contentDescription,

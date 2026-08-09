@@ -86,23 +86,19 @@ internal fun DownloadBatchGroup(
                     }
 
                     if (canPauseBatch) {
-                        IconButton(onClick = onPauseBatch, modifier = Modifier.size(32.dp)) {
-                            Icon(
-                                painter = painterResource(UiCommonR.drawable.round_pause_24),
-                                contentDescription = stringResource(LocaleR.string.download_action_pause_content_desc),
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
+                        IconAction(
+                            iconId = UiCommonR.drawable.round_pause_24,
+                            contentDescription = stringResource(LocaleR.string.download_action_pause_content_desc),
+                            onClick = onPauseBatch,
+                        )
                     }
 
                     if (canStopBatch) {
-                        IconButton(onClick = onStopBatch, modifier = Modifier.size(32.dp)) {
-                            Icon(
-                                painter = painterResource(UiCommonR.drawable.round_stop_24),
-                                contentDescription = stringResource(LocaleR.string.download_action_stop_content_desc),
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
+                        IconAction(
+                            iconId = UiCommonR.drawable.round_stop_24,
+                            contentDescription = stringResource(LocaleR.string.download_action_stop_content_desc),
+                            onClick = onStopBatch,
+                        )
                     }
 
                     IconButton(onClick = onToggleExpand, modifier = Modifier.size(32.dp)) {
