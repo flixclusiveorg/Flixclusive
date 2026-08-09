@@ -1,11 +1,9 @@
 package com.flixclusive.domain.downloads.service
 
-import android.app.Notification
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -15,6 +13,8 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
+import com.flixclusive.data.downloads.service.safeStartForeground
+import com.flixclusive.data.downloads.service.stopForegroundCompat
 import com.flixclusive.domain.downloads.controller.MediaDownloadController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -241,22 +241,6 @@ class MediaDownloadService : Service() {
     }
 
     @Suppress("DEPRECATION")
-    private fun stopForegroundCompat() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            stopForeground(true)
-        }
-    }
-
-    private fun safeStartForeground(id: Int, notification: Notification) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else {
-            startForeground(id, notification)
-        }
-    }
-
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
