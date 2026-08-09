@@ -115,6 +115,21 @@ private fun getDownloadTweaks(
                     onUpdatePreferences { it.copy(downloadLinkSortDirection = direction) }
                 },
             ),
+            TweakUI.ListTweak(
+                title = stringResource(LocaleR.string.download_concurrency_limit_title),
+                description = { resources.getString(LocaleR.string.download_concurrency_limit_desc) },
+                value = { dataPreferences().downloadConcurrencyLimit },
+                options = persistentMapOf(
+                    1 to "1",
+                    2 to "2",
+                    3 to "3",
+                    4 to "4",
+                    5 to "5",
+                ),
+                onTweaked = { limit ->
+                    onUpdatePreferences { it.copy(downloadConcurrencyLimit = limit) }
+                },
+            ),
         )
     )
 }

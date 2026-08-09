@@ -166,8 +166,10 @@ internal fun MediaLinksBottomSheet(
         ) { state, remoteLinks, localLink ->
             playerPrefs.isAutoSelectingServer &&
                 !state.isLoading &&
-                ((remoteLinks.hasPlayableLinks && state.isSuccess)
-                    || localLink != null)
+                (
+                    (remoteLinks.hasPlayableLinks && state.isSuccess) ||
+                        localLink != null
+                )
         }.filter { it }
             .distinctUntilChanged()
             .debounce(1000L.milliseconds) // Debounce to prevent rapid navigation if links change quickly

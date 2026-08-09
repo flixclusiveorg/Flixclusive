@@ -300,6 +300,8 @@
     <string name="download_link_sort_direction_desc">Which end to prefer: the largest/best-matching file, or when nothing matches exactly, which way to fall back.</string>
     <string name="download_link_sort_direction_highest_first">Highest first</string>
     <string name="download_link_sort_direction_lowest_first">Lowest first</string>
+    <string name="download_concurrency_limit_title">Simultaneous downloads</string>
+    <string name="download_concurrency_limit_desc">How many downloads may transfer at once. Anything beyond the limit stays queued, oldest first, until a slot frees up.</string>
     <string name="links_test_done_format">Test complete: %1$d alive, %2$d dead</string>
     <string name="testing_link_format">Testing link %1$d of %2$d…</string>
     <string name="change_avatar_content_desc">Change user\'s avatar</string>
