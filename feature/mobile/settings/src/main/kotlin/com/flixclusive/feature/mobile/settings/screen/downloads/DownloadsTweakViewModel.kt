@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -54,27 +56,39 @@ internal class DownloadsTweakViewModel @Inject constructor(
     private val _event = MutableSharedFlow<DownloadsTweakEvent>()
     val event = _event.asSharedFlow()
 
-    val entries = combine(
-        mediaDownloadRepository.observeAllItems(),
-        debouncedQuery,
-        _stateFilters,
-        _typeFilters,
-    ) { items, query, stateFilters, typeFilters ->
-        val allowedStates = stateFilters.flatMap { it.states }.toSet()
+    /** Bumped by [onRetry] to resubscribe after a failure. The catch below terminates the flow, so
+     * without a fresh subscription the error state would be permanent and the retry a dead end. */
+    private val retryTrigger = MutableStateFlow(0)
 
-        items
-            .filter { allowedStates.isEmpty() || it.state in allowedStates }
-            .filter { typeFilters.isEmpty() || it.mediaType in typeFilters }
-            .filter { query.isBlank() || it.mediaTitle.contains(query, ignoreCase = true) }
-            .let(::groupIntoEntries)
-    }.map { Async.Success(it) as Async<List<DownloadListEntry>> }
-        .onStart { emit(Async.Loading) }
-        .catch { emit(Async.Failure(it)) }
-        .stateIn(
+    val entries = retryTrigger
+        .flatMapLatest {
+            combine(
+                mediaDownloadRepository.observeAllItems(),
+                debouncedQuery,
+                _stateFilters,
+                _typeFilters,
+            ) { items, query, stateFilters, typeFilters ->
+                val allowedStates = stateFilters.flatMap { it.states }.toSet()
+
+                items
+                    .filter { allowedStates.isEmpty() || it.state in allowedStates }
+                    .filter { typeFilters.isEmpty() || it.mediaType in typeFilters }
+                    .filter { query.isBlank() || it.mediaTitle.contains(query, ignoreCase = true) }
+                    .let(::groupIntoEntries)
+            }.map { Async.Success(it) as Async<List<DownloadListEntry>> }
+                .onStart { emit(Async.Loading) }
+                .catch { emit(Async.Failure(it)) }
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = Async.Loading,
         )
+
+    /** Resubscribes the entries flow after a failure. Distinct from [onRetry], which retries one
+     * download rather than the list itself. */
+    fun onReloadList() {
+        retryTrigger.update { it + 1 }
+    }
 
     fun onQueryChange(value: String) {
         _query.value = value

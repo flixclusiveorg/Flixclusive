@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -54,6 +52,7 @@ import com.flixclusive.core.navigation.navargs.PlaybackRequest
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.navigation.navigator.NavigateToMediaLinksBottomSheet
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.LoadingScreen
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
@@ -109,6 +108,7 @@ internal fun DownloadsTweakScreen(
         onOpen = viewModel::onOpen,
         onPauseBatch = viewModel::onPauseBatch,
         onStopBatch = viewModel::onStopBatch,
+        onReloadList = viewModel::onReloadList,
     )
 }
 
@@ -131,6 +131,7 @@ private fun DownloadsTweakScreenContent(
     onOpen: (DownloadItem) -> Unit,
     onPauseBatch: (String, Int) -> Unit,
     onStopBatch: (String, Int) -> Unit,
+    onReloadList: () -> Unit,
 ) {
     var isSearching by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -176,6 +177,7 @@ private fun DownloadsTweakScreenContent(
                 onOpen = onOpen,
                 onPauseBatch = onPauseBatch,
                 onStopBatch = onStopBatch,
+                onReloadList = onReloadList,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -257,6 +259,7 @@ private fun DownloadsEntriesList(
     onOpen: (DownloadItem) -> Unit,
     onPauseBatch: (String, Int) -> Unit,
     onStopBatch: (String, Int) -> Unit,
+    onReloadList: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Deleting takes the downloaded files with it and there is no undo, so the tap only arms the
@@ -279,17 +282,12 @@ private fun DownloadsEntriesList(
     AsyncAnimatedContent(
         targetState = entries,
         modifier = modifier,
-        loadingContent = {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        },
+        loadingContent = { LoadingScreen(modifier = Modifier.fillMaxSize()) },
         errorContent = {
             RetryButton(
                 modifier = Modifier.fillMaxSize(),
                 error = it.message.asString(),
-                // The list is a hot, self-recovering DB flow (no one-shot load to redo).
-                onRetry = {},
+                onRetry = onReloadList,
             )
         },
     ) { entriesProvider ->
@@ -381,6 +379,7 @@ private fun DownloadsTweakScreenPreview() {
                 onOpen = {},
                 onPauseBatch = { _, _ -> },
                 onStopBatch = { _, _ -> },
+                onReloadList = {},
             )
         }
     }

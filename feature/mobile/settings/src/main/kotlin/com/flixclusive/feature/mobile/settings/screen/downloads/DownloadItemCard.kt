@@ -17,7 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -31,6 +30,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.flixclusive.feature.mobile.settings.component.SettingsListCard
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
 import com.flixclusive.feature.mobile.settings.util.CacheLinksFormatUtil
@@ -56,15 +56,10 @@ internal fun DownloadItemCard(
         item.state == DownloadItemState.STREAM_COMPLETE ||
         item.state == DownloadItemState.FETCHING_SUBTITLES
 
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .graphicsLayer { alpha = if (isStopped) 0.6f else 1f }
-            .clip(MaterialTheme.shapes.medium),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        shape = MaterialTheme.shapes.medium,
+    SettingsListCard(
+        modifier = modifier.graphicsLayer { alpha = if (isStopped) 0.6f else 1f },
     ) {
-        Column(modifier = Modifier.padding(12.dp).animateContentSize()) {
+        Column(modifier = Modifier.animateContentSize()) {
             Row(verticalAlignment = Alignment.Top) {
                 Crossfade(targetState = item.state, label = "DownloadItemStatusIcon") { state ->
                     Icon(
