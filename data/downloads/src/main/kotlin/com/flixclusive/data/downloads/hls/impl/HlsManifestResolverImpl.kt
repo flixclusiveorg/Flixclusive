@@ -15,24 +15,16 @@ import com.flixclusive.data.downloads.hls.HlsResolutionResult
 import com.flixclusive.data.downloads.hls.HlsSegmentInfo
 import com.flixclusive.data.downloads.hls.ResolvedHlsPlaylist
 import kotlinx.coroutines.withContext
+import com.flixclusive.data.downloads.di.DownloadHttpClient
+import com.flixclusive.data.downloads.util.okRequest
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.IOException
 import javax.inject.Inject
 
 internal class HlsManifestResolverImpl @Inject constructor(
-    client: OkHttpClient,
+    @param:DownloadHttpClient private val client: OkHttpClient,
     private val appDispatchers: AppDispatchers,
 ) : HlsManifestResolver {
-    private val client by lazy {
-        client
-            .newBuilder()
-            .cache(null)
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .build()
-    }
-
     override suspend fun resolve(
         url: String,
         headers: Map<String, String>,
@@ -138,10 +130,9 @@ internal class HlsManifestResolverImpl @Inject constructor(
         headers: Map<String, String>,
         parser: HlsPlaylistParser,
     ): HlsPlaylist {
-        val requestBuilder = Request.Builder().url(url)
-        headers.forEach { (name, value) -> requestBuilder.addHeader(name, value) }
+        val request = okRequest(url, headers)
 
-        client.newCall(requestBuilder.build()).execute().use { response ->
+        client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("Failed to fetch HLS playlist: ${response.code}")
             return response.body.byteStream().use { stream -> parser.parse(Uri.parse(url), stream) }
         }

@@ -15,27 +15,19 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import com.flixclusive.data.downloads.di.DownloadHttpClient
+import com.flixclusive.data.downloads.util.okRequest
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import javax.inject.Inject
 
 internal class MediaTransferEngineImpl @Inject constructor(
-    client: OkHttpClient,
+    @param:DownloadHttpClient private val client: OkHttpClient,
     @param:ApplicationContext private val context: Context,
     private val appDispatchers: AppDispatchers,
 ) : MediaTransferEngine {
-    private val client by lazy {
-        client
-            .newBuilder()
-            .cache(null)
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .build()
-    }
-
     override suspend fun transfer(
         chunks: List<DownloadChunk>,
         url: String,
@@ -128,10 +120,9 @@ internal class MediaTransferEngineImpl @Inject constructor(
         val rangeHeader = if (isOpenEnded) "bytes=$rangeStart-" else "bytes=$rangeStart-${chunk.rangeEnd}"
         val expectedBytes = if (isOpenEnded) null else chunk.rangeEnd - chunk.rangeStart + 1
 
-        val requestBuilder = Request.Builder().url(url).addHeader("Range", rangeHeader)
-        headers.forEach { (name, value) -> requestBuilder.addHeader(name, value) }
+        val request = okRequest(url, headers) { addHeader("Range", rangeHeader) }
 
-        client.newCall(requestBuilder.build()).execute().use { response ->
+        client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 throw IOException("Chunk request failed: ${response.code}")
             }

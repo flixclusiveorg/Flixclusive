@@ -13,25 +13,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import com.flixclusive.data.downloads.di.DownloadHttpClient
+import com.flixclusive.data.downloads.util.okRequest
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 internal class HlsTransferEngineImpl @Inject constructor(
-    client: OkHttpClient,
+    @param:DownloadHttpClient private val client: OkHttpClient,
     private val appDispatchers: AppDispatchers,
 ) : HlsTransferEngine {
-    private val client by lazy {
-        client
-            .newBuilder()
-            .cache(null)
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .build()
-    }
-
     override suspend fun transfer(
         segments: List<HlsSegmentInfo>,
         startIndex: Int,
@@ -156,14 +148,14 @@ internal class HlsTransferEngineImpl @Inject constructor(
         headers: Map<String, String>,
         keyCache: ConcurrentHashMap<String, ByteArray>,
     ): ByteArray {
-        val requestBuilder = Request.Builder().url(segment.url)
-        headers.forEach { (name, value) -> requestBuilder.addHeader(name, value) }
-        if (segment.byteRangeLength >= 0) {
-            val rangeEnd = segment.byteRangeOffset + segment.byteRangeLength - 1
-            requestBuilder.addHeader("Range", "bytes=${segment.byteRangeOffset}-$rangeEnd")
+        val request = okRequest(segment.url, headers) {
+            if (segment.byteRangeLength >= 0) {
+                val rangeEnd = segment.byteRangeOffset + segment.byteRangeLength - 1
+                addHeader("Range", "bytes=${segment.byteRangeOffset}-$rangeEnd")
+            }
         }
 
-        client.newCall(requestBuilder.build()).execute().use { response ->
+        client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("Segment request failed: ${response.code}")
 
             val bytes = response.body.bytes()
@@ -182,10 +174,9 @@ internal class HlsTransferEngineImpl @Inject constructor(
         keyCache: ConcurrentHashMap<String, ByteArray>,
     ): ByteArray =
         keyCache.getOrPut(keyUri) {
-            val requestBuilder = Request.Builder().url(keyUri)
-            headers.forEach { (name, value) -> requestBuilder.addHeader(name, value) }
+            val request = okRequest(keyUri, headers)
 
-            client.newCall(requestBuilder.build()).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) throw IOException("Failed to fetch encryption key: ${response.code}")
                 response.body.bytes()
             }

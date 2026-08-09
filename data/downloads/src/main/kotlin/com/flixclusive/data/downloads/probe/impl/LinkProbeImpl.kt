@@ -6,25 +6,17 @@ import com.flixclusive.data.downloads.probe.LinkProbeResult
 import com.flixclusive.core.util.log.errorLog
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import com.flixclusive.data.downloads.di.DownloadHttpClient
+import com.flixclusive.data.downloads.util.okRequest
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.Response
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
 internal class LinkProbeImpl @Inject constructor(
-    client: OkHttpClient,
+    @param:DownloadHttpClient private val client: OkHttpClient,
     private val appDispatchers: AppDispatchers,
 ) : LinkProbe {
-    private val client by lazy {
-        client
-            .newBuilder()
-            .cache(null)
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .build()
-    }
-
     override suspend fun probe(
         url: String,
         headers: Map<String, String>,
@@ -37,11 +29,10 @@ internal class LinkProbeImpl @Inject constructor(
         url: String,
         headers: Map<String, String>,
     ): LinkProbeResult {
-        val requestBuilder = Request.Builder().url(url)
-        headers.forEach { (name, value) -> requestBuilder.addHeader(name, value) }
+        val request = okRequest(url, headers)
 
         return try {
-            client.newCall(requestBuilder.build()).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return UNREACHABLE_RESULT
 
                 val contentLength = response.body.contentLength().takeIf { it >= 0 }
