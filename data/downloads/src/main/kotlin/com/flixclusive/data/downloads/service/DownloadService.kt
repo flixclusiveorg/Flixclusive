@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.math.truncate
 import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.strings.R as StringR
 
@@ -181,7 +182,8 @@ class DownloadService : Service() {
 
                 downloadRepository.executeDownload(downloadId, url, file)
                 downloadRepository.getDownloadState(downloadId).collect { state ->
-                    updateNotification(notificationId, fileName, downloadId, state.progress, state.status)
+                    val progress = truncate(state.progress * 100) / 100
+                    updateNotification(notificationId, fileName, downloadId, progress, state.status)
 
                     if (state.status.isFinished) {
                         activeDownloads.remove(downloadId)

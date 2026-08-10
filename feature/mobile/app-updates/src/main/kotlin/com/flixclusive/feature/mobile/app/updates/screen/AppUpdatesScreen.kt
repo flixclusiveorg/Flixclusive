@@ -17,12 +17,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,7 +70,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
-import com.flixclusive.core.common.file.toUri
+import com.flixclusive.core.common.file.extension.toUri
 import com.flixclusive.core.common.intent.createApkInstallIntent
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -78,6 +83,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.delay
+import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -112,7 +118,7 @@ internal fun AppUpdatesScreen(
         applicationId = viewModel.applicationId,
         newVersion = newVersion,
         updateInfo = updateInfo,
-        downloadState = downloadState,
+        downloadState = { downloadState },
         goBack = goBack,
         downloadUpdate = {
             viewModel.downloadUpdate(
@@ -128,16 +134,12 @@ private fun AppUpdatesScreenContent(
     applicationId: String,
     newVersion: String,
     updateInfo: String?,
-    downloadState: DownloadState,
+    downloadState: () -> DownloadState,
     downloadUpdate: () -> Unit,
     goBack: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val resources = LocalResources.current
     val uriHandler = LocalUriHandler.current
 
-    val buttonPaddingValues = PaddingValues(horizontal = 5.dp, vertical = 10.dp)
-    val progressColor = MaterialTheme.colorScheme.primary
     val brushGradient = Brush.linearGradient(
         colors = listOf(
             MaterialTheme.colorScheme.primary,
@@ -145,40 +147,35 @@ private fun AppUpdatesScreenContent(
         ),
     )
 
-    val status by remember {
-        derivedStateOf { downloadState.status }
-    }
-
-    fun startInstallation() {
-        val uri = downloadState.file!!.toUri(
-            applicationId,
-            context,
-        )
-
-        context.startActivity(createApkInstallIntent(uri))
-        goBack()
-    }
-
     BackHandler {
         goBack()
     }
 
-    Box(
+    Scaffold(
+        contentWindowInsets = WindowInsets(),
+        bottomBar = {
+            AppUpdatesScreenButtons(
+                applicationId = applicationId,
+                downloadState = downloadState,
+                goBack = goBack,
+                downloadUpdate = downloadUpdate,
+                modifier = Modifier
+                    .navigationBarsPadding()
+            )
+        },
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
+                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                .padding(it)
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    top = 10.dp,
-                    bottom = 20.dp,
-                    end = 10.dp,
-                    start = 10.dp,
-                ),
+                .padding(horizontal = 10.dp),
         ) {
+            Spacer(modifier = Modifier.statusBarsPadding())
+
             Image(
                 painter = painterResource(id = UiCommonR.drawable.flixclusive_tag),
                 contentDescription = stringResource(LocaleR.string.flixclusive_tag_content_desc),
@@ -198,11 +195,10 @@ private fun AppUpdatesScreenContent(
             Text(
                 text = stringResource(id = LocaleR.string.update_out_now_format, newVersion),
                 modifier = Modifier.padding(bottom = 10.dp),
-                style =
-                    MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
             )
 
             MarkdownText(
@@ -210,138 +206,167 @@ private fun AppUpdatesScreenContent(
                 isTextSelectable = true,
                 linkColor = Color(0xFF5890FF),
                 linkifyMask = Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES,
-                style = MaterialTheme.typography.bodySmall
+                imageLoader = LocalContext.current.imageLoader,
+                onLinkClicked = uriHandler::openUri,
+                syntaxHighlightColor = Color.Transparent,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodyMedium
                     .copy(
                         color = LocalContentColor.current,
                         fontWeight = FontWeight.Normal,
                         lineHeight = 22.sp,
                     ).asAdaptiveTextStyle(),
-                imageLoader = LocalContext.current.imageLoader,
-                onLinkClicked = uriHandler::openUri,
-                modifier = Modifier.fillMaxWidth(),
             )
-
-            Spacer(modifier = Modifier.height(50.dp))
         }
+    }
+}
 
-        AnimatedContent(
-            targetState = status.isIdle,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            transitionSpec = {
-                ContentTransform(
-                    targetContentEnter = fadeIn(),
-                    initialContentExit = fadeOut(),
-                )
-            },
-        ) { state ->
-            if (state) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .height(70.dp),
-                ) {
-                    Button(
-                        onClick = {
-                            if (downloadState.status.isFinished) {
-                                startInstallation()
-                            } else {
-                                downloadUpdate()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                        shape = MaterialTheme.shapes.small,
-                        modifier = Modifier
-                            .weight(0.5F)
-                            .heightIn(min = getAdaptiveDp(70.dp))
-                            .padding(buttonPaddingValues),
-                    ) {
-                        Text(
-                            text = stringResource(LocaleR.string.update_label),
-                            style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
-                            fontWeight = FontWeight.Normal,
-                        )
-                    }
+@Composable
+private fun AppUpdatesScreenButtons(
+    applicationId: String,
+    downloadState: () -> DownloadState,
+    goBack: () -> Unit,
+    downloadUpdate: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
 
-                    Button(
-                        onClick = goBack,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = Color.White.copy(0.6f),
-                        ),
-                        shape = MaterialTheme.shapes.small,
-                        modifier = Modifier
-                            .weight(0.5F)
-                            .heightIn(min = 70.dp)
-                            .padding(buttonPaddingValues),
-                    ) {
-                        Text(
-                            text = stringResource(LocaleR.string.not_now_label),
-                            style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
-                            fontWeight = FontWeight.Normal,
-                        )
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .height(getAdaptiveDp(70.dp)),
-                ) {
-                    Box(modifier = Modifier.padding(buttonPaddingValues)) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = MaterialTheme.shapes.small,
-                                ).clip(MaterialTheme.shapes.medium)
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .clickable(downloadState.status.isFinished) { startInstallation() }
-                                .drawWithContent {
-                                    with(drawContext.canvas.nativeCanvas) {
-                                        val checkPoint = saveLayer(null, null)
+    val buttonPaddingValues = PaddingValues(horizontal = 5.dp, vertical = 10.dp)
+    val progressColor = MaterialTheme.colorScheme.primary
 
-                                        drawContent()
-                                        drawRect(
-                                            color = progressColor,
-                                            size = Size(size.width * (downloadState.progress / 100), size.height),
-                                            blendMode = BlendMode.SrcOut,
-                                        )
-                                        restoreToCount(checkPoint)
-                                    }
-                                },
-                        ) {
-                            val label by remember {
-                                derivedStateOf {
-                                    var label = resources.getString(LocaleR.string.update_label)
+    val status by remember {
+        derivedStateOf { downloadState().status }
+    }
 
-                                    if (downloadState.status == DownloadStatus.COMPLETED) {
-                                        label = resources.getString(LocaleR.string.label_install)
-                                    } else if (downloadState.status.isDownloading) {
-                                        label = "${downloadState.progress}%"
-                                    }
+    fun startInstallation() {
+        val uri = downloadState().file!!.toUri(
+            applicationId,
+            context,
+        )
 
-                                    label
-                                }
-                            }
+        context.startActivity(createApkInstallIntent(uri))
+        goBack()
+    }
 
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Normal,
-                                modifier = Modifier.align(Alignment.Center),
-                            )
+    AnimatedContent(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .then(modifier),
+        targetState = status.isIdle,
+        transitionSpec = {
+            ContentTransform(
+                targetContentEnter = fadeIn(),
+                initialContentExit = fadeOut(),
+            )
+        },
+    ) { state ->
+        if (state) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(getAdaptiveDp(70.dp)),
+            ) {
+                Button(
+                    onClick = {
+                        if (status.isFinished) {
+                            startInstallation()
+                        } else {
+                            downloadUpdate()
                         }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier
+                        .weight(0.5F)
+                        .heightIn(min = getAdaptiveDp(70.dp))
+                        .padding(buttonPaddingValues),
+                ) {
+                    Text(
+                        text = stringResource(LocaleR.string.update_label),
+                        style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
+                        fontWeight = FontWeight.Normal,
+                    )
+                }
+
+                Button(
+                    onClick = goBack,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = Color.White.copy(0.6f),
+                    ),
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier
+                        .weight(0.5F)
+                        .heightIn(min = getAdaptiveDp(70.dp))
+                        .padding(buttonPaddingValues),
+                ) {
+                    Text(
+                        text = stringResource(LocaleR.string.not_now_label),
+                        style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
+                        fontWeight = FontWeight.Normal,
+                    )
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(getAdaptiveDp(70.dp)),
+            ) {
+                Box(modifier = Modifier.padding(buttonPaddingValues)) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = MaterialTheme.shapes.small,
+                            ).clip(MaterialTheme.shapes.medium)
+                            .fillMaxWidth()
+                            .height(getAdaptiveDp(50.dp))
+                            .clickable(status.isFinished) { startInstallation() }
+                            .drawWithContent {
+                                with(drawContext.canvas.nativeCanvas) {
+                                    val checkPoint = saveLayer(null, null)
+
+                                    drawContent()
+                                    drawRect(
+                                        color = progressColor,
+                                        size = Size(size.width * (downloadState().progress / 100), size.height),
+                                        blendMode = BlendMode.SrcOut,
+                                    )
+                                    restoreToCount(checkPoint)
+                                }
+                            },
+                    ) {
+                        val label by remember {
+                            derivedStateOf {
+                                var label = resources.getString(LocaleR.string.update_label)
+
+                                val status = downloadState().status
+                                if (status == DownloadStatus.COMPLETED) {
+                                    label = resources.getString(LocaleR.string.label_install)
+                                } else if (status.isDownloading) {
+                                    label = "${String.format(Locale.ROOT, "%.2f", downloadState().progress)}%"
+                                }
+
+                                label
+                            }
+                        }
+
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Normal,
+                            modifier = Modifier.align(Alignment.Center),
+                        )
                     }
                 }
             }
@@ -349,7 +374,7 @@ private fun AppUpdatesScreenContent(
     }
 }
 
-@Preview
+@Preview(showSystemUi = true)
 @Composable
 private fun AppUpdatesScreenBasePreview() {
     var state by remember { mutableStateOf(DownloadState.IDLE) }
@@ -379,7 +404,9 @@ private fun AppUpdatesScreenBasePreview() {
     }
 
     FlixclusiveTheme {
-        Surface {
+        Surface(
+            modifier = Modifier.fillMaxSize()
+        ) {
             AppUpdatesScreenContent(
                 applicationId = "com.flixclusive",
                 newVersion = "1.2.3",
@@ -393,7 +420,7 @@ private fun AppUpdatesScreenBasePreview() {
 
                     For more details, visit our [website](https://example.com).
                 """.trimIndent(),
-                downloadState = state,
+                downloadState = { state },
                 downloadUpdate = {
                     state = state.copy(
                         id = "",

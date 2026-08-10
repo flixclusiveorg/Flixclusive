@@ -2,7 +2,7 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.file.isEmpty
+import com.flixclusive.core.common.file.extension.isEmpty
 import com.flixclusive.core.common.provider.ProviderConstants
 import com.flixclusive.core.common.provider.ProviderFile.getProviderSettingsFileDirPath
 import com.flixclusive.core.database.entity.provider.InstalledProvider
