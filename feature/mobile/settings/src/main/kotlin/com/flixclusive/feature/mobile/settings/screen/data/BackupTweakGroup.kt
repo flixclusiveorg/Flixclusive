@@ -32,7 +32,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.file.FileConstants
-import com.flixclusive.core.common.file.UniFileUtils
+import com.flixclusive.core.common.file.extension.toFile
 import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.core.datastore.model.user.BackupOptions
 import com.flixclusive.core.datastore.model.user.DataPreferences
@@ -325,7 +325,7 @@ internal fun backupTweakGroup(
                 description = {
                     resources.getString(
                         LocaleR.string.backup_location_desc,
-                        UniFileUtils.getFilePath(context, storageDirectoryUri),
+                        storageDirectoryUri?.toFile(context),
                     )
                 },
                 enabledProvider = { !isBackupOperationRunning },

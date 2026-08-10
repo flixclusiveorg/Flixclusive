@@ -61,7 +61,7 @@ internal class GithubUpdatesRepository @Inject constructor(
                 Result.success(
                     AppUpdateInfo(
                         versionName = latestVersion.toString(),
-                        changelogs = releases.releaseNotes,
+                        changelogs = releases.releaseNotes.trimCommitBy("rhenwinch"),
                         updateUrl = updateUrl,
                     ),
                 )
@@ -81,5 +81,12 @@ internal class GithubUpdatesRepository @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun String.trimCommitBy(user: String): String {
+        return replace(
+            Regex("""\*\(commit by \[@${Regex.escape(user)}]\(([^)]+)\)\)\*"""),
+            ""
+        )
     }
 }

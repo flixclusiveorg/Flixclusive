@@ -1,4 +1,4 @@
-package com.flixclusive.core.common.file
+package com.flixclusive.core.common.file.extension
 
 import android.content.Context
 import android.net.Uri

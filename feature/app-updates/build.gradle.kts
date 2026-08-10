@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.coreDatastore)
     implementation(projects.coreCommon)
     implementation(projects.dataAppUpdates)
     implementation(projects.dataDownloads)

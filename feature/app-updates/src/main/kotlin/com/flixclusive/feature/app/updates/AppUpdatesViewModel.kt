@@ -2,11 +2,14 @@ package com.flixclusive.feature.app.updates
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.config.BuildConfigProvider
 import com.flixclusive.core.common.exception.ExceptionWithUiText
+import com.flixclusive.core.common.file.extension.toFile
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.data.app.updates.model.AppUpdateInfo
 import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
 import com.flixclusive.data.downloads.model.DownloadState
@@ -20,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -28,6 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AppUpdatesViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val dataStoreManager: DataStoreManager,
     private val appUpdatesRepository: AppUpdatesRepository,
     private val downloadFile: DownloadFileUseCase,
     private val _cancelDownload: CancelDownloadUseCase,
@@ -80,18 +85,20 @@ class AppUpdatesViewModel @Inject constructor(
         // No download in progress
         if (downloadJob?.isActive == false) return
 
-        val destinationPath = getUpdateDownloadDir()
+        viewModelScope.launch {
+            val destinationPath = getUpdateDownloadDir()
 
-        val downloadId = getDownloadId(
-            url = url,
-            fileName = "$version.apk",
-            destinationPath = destinationPath.absolutePath,
-        )
+            val downloadId = getDownloadId(
+                url = url,
+                fileName = "$version.apk",
+                destinationPath = destinationPath.absolutePath,
+            )
 
-        _cancelDownload(downloadId)
-        downloadJob?.cancel()
-        downloadJob = null
-        _downloadState.update { DownloadState.IDLE }
+            _cancelDownload(downloadId)
+            downloadJob?.cancel()
+            downloadJob = null
+            _downloadState.update { DownloadState.IDLE }
+        }
     }
 
     /**
@@ -124,8 +131,16 @@ class AppUpdatesViewModel @Inject constructor(
         }
     }
 
-    private fun getUpdateDownloadDir(): File {
-        return context.externalCacheDir ?: context.cacheDir
+    private suspend fun getUpdateDownloadDir(): File {
+        val preferredDir = dataStoreManager
+            .getSystemPrefs()
+            .first()
+            .storageDirectoryUri
+            ?.toUri()
+
+        return preferredDir?.toFile(context)
+            ?: context.externalCacheDir
+            ?: context.cacheDir
     }
 }
 
