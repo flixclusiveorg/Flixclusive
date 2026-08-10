@@ -17,13 +17,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -69,6 +73,8 @@ import coil3.imageLoader
 import com.flixclusive.core.common.file.extension.toUri
 import com.flixclusive.core.common.intent.createApkInstallIntent
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.data.downloads.model.DownloadState
 import com.flixclusive.data.downloads.model.DownloadStatus
 import com.flixclusive.feature.app.updates.AppUpdatesViewModel
@@ -163,11 +169,12 @@ private fun AppUpdatesScreenContent(
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
+                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                .padding(it)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 10.dp)
-                .padding(it),
+                .padding(horizontal = 10.dp),
         ) {
-            Spacer(modifier = Modifier.systemBarsPadding())
+            Spacer(modifier = Modifier.statusBarsPadding())
 
             Image(
                 painter = painterResource(id = UiCommonR.drawable.flixclusive_tag),
@@ -203,11 +210,12 @@ private fun AppUpdatesScreenContent(
                 onLinkClicked = uriHandler::openUri,
                 syntaxHighlightColor = Color.Transparent,
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = LocalContentColor.current,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 22.sp,
-                ),
+                style = MaterialTheme.typography.bodyMedium
+                    .copy(
+                        color = LocalContentColor.current,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 22.sp,
+                    ).asAdaptiveTextStyle(),
             )
         }
     }
@@ -259,7 +267,7 @@ private fun AppUpdatesScreenButtons(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp),
+                    .height(getAdaptiveDp(70.dp)),
             ) {
                 Button(
                     onClick = {
@@ -276,12 +284,12 @@ private fun AppUpdatesScreenButtons(
                     shape = MaterialTheme.shapes.small,
                     modifier = Modifier
                         .weight(0.5F)
-                        .heightIn(70.dp)
+                        .heightIn(min = getAdaptiveDp(70.dp))
                         .padding(buttonPaddingValues),
                 ) {
                     Text(
                         text = stringResource(LocaleR.string.update_label),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
                         fontWeight = FontWeight.Normal,
                     )
                 }
@@ -295,12 +303,12 @@ private fun AppUpdatesScreenButtons(
                     shape = MaterialTheme.shapes.small,
                     modifier = Modifier
                         .weight(0.5F)
-                        .heightIn(70.dp)
+                        .heightIn(min = getAdaptiveDp(70.dp))
                         .padding(buttonPaddingValues),
                 ) {
                     Text(
                         text = stringResource(LocaleR.string.not_now_label),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
                         fontWeight = FontWeight.Normal,
                     )
                 }
@@ -309,7 +317,7 @@ private fun AppUpdatesScreenButtons(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp),
+                    .height(getAdaptiveDp(70.dp)),
             ) {
                 Box(modifier = Modifier.padding(buttonPaddingValues)) {
                     Box(
@@ -319,10 +327,9 @@ private fun AppUpdatesScreenButtons(
                                 width = 1.dp,
                                 color = MaterialTheme.colorScheme.primary,
                                 shape = MaterialTheme.shapes.small,
-                            )
-                            .clip(MaterialTheme.shapes.medium)
+                            ).clip(MaterialTheme.shapes.medium)
                             .fillMaxWidth()
-                            .height(50.dp)
+                            .height(getAdaptiveDp(50.dp))
                             .clickable(status.isFinished) { startInstallation() }
                             .drawWithContent {
                                 with(drawContext.canvas.nativeCanvas) {
@@ -355,7 +362,7 @@ private fun AppUpdatesScreenButtons(
 
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Normal,
                             modifier = Modifier.align(Alignment.Center),
@@ -430,5 +437,29 @@ private fun AppUpdatesScreenBasePreview() {
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 private fun AppUpdatesScreenCompactLandscapePreview() {
+    AppUpdatesScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun AppUpdatesScreenMediumPortraitPreview() {
+    AppUpdatesScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun AppUpdatesScreenMediumLandscapePreview() {
+    AppUpdatesScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun AppUpdatesScreenExtendedPortraitPreview() {
+    AppUpdatesScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun AppUpdatesScreenExtendedLandscapePreview() {
     AppUpdatesScreenBasePreview()
 }

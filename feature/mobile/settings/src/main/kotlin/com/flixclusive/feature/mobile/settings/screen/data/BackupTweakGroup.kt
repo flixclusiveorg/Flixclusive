@@ -298,8 +298,7 @@ internal fun backupTweakGroup(
                                         isSelected -> manualSelectedOptions.remove(option)
                                         else -> manualSelectedOptions.add(option)
                                     }
-                                }
-                                .minimumInteractiveComponentSize()
+                                }.minimumInteractiveComponentSize()
                                 .padding(horizontal = getAdaptiveDp(10.dp)),
                     ) {
                         Text(
