@@ -15,4 +15,28 @@
     <string name="label_dead">dead</string>
     <string name="label_alive">alive</string>
     <string name="label_total_format">%1$d total</string>
+    <!-- Logcat viewer -->
+    <string name="logcat_group_title">Debug</string>
+    <string name="logcat">Logcat</string>
+    <string name="logcat_content_desc">View, filter and search the app\'s live log output.</string>
+    <string name="logcat_filter_label">Filter</string>
+    <string name="logcat_filter_hint">package:mine level:E -tag:Foo</string>
+    <string name="logcat_filter_invalid">Some of this filter could not be read, so it was matched as plain text.</string>
+    <string name="logcat_match_format">%1$d/%2$d</string>
+    <string name="logcat_no_matches">No matches</string>
+    <string name="logcat_find_previous">Previous match</string>
+    <string name="logcat_find_next">Next match</string>
+    <string name="logcat_scroll_to_latest">Jump to latest</string>
+    <string name="logcat_more_actions">More actions</string>
+    <string name="logcat_pause">Pause</string>
+    <string name="logcat_resume">Resume</string>
+    <string name="logcat_copy">Copy visible logs</string>
+    <string name="logcat_share">Share visible logs</string>
+    <string name="logcat_share_title">App logs</string>
+    <string name="logcat_clear">Clear</string>
+    <string name="logcat_clear_confirm_title">Clear the log view?</string>
+    <string name="logcat_clear_confirm_message">Everything logged so far is hidden from this screen. New lines keep coming in, and nothing is deleted from the system log.</string>
+    <string name="logcat_empty_title">Nothing logged yet</string>
+    <string name="logcat_empty_description">Lines appear here as the app writes them. Loosen the filter if you expected output.</string>
+    <string name="logcat_count_format">%1$d of %2$d lines</string>
 </resources>
