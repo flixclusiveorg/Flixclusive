@@ -46,6 +46,7 @@ import com.flixclusive.feature.mobile.settings.screen.links.show.NavigatorMediaL
 import com.flixclusive.feature.mobile.settings.screen.player.NavigatorPlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.providers.NavigatorProvidersTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.NavigatorSettingsScreen
+import com.flixclusive.feature.mobile.settings.screen.system.NavigatorSystemTweakScreen
 import com.flixclusive.feature.mobile.user.add.NavigatorAddUserScreenNavigateTo
 import com.flixclusive.feature.mobile.user.edit.NavigatorUserEditScreen
 import com.flixclusive.feature.mobile.user.profiles.NavigatorUserProfilesScreen
@@ -89,6 +90,7 @@ import com.ramcosta.composedestinations.generated.repositorymanage.destinations.
 import com.ramcosta.composedestinations.generated.settings.destinations.AppearanceTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.DataTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.DownloadsTweakScreenDestination
+import com.ramcosta.composedestinations.generated.settings.destinations.LogcatTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ManageMediaLinksTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinkCardsTweakScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.MediaLinksShowDetailTweakScreenDestination
@@ -143,6 +145,7 @@ internal class MobileAppNavigator(
     NavigatorOnboardingScreen,
     NavigatorPlayerSplashScreen,
     NavigatorPlayerTweakScreen,
+    NavigatorSystemTweakScreen,
     NavigatorProviderDetailsBottomSheet,
     NavigatorProviderManagerScreen,
     NavigatorProvidersTweakScreen,
@@ -454,6 +457,12 @@ internal class MobileAppNavigator(
     override fun navigateToMediaLinkCardsTweakScreen() {
         runOnResumed {
             navigator.navigate(MediaLinkCardsTweakScreenDestination)
+        }
+    }
+
+    override fun navigateToLogcatTweakScreen() {
+        runOnResumed {
+            navigator.navigate(LogcatTweakScreenDestination)
         }
     }
 

@@ -13,6 +13,7 @@ import com.flixclusive.core.datastore.model.system.SystemPreferences
 import com.flixclusive.core.datastore.model.user.network.DoHPreference
 import com.flixclusive.core.navigation.navigator.NavigateBack
 import com.flixclusive.core.presentation.common.extensions.showToast
+import com.flixclusive.feature.mobile.settings.R
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakScaffold
 import com.flixclusive.feature.mobile.settings.TweakUI
@@ -21,12 +22,17 @@ import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
+
+interface NavigatorSystemTweakScreen : NavigateBack {
+    fun navigateToLogcatTweakScreen()
+}
 
 @Destination<ExternalModuleGraph>
 @Composable
 internal fun SystemTweakScreen(
-    navigator: NavigateBack,
+    navigator: NavigatorSystemTweakScreen,
     viewModel: SystemTweakViewModel = hiltViewModel()
 ) {
     val systemPreferences by viewModel.preferences.collectAsStateWithLifecycle()
@@ -43,7 +49,8 @@ internal fun SystemTweakScreen(
                 getNetworkTweaks(
                     systemPreferences = { systemPreferences },
                     onUpdatePreferences = viewModel::updateSystemPrefs,
-                )
+                ),
+                getDebugTweaks(onOpenLogcat = navigator::navigateToLogcatTweakScreen),
             )
         }
     )
@@ -133,6 +140,23 @@ private fun getNetworkTweaks(
                         context.showToast(message)
                     }
                 },
+            ),
+        ),
+    )
+}
+
+@Composable
+private fun getDebugTweaks(onOpenLogcat: () -> Unit): TweakGroup {
+    val resources = LocalResources.current
+
+    return TweakGroup(
+        title = stringResource(R.string.logcat_group_title),
+        tweaks = persistentListOf(
+            TweakUI.ClickableTweak(
+                title = resources.getString(R.string.logcat),
+                description = { resources.getString(R.string.logcat_content_desc) },
+                iconId = UiCommonR.drawable.bug_thin,
+                onClick = onOpenLogcat,
             ),
         ),
     )
