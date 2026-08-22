@@ -183,6 +183,8 @@ internal class MediaDownloadRunner @Inject constructor(
         val destinationFile = resolveOrCreateStreamFile(itemId, item, directory, fileName)
             ?: return fail(itemId, LocaleR.string.download_error_no_destination_file)
 
+        val resumeItem = mediaDownloadRepository.getItem(itemId) ?: item
+
         val resolution = hlsManifestResolver.resolve(sourceUrl, headers, currentLinkSortDirection())
         val playlist = when (resolution) {
             is HlsResolutionResult.Success -> resolution.playlist
@@ -200,7 +202,7 @@ internal class MediaDownloadRunner @Inject constructor(
         // live playlist — the old segment index points somewhere else entirely and appending from
         // it would splice two different streams together. A changed segment count is the cheapest
         // reliable signal that happened; start over when it differs.
-        val previousSegmentCount = item.streamTotalBytes
+        val previousSegmentCount = resumeItem.streamTotalBytes
         val playlistChanged = previousSegmentCount > 0 && previousSegmentCount != playlist.segments.size.toLong()
 
         // Recreated rather than just emptied: the HLS engine appends, so the partial segments
@@ -219,7 +221,7 @@ internal class MediaDownloadRunner @Inject constructor(
         val result = mediaDownloadRepository.runHlsTransfer(
             id = itemId,
             segments = playlist.segments,
-            startIndex = if (playlistChanged) 0 else item.streamBytesDownloaded.toInt(),
+            startIndex = if (playlistChanged) 0 else resumeItem.streamBytesDownloaded.toInt(),
             headers = headers,
             destinationFile = transferFile,
         )
@@ -242,7 +244,13 @@ internal class MediaDownloadRunner @Inject constructor(
                 // The chunk rows claim bytes that have to actually be on disk for a resume to write
                 // at the right offsets. If the file was deleted from under us and recreated, or
                 // truncated, resuming would write into a hole and silently produce a broken video.
-                if (existing.length() < item.streamBytesDownloaded) {
+                val isProgressUnbacked = if (item.isHlsStream) {
+                    item.streamBytesDownloaded > 0 && existing.length() == 0L
+                } else {
+                    existing.length() < item.streamBytesDownloaded
+                }
+
+                if (isProgressUnbacked) {
                     mediaDownloadRepository.resetChunks(itemId)
                 }
                 return existing
