@@ -6,7 +6,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.config.BuildConfigProvider
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.exception.ExceptionWithUiText
+import com.flixclusive.core.common.file.extension.isWritableDirectory
 import com.flixclusive.core.common.file.extension.toFile
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.DataStoreManager
@@ -26,12 +28,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class AppUpdatesViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val appDispatchers: AppDispatchers,
     private val dataStoreManager: DataStoreManager,
     private val appUpdatesRepository: AppUpdatesRepository,
     private val downloadFile: DownloadFileUseCase,
@@ -114,6 +118,8 @@ class AppUpdatesViewModel @Inject constructor(
         // Download already in progress
         if (downloadJob?.isActive == true) return
 
+        _downloadState.value = DownloadState.IDLE
+
         downloadJob = viewModelScope.launch {
             val destinationPath = getUpdateDownloadDir()
 
@@ -131,17 +137,30 @@ class AppUpdatesViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getUpdateDownloadDir(): File {
-        val preferredDir = dataStoreManager
-            .getSystemPrefs()
-            .first()
-            .storageDirectoryUri
-            ?.toUri()
+    /**
+     * Resolves where the update APK should be downloaded to.
+     *
+     * The user's preferred storage directory is a SAF tree URI, and the download pipeline
+     * writes through [File] rather than the resolver. Flattening that URI to a raw path
+     * only works while the path is genuinely writable, which on Android 11+ it is not:
+     * scoped storage rejects the write with `EPERM`. So we probe it and fall back to our
+     * own cache directory, which is always writable and is exposed by the FileProvider the
+     * install intent reads from.
+     * */
+    private suspend fun getUpdateDownloadDir(): File =
+        withContext(appDispatchers.io) {
+            val preferredDir = dataStoreManager
+                .getSystemPrefs()
+                .first()
+                .storageDirectoryUri
+                ?.toUri()
+                ?.toFile(context)
+                ?.takeIf { it.isWritableDirectory() }
 
-        return preferredDir?.toFile(context)
-            ?: context.externalCacheDir
-            ?: context.cacheDir
-    }
+            preferredDir
+                ?: context.externalCacheDir
+                ?: context.cacheDir
+        }
 }
 
 sealed class AppUpdatesUiState {
