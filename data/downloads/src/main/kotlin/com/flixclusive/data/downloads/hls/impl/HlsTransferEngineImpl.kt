@@ -97,6 +97,8 @@ internal class HlsTransferEngineImpl @Inject constructor(
                                             outputStream.write(cached)
                                             nextWriteIndex++
                                         }
+
+                                        outputStream.flush()
                                     } else {
                                         pendingData[index] = bytes
                                     }

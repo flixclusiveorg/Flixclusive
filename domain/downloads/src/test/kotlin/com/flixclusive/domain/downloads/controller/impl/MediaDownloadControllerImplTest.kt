@@ -606,6 +606,71 @@ class MediaDownloadControllerImplTest {
         }
 
     @Test
+    fun `start should restart an HLS download from zero when its persisted file turned up empty`() =
+        runTest(testDispatcher) {
+            val segments = List(5) {
+                HlsSegmentInfo(
+                    url = "https://example.com/$it.ts",
+                    byteRangeOffset = 0,
+                    byteRangeLength = -1,
+                    encryptionKeyUri = null,
+                    encryptionIv = null
+                )
+            }
+            coEvery { mediaDownloadRepository.getItem(itemId) } returnsMany
+                listOf(
+                    testItem(isHlsStream = true, streamFilePath = "content://empty", streamBytesDownloaded = 3),
+                    testItem(isHlsStream = true, streamFilePath = "content://empty", streamBytesDownloaded = 0),
+                )
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            every { downloadDirectoryRepository.resolveFile("content://empty") } returns streamFile
+            every { streamFile.length() } returnsMany listOf(0L, 200_000L)
+            coEvery {
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
+            } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
+            coEvery {
+                mediaDownloadRepository.runHlsTransfer(itemId, segments, any(), emptyMap(), streamFile)
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify { mediaDownloadRepository.resetChunks(itemId) }
+            coVerify { mediaDownloadRepository.runHlsTransfer(itemId, segments, 0, emptyMap(), streamFile) }
+        }
+
+    @Test
+    fun `start should not weigh an HLS segment count against the persisted file's byte length`() =
+        runTest(testDispatcher) {
+            val segments = List(6_000) {
+                HlsSegmentInfo(
+                    url = "https://example.com/$it.ts",
+                    byteRangeOffset = 0,
+                    byteRangeLength = -1,
+                    encryptionKeyUri = null,
+                    encryptionIv = null
+                )
+            }
+            coEvery { mediaDownloadRepository.getItem(itemId) } returns
+                testItem(isHlsStream = true, streamFilePath = "content://partial", streamBytesDownloaded = 5_000)
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            every { downloadDirectoryRepository.resolveFile("content://partial") } returns streamFile
+            every { streamFile.length() } returnsMany listOf(4_096L, 200_000L)
+            coEvery {
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
+            } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
+            coEvery {
+                mediaDownloadRepository.runHlsTransfer(itemId, segments, any(), emptyMap(), streamFile)
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { mediaDownloadRepository.resetChunks(itemId) }
+            coVerify { mediaDownloadRepository.runHlsTransfer(itemId, segments, 5_000, emptyMap(), streamFile) }
+        }
+
+    @Test
     fun `start should fall through to the next candidate when HLS resolution fails`() =
         runTest(testDispatcher) {
             val clearedItem = testItem(sourceUrl = null, isHlsStream = false, streamFilePath = null)
