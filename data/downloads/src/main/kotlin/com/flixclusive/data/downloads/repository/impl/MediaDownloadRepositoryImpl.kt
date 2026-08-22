@@ -258,13 +258,13 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
             // Every callback here is a segment landing, so it is movement by definition — no need
             // to diff against a previous value the way the byte-range path does.
             tracker.markMoved(id)
-            writeHlsProgressThrottled(id, segmentsWritten, totalSegments)
+            writeHlsProgress(id, segmentsWritten, totalSegments)
         }
 
         return tracker.resolveStalled(id, result, interrupted = interruptFlags.containsKey(id))
     }
 
-    private suspend fun writeHlsProgressThrottled(
+    private suspend fun writeHlsProgress(
         id: String,
         segmentsWritten: Int,
         totalSegments: Int,
@@ -272,10 +272,16 @@ internal class MediaDownloadRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis()
         val lastWrite = tracker.lastWriteAt(id)
         val isFinal = segmentsWritten >= totalSegments
-        if (!isFinal && now - lastWrite < PROGRESS_WRITE_THROTTLE_MS) return
+        val shouldSampleRate = isFinal || now - lastWrite >= PROGRESS_WRITE_THROTTLE_MS
 
-        val rate = tracker.rateFor(id, segmentsWritten.toLong(), now, lastWrite)
-        tracker.recordWrite(id, now, segmentsWritten.toLong())
+        val rate = if (shouldSampleRate) {
+            tracker.rateFor(id, segmentsWritten.toLong(), now, lastWrite).also {
+                tracker.recordWrite(id, now, segmentsWritten.toLong())
+            }
+        } else {
+            tracker.lastMeasuredRate(id)
+        }
+
         downloadItemDao.updateStreamProgress(id, segmentsWritten.toLong(), totalSegments.toLong(), rate, Date())
     }
 

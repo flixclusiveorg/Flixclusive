@@ -133,42 +133,52 @@ class DownloadLinkRankerTest {
     }
 
     @Test
-    fun `rank should put every direct link ahead of every HLS link under QUALITY_FIRST`() {
+    fun `rank should prefer the direct link when two candidates sit at the same quality tier`() {
         val hls1080p = stream("hls-1080p") to result(isHls = true)
-        val direct480p = stream("direct-480p") to result()
-        val hls720p = stream("hls-720p") to result(isHls = true)
-        val direct360p = stream("direct-360p") to result()
+        val direct1080p = stream("direct-1080p") to result()
 
         val ranked = DownloadLinkRanker.rank(
-            candidates = listOf(hls1080p, direct480p, hls720p, direct360p),
+            candidates = listOf(hls1080p, direct1080p),
             mode = DownloadLinkSelectionMode.QUALITY_FIRST,
             direction = DownloadLinkSortDirection.HIGHEST_FIRST,
             preferredQuality = PlayerQuality.Quality1080p,
         )
 
-        expectThat(ranked.map { it.first.name })
-            .containsExactly("direct-360p", "direct-480p", "hls-1080p", "hls-720p")
+        expectThat(ranked.map { it.first.name }).containsExactly("direct-1080p", "hls-1080p")
     }
 
     @Test
-    fun `rank should put every direct link ahead of every HLS link under SIZE_FIRST`() {
-        val hlsLarge = stream("hls-large") to result(contentLength = 9_000_000, isHls = true)
-        val directSmall = stream("direct-small") to result(contentLength = 1_000)
-        val directMedium = stream("direct-medium") to result(contentLength = 500_000)
+    fun `rank should not let the direct preference outrank a closer quality match`() {
+        val hls1080p = stream("hls-1080p") to result(isHls = true)
+        val direct480p = stream("direct-480p") to result()
 
         val ranked = DownloadLinkRanker.rank(
-            candidates = listOf(hlsLarge, directSmall, directMedium),
+            candidates = listOf(direct480p, hls1080p),
+            mode = DownloadLinkSelectionMode.QUALITY_FIRST,
+            direction = DownloadLinkSortDirection.HIGHEST_FIRST,
+            preferredQuality = PlayerQuality.Quality1080p,
+        )
+
+        expectThat(ranked.map { it.first.name }).containsExactly("hls-1080p", "direct-480p")
+    }
+
+    @Test
+    fun `rank should prefer the direct link when two candidates report the same size`() {
+        val hlsSameSize = stream("hls-stream") to result(contentLength = 500_000, isHls = true)
+        val directSameSize = stream("direct-stream") to result(contentLength = 500_000)
+
+        val ranked = DownloadLinkRanker.rank(
+            candidates = listOf(hlsSameSize, directSameSize),
             mode = DownloadLinkSelectionMode.SIZE_FIRST,
             direction = DownloadLinkSortDirection.HIGHEST_FIRST,
             preferredQuality = PlayerQuality.Quality1080p,
         )
 
-        expectThat(ranked.map { it.first.name })
-            .containsExactly("direct-medium", "direct-small", "hls-large")
+        expectThat(ranked.map { it.first.name }).containsExactly("direct-stream", "hls-stream")
     }
 
     @Test
-    fun `rank should keep a direct link first even when the HLS link is faster`() {
+    fun `rank should break a quality tie by directness before speed`() {
         val hlsFast = stream("hls-1080p") to result(bytesPerSecond = 10_000_000, isHls = true)
         val directSlow = stream("direct-1080p") to result(bytesPerSecond = 1_000)
 
@@ -183,20 +193,20 @@ class DownloadLinkRankerTest {
     }
 
     @Test
-    fun `rank should still order within each tier by quality then speed`() {
-        val hls720pSlow = stream("hls-720p-slow") to result(bytesPerSecond = 1_000, isHls = true)
-        val hls1080p = stream("hls-1080p") to result(bytesPerSecond = 1_000, isHls = true)
-        val hls720pFast = stream("hls-720p-fast") to result(bytesPerSecond = 9_000, isHls = true)
-        val direct1080p = stream("direct-1080p") to result()
+    fun `rank should still order by quality first, then directness, then speed`() {
+        val hls1080p = stream("hls-1080p") to result(bytesPerSecond = 9_000, isHls = true)
+        val direct1080p = stream("direct-1080p") to result(bytesPerSecond = 1_000)
+        val direct720pSlow = stream("direct-720p-slow") to result(bytesPerSecond = 1_000)
+        val direct720pFast = stream("direct-720p-fast") to result(bytesPerSecond = 9_000)
 
         val ranked = DownloadLinkRanker.rank(
-            candidates = listOf(hls720pSlow, hls1080p, hls720pFast, direct1080p),
+            candidates = listOf(hls1080p, direct720pSlow, direct1080p, direct720pFast),
             mode = DownloadLinkSelectionMode.QUALITY_FIRST,
             direction = DownloadLinkSortDirection.LOWEST_FIRST,
             preferredQuality = PlayerQuality.Quality1080p,
         )
 
         expectThat(ranked.map { it.first.name })
-            .containsExactly("direct-1080p", "hls-1080p", "hls-720p-fast", "hls-720p-slow")
+            .containsExactly("direct-1080p", "hls-1080p", "direct-720p-fast", "direct-720p-slow")
     }
 }

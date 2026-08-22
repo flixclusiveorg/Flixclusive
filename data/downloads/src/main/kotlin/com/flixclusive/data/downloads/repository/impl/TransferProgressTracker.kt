@@ -47,6 +47,8 @@ internal class TransferProgressTracker {
 
     fun lastWriteAt(id: String): Long = lastProgressWriteTimes[id] ?: 0L
 
+    fun lastMeasuredRate(id: String): Long = lastNonZeroRates[id] ?: 0L
+
     fun recordWrite(
         id: String,
         now: Long,

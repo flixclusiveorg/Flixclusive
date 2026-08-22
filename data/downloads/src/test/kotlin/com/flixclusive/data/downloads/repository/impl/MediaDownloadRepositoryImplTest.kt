@@ -670,6 +670,8 @@ class MediaDownloadRepositoryImplTest {
 
     private companion object {
         const val RATE_SAMPLE_SPACING_MS = 5L
+
+        const val PROGRESS_WRITE_THROTTLE_MS = 1000L
     }
 
     @Test
@@ -723,5 +725,66 @@ class MediaDownloadRepositoryImplTest {
             repository.runHlsTransfer(itemId, segments, 0, emptyMap(), destinationFile)
 
             coVerify { downloadItemDao.updateStreamProgress(itemId, 1L, 4L, 0L, any()) }
+        }
+
+    @Test
+    fun `runHlsTransfer should persist every segment rather than only the throttled ones`() =
+        runTest {
+            val segments =
+                listOf(
+                    HlsSegmentInfo(
+                        url = "https://example.com/0.ts",
+                        byteRangeOffset = 0,
+                        byteRangeLength = -1,
+                        encryptionKeyUri = null,
+                        encryptionIv = null
+                    )
+                )
+            coEvery {
+                hlsTransferEngine.transfer(segments, 0, emptyMap(), destinationFile, any(), any())
+            } coAnswers {
+                val onSegmentWritten = arg<suspend (Int, Int) -> Unit>(5)
+                onSegmentWritten(1, 8)
+                onSegmentWritten(2, 8)
+                onSegmentWritten(3, 8)
+                MediaTransferResult.Completed
+            }
+
+            repository.runHlsTransfer(itemId, segments, 0, emptyMap(), destinationFile)
+
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 1L, 8L, any(), any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 2L, 8L, any(), any()) }
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 3L, 8L, any(), any()) }
+        }
+
+    @Test
+    fun `runHlsTransfer should carry the last measured rate through unsampled segment writes`() =
+        runTest {
+            val segments =
+                listOf(
+                    HlsSegmentInfo(
+                        url = "https://example.com/0.ts",
+                        byteRangeOffset = 0,
+                        byteRangeLength = -1,
+                        encryptionKeyUri = null,
+                        encryptionIv = null
+                    )
+                )
+            coEvery {
+                hlsTransferEngine.transfer(segments, 0, emptyMap(), destinationFile, any(), any())
+            } coAnswers {
+                val onSegmentWritten = arg<suspend (Int, Int) -> Unit>(5)
+                onSegmentWritten(1, 8)
+                Thread.sleep(PROGRESS_WRITE_THROTTLE_MS + RATE_SAMPLE_SPACING_MS)
+                onSegmentWritten(5, 8)
+                onSegmentWritten(6, 8)
+                MediaTransferResult.Completed
+            }
+
+            repository.runHlsTransfer(itemId, segments, 0, emptyMap(), destinationFile)
+
+            val rates = mutableListOf<Long>()
+            coVerify { downloadItemDao.updateStreamProgress(itemId, 6L, 8L, capture(rates), any()) }
+            expectThat(rates.single()).isGreaterThan(0L)
         }
 }
