@@ -62,6 +62,8 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,6 +74,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
 import com.flixclusive.core.common.file.extension.toUri
 import com.flixclusive.core.common.intent.createApkInstallIntent
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -239,8 +242,16 @@ private fun AppUpdatesScreenButtons(
         derivedStateOf { downloadState().status }
     }
 
+    val isShowingProgress by remember {
+        derivedStateOf {
+            status.isDownloading || status == DownloadStatus.COMPLETED
+        }
+    }
+
     fun startInstallation() {
-        val uri = downloadState().file!!.toUri(
+        val file = downloadState().takeIf { it.status == DownloadStatus.COMPLETED }?.file ?: return
+
+        val uri = file.toUri(
             applicationId,
             context,
         )
@@ -253,64 +264,88 @@ private fun AppUpdatesScreenButtons(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.surface)
             .then(modifier),
-        targetState = status.isIdle,
+        targetState = isShowingProgress,
         transitionSpec = {
             ContentTransform(
                 targetContentEnter = fadeIn(),
                 initialContentExit = fadeOut(),
             )
         },
-    ) { state ->
-        if (state) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(getAdaptiveDp(70.dp)),
+    ) { showingProgress ->
+        if (!showingProgress) {
+            val error by remember {
+                derivedStateOf { downloadState().error }
+            }
+
+            val hasFailed by remember {
+                derivedStateOf {
+                    val status = downloadState().status
+                    status == DownloadStatus.FAILED || status == DownloadStatus.CANCELLED
+                }
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Button(
-                    onClick = {
-                        if (status.isFinished) {
-                            startInstallation()
-                        } else {
-                            downloadUpdate()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                    shape = MaterialTheme.shapes.small,
-                    modifier = Modifier
-                        .weight(0.5F)
-                        .heightIn(min = getAdaptiveDp(70.dp))
-                        .padding(buttonPaddingValues),
-                ) {
+                if (hasFailed) {
                     Text(
-                        text = stringResource(LocaleR.string.update_label),
-                        style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
-                        fontWeight = FontWeight.Normal,
+                        text = error?.asString() ?: stringResource(LocaleR.string.download_error_generic),
+                        style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(),
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 15.dp),
                     )
                 }
 
-                Button(
-                    onClick = goBack,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = Color.White.copy(0.6f),
-                    ),
-                    shape = MaterialTheme.shapes.small,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
-                        .weight(0.5F)
-                        .heightIn(min = getAdaptiveDp(70.dp))
-                        .padding(buttonPaddingValues),
+                        .fillMaxWidth()
+                        .height(getAdaptiveDp(70.dp)),
                 ) {
-                    Text(
-                        text = stringResource(LocaleR.string.not_now_label),
-                        style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
-                        fontWeight = FontWeight.Normal,
-                    )
+                    Button(
+                        onClick = downloadUpdate,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier
+                            .weight(0.5F)
+                            .heightIn(min = getAdaptiveDp(70.dp))
+                            .padding(buttonPaddingValues),
+                    ) {
+                        Text(
+                            text = stringResource(
+                                if (hasFailed) LocaleR.string.retry else LocaleR.string.update_label,
+                            ),
+                            style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
+                            fontWeight = FontWeight.Normal,
+                        )
+                    }
+
+                    Button(
+                        onClick = goBack,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = Color.White.copy(0.6f),
+                        ),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier
+                            .weight(0.5F)
+                            .heightIn(min = getAdaptiveDp(70.dp))
+                            .padding(buttonPaddingValues),
+                    ) {
+                        Text(
+                            text = stringResource(LocaleR.string.not_now_label),
+                            style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
+                            fontWeight = FontWeight.Normal,
+                        )
+                    }
                 }
             }
         } else {
@@ -330,7 +365,7 @@ private fun AppUpdatesScreenButtons(
                             ).clip(MaterialTheme.shapes.medium)
                             .fillMaxWidth()
                             .height(getAdaptiveDp(50.dp))
-                            .clickable(status.isFinished) { startInstallation() }
+                            .clickable(status == DownloadStatus.COMPLETED) { startInstallation() }
                             .drawWithContent {
                                 with(drawContext.canvas.nativeCanvas) {
                                     val checkPoint = saveLayer(null, null)
@@ -428,6 +463,32 @@ private fun AppUpdatesScreenBasePreview() {
                         progress = 0f,
                     )
                 },
+                goBack = {},
+            )
+        }
+    }
+}
+
+@Preview(showSystemUi = true)
+@Composable
+private fun AppUpdatesScreenFailedPreview() {
+    val state = DownloadState(
+        id = "",
+        status = DownloadStatus.FAILED,
+        progress = 42f,
+        error = UiText.from("open failed: EPERM (Operation not permitted)"),
+    )
+
+    FlixclusiveTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            AppUpdatesScreenContent(
+                applicationId = "com.flixclusive",
+                newVersion = "1.2.3",
+                updateInfo = null,
+                downloadState = { state },
+                downloadUpdate = {},
                 goBack = {},
             )
         }
