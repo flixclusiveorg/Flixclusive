@@ -107,6 +107,64 @@ class LinkProbeImplTest {
         }
 
     @Test
+    fun `probe should detect HLS from an m3u8 url even when the body and content type hide it`() =
+        runTest(testDispatcher) {
+            server.enqueue(
+                MockResponse()
+                    .setBody("a".repeat(1024))
+                    .setHeader("Content-Type", "application/octet-stream")
+            )
+
+            val result = linkProbe.probe(server.url("/hls/master.m3u8?token=abc").toString())
+
+            expectThat(result.isHls).isTrue()
+        }
+
+    @Test
+    fun `probe should detect HLS behind a utf-8 bom`() =
+        runTest(testDispatcher) {
+            server.enqueue(
+                MockResponse()
+                    .setBody("\uFEFF#EXTM3U\n#EXT-X-VERSION:3\n")
+                    .setHeader("Content-Type", "application/octet-stream")
+            )
+
+            val result = linkProbe.probe(server.url("/playlist").toString())
+
+            expectThat(result.isHls).isTrue()
+        }
+
+    @Test
+    fun `probe should detect HLS when the manifest arrives in tiny chunks`() =
+        runTest(testDispatcher) {
+            server.enqueue(
+                MockResponse()
+                    .setChunkedBody("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-ENDLIST\n", 4)
+                    .setHeader("Content-Type", "application/octet-stream")
+            )
+
+            val result = linkProbe.probe(server.url("/playlist").toString())
+
+            expectThat(result.isHls).isTrue()
+        }
+
+    @Test
+    fun `probe should detect HLS via the alternative mpegurl content types`() =
+        runTest(testDispatcher) {
+            listOf("application/mpegurl", "audio/x-mpegurl", "audio/mpegurl").forEach { contentType ->
+                server.enqueue(
+                    MockResponse()
+                        .setBody("a".repeat(1024))
+                        .setHeader("Content-Type", contentType)
+                )
+
+                val result = linkProbe.probe(server.url("/stream").toString())
+
+                expectThat(result.isHls).isTrue()
+            }
+        }
+
+    @Test
     fun `probe should not flag a regular video file as HLS`() =
         runTest(testDispatcher) {
             server.enqueue(MockResponse().setBody("a".repeat(1024)).setHeader("Content-Type", "video/mp4"))

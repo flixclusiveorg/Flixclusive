@@ -45,6 +45,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayInputStream
 import java.io.IOException
 
 class MediaDownloadControllerImplTest {
@@ -626,7 +627,7 @@ class MediaDownloadControllerImplTest {
         }
 
     @Test
-    fun `start should mark item FAILED when a completed transfer produced a suspiciously small file`() =
+    fun `start should mark the link dead and re-resolve when a completed transfer produced a tiny file`() =
         runTest(testDispatcher) {
             coEvery { mediaDownloadRepository.getItem(itemId) } returns testItem()
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
@@ -634,14 +635,63 @@ class MediaDownloadControllerImplTest {
                 mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
             } returns MediaTransferResult.Completed
             every { streamFile.length() } returns 10L
+            every { streamFile.openInputStream() } returns ByteArrayInputStream(ByteArray(10))
+            coEvery { resolveDownloadableStreamUseCase(ownerId, mediaId, null, null) } returns
+                Async.Failure(UiText.from("nothing reachable"))
 
             controller.start(itemId)
             advanceUntilIdle()
 
+            coVerify { mediaLinksRepository.setLinkStatus("https://example.com/stream.mp4", ownerId, isDead = true) }
             coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.FAILED, null) }
             coVerify(
                 exactly = 0
             ) { mediaDownloadRepository.updateState(itemId, DownloadItemState.STREAM_COMPLETE, any()) }
+        }
+
+    @Test
+    fun `start should re-run a misclassified manifest as HLS instead of blaming the link`() =
+        runTest(testDispatcher) {
+            val manifest = "#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:4.0,\n0.ts\n#EXT-X-ENDLIST\n"
+            val segments = listOf(
+                HlsSegmentInfo(
+                    url = "https://example.com/0.ts",
+                    byteRangeOffset = 0,
+                    byteRangeLength = -1,
+                    encryptionKeyUri = null,
+                    encryptionIv = null
+                )
+            )
+
+            coEvery { mediaDownloadRepository.getItem(itemId) } returnsMany
+                listOf(testItem(), testItem(isHlsStream = true), testItem(isHlsStream = true))
+            coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
+            coEvery {
+                mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), streamFile, any())
+            } returns MediaTransferResult.Completed
+            every { streamFile.length() } returnsMany listOf(10L, 200_000L)
+            every { streamFile.openInputStream() } returns ByteArrayInputStream(manifest.toByteArray())
+            coEvery {
+                hlsManifestResolver.resolve("https://example.com/stream.mp4", emptyMap(), any())
+            } returns HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
+            coEvery {
+                mediaDownloadRepository.runHlsTransfer(itemId, segments, 0, emptyMap(), streamFile)
+            } returns MediaTransferResult.Completed
+
+            controller.start(itemId)
+            advanceUntilIdle()
+
+            coVerify {
+                mediaDownloadRepository.updateSource(
+                    itemId,
+                    "https://example.com/stream.mp4",
+                    isHls = true,
+                    totalBytes = 0,
+                )
+            }
+            coVerify { mediaDownloadRepository.runHlsTransfer(itemId, segments, 0, emptyMap(), streamFile) }
+            coVerify(exactly = 0) { mediaLinksRepository.setLinkStatus(any(), any(), isDead = true) }
+            coVerify { mediaDownloadRepository.updateState(itemId, DownloadItemState.COMPLETED, null) }
         }
 
     @Test
@@ -825,7 +875,7 @@ class MediaDownloadControllerImplTest {
                 testItem(streamFilePath = "content://partial", streamBytesDownloaded = 5_000)
             coEvery { getDownloadDirectoryUseCase(any(), any(), any(), any()) } returns directory
             every { downloadDirectoryRepository.resolveFile("content://partial") } returns streamFile
-            every { streamFile.length() } returns 100L
+            every { streamFile.length() } returnsMany listOf(100L, 200_000L)
             coEvery {
                 mediaDownloadRepository.runTransfer(itemId, DownloadPhase.STREAM, any(), any(), any(), any())
             } returns MediaTransferResult.Completed

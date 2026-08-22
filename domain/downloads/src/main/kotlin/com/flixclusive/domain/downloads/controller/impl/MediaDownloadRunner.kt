@@ -20,6 +20,7 @@ import com.flixclusive.data.downloads.repository.MediaDownloadRepository
 import com.flixclusive.data.downloads.transfer.MediaTransferResult
 import com.flixclusive.data.downloads.transfer.TransferFailure
 import com.flixclusive.data.downloads.util.DownloadPathUtil
+import com.flixclusive.data.downloads.util.HlsSignature
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.domain.downloads.usecase.GetDownloadDirectoryUseCase
 import com.flixclusive.domain.downloads.usecase.RankedDownloadCandidate
@@ -158,7 +159,7 @@ internal class MediaDownloadRunner @Inject constructor(
             totalBytes = item.streamTotalBytes.takeIf { it > 0 },
         )
 
-        handleStreamTransferResult(itemId, item, directory, destinationFile, result)
+        handleStreamTransferResult(itemId, item, directory, destinationFile, sourceUrl, result)
     }
 
     /**
@@ -223,7 +224,7 @@ internal class MediaDownloadRunner @Inject constructor(
             destinationFile = transferFile,
         )
 
-        handleStreamTransferResult(itemId, item, directory, transferFile, result)
+        handleStreamTransferResult(itemId, item, directory, transferFile, sourceUrl, result)
     }
 
     /** Resolves [DownloadItem.streamFilePath] back to its [UniFile] on resume; otherwise creates
@@ -262,12 +263,25 @@ internal class MediaDownloadRunner @Inject constructor(
         item: DownloadItem,
         directory: UniFile,
         destinationFile: UniFile,
+        sourceUrl: String,
         result: MediaTransferResult,
     ) {
         when (result) {
             is MediaTransferResult.Completed -> {
                 if (destinationFile.length() < MIN_VALID_STREAM_FILE_BYTES) {
-                    return fail(itemId, LocaleR.string.download_error_file_too_small)
+                    if (!item.isHlsStream && isHlsPlaylistFile(destinationFile)) {
+                        return restartAsHls(itemId, directory, destinationFile, sourceUrl)
+                    }
+
+                    return markDeadAndRetryOrFail(
+                        itemId,
+                        item,
+                        directory,
+                        destinationFile,
+                        MediaTransferResult.Failed(
+                            IOException(context.getString(LocaleR.string.download_error_file_too_small)),
+                        ),
+                    )
                 }
                 mediaDownloadRepository.updateState(itemId, DownloadItemState.STREAM_COMPLETE, null)
                 advancePastStreamComplete(itemId, item, directory)
@@ -281,6 +295,30 @@ internal class MediaDownloadRunner @Inject constructor(
                 result
             )
         }
+    }
+
+    private fun isHlsPlaylistFile(file: UniFile): Boolean =
+        runCatching {
+            file.openInputStream().use { stream ->
+                val head = ByteArray(PLAYLIST_SNIFF_BYTES)
+                val read = stream.read(head)
+                read > 0 && HlsSignature.matchesBody(head, read)
+            }
+        }.getOrDefault(false)
+
+    private suspend fun restartAsHls(
+        itemId: String,
+        directory: UniFile,
+        destinationFile: UniFile,
+        sourceUrl: String,
+    ) {
+        destinationFile.delete()
+        mediaDownloadRepository.resetChunks(itemId)
+        mediaDownloadRepository.updateStreamFilePath(itemId, null)
+        mediaDownloadRepository.updateSource(itemId, sourceUrl, isHls = true, totalBytes = 0)
+
+        val hlsItem = mediaDownloadRepository.getItem(itemId) ?: return
+        runStreamPhase(itemId, hlsItem, directory, sourceUrl)
     }
 
     /**
@@ -489,5 +527,6 @@ internal class MediaDownloadRunner @Inject constructor(
         // Catches a "successful" transfer that actually saved an error page or empty response
         // (e.g. a dead link the initial probe didn't catch) instead of a real video file.
         private const val MIN_VALID_STREAM_FILE_BYTES = 100 * 1024L
+        private const val PLAYLIST_SNIFF_BYTES = 1024
     }
 }
