@@ -25,7 +25,11 @@ object DownloadLinkRanker {
                 ?: UNKNOWN_SPEED_RANK
         }
 
-        return candidates.sortedWith(primary.then(bySpeed))
+        return candidates.sortedWith(byDirectFirst.then(primary).then(bySpeed))
+    }
+
+    private val byDirectFirst = compareBy<Pair<Stream, LinkProbeResult>> { (_, result) ->
+        if (result.isHls) 1 else 0
     }
 
     /**

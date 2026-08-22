@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import com.flixclusive.data.downloads.di.DownloadHttpClient
+import com.flixclusive.data.downloads.util.HlsSignature
 import com.flixclusive.data.downloads.util.okRequest
 import okhttp3.OkHttpClient
 import java.io.IOException
@@ -119,6 +120,9 @@ internal class HlsTransferEngineImpl @Inject constructor(
                 failed -> MediaTransferResult.Failed(
                     lastSegmentError ?: IOException("One or more HLS segments failed to download"),
                 )
+                nextWriteIndex != segments.size -> MediaTransferResult.Failed(
+                    IOException("HLS transfer wrote $nextWriteIndex of ${segments.size} segments"),
+                )
                 else -> MediaTransferResult.Completed
             }
         }
@@ -160,6 +164,12 @@ internal class HlsTransferEngineImpl @Inject constructor(
 
             val bytes = response.body.bytes()
             if (bytes.isEmpty()) throw IOException("Segment returned no data")
+            if (bytes.size < MIN_MEDIA_SEGMENT_BYTES && bytes.all { it >= 0 }) {
+                throw IOException("Segment returned ${bytes.size} bytes of text, not media")
+            }
+            if (HlsSignature.matchesBody(bytes)) {
+                throw IOException("Segment URL returned a playlist, not media")
+            }
 
             val keyUri = segment.encryptionKeyUri ?: return bytes
             val iv = segment.encryptionIv ?: throw IOException("Encrypted segment is missing its IV")
@@ -185,5 +195,6 @@ internal class HlsTransferEngineImpl @Inject constructor(
     companion object {
         private const val HLS_PARALLEL_CONNECTIONS = 3
         private const val MAX_SEGMENT_RETRIES = 3
+        private const val MIN_MEDIA_SEGMENT_BYTES = 128
     }
 }
