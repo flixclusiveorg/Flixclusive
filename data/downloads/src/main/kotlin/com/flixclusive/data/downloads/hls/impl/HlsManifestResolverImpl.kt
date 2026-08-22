@@ -77,18 +77,38 @@ internal class HlsManifestResolverImpl @Inject constructor(
         // Media3's parser leaves segment/key URIs exactly as written in the manifest — resolution
         // against the enclosing playlist's URL (which ExoPlayer does at a different layer during
         // playback) is left to us here.
-        val segments = mediaPlaylist.segments.map { segment ->
-            HlsSegmentInfo(
-                url = UriUtil.resolve(mediaPlaylistUrl, segment.url),
-                byteRangeOffset = segment.byteRangeOffset,
-                byteRangeLength = segment.byteRangeLength,
-                encryptionKeyUri = segment.fullSegmentEncryptionKeyUri?.let { UriUtil.resolve(mediaPlaylistUrl, it) },
-                encryptionIv = segment.encryptionIV,
-            )
+        val segments = buildList {
+            var currentInit: HlsMediaPlaylist.Segment? = null
+            mediaPlaylist.segments.forEach { segment ->
+                val init = segment.initializationSegment
+                if (init != null && !init.isSameResourceAs(currentInit)) {
+                    add(init.toSegmentInfo(mediaPlaylistUrl))
+                    currentInit = init
+                }
+
+                add(segment.toSegmentInfo(mediaPlaylistUrl))
+            }
         }
 
         return HlsResolutionResult.Success(ResolvedHlsPlaylist(segments))
     }
+
+    @OptIn(UnstableApi::class)
+    private fun HlsMediaPlaylist.Segment.isSameResourceAs(other: HlsMediaPlaylist.Segment?): Boolean =
+        other != null &&
+            url == other.url &&
+            byteRangeOffset == other.byteRangeOffset &&
+            byteRangeLength == other.byteRangeLength
+
+    @OptIn(UnstableApi::class)
+    private fun HlsMediaPlaylist.Segment.toSegmentInfo(playlistUrl: String) =
+        HlsSegmentInfo(
+            url = UriUtil.resolve(playlistUrl, url),
+            byteRangeOffset = byteRangeOffset,
+            byteRangeLength = byteRangeLength,
+            encryptionKeyUri = fullSegmentEncryptionKeyUri?.let { UriUtil.resolve(playlistUrl, it) },
+            encryptionIv = encryptionIV,
+        )
 
     /**
      * Mirrors CS3's `isPlayableStandalone`: a variant is safe to download standalone when it

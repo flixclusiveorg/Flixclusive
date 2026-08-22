@@ -67,12 +67,14 @@ class HlsTransferEngineImplTest {
         encryptionIv = encryptionIv,
     )
 
+    private fun body(marker: String) = marker.repeat(SEGMENT_BODY_LENGTH)
+
     @Test
     fun `transfer should download all segments in order into the destination file`() =
         runTest(testDispatcher) {
-            server.enqueue(MockResponse().setBody("AAAA"))
-            server.enqueue(MockResponse().setBody("BBBB"))
-            server.enqueue(MockResponse().setBody("CCCC"))
+            server.enqueue(MockResponse().setBody(body("A")))
+            server.enqueue(MockResponse().setBody(body("B")))
+            server.enqueue(MockResponse().setBody(body("C")))
 
             val result = engine.transfer(
                 segments = listOf(segment("/0.ts"), segment("/1.ts"), segment("/2.ts")),
@@ -83,14 +85,14 @@ class HlsTransferEngineImplTest {
             ) { _, _ -> }
 
             expectThat(result).isA<MediaTransferResult.Completed>()
-            expectThat(destinationFile.readText()).isEqualTo("AAAABBBBCCCC")
+            expectThat(destinationFile.readText()).isEqualTo(body("A") + body("B") + body("C"))
         }
 
     @Test
     fun `transfer should resume from startIndex leaving the earlier bytes untouched`() =
         runTest(testDispatcher) {
-            destinationFile.writeText("AAAA")
-            server.enqueue(MockResponse().setBody("BBBB"))
+            destinationFile.writeText(body("A"))
+            server.enqueue(MockResponse().setBody(body("B")))
 
             val result = engine.transfer(
                 segments = listOf(segment("/0.ts"), segment("/1.ts")),
@@ -101,14 +103,14 @@ class HlsTransferEngineImplTest {
             ) { _, _ -> }
 
             expectThat(result).isA<MediaTransferResult.Completed>()
-            expectThat(destinationFile.readText()).isEqualTo("AAAABBBB")
+            expectThat(destinationFile.readText()).isEqualTo(body("A") + body("B"))
             expectThat(server.requestCount).isEqualTo(1)
         }
 
     @Test
     fun `transfer should write out-of-order segments in the correct order`() =
         runTest(testDispatcher) {
-            val bodies = mapOf("/0.ts" to "AAAA", "/1.ts" to "BBBB", "/2.ts" to "CCCC")
+            val bodies = mapOf("/0.ts" to body("A"), "/1.ts" to body("B"), "/2.ts" to body("C"))
             server.dispatcher = object : Dispatcher() {
                 override fun dispatch(request: RecordedRequest): MockResponse {
                     // segment 0 resolves last, forcing 1 and 2 to buffer in the pending map
@@ -126,7 +128,7 @@ class HlsTransferEngineImplTest {
             ) { _, _ -> }
 
             expectThat(result).isA<MediaTransferResult.Completed>()
-            expectThat(destinationFile.readText()).isEqualTo("AAAABBBBCCCC")
+            expectThat(destinationFile.readText()).isEqualTo(body("A") + body("B") + body("C"))
         }
 
     @Test
@@ -163,9 +165,62 @@ class HlsTransferEngineImplTest {
         }
 
     @Test
+    fun `transfer should report Failed when a segment answers 200 with a short text body`() =
+        runTest(testDispatcher) {
+            repeat(3) { server.enqueue(MockResponse().setBody("Not found")) }
+
+            val result = engine.transfer(
+                segments = listOf(segment("/0.ts")),
+                startIndex = 0,
+                headers = emptyMap(),
+                destinationFile = UniFile.fromFile(destinationFile)!!,
+                shouldInterrupt = { false },
+            ) { _, _ -> }
+
+            expectThat(result).isA<MediaTransferResult.Failed>()
+            expectThat(destinationFile.length()).isEqualTo(0)
+        }
+
+    @Test
+    fun `transfer should report Failed when a segment answers with a playlist`() =
+        runTest(testDispatcher) {
+            val playlist = "#EXTM3U\n" + "#EXTINF:4.0,\n/0.ts\n".repeat(20)
+            repeat(3) { server.enqueue(MockResponse().setBody(playlist)) }
+
+            val result = engine.transfer(
+                segments = listOf(segment("/0.ts")),
+                startIndex = 0,
+                headers = emptyMap(),
+                destinationFile = UniFile.fromFile(destinationFile)!!,
+                shouldInterrupt = { false },
+            ) { _, _ -> }
+
+            expectThat(result).isA<MediaTransferResult.Failed>()
+            expectThat(destinationFile.length()).isEqualTo(0)
+        }
+
+    @Test
+    fun `transfer should accept a short segment that is binary rather than text`() =
+        runTest(testDispatcher) {
+            val binary = ByteArray(16) { 0x80.toByte() }
+            server.enqueue(MockResponse().setBody(okio.Buffer().write(binary)))
+
+            val result = engine.transfer(
+                segments = listOf(segment("/0.ts")),
+                startIndex = 0,
+                headers = emptyMap(),
+                destinationFile = UniFile.fromFile(destinationFile)!!,
+                shouldInterrupt = { false },
+            ) { _, _ -> }
+
+            expectThat(result).isA<MediaTransferResult.Completed>()
+            expectThat(destinationFile.readBytes().toList()).isEqualTo(binary.toList())
+        }
+
+    @Test
     fun `transfer should send a Range header for byte-range segments`() =
         runTest(testDispatcher) {
-            server.enqueue(MockResponse().setBody("AAAA"))
+            server.enqueue(MockResponse().setBody(body("A")))
 
             engine.transfer(
                 segments = listOf(segment("/combined.ts", byteRangeOffset = 100, byteRangeLength = 4)),
@@ -181,7 +236,7 @@ class HlsTransferEngineImplTest {
     @Test
     fun `transfer should decrypt AES-128 encrypted segments before writing`() =
         runTest(testDispatcher) {
-            val plaintext = "hello world12345"
+            val plaintext = body("z")
             val key = ByteArray(16) { 1 }
             val iv = ByteArray(16) { 2 }
             val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
@@ -209,4 +264,8 @@ class HlsTransferEngineImplTest {
             expectThat(result).isA<MediaTransferResult.Completed>()
             expectThat(destinationFile.readText()).isEqualTo(plaintext)
         }
+
+    private companion object {
+        const val SEGMENT_BODY_LENGTH = 200
+    }
 }

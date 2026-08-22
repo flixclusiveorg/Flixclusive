@@ -91,6 +91,67 @@ class HlsManifestResolverImplTest {
                 .hasSize(2)
         }
 
+    private val fmp4MediaPlaylist = """
+        #EXTM3U
+        #EXT-X-VERSION:7
+        #EXT-X-TARGETDURATION:10
+        #EXT-X-MEDIA-SEQUENCE:0
+        #EXT-X-MAP:URI="init.mp4"
+        #EXTINF:10.0,
+        segment0.m4s
+        #EXTINF:10.0,
+        segment1.m4s
+        #EXT-X-ENDLIST
+    """.trimIndent()
+
+    private val fmp4MediaPlaylistWithChangingMap = """
+        #EXTM3U
+        #EXT-X-VERSION:7
+        #EXT-X-TARGETDURATION:10
+        #EXT-X-MEDIA-SEQUENCE:0
+        #EXT-X-MAP:URI="init0.mp4"
+        #EXTINF:10.0,
+        segment0.m4s
+        #EXT-X-MAP:URI="init1.mp4"
+        #EXTINF:10.0,
+        segment1.m4s
+        #EXT-X-ENDLIST
+    """.trimIndent()
+
+    @Test
+    fun resolveShouldEmitTheInitialisationSegmentOnceAheadOfTheMediaSegments() =
+        runTest(testDispatcher) {
+            server.enqueue(MockResponse().setBody(fmp4MediaPlaylist))
+
+            val result = resolver.resolve(
+                server.url("/media.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSortDirection.HIGHEST_FIRST
+            )
+
+            expectThat(result)
+                .isA<HlsResolutionResult.Success>()
+                .get { playlist.segments.map { it.url.substringAfterLast('/') } }
+                .isEqualTo(listOf("init.mp4", "segment0.m4s", "segment1.m4s"))
+        }
+
+    @Test
+    fun resolveShouldReEmitTheInitialisationSegmentWhenItChangesMidPlaylist() =
+        runTest(testDispatcher) {
+            server.enqueue(MockResponse().setBody(fmp4MediaPlaylistWithChangingMap))
+
+            val result = resolver.resolve(
+                server.url("/media.m3u8").toString(),
+                emptyMap(),
+                DownloadLinkSortDirection.HIGHEST_FIRST
+            )
+
+            expectThat(result)
+                .isA<HlsResolutionResult.Success>()
+                .get { playlist.segments.map { it.url.substringAfterLast('/') } }
+                .isEqualTo(listOf("init0.mp4", "segment0.m4s", "init1.mp4", "segment1.m4s"))
+        }
+
     @Test
     fun resolveShouldFailForLiveMediaPlaylistWithNoEndlistTag() =
         runTest(testDispatcher) {
