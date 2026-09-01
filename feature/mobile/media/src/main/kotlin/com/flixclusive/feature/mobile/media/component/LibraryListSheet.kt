@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -57,6 +58,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -106,6 +108,7 @@ internal fun LibraryListSheet(
     query: () -> String,
     onQueryChange: (String) -> Unit,
     toggleOnLibrary: (String, LibraryListAndState) -> Unit,
+    onRetry: () -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -190,7 +193,26 @@ internal fun LibraryListSheet(
                         }
                     }
                 },
-                errorContent = {}
+                errorContent = { state ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp)
+                    ) {
+                        Text(
+                            text = state.message.asString(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        TextButton(onClick = onRetry) {
+                            Text(text = stringResource(LocaleR.string.retry))
+                        }
+                    }
+                }
             ) { data ->
                 AnimatedContent(
                     targetState = data().isEmpty(),
@@ -320,6 +342,8 @@ private fun ItemContent(
     TextButton(
         onClick = toggleOnLibrary,
         shape = MaterialTheme.shapes.small,
+        enabled = toggleState() != ItemToggleState.Toggling,
+        colors = ButtonDefaults.textButtonColors(disabledContentColor = MaterialTheme.colorScheme.primary),
         modifier = modifier.fillMaxWidth(),
     ) {
         LibraryItemIcon(
@@ -515,6 +539,7 @@ private fun LibraryListSheetPreview() {
                 query = { query },
                 onQueryChange = { query = it },
                 toggleOnLibrary = { _, _ -> },
+                onRetry = {},
                 onDismissRequest = {},
             )
         }

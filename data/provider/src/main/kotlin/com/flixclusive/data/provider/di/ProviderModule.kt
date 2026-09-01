@@ -3,9 +3,11 @@ package com.flixclusive.data.provider.di
 import com.flixclusive.data.provider.repository.InstalledRepoRepository
 import com.flixclusive.data.provider.repository.MediaLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.provider.repository.TrackerListRepository
 import com.flixclusive.data.provider.repository.impl.InstalledRepoRepositoryImpl
 import com.flixclusive.data.provider.repository.impl.MediaLinksRepositoryImpl
 import com.flixclusive.data.provider.repository.impl.ProviderRepositoryImpl
+import com.flixclusive.data.provider.repository.impl.TrackerListRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -32,4 +34,10 @@ internal abstract class ProviderModule {
     abstract fun provideProviderRepository(
         providerRepository: ProviderRepositoryImpl
     ): ProviderRepository
+
+    @Singleton
+    @Binds
+    abstract fun provideTrackerListRepository(
+        impl: TrackerListRepositoryImpl
+    ): TrackerListRepository
 }

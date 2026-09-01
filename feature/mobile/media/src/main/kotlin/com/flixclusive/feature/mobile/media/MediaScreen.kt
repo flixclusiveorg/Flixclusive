@@ -407,6 +407,7 @@ private fun MediaScreenContent(
             },
             onQueryChange = onQueryChange,
             toggleOnLibrary = toggleOnLibrary,
+            onRetry = onRetryFetchLists,
             onDismissRequest = { isLibrarySheetOpen = false },
             snackbarHostState = snackbarHostState,
         )

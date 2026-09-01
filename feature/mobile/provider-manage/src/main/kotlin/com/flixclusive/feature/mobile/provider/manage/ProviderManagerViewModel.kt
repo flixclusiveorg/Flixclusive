@@ -66,7 +66,7 @@ internal class ProviderManagerViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = _searchQuery.value,
         )
 
@@ -111,7 +111,7 @@ internal class ProviderManagerViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = false,
         )
 

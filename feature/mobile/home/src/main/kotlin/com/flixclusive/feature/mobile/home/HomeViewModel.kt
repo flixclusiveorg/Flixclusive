@@ -92,7 +92,7 @@ internal class HomeViewModel @Inject constructor(
                 }
         }.stateIn(
             scope = appDispatchers.ioScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),
         )
 
@@ -103,7 +103,7 @@ internal class HomeViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             scope = appDispatchers.defaultScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = false,
         )
 
@@ -125,7 +125,7 @@ internal class HomeViewModel @Inject constructor(
             Async.Success(providers) as Async<List<CatalogProvider>>
         }.stateIn(
             scope = appDispatchers.ioScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = Async.Loading,
         )
 

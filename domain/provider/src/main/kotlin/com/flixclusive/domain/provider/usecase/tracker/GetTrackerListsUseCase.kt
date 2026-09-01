@@ -1,10 +1,22 @@
 package com.flixclusive.domain.provider.usecase.tracker
 
-import com.flixclusive.data.provider.repository.ProviderResponseWrapper
+import com.flixclusive.core.common.provider.ProviderWithThrowable
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.tracker.TrackerList
+import kotlinx.coroutines.flow.Flow
+
+data class TrackerListAndProvider(
+    val list: TrackerList,
+    val provider: ProviderMetadata,
+    val containsMedia: Boolean = false,
+)
+
+data class TrackerLists(
+    val lists: List<TrackerListAndProvider> = emptyList(),
+    val errors: List<ProviderWithThrowable> = emptyList(),
+    val isLoading: Boolean = false,
+)
 
 interface GetTrackerListsUseCase {
-    suspend operator fun invoke(
-        providers: List<ProviderResponseWrapper>
-    ): List<TrackerList>
+    operator fun invoke(): Flow<TrackerLists>
 }

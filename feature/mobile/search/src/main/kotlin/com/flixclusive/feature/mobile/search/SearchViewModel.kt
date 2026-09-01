@@ -113,7 +113,7 @@ internal class SearchViewModel @Inject constructor(
         .catch { emit(Async.Failure(it)) }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = Async.Loading,
         )
 
@@ -124,7 +124,7 @@ internal class SearchViewModel @Inject constructor(
                 .getAllItemsInFlow(ownerId = userId)
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),
         )
 
@@ -134,7 +134,7 @@ internal class SearchViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = false,
         )
 

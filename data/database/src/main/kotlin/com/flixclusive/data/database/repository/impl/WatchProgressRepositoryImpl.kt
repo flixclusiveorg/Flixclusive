@@ -202,11 +202,12 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
 
     override suspend fun delete(item: Long, type: MediaType) {
         withContext(appDispatchers.io) {
-            val ownerId = when (type) {
-                MediaType.MOVIE -> movieProgressDao.get(item)?.watchData?.ownerId
-                MediaType.SHOW -> episodeProgressDao.get(item)?.watchData?.ownerId
+            val itemData = when (type) {
+                MediaType.MOVIE -> movieProgressDao.get(item)
+                MediaType.SHOW -> episodeProgressDao.get(item)
             }
 
+            val ownerId = itemData?.watchData?.ownerId
             if (ownerId == null) {
                 errorLog("WatchProgressRepository.delete - no watch progress found for id: $item and type: $type")
                 return@withContext
@@ -230,18 +231,8 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
             }
 
             if (canDeleteOnLibrary) {
-                val mediaId = when (type) {
-                    MediaType.MOVIE -> movieProgressDao.get(item)?.mediaId
-                    MediaType.SHOW -> episodeProgressDao.get(item)?.mediaId
-                }
-
-                if (mediaId == null) {
-                    errorLog("WatchProgressRepository.delete - no watch progress found for id: $item and type: $type")
-                    return@withContext
-                }
-
                 libraryListItemDao.deleteByListIdAndMediaId(
-                    mediaId = mediaId,
+                    mediaId = itemData.media.id,
                     listId = watchedList.id
                 )
             }

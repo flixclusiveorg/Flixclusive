@@ -1,20 +1,18 @@
 package com.flixclusive.feature.mobile.media
 
-import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.domain.Async
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.database.entity.downloads.DownloadItem
 import com.flixclusive.core.database.entity.downloads.DownloadItemState
-import com.flixclusive.feature.mobile.media.util.combinedProgress
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
@@ -24,29 +22,25 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.downloads.repository.MediaDownloadRepository
+import com.flixclusive.data.provider.repository.TrackerListRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.download.DownloadTarget
 import com.flixclusive.domain.provider.usecase.download.ToggleMediaDownloadUseCase
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
-import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetNextEpisodeUseCase
 import com.flixclusive.domain.provider.usecase.get.GetProviderMetadataUseCase
-import com.flixclusive.domain.provider.usecase.get.GetProviderPluginUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
-import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
+import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsForMediaUseCase
 import com.flixclusive.domain.provider.usecase.tracker.SyncFromScrobblersUseCase
-import com.flixclusive.domain.provider.usecase.tracker.ToggleListItemOnTrackerListUseCase
-import com.flixclusive.domain.provider.usecase.tracker.TrackerListItemToggleAction
 import com.flixclusive.feature.mobile.media.LibraryListAndState.Companion.toLibraryState
+import com.flixclusive.feature.mobile.media.util.combinedProgress
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
@@ -58,7 +52,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -92,7 +85,6 @@ import kotlin.time.Duration.Companion.milliseconds
 class MediaScreenViewModel @AssistedInject constructor(
     dataStoreManager: DataStoreManager,
     getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
-    @param:ApplicationContext private val context: Context,
     private val appDispatchers: AppDispatchers,
     private val getNextEpisode: GetNextEpisodeUseCase,
     private val getMediaMetadata: GetMediaMetadataUseCase,
@@ -101,13 +93,10 @@ class MediaScreenViewModel @AssistedInject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val watchProgressRepository: WatchProgressRepository,
     private val getProviderMetadata: GetProviderMetadataUseCase,
-    private val getTrackerProviders: GetTrackerProvidersUseCase,
-    private val getTrackerLists: GetTrackerListsUseCase,
-    private val getProviderPlugin: GetProviderPluginUseCase,
-    private val toggleListItemOnTrackerList: ToggleListItemOnTrackerListUseCase,
+    private val getTrackerListsForMedia: GetTrackerListsForMediaUseCase,
+    private val trackerListRepository: TrackerListRepository,
     private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
     private val syncFromScrobblers: SyncFromScrobblersUseCase,
-    private val getMediaLinks: GetMediaLinksUseCase,
     private val toggleMediaDownload: ToggleMediaDownloadUseCase,
     private val mediaDownloadRepository: MediaDownloadRepository,
     @Assisted private val navArgMedia: MediaMetadata,
@@ -141,6 +130,8 @@ class MediaScreenViewModel @AssistedInject constructor(
      * I know... it's not pretty, but it works for now :D
      */
     private val retrySeasonTrigger = MutableStateFlow(0)
+
+    private val reportedTrackerErrors = mutableSetOf<String>()
 
     /** Displays the title of the media under the card */
     val showMediaTitles = dataStoreManager
@@ -445,70 +436,34 @@ class MediaScreenViewModel @AssistedInject constructor(
                     emit(Async.Failure(it))
                 }
 
-            val trackerLists = getTrackerProviders().mapLatest { state ->
-                if (state is Async.Loading) {
-                    return@mapLatest Async.Loading
-                } else if (state is Async.Failure) {
-                    return@mapLatest Async.Success(emptyList())
-                }
-
-                val providers = (state as Async.Success).data
-                val libraries = safeCall {
-                    getTrackerLists(providers).fastMapNotNull { list ->
-                        val isInList = runCatching {
-                            val provider = getProviderPlugin(list.providerId) ?: return@fastMapNotNull null
-                            val trackerApi = provider.getTrackerApi(context) ?: return@fastMapNotNull null
-
-                            val media = getCrossMatchedMediaMetadata(
-                                media = navArgMedia,
-                                providerId = list.providerId,
-                            )
-
-                            trackerApi.isInList(list, media)
-                        }.onFailure { e ->
-                            errorLog(
-                                "Failed to check if media is in list [${list.id}] for provider ${list.providerId}: ${e.message}"
-                            )
-                            e.printStackTrace()
-                            _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
-                            return@mapLatest Async.Failure(UiText.from(e.message ?: "Unknown error"), e)
-                        }.getOrNull()
-                            ?: return@fastMapNotNull null
-
-                        list.toLibraryState(
-                            containsMedia = isInList,
-                            ownerId = userId,
-                            provider = providers
-                                .fastFirstOrNull { it.id == list.providerId }
-                                ?.metadata
-                                ?: return@fastMapNotNull null,
-                        )
-                    }
-                } ?: emptyList()
-
-                Async.Success(libraries)
-            }
-
             combine(
                 appLibraries,
-                trackerLists,
-            ) { app, tracker ->
-                when {
-                    app is Async.Loading || tracker is Async.Loading -> Async.Loading
+                getTrackerListsForMedia(navArgMedia),
+            ) { app, trackers -> app to trackers }
+                .collectLatest { (app, trackers) ->
+                    val trackerStates = trackers.lists.fastMap {
+                        it.list.toLibraryState(
+                            containsMedia = it.containsMedia,
+                            ownerId = userId,
+                            provider = it.provider,
+                        )
+                    }
 
-                    app is Async.Failure -> Async.Failure(app.message, app.cause)
+                    _libraryLists.value = when (app) {
+                        is Async.Loading -> Async.Loading
+                        is Async.Failure -> Async.Failure(app.message, app.cause)
+                        is Async.Success -> Async.Success(app.data + trackerStates)
+                    }
 
-                    tracker is Async.Failure -> Async.Failure(tracker.message, tracker.cause)
-
-                    app is Async.Success && tracker is Async.Success -> Async.Success(
-                        (app.data + tracker.data).sortedByDescending { it.list.createdAt.time }
-                    )
-
-                    else -> Async.Loading
+                    reportTrackerErrors(trackers.errors)
                 }
-            }.collectLatest { result ->
-                _libraryLists.value = result
-            }
+        }
+    }
+
+    private suspend fun reportTrackerErrors(errors: List<ProviderWithThrowable>) {
+        errors.forEach {
+            if (!reportedTrackerErrors.add(it.provider.id)) return@forEach
+            _trackerError.emit(UiText.from(it.throwable.message ?: "Unknown error"))
         }
     }
 
@@ -600,39 +555,14 @@ class MediaScreenViewModel @AssistedInject constructor(
                 return@launch
             }
 
-            if (list.isFromTracker) {
-                val provider = getProviderPlugin(list.providerId!!)
-                if (provider == null) {
-                    errorLog("Failed to get provider plugin for id ${list.providerId}")
-                    return@launch
-                }
-
-                val trackerApi = provider.getTrackerApi(context)
-                if (trackerApi == null) {
-                    errorLog("Failed to get tracker API for provider ${provider.id}")
-                    return@launch
-                }
-
-                val trackerList = TrackerList(
-                    id = list.id,
-                    name = list.name,
-                    providerId = provider.id
-                )
-
-                val matchedMedia = getCrossMatchedMediaMetadata(
-                    media = media,
-                    providerId = provider.id,
-                )
-
-                val updatedList = toggleListItemOnTrackerList(
-                    list = trackerList,
-                    item = matchedMedia,
-                    action = if (list.containsMedia) {
-                        TrackerListItemToggleAction.REMOVE
-                    } else {
-                        TrackerListItemToggleAction.ADD
-                    }
-                ).onFailure { e ->
+            val trackerList = list.trackerList
+            if (trackerList != null) {
+                val matchedMedia = runCatching {
+                    getCrossMatchedMediaMetadata(
+                        media = media,
+                        providerId = trackerList.providerId,
+                    )
+                }.onFailure { e ->
                     errorLog(e)
                     _trackerError.emit(
                         UiText.from(
@@ -641,31 +571,31 @@ class MediaScreenViewModel @AssistedInject constructor(
                             e.message ?: "Unknown error"
                         )
                     )
-                }.getOrNull()
-                    ?: return@launch
+                }.getOrNull() ?: return@launch
 
-                _libraryLists.update { state ->
-                    when (state) {
-                        is Async.Loading, is Async.Failure -> {
-                            state
-                        }
+                val result = if (list.containsMedia) {
+                    trackerListRepository.removeItem(
+                        mediaId = navArgMedia.id,
+                        list = trackerList,
+                        media = matchedMedia,
+                    )
+                } else {
+                    trackerListRepository.addItem(
+                        mediaId = navArgMedia.id,
+                        list = trackerList,
+                        media = matchedMedia,
+                    )
+                }
 
-                        is Async.Success -> {
-                            val updatedLists = state.data.toMutableList()
-                            val index = updatedLists.indexOfFirst { it.id == list.id }
-
-                            if (index == -1) return@update state
-
-                            val current = updatedLists[index]
-                            updatedLists[index] = updatedList.toLibraryState(
-                                ownerId = current.list.ownerId,
-                                containsMedia = !current.containsMedia,
-                                provider = current.provider!!,
-                            )
-
-                            Async.Success(updatedLists.toList())
-                        }
-                    }
+                result.onFailure { e ->
+                    errorLog(e)
+                    _trackerError.emit(
+                        UiText.from(
+                            R.string.failed_to_toggle_item_on_tracker_list,
+                            list.name,
+                            e.message ?: "Unknown error"
+                        )
+                    )
                 }
             } else {
                 val oldItem = list.items.fastFirstOrNull { it.mediaId == navArgMedia.id }
@@ -814,6 +744,7 @@ data class LibraryListAndState(
     val containsMedia: Boolean,
     val images: List<String> = emptyList(),
     val provider: ProviderMetadata? = null,
+    val trackerList: TrackerList? = null,
 ) {
     val id get() = list.id
     val providerId get() = provider?.id
@@ -824,7 +755,7 @@ data class LibraryListAndState(
     val list get() = listWithItems.list
     val items get() = listWithItems.items
 
-    val isFromTracker get() = provider != null
+    val isFromTracker get() = trackerList != null
 
     companion object {
         fun LibraryListWithItems.toLibraryState(
@@ -855,6 +786,7 @@ data class LibraryListAndState(
                 items = emptyList(),
             ),
             provider = provider,
+            trackerList = this,
             images = images,
             containsMedia = containsMedia,
         )

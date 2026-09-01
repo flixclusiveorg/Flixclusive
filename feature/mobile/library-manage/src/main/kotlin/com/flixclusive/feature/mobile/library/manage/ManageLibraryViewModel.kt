@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.library.manage
 
-import android.content.Context
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.ui.util.fastFilter
@@ -14,14 +13,13 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.media.DBMedia
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
 import com.flixclusive.data.provider.ProviderCapability
+import com.flixclusive.data.provider.repository.TrackerListRepository
 import com.flixclusive.domain.provider.usecase.get.GetTrackerProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.ToggleCapabilityUseCase
-import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
 import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListsUseCase
 import com.flixclusive.feature.mobile.library.common.model.TrackerProvider
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
@@ -30,12 +28,15 @@ import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.tracker.TrackerList
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
@@ -54,14 +56,13 @@ import javax.inject.Inject
 @OptIn(FlowPreview::class)
 @HiltViewModel
 internal class ManageLibraryViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     private val libraryListRepository: LibraryListRepository,
     private val getTrackerProviders: GetTrackerProvidersUseCase,
     private val userSessionDataStore: UserSessionDataStore,
     private val appDispatchers: AppDispatchers,
     private val toggleCapability: ToggleCapabilityUseCase,
     private val getTrackerLists: GetTrackerListsUseCase,
-    private val getTrackerApi: GetTrackerApiUseCase
+    private val trackerListRepository: TrackerListRepository,
 ) : ViewModel() {
     private var loadListsJob: Job? = null
     private var loadProvidersJob: Job? = null
@@ -83,6 +84,14 @@ internal class ManageLibraryViewModel @Inject constructor(
 
     private val _trackers = MutableStateFlow<Async<List<TrackerProvider>>>(Async.Loading)
     val trackers = _trackers.asStateFlow()
+
+    private val _trackerErrors = MutableSharedFlow<List<ProviderWithThrowable>>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    val trackerErrors = _trackerErrors.asSharedFlow()
+
+    private var lastTrackerLoadErrors = emptySet<String>()
 
     init {
         initialize()
@@ -110,31 +119,18 @@ internal class ManageLibraryViewModel @Inject constructor(
                             emit(Async.Failure(it))
                         }
 
-                    val trackerLists = getTrackerProviders().mapLatest { state ->
-                        if (state is Async.Loading) return@mapLatest Async.Loading
-                        if (state !is Async.Success) return@mapLatest Async.Success(emptyList())
+                    val trackerLists = getTrackerLists().mapLatest { trackers ->
+                        emitTrackerLoadErrors(trackers.errors)
 
-                        val providers = state.data
-                        val errors = mutableListOf<ProviderWithThrowable>()
-                        val lists = providers.flatMap { provider ->
-                            val metadata = provider.metadata ?: return@flatMap emptyList()
-                            runCatching {
-                                getTrackerLists(listOf(provider)).map { list ->
-                                    list.toPreview(provider = metadata, ownerId = userId)
-                                }
-                            }.getOrElse { e ->
-                                errorLog("Failed to fetch tracker lists for provider ${metadata.name}")
-                                errorLog(e)
-                                errors.add(ProviderWithThrowable(provider = metadata, throwable = e))
-                                emptyList()
-                            }
+                        val lists = trackers.lists.map {
+                            it.list.toPreview(provider = it.provider, ownerId = userId)
                         }
 
-                        if (errors.isNotEmpty()) {
-                            _uiState.update { it.copy(trackerErrors = errors.toList()) }
+                        if (trackers.isLoading && lists.isEmpty()) {
+                            Async.Loading
+                        } else {
+                            Async.Success(lists)
                         }
-
-                        Async.Success(lists)
                     }
 
                     combine(
@@ -216,39 +212,46 @@ internal class ManageLibraryViewModel @Inject constructor(
 
         loadProvidersJob = viewModelScope.launch {
             getTrackerProviders()
-                .mapLatest {
-                    when (it) {
-                        is Async.Loading -> Async.Loading
+                .flatMapLatest { state ->
+                    when (state) {
+                        is Async.Loading -> flowOf<Async<List<TrackerProvider>>>(Async.Loading)
 
-                        is Async.Failure -> Async.Failure(it.message, it.cause)
+                        is Async.Failure ->
+                            flowOf<Async<List<TrackerProvider>>>(Async.Failure(state.message, state.cause))
 
-                        is Async.Success -> Async.Success(
-                            it.data.mapNotNull { provider ->
-                                val isAuthenticated = try {
-                                    val plugin = provider.plugin ?: return@mapNotNull null
-
-                                    plugin.getTrackerApi(context)?.isAuthenticated() == true
-                                } catch (e: Throwable) {
-                                    errorLog("Failed to check authentication for provider ${provider.metadata?.name}")
-                                    errorLog(e)
-                                    _uiState.update { state ->
-                                        state.copy(
-                                            trackerErrors = state.trackerErrors + ProviderWithThrowable(
-                                                provider = provider.metadata ?: return@update state,
-                                                throwable = e,
-                                            )
-                                        )
-                                    }
-                                    false
-                                }
-
-                                TrackerProvider(
-                                    metadata = provider.metadata ?: return@mapNotNull null,
-                                    isTrackerEnabled = provider.isTrackerEnabled,
-                                    isAuthenticated = isAuthenticated,
+                        is Async.Success -> {
+                            val providers = state.data.filter { it.metadata != null }
+                            if (providers.isEmpty()) {
+                                return@flatMapLatest flowOf<Async<List<TrackerProvider>>>(
+                                    Async.Success(emptyList()),
                                 )
                             }
-                        )
+
+                            channelFlow<Async<List<TrackerProvider>>> {
+                                providers.forEach { provider ->
+                                    launch { trackerListRepository.loadAuthentication(provider.id) }
+                                }
+
+                                combine(
+                                    providers.map { provider ->
+                                        trackerListRepository
+                                            .isAuthenticated(provider.id)
+                                            .map { provider to it }
+                                    },
+                                ) { it.toList() }
+                                    .collect { results ->
+                                        val trackers = results.mapNotNull { (provider, auth) ->
+                                            TrackerProvider(
+                                                metadata = provider.metadata ?: return@mapNotNull null,
+                                                isTrackerEnabled = provider.isTrackerEnabled,
+                                                isAuthenticated = (auth as? Async.Success)?.data == true,
+                                            )
+                                        }
+
+                                        send(Async.Success(trackers))
+                                    }
+                            }
+                        }
                     }
                 }.collectLatest {
                     if (isRefreshing && it is Async.Loading) return@collectLatest
@@ -259,35 +262,40 @@ internal class ManageLibraryViewModel @Inject constructor(
     }
 
     private suspend fun removeLibrary(list: LibraryListWithPreview) {
-        if (list.isFromTracker) {
-            val providerId = list.provider?.id ?: return
-            val api = safeCall { getTrackerApi(providerId) } ?: return
-
-            api.deleteList(
-                list = TrackerList(
-                    id = list.id,
-                    name = list.name,
-                    description = list.description,
-                    itemCount = list.itemsCount,
-                    providerId = providerId,
-                )
-            )
-
-            _lists.update { state ->
-                if (state !is Async.Success) return@update state
-
-                val updated = state.data.fastFilter { it.id != list.id }
-
-                Async.Success(updated)
+        val trackerList = list.trackerList
+        if (trackerList != null) {
+            trackerListRepository.deleteList(trackerList).onFailure {
+                errorLog("Failed to delete tracker list ${list.name}")
+                errorLog(it)
+                addTrackerError(list.provider, it)
             }
         } else {
             libraryListRepository.deleteListById(list.id)
         }
     }
 
+    private fun addTrackerError(provider: ProviderMetadata?, throwable: Throwable) {
+        if (provider == null) return
+
+        _trackerErrors.tryEmit(
+            listOf(ProviderWithThrowable(provider = provider, throwable = throwable)),
+        )
+    }
+
+    private fun emitTrackerLoadErrors(errors: List<ProviderWithThrowable>) {
+        if (errors.isEmpty()) return
+
+        val keys = errors.mapTo(mutableSetOf()) { it.identity }
+        if (keys == lastTrackerLoadErrors) return
+
+        lastTrackerLoadErrors = keys
+        _trackerErrors.tryEmit(errors)
+    }
+
     fun initialize(isRefreshing: Boolean = false) {
         if (isRefreshing && _uiState.value.isLoadingTrackers) return
-        _uiState.update { it.copy(isRefreshing = isRefreshing, trackerErrors = emptyList()) }
+        lastTrackerLoadErrors = emptySet()
+        _uiState.update { it.copy(isRefreshing = isRefreshing) }
         loadTrackers(isRefreshing)
         loadLists(isRefreshing)
     }
@@ -296,34 +304,14 @@ internal class ManageLibraryViewModel @Inject constructor(
         if (verifyAuthJob?.isActive == true) return
 
         verifyAuthJob = viewModelScope.launch {
-            val isAuthenticated = safeCall {
-                getTrackerApi(tracker.id).isAuthenticated()
-            } ?: false
-
-            if (!isAuthenticated) return@launch
-
-            _trackers.update { providers ->
-                if (providers !is Async.Success) return@update providers
-
-                val updatedProviders = providers.data.fastMap { provider ->
-                    if (provider.id != provider.id) {
-                        return@fastMap provider
-                    }
-
-                    provider.copy(isAuthenticated = true)
-                }
-
-                Async.Success(updatedProviders)
-            }
+            trackerListRepository.invalidate(tracker.id)
+            trackerListRepository.loadAuthentication(tracker.id, refresh = true)
+            trackerListRepository.loadLists(tracker.id, refresh = true)
         }
     }
 
     fun onToggleTracker(tracker: TrackerProvider) {
         toggleCapability(tracker.id, ProviderCapability.TRACKER)
-    }
-
-    fun onConsumeTrackerErrors() {
-        _uiState.update { it.copy(trackerErrors = emptyList()) }
     }
 
     fun onUpdateFilter(filter: LibrarySort) {
@@ -365,34 +353,19 @@ internal class ManageLibraryViewModel @Inject constructor(
         if (addLibJob?.isActive == true) return
 
         addLibJob = appDispatchers.ioScope.launch {
-            if (list.isFromTracker) {
-                val providerId = list.provider?.id ?: return@launch
-                val api = safeCall { getTrackerApi(providerId) } ?: return@launch
-
-                val updatedList = api.updateList(
-                    list = TrackerList(
-                        id = list.id,
-                        name = list.name,
-                        description = list.description,
-                        itemCount = list.itemsCount,
-                        providerId = providerId,
-                    )
-                )
-
-                _lists.update { state ->
-                    if (state !is Async.Success) return@update state
-
-                    val updatedLists = state.data.toMutableList()
-                    val index = updatedLists.indexOfFirst { it.id == list.id }
-                    if (index == -1) return@update state
-
-                    updatedLists[index] = updatedList.toPreview(
-                        provider = list.provider,
-                        ownerId = list.list.ownerId,
-                    )
-
-                    Async.Success(updatedLists.toList())
-                }
+            val trackerList = list.trackerList
+            if (trackerList != null) {
+                trackerListRepository
+                    .updateList(
+                        trackerList.copy(
+                            name = list.name,
+                            description = list.description,
+                        ),
+                    ).onFailure {
+                        errorLog("Failed to update tracker list ${list.name}")
+                        errorLog(it)
+                        addTrackerError(list.provider, it)
+                    }
             } else {
                 libraryListRepository.updateList(
                     LibraryList(
@@ -424,29 +397,19 @@ internal class ManageLibraryViewModel @Inject constructor(
             val userId = userSessionDataStore.currentUserId.filterNotNull().first()
 
             if (tracker != null) {
-                val api = safeCall { getTrackerApi(tracker.id) } ?: return@launch
+                trackerListRepository
+                    .createList(
+                        providerId = tracker.id,
+                        name = name,
+                        description = description,
+                    ).onFailure {
+                        errorLog("Failed to create tracker list $name")
+                        errorLog(it)
+                        addTrackerError(tracker.metadata, it)
+                    }
 
-                val newList = api.createList(name, description)
-
-                _lists.update {
-                    if (it !is Async.Success) return@update it
-
-                    val updated = it.data.toMutableList()
-                    updated.add(
-                        LibraryListWithPreview(
-                            list = LibraryList(
-                                id = newList.id,
-                                ownerId = userId,
-                                name = newList.name,
-                                description = newList.description,
-                            ),
-                            itemsCount = newList.itemCount ?: -1,
-                            provider = tracker.metadata,
-                            previews = emptyList(),
-                        )
-                    )
-
-                    Async.Success(updated.toList())
+                _uiState.update { state ->
+                    state.copy(isCreatingLibrary = false)
                 }
 
                 return@launch
@@ -535,8 +498,10 @@ internal data class ManageLibraryUiState(
     val isEditingLibrary: Boolean = false,
     val longClickedLibrary: LibraryListWithPreview? = null,
     val selectedFilter: LibrarySort = LibrarySort.Added(ascending = true),
-    val trackerErrors: List<ProviderWithThrowable> = emptyList(),
 )
+
+private val ProviderWithThrowable.identity: String
+    get() = "${provider.id}|${throwable::class.qualifiedName}|${throwable.message}"
 
 @Stable
 internal data class LibraryListWithPreview(
@@ -544,12 +509,13 @@ internal data class LibraryListWithPreview(
     val itemsCount: Int,
     val provider: ProviderMetadata? = null,
     val previews: List<PreviewPoster>,
+    val trackerList: TrackerList? = null,
 ) {
     val name get() = list.name
     val description get() = list.description
     val id get() = list.id
 
-    val isFromTracker get() = provider != null
+    val isFromTracker get() = trackerList != null
 
     companion object {
         fun LibraryListWithItems.toPreview(): LibraryListWithPreview {
@@ -579,6 +545,7 @@ internal data class LibraryListWithPreview(
                 itemsCount = itemCount ?: -1,
                 provider = provider,
                 previews = images.take(3).map { it.toPreviewPoster() },
+                trackerList = this,
             )
         }
     }

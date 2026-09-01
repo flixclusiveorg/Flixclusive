@@ -52,7 +52,7 @@ internal class MediaLinkCardsTweakViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = false,
         )
 
