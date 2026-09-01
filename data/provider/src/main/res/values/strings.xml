@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tracker_api_unavailable">Failed to load tracker provider</string>
+    <string name="tracker_no_list_management_feature">%1$s doesn\'t allow list management features.</string>
+    <string name="tracker_requires_authentication">%1$s requires authentication to perform this action.</string>
+    <string name="tracker_not_matched_provider">Media item does not belong to the same provider as the list.</string>
+</resources>

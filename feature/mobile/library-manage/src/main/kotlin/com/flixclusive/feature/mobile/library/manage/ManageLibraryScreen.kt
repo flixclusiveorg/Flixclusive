@@ -47,6 +47,7 @@ import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.collections.SortUtils
 import com.flixclusive.core.common.domain.Async
+import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.showToast
@@ -97,15 +98,21 @@ internal fun ManageLibraryScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val trackers by viewModel.trackers.collectAsStateWithLifecycle()
 
+    var trackerErrors by remember { mutableStateOf(emptyList<ProviderWithThrowable>()) }
+    LaunchedEffect(viewModel) {
+        viewModel.trackerErrors.collect { trackerErrors = it }
+    }
+
     ManageLibraryScreenContent(
         uiState = uiState,
+        trackerErrors = { trackerErrors },
         searchQuery = { searchQuery },
         selectedLists = { viewModel.selectedLists },
         lists = { lists },
         trackers = { trackers },
         onToggleTracker = viewModel::onToggleTracker,
         onRefresh = { viewModel.initialize(isRefreshing = true) },
-        onConsumeTrackerErrors = viewModel::onConsumeTrackerErrors,
+        onConsumeTrackerErrors = { trackerErrors = emptyList() },
         onRemoveLongClickedLibrary = viewModel::onRemoveLongClickedLibrary,
         onLongClickItem = viewModel::onLongClickItem,
         onStartMultiSelecting = viewModel::onStartMultiSelecting,
@@ -135,6 +142,7 @@ internal fun ManageLibraryScreen(
 @Composable
 private fun ManageLibraryScreenContent(
     uiState: ManageLibraryUiState,
+    trackerErrors: () -> List<ProviderWithThrowable>,
     lists: () -> Async<List<LibraryListWithPreview>>,
     trackers: () -> Async<List<TrackerProvider>>,
     selectedLists: () -> Set<LibraryListWithPreview>,
@@ -347,10 +355,11 @@ private fun ManageLibraryScreenContent(
             onToggle = onToggleTracker
         )
     }
-    if (uiState.trackerErrors.isNotEmpty()) {
+    val errors = trackerErrors()
+    if (errors.isNotEmpty()) {
         ProviderCrashBottomSheet(
             isLoading = false,
-            errors = uiState.trackerErrors,
+            errors = errors,
             onDismissRequest = onConsumeTrackerErrors,
         )
     }
@@ -609,6 +618,7 @@ private fun ManageLibraryScreenBasePreview() {
                     onLongClickItem = { uiState = uiState.copy(longClickedLibrary = it) },
                     openProviderSettings = { },
                     onToggleTracker = { },
+                    trackerErrors = { emptyList() },
                     onConsumeTrackerErrors = {},
                     onUpdateFilter = {
                         if (uiState.selectedFilter == it) {

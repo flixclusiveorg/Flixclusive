@@ -12,11 +12,11 @@ import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.provider.ProviderCapability
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.provider.repository.TrackerListRepository
 import com.flixclusive.domain.provider.usecase.get.GetCrossMatchedMediaMetadataUseCase
 import com.flixclusive.domain.provider.usecase.tracker.SyncFromScrobblersUseCase
 import com.flixclusive.model.media.MediaMetadata
@@ -39,7 +39,8 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
     private val userSessionDataStore: UserSessionDataStore,
     private val providerRepository: ProviderRepository,
     private val watchProgressRepository: WatchProgressRepository,
-    private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase
+    private val getCrossMatchedMediaMetadata: GetCrossMatchedMediaMetadataUseCase,
+    private val trackerListRepository: TrackerListRepository
 ) : SyncFromScrobblersUseCase {
     private companion object {
         const val CACHE_TTL_KEY_PREFIX = "scrobble_sync_cache_ttl:"
@@ -281,28 +282,9 @@ internal class SyncFromScrobblersUseCaseImpl @Inject constructor(
         val providers = providerRepository.getProvidersWithCapability(userId, ProviderCapability.TRACKER)
 
         return providers.mapNotNull {
-            if (!it.isTrackerEnabled) return@mapNotNull null
-
-            val api = try {
-                it.plugin?.getTrackerApi(context)
-            } catch (e: Throwable) {
-                errorLog("Failed to get TrackerProviderApi for provider ${it.name}: ${e.message}")
-                e.printStackTrace()
-                return@mapNotNull null
-            }
-
+            val api = trackerListRepository.getApi(it.id, TrackerFeature.SCROBBLE)
             if (api == null) {
-                warnLog("Provider ${it.name} does not support tracker operations")
-                return@mapNotNull null
-            }
-
-            if (!api.isAuthenticated()) {
-                warnLog("Provider ${it.name} is not authenticated for tracker operations")
-                return@mapNotNull null
-            }
-
-            if (!api.getFeatures().contains(TrackerFeature.SCROBBLE)) {
-                warnLog("Provider ${it.name} does not support scrobble operations")
+                warnLog("Provider ${it.name} cannot scrobble")
                 return@mapNotNull null
             }
 

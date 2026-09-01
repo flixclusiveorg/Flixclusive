@@ -52,7 +52,7 @@ internal class UserEditViewModel @Inject constructor(
         .filterNotNull()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = User.Empty,
         )
 

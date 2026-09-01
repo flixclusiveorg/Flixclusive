@@ -17,8 +17,8 @@ import com.flixclusive.core.database.entity.media.DBMediaExternalId.Companion.to
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.LibrarySort
-import com.flixclusive.domain.provider.usecase.tracker.GetTrackerApiUseCase
-import com.flixclusive.domain.provider.usecase.tracker.GetTrackerListItemsUseCase
+import com.flixclusive.data.provider.repository.TrackerListKey
+import com.flixclusive.data.provider.repository.TrackerListRepository
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.provider.tracker.TrackerList
 import dagger.assisted.Assisted
@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
@@ -53,8 +54,7 @@ private const val PAGINATE_SIZE = 20
 class LibraryDetailsViewModel @AssistedInject constructor(
     private val libraryListRepository: LibraryListRepository,
     private val appDispatchers: AppDispatchers,
-    private val getTrackerListItems: GetTrackerListItemsUseCase,
-    private val getTrackerApi: GetTrackerApiUseCase,
+    private val trackerListRepository: TrackerListRepository,
     @Assisted private val navArgs: LibraryDetailsNavArgs,
 ) : ViewModel() {
     @AssistedFactory
@@ -148,36 +148,43 @@ class LibraryDetailsViewModel @AssistedInject constructor(
         val trackerList = navArgs.library.toTrackerList(
             providerId = navArgs.tracker!!.id,
         )
+        val key = TrackerListKey(
+            providerId = trackerList.providerId,
+            listId = trackerList.id,
+        )
 
-        getTrackerListItems(
+        trackerListRepository.loadNextItems(
             list = trackerList,
-            page = uiState.value.currentPage,
-        ).collect { state ->
-            when (state) {
-                is Async.Loading -> {
-                    _uiState.update {
-                        it.copy(pagingState = PagingState.Loading)
-                    }
-                }
+            pageSize = PAGINATE_SIZE,
+            refresh = uiState.value.currentPage == 1,
+        )
 
-                is Async.Failure -> {
-                    _uiState.update {
-                        it.copy(pagingState = PagingState.Error(error = state.message))
-                    }
-                }
+        when (val state = trackerListRepository.getItems(key).first()) {
+            is Async.Loading -> Unit
 
-                is Async.Success -> {
-                    val list = state.data.results.fastMap {
+            is Async.Failure -> {
+                _uiState.update {
+                    it.copy(pagingState = PagingState.Error(error = state.message))
+                }
+            }
+
+            is Async.Success -> {
+                items.clear()
+                items.addAll(
+                    state.data.items.fastMap {
                         it.toLibraryListItemWithMetadata(navArgs.library.id)
-                    }
+                    },
+                )
 
-                    items.addAll(list)
-                    _uiState.update {
-                        it.copy(
-                            pagingState = if (state.data.hasNextPage) PagingState.Idle else PagingState.Exhausted,
-                            currentPage = it.currentPage + 1,
-                        )
-                    }
+                _uiState.update {
+                    it.copy(
+                        pagingState = if (state.data.hasNextPage) {
+                            PagingState.Idle
+                        } else {
+                            PagingState.Exhausted
+                        },
+                        currentPage = state.data.page + 1,
+                    )
                 }
             }
         }
@@ -185,18 +192,16 @@ class LibraryDetailsViewModel @AssistedInject constructor(
 
     private suspend fun removeItem(item: LibraryListItemWithMetadata) {
         if (navArgs.tracker != null) {
-            try {
-                val api = getTrackerApi(navArgs.tracker.id)
-                api.removeListItem(
-                    list = navArgs.library.toTrackerList(navArgs.tracker.id),
-                    item = item.toMediaMetadata(),
-                )
-
+            trackerListRepository.removeItem(
+                mediaId = item.mediaId,
+                list = navArgs.library.toTrackerList(navArgs.tracker.id),
+                media = item.toMediaMetadata(),
+            ).onSuccess {
                 items.remove(item)
                 _library.value = _library.value.copy(
                     updatedAt = Date(),
                 )
-            } catch (e: Throwable) {
+            }.onFailure { e ->
                 errorLog("Failed to remove item from tracker list: ${e.message}")
                 e.printStackTrace()
 
