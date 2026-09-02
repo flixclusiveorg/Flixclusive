@@ -31,7 +31,6 @@ internal class SyncToScrobblersUseCaseImpl @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val trackerListRepository: TrackerListRepository,
 ) : SyncToScrobblersUseCase {
-
     override fun invoke(
         action: ScrobbleAction,
         watchProgress: WatchProgress,
