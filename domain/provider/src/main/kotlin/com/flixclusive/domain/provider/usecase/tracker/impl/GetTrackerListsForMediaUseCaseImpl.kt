@@ -45,7 +45,8 @@ internal class GetTrackerListsForMediaUseCaseImpl @Inject constructor(
         media: MediaMetadata,
         lists: List<TrackerListAndProvider>,
     ) {
-        lists.groupBy { it.list.providerId }
+        lists
+            .groupBy { it.list.providerId }
             .entries
             .mapAsync { (providerId, group) ->
                 val matched = runCatching {
