@@ -192,21 +192,22 @@ class LibraryDetailsViewModel @AssistedInject constructor(
 
     private suspend fun removeItem(item: LibraryListItemWithMetadata) {
         if (navArgs.tracker != null) {
-            trackerListRepository.removeItem(
-                mediaId = item.mediaId,
-                list = navArgs.library.toTrackerList(navArgs.tracker.id),
-                media = item.toMediaMetadata(),
-            ).onSuccess {
-                items.remove(item)
-                _library.value = _library.value.copy(
-                    updatedAt = Date(),
-                )
-            }.onFailure { e ->
-                errorLog("Failed to remove item from tracker list: ${e.message}")
-                e.printStackTrace()
+            trackerListRepository
+                .removeItem(
+                    mediaId = item.mediaId,
+                    list = navArgs.library.toTrackerList(navArgs.tracker.id),
+                    media = item.toMediaMetadata(),
+                ).onSuccess {
+                    items.remove(item)
+                    _library.value = _library.value.copy(
+                        updatedAt = Date(),
+                    )
+                }.onFailure { e ->
+                    errorLog("Failed to remove item from tracker list: ${e.message}")
+                    e.printStackTrace()
 
-                _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
-            }
+                    _trackerError.emit(UiText.from(e.message ?: "Unknown error"))
+                }
         } else {
             libraryListRepository
                 .deleteItem(itemId = item.itemId)
