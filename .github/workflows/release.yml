@@ -2,11 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag in semver format (e.g. 2.2.0)'
-        required: true
-        type: string
 
 permissions:
   contents: write
@@ -17,28 +12,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
-    name: Validate Tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate semver format
-        run: |
-          TAG="${{ inputs.tag }}"
-          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Tag '$TAG' is not valid semver. Expected format: X.Y.Z (e.g. 2.2.0)"
-            echo "::error::Must not be a branch name (e.g. master/main) or a commit hash."
-            exit 1
-          fi
-
   build:
     name: Build Release APK
-    needs: validate
     runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.version.outputs.tag_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Determine release tag
+        id: version
+        run: |
+          # Extract the release version from libs.versions.toml
+          # Assuming it's in the [versions] section as app-version-release-{major,minor,patch} = "..."
+          MAJOR=$(grep 'app-version-release-major' gradle/libs.versions.toml | cut -d'"' -f2 || echo "")
+          MINOR=$(grep 'app-version-release-minor' gradle/libs.versions.toml | cut -d'"' -f2 || echo "")
+          PATCH=$(grep 'app-version-release-patch' gradle/libs.versions.toml | cut -d'"' -f2 || echo "")
+
+          TAG_NAME="${MAJOR}.${MINOR}.${PATCH}"
+
+          if [[ ! "$TAG_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Could not build a valid semver tag from 'app-version-release-*' in gradle/libs.versions.toml (got '$TAG_NAME'). Expected format: X.Y.Z (e.g. 2.2.0)"
+            exit 1
+          fi
+
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Release tag: $TAG_NAME"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -69,7 +71,7 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
-      - name: Prepare release artifact
+      - name: Prepare artifact
         run: mv ${{ steps.sign_release.outputs.signedReleaseFile }} flixclusive-release.apk
 
       - name: Upload artifact
@@ -79,7 +81,7 @@ jobs:
           path: flixclusive-release.apk
 
   release:
-    name: Create GitHub Release
+    name: Publish Release
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -93,16 +95,9 @@ jobs:
         with:
           name: release-apk
 
-      - name: Create and push tag
+      - name: Get previous stable tag for changelog
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag -f ${{ inputs.tag }}
-          git push origin ${{ inputs.tag }} --force
-
-      - name: Get previous stable tag
-        run: |
-          previous_tag=$(git --no-pager tag --sort=-creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "${{ inputs.tag }}" | head -1 || echo "")
+          previous_tag=$(git --no-pager tag --sort=-creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep -vx "${{ needs.build.outputs.tag_name }}" | head -1 || echo "")
           echo "Found previous tag: $previous_tag"
           echo "previousTag=$previous_tag" >> $GITHUB_ENV
 
@@ -111,19 +106,36 @@ jobs:
         uses: requarks/changelog-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fromTag: ${{ inputs.tag }}
+          fromTag: ${{ github.sha }}
           toTag: ${{ env.previousTag }}
           excludeTypes: 'build,docs,other,style,test,chore'
           writeToFile: true
           filename: 'CHANGELOG.md'
 
-      - name: Create release
+      - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete ${{ inputs.tag }} --yes || echo "No existing release to delete."
+          TAG_NAME="${{ needs.build.outputs.tag_name }}"
 
-          gh release create ${{ inputs.tag }} \
-            --title "${{ inputs.tag }}" \
+          # Delete existing release with same tag if re-running
+          gh release delete "$TAG_NAME" --yes || echo "No existing release with tag $TAG_NAME."
+
+          gh release create "$TAG_NAME" \
+            --title "$TAG_NAME" \
             --notes-file CHANGELOG.md \
+            --target "${{ github.sha }}" \
             flixclusive-release.apk
+
+      - name: Push tag to source repository
+        run: |
+          TAG_NAME="${{ needs.build.outputs.tag_name }}"
+
+          git config user.name "flixclusiveorg"
+          git config user.email "bot@flixclusive.app"
+
+          # Overwrite the tag locally in case this run is a re-publish
+          git tag -f "$TAG_NAME" "${{ github.sha }}"
+
+          # Force-push so re-runs against the same version move the tag
+          git push origin "$TAG_NAME" --force
