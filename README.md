@@ -4,7 +4,7 @@
   <table>
     <tr>
       <td>CI Build</td>
-      <td><a href="https://github.com/flixclusiveorg/Flixclusive/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/flixclusiveorg/Flixclusive/release.yml?branch=master&event=push&style=for-the-badge&label=CI+Build" alt="CI"></a></td>
+      <td><a href="https://github.com/flixclusiveorg/Flixclusive/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/flixclusiveorg/Flixclusive/release.yml?branch=main&style=for-the-badge&label=CI+Build" alt="CI"></a></td>
     </tr>
     <tr>
       <td>Pre-release</td>
