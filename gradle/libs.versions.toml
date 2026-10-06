@@ -8,8 +8,8 @@ app-id = "com.flixclusive"
 app-name = "Flixclusive"
 
 # App Versioning ==
-app-version-release-major = "2"
-app-version-release-minor = "2"
+app-version-release-major = "3"
+app-version-release-minor = "0"
 app-version-release-patch = "0"
 app-version-release-build = "0"
 app-version-preview = "965"
