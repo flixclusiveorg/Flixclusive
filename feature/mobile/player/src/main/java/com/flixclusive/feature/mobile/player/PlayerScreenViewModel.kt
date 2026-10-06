@@ -305,40 +305,6 @@ internal class PlayerScreenViewModel @Inject constructor(
             initialValue = null,
         )
 
-    val watchProgress = combine(
-        selectedEpisode,
-        userSessionDataStore.currentUserId.filterNotNull()
-    ) { episode, userId ->
-        episode to userId
-    }.flatMapLatest { (episode, userId) ->
-        watchProgressRepository
-            .getAsFlow(
-                id = currentMedia.id,
-                type = currentMedia.type,
-                ownerId = userId,
-            ).filterNotNull()
-            .map {
-                val progress = it.watchData
-                if (progress is EpisodeProgress) {
-                    val isSameEpisode = progress.isSameEpisode(
-                        otherEpisode = episode?.number ?: -1,
-                        otherSeason = episode?.season ?: -1,
-                        otherMediaId = currentMedia.id,
-                    )
-
-                    if (!isSameEpisode) {
-                        return@map getDefaultWatchProgress()
-                    }
-                }
-
-                progress
-            }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = getDefaultWatchProgress(),
-    )
-
     init {
         initialize()
     }
@@ -756,9 +722,6 @@ internal class PlayerScreenViewModel @Inject constructor(
     private fun getDefaultWatchProgress(): WatchProgress {
         val userId = runBlocking { userSessionDataStore.currentUserId.filterNotNull().first() }
 
-        // A class check (`when (media) { is Movie -> ...`) would throw for a PartialMedia — the
-        // type a locally-resolved download's media always is. Switch on the type enum instead,
-        // which every MediaMetadata implementation reports correctly regardless of its class.
         return when (currentMedia.type) {
             MediaType.MOVIE -> MovieProgress(
                 mediaId = currentMedia.id,
@@ -839,15 +802,37 @@ internal class PlayerScreenViewModel @Inject constructor(
                 player.duration
             }
 
-            val progress = when (val progress = watchProgress.value) {
-                is EpisodeProgress -> progress.copy(
+            val watchProgress = watchProgressRepository
+                .get(
+                    id = currentMedia.id,
+                    type = currentMedia.type,
+                    ownerId = userSessionDataStore.currentUserId.filterNotNull().first(),
+                )?.let {
+                    val progress = it.watchData
+                    if (progress is EpisodeProgress) {
+                        val isSameEpisode = progress.isSameEpisode(
+                            otherEpisode = selectedEpisode.value?.number ?: -1,
+                            otherSeason = selectedEpisode.value?.season ?: -1,
+                            otherMediaId = currentMedia.id,
+                        )
+
+                        if (!isSameEpisode) {
+                            return@let getDefaultWatchProgress()
+                        }
+                    }
+
+                    return@let progress
+                } ?: getDefaultWatchProgress()
+
+            val progress = when (watchProgress) {
+                is EpisodeProgress -> watchProgress.copy(
                     progress = currentPosition,
                     duration = duration,
                     status = WatchStatus.WATCHING,
                     updatedAt = Date()
                 )
 
-                is MovieProgress -> progress.copy(
+                is MovieProgress -> watchProgress.copy(
                     progress = currentPosition,
                     duration = duration,
                     status = WatchStatus.WATCHING,
