@@ -117,6 +117,18 @@ jobs:
           writeToFile: true
           filename: 'CHANGELOG.md'
 
+      - name: Truncate changelog if too long
+        run: |
+          MAX_BYTES=120000
+          SIZE=$(wc -c < CHANGELOG.md)
+
+          if [ "$SIZE" -gt "$MAX_BYTES" ]; then
+            echo "::warning::Changelog is $SIZE bytes, truncating to fit GitHub's 125000 character release body limit."
+            head -c "$MAX_BYTES" CHANGELOG.md > CHANGELOG.truncated.md
+            printf '\n\n---\n_Changelog truncated. See the full commit history for the remaining changes._\n' >> CHANGELOG.truncated.md
+            mv CHANGELOG.truncated.md CHANGELOG.md
+          fi
+
       - name: Publish to preview-builds repository
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
