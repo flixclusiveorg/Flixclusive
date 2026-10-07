@@ -102,9 +102,10 @@ jobs:
           repositories: |
             preview-builds
 
-      - name: Get previous tag for changelog
+      - name: Get previous pre-release tag for changelog
         run: |
-          previous_tag=$(git --no-pager tag --sort=-creatordate | head -1 || echo "")
+          previous_tag=$(git --no-pager tag --sort=-creatordate | grep -E '^p[0-9]+$' | grep -vx "${{ needs.build.outputs.tag_name }}" | head -1 || echo "")
+          echo "Found previous tag: $previous_tag"
           echo "previousTag=$previous_tag" >> $GITHUB_ENV
 
       - name: Generate changelogs
