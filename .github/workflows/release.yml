@@ -112,9 +112,15 @@ jobs:
           writeToFile: true
           filename: 'CHANGELOG.md'
 
-      - name: Truncate changelog if too long
+      - name: Validate changelog
         run: |
           MAX_BYTES=120000
+
+          if [ ! -s CHANGELOG.md ]; then
+            echo "::warning::CHANGELOG.md was not generated or is empty, using a fallback."
+            echo "No notable changes." > CHANGELOG.md
+          fi
+
           SIZE=$(wc -c < CHANGELOG.md)
 
           if [ "$SIZE" -gt "$MAX_BYTES" ]; then
