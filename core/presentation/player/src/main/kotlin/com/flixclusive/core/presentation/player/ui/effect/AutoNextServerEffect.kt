@@ -33,6 +33,9 @@ fun AutoNextServerEffect(
 
     LaunchedEffect(player, key(), currentServer, availableServers, onServerChange, onServerFail) {
         failedServers.clear()
+        availableServers().forEachIndexed { i, server ->
+            if (server.isDead) failedServers.add(i)
+        }
 
         player.listen { events ->
             if (!events.contains(Player.EVENT_PLAYER_ERROR)) return@listen
