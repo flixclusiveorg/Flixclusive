@@ -160,6 +160,7 @@ dependencies {
     implementation(libs.destinations.bottomSheet)
     implementation(libs.hilt.navigation)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlinx.immutables)
 
     testImplementation(projects.coreTesting)
