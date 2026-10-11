@@ -87,10 +87,12 @@ class MediaSourceManager(
             .setLabel(subtitle.label)
             .build()
 
-        val dataSourceFactory = when (subtitle.source) {
-            TrackSource.REMOTE -> dataSourceFactory.remote
-            else -> dataSourceFactory.local
-        }
+        val dataSourceFactory = LenientDataSource.Factory(
+            when (subtitle.source) {
+                TrackSource.REMOTE -> dataSourceFactory.remote
+                else -> dataSourceFactory.local
+            },
+        )
 
         val format = Format
             .Builder()
