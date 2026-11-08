@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.media
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastMap
@@ -755,18 +754,19 @@ data class LibraryListAndState(
     val list get() = listWithItems.list
     val items get() = listWithItems.items
 
-    val isFromTracker get() = trackerList != null
-
     companion object {
         fun LibraryListWithItems.toLibraryState(
             mediaId: String,
         ): LibraryListAndState {
+            val images = items
+                .sortedByDescending { it.metadata.updatedAt }
+                .take(3)
+                .mapNotNull { it.metadata.posterImage }
+
             return LibraryListAndState(
                 listWithItems = this,
-                images = items.take(3).fastMap { it.metadata.posterImage }.filterNotNull(),
-                containsMedia = items.fastAny { item ->
-                    item.mediaId == mediaId
-                },
+                images = images,
+                containsMedia = items.any { it.mediaId == mediaId }
             )
         }
 
