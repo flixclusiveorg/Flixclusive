@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.media.component
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -460,14 +461,16 @@ private fun LibraryItemIcon(
             )
         }
 
-        AsyncImage(
-            model = model,
-            imageLoader = LocalContext.current.imageLoader,
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Crop,
-            onSuccess = { isSuccess = true },
-            modifier = Modifier.fillMaxSize()
-        )
+        Crossfade(model) {
+            AsyncImage(
+                model = it,
+                imageLoader = LocalContext.current.imageLoader,
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Crop,
+                onSuccess = { isSuccess = true },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
