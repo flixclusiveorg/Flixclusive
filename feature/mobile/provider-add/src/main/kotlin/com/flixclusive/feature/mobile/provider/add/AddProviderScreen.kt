@@ -41,6 +41,7 @@ import com.flixclusive.core.common.domain.Async.Companion.AsyncAnimatedContent
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallState
@@ -48,7 +49,6 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.feature.mobile.provider.add.component.AddProviderTopBar
-import com.flixclusive.feature.mobile.provider.add.component.ErrorScreen
 import com.flixclusive.feature.mobile.provider.add.component.ProviderCard
 import com.flixclusive.feature.mobile.provider.add.component.ProviderCardPlaceholder
 import com.flixclusive.feature.mobile.provider.add.component.RepositoryCrashBottomSheet
@@ -189,7 +189,7 @@ internal fun AddProviderScreenContent(
                     }
                 },
                 errorContent = {
-                    ErrorScreen(onRetry = onRetry)
+                    RetryButton(onRetry = onRetry)
                 },
                 content = { getProviders ->
                     val currentProviders = getProviders()
