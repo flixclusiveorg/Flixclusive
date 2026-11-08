@@ -92,7 +92,7 @@ internal class HomeViewModel @Inject constructor(
                 }
         }.stateIn(
             scope = appDispatchers.ioScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.WhileSubscribed(),
             initialValue = emptyList(),
         )
 
@@ -140,12 +140,16 @@ internal class HomeViewModel @Inject constructor(
      * with 0 progress. If there are no more episodes, it excludes the item from the list.
      * */
     private suspend fun filterContinueWatching(item: WatchProgressWithMetadata): WatchProgressWithMetadata? {
-        return when (val data = item.watchData) {
-            is EpisodeProgress -> {
-                if (!data.isCompleted) {
-                    return item // Episode not finished, include in continue watching
-                }
+        if (!item.watchData.isCompleted) {
+            return item
+        }
 
+        return when (val data = item.watchData) {
+            is MovieProgress -> {
+                null
+            }
+
+            is EpisodeProgress -> {
                 var tvShow: MediaMetadata? = cachedMediaMetadata[item.media]
                 if (tvShow == null) {
                     val response = getMediaMetadata(item.toMediaMetadata()).last()
@@ -184,22 +188,11 @@ internal class HomeViewModel @Inject constructor(
                     )
                 }
             }
-
-            is MovieProgress -> {
-                if (!data.isCompleted) {
-                    return item
-                }
-
-                null // Movie is finished, exclude from continue watching
-            }
         }
     }
 
     private fun observeCatalogs() {
-        if (observeCatalogsJob?.isActive == true) {
-            observeCatalogsJob?.cancel()
-        }
-
+        observeCatalogsJob?.cancel()
         observeCatalogsJob = viewModelScope.launch {
             getHomeCatalogs()
                 .distinctUntilChanged()
@@ -257,10 +250,7 @@ internal class HomeViewModel @Inject constructor(
 
     @OptIn(FlowPreview::class)
     private fun loadHeaderItem() {
-        if (loadFetchHeaderJob?.isActive == true) {
-            loadFetchHeaderJob?.cancel()
-        }
-
+        loadFetchHeaderJob?.cancel()
         loadFetchHeaderJob = viewModelScope.launch {
             val response = _uiState
                 .map { it.catalogs }
