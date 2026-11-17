@@ -248,8 +248,8 @@ private fun getBriefDetails(
     val adult = if (media.adult) context.getString(R.string.adult) else null
 
     return ImportantInfo(
-        rating = media.rating?.formatAsRating()?.asString(context),
-        runtime = media.runtime?.formatAsRuntime()?.asString(context),
+        rating = media.rating?.formatAsRating(),
+        runtime = media.runtime?.formatAsRuntime(),
         releaseDate = media.formatReleaseDate(),
         certification = media.certification,
         adult = adult,

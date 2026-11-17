@@ -1,7 +1,6 @@
 package com.flixclusive.core.presentation.common.util
 
 import android.content.Context
-import com.flixclusive.core.presentation.common.R
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRating
 import com.flixclusive.core.presentation.common.util.MediaDetailsFormatterUtil.formatAsRuntime
 import io.mockk.every
@@ -19,8 +18,6 @@ class MediaDetailsFormatterUtilTest {
     @Before
     fun setUp() {
         context = mockk {
-            every { getString(R.string.no_runtime, *anyVararg<Any>()) } returns "No runtime"
-            every { getString(R.string.no_ratings, *anyVararg<Any>()) } returns "No ratings"
             every {
                 resources.getQuantityString(
                     LocaleR.plurals.season_runtime,
@@ -51,7 +48,7 @@ class MediaDetailsFormatterUtilTest {
     @Test
     fun formatAsRuntime() {
         val testCases = listOf(
-            0 to "No runtime",
+            0 to null,
             45 to "45m",
             120 to "2h",
             135 to "2h 15m",
@@ -63,8 +60,7 @@ class MediaDetailsFormatterUtilTest {
 
         for ((input, expected) in testCases) {
             val result = input.formatAsRuntime()
-            expectThat(result.asString(context))
-                .isEqualTo(expected)
+            expectThat(result).isEqualTo(expected)
         }
     }
 
@@ -82,8 +78,7 @@ class MediaDetailsFormatterUtilTest {
 
         for ((input, expected) in testCases) {
             val result = input.formatAsRating()
-            expectThat(result.asString(context))
-                .isEqualTo(expected)
+            expectThat(result).isEqualTo(expected)
         }
     }
 }

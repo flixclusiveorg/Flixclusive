@@ -1,7 +1,5 @@
 package com.flixclusive.core.presentation.common.util
 
-import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.presentation.common.R
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Show
 import java.util.Calendar
@@ -21,10 +19,8 @@ object MediaDetailsFormatterUtil {
      * - 120 minutes -> "2h"
      * - 135 minutes -> "2h 15m"
      * */
-    fun Int.formatAsRuntime(): UiText {
-        if (this <= 0) {
-            return UiText.from(R.string.no_runtime)
-        }
+    fun Int.formatAsRuntime(): String? {
+        if (this <= 0) return null
 
         val hours = this / 60
         val minutes = this % 60
@@ -32,7 +28,7 @@ object MediaDetailsFormatterUtil {
         val hoursText = if (hours > 0) "${hours}h " else ""
         val minutesText = if (minutes > 0) "${minutes}m" else ""
 
-        return UiText.StringValue((hoursText + minutesText).trim())
+        return (hoursText + minutesText).trim()
     }
 
     /**
@@ -43,23 +39,18 @@ object MediaDetailsFormatterUtil {
      * - 3.0 -> "3.0"
      * - 4.25 -> "4.25"
      * */
-    fun Double.formatAsRating(): UiText {
+    fun Double.formatAsRating(): String? {
         val ratings = if (this % 1 == 0.0) {
             String.format(Locale.ROOT, "%.1f", this)
         } else {
             String.format(Locale.ROOT, "%.2f", this)
         }
 
-        return when (ratings) {
-            "0.0" -> UiText.from(R.string.no_ratings)
+        if (ratings == "0.0") return null
 
-            else -> UiText.StringValue(
-                // Remove trailing 0 if present (e.g., 3.20 -> 3.2, but 3.0 stays 3.0)
-                when {
-                    ratings.endsWith("0") && !ratings.endsWith(".0") -> ratings.dropLast(1)
-                    else -> ratings
-                }
-            )
+        return when {
+            ratings.endsWith("0") && !ratings.endsWith(".0") -> ratings.dropLast(1)
+            else -> ratings
         }
     }
 

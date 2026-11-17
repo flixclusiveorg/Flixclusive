@@ -246,8 +246,7 @@ private fun EpisodeDetails(
     val episodeLabel = buildString {
         append(stringResource(R.string.episode_number_label, episode.episode.number))
         if (duration != null) {
-            append(" • ")
-            append(duration.asString())
+            append(" • $duration")
         }
     }
 

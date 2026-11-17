@@ -148,18 +148,20 @@ private fun MediaPreviewBottomSheetContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    media.rating?.let {
-                        Text(
-                            text = it.formatAsRating().asString(),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Normal,
-                            color = MaterialTheme.colorScheme.onTertiary,
-                            modifier = Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.tertiary.copy(0.6f),
-                                    shape = MaterialTheme.shapes.extraSmall,
-                                ).padding(horizontal = 3.dp, vertical = 1.dp),
-                        )
+                    media.rating?.let { rating ->
+                        rating.formatAsRating()?.let { formattedRating ->
+                            Text(
+                                text = formattedRating,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onTertiary,
+                                modifier = Modifier
+                                    .background(
+                                        color = MaterialTheme.colorScheme.tertiary.copy(0.6f),
+                                        shape = MaterialTheme.shapes.extraSmall,
+                                    ).padding(horizontal = 3.dp, vertical = 1.dp),
+                            )
+                        }
                     }
 
                     media.releaseDate?.let {
