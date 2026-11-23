@@ -16,6 +16,7 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
+import okio.Buffer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -268,5 +269,36 @@ class MediaTransferEngineImplTest {
 
             expectThat(result).isA<MediaTransferResult.Failed>()
             expectThat(progressEvents.last()).isEqualTo(DownloadChunkStatus.FAILED)
+        }
+
+    @Test
+    fun transferShouldKeepRetryingAChunkThatKeepsMakingMeaningfulProgress() =
+        runTest(testDispatcher) {
+            val total = 1_000_000
+            val fullContent = ByteArray(total) { (it % 251).toByte() }
+            val bytesPerTruncatedAttempt = 300_000
+            var requestCount = 0
+            server.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    requestCount++
+                    val start = request.getHeader("Range")!!.removePrefix("bytes=").substringBefore("-").toInt()
+                    val end = if (requestCount <= 3) start + bytesPerTruncatedAttempt else total
+                    return MockResponse()
+                        .setResponseCode(206)
+                        .setBody(Buffer().write(fullContent.copyOfRange(start, end)))
+                }
+            }
+
+            val result = engine.transfer(
+                chunks = listOf(chunk(rangeEnd = total - 1L)),
+                url = server.url("/file.mp4").toString(),
+                headers = emptyMap(),
+                destinationFile = UniFile.fromFile(destinationFile)!!,
+                shouldInterrupt = { false },
+            ) { _, _, _ -> }
+
+            expectThat(result).isA<MediaTransferResult.Completed>()
+            expectThat(requestCount).isEqualTo(4)
+            expectThat(destinationFile.readBytes().contentEquals(fullContent)).isEqualTo(true)
         }
 }

@@ -94,15 +94,14 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
                     return@flow
                 }
 
-                withContext(appDispatchers.io) {
-                    if (!file.setReadOnly(metadata = metadata)) {
-                        warnLog("Failed to set dex as read-only for provider: ${metadata.name}.")
-                    }
+                val safeFile = withContext(appDispatchers.io) {
+                    file.ensureReadOnly(context, metadata)
+                        ?: error("Refusing to load ${metadata.name}: couldn't make dex read-only")
                 }
 
-                infoLog("Loading provider: ${metadata.name} [${file.name}]")
+                infoLog("Loading provider: ${metadata.name} [${safeFile.name}]")
 
-                val loader = PathClassLoader(file.absolutePath, context.classLoader)
+                val loader = PathClassLoader(safeFile.absolutePath, context.classLoader)
                 val manifest = withContext<ProviderManifest>(appDispatchers.io) {
                     loader.getFileFromPath(MANIFEST_FILE)
                 }.let {
@@ -174,37 +173,33 @@ internal class LoadProviderUseCaseImpl @Inject constructor(
      * To ensure the provider can still be loaded, we fall back to creating an
      * app-owned copy of the file which we can set as read-only without restrictions.
      * */
-    private fun File.setReadOnly(metadata: ProviderMetadata): Boolean {
-        if (setReadOnly()) {
-            return true
-        }
+    private fun File.ensureReadOnly(context: Context, metadata: ProviderMetadata): File? {
+        // Works if the file is already in app-private storage
+        setReadOnly()
+        if (!canWrite()) return this
 
-        warnLog("Failed to set dex as read-only for provider: ${metadata.name}. Replacing with app-owned copy...")
-        val tmpFile = File(parentFile, "$nameWithoutExtension.tmp")
-        try {
-            copyTo(target = tmpFile, overwrite = true)
-            delete()
-            tmpFile.renameTo(this)
+        // Still writable (shared/external storage ignores chmod), so load an app-private copy
+        warnLog("Dex still writable for ${metadata.name}. Using app-private copy...")
+        val dir = File(context.filesDir, "loaded_providers").apply { mkdirs() }
+        val target = File(dir, name)
 
-            if (!setReadOnly()) {
-                return false
-            }
+        return try {
+            if (target.exists() && !target.delete()) error("Couldn't delete old copy")
+            copyTo(target, overwrite = true)
 
-            infoLog("Replaced with app-owned copy for provider: ${metadata.name}")
-            return true
+            target.setReadOnly()
+            if (target.canWrite()) error("Copy is still writable")
+
+            infoLog("Using app-private copy for provider: ${metadata.name}")
+            target
         } catch (e: Throwable) {
-            tmpFile.delete()
-            errorLog("Failed to replace with app-owned copy for provider: ${metadata.name}")
+            target.delete()
+            errorLog("Failed to prepare ${metadata.name}")
             errorLog(e)
-            return false
+            null
         }
     }
 
-    /**
-     * Retrieves the metadata from the `updater.json` file for the given provider ID.
-     *
-     * All online metadata are stored in the `updater.json` file
-     * */
     private fun getMetadataFromFile(provider: InstalledProvider): ProviderMetadata? {
         if (cacheLocalMetadataMap.containsKey(provider.id)) {
             return cacheLocalMetadataMap[provider.id]

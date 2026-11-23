@@ -153,7 +153,7 @@ private fun MediaContent(
             genre?.name,
             media.formatReleaseDate(),
             media.certification,
-            media.runtime?.formatAsRuntime()?.asString(context),
+            media.runtime?.formatAsRuntime(),
         )
     }
 

@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.media.DBMedia.Companion.toDBMedia
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
@@ -125,7 +124,7 @@ private fun ContinueWatchingCard(
 
     val itemLabel = remember(item) {
         if (item is EpisodeProgressWithMetadata) {
-            UiText.from("S${item.watchData.seasonNumber} E${item.watchData.episodeNumber}")
+            "S${item.watchData.seasonNumber} E${item.watchData.episodeNumber}"
         } else {
             val watchTime = item.watchData.progress
             val watchTimeInSeconds = (watchTime / 1000).toInt()
@@ -204,12 +203,14 @@ private fun ContinueWatchingCard(
                         .padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = itemLabel.asString(),
-                        style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1
-                    )
+                    itemLabel?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1
+                        )
+                    }
 
                     LinearProgressIndicator(
                         progress = { progress },

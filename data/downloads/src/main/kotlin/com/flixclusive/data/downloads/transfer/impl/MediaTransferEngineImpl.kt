@@ -21,6 +21,7 @@ import okhttp3.OkHttpClient
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 internal class MediaTransferEngineImpl @Inject constructor(
@@ -28,6 +29,9 @@ internal class MediaTransferEngineImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val appDispatchers: AppDispatchers,
 ) : MediaTransferEngine {
+    private val transferClient: OkHttpClient =
+        client.newBuilder().callTimeout(0, TimeUnit.SECONDS).build()
+
     override suspend fun transfer(
         chunks: List<DownloadChunk>,
         url: String,
@@ -72,6 +76,7 @@ internal class MediaTransferEngineImpl @Inject constructor(
         var lastError: Throwable = IOException("Chunk ${chunk.chunkIndex} failed to download")
 
         while (attempt < MAX_CHUNK_RETRIES) {
+            val offsetAtAttemptStart = offset
             try {
                 val completed =
                     downloadChunkOnce(chunk, offset, url, headers, destinationFile, shouldInterrupt) { bytesWritten ->
@@ -97,7 +102,7 @@ internal class MediaTransferEngineImpl @Inject constructor(
             } catch (e: Throwable) {
                 errorLog("Chunk ${chunk.chunkIndex} failed (attempt ${attempt + 1}): ${e.message}")
                 lastError = e
-                attempt++
+                attempt = if (offset - offsetAtAttemptStart >= MIN_PROGRESS_TO_RESET_RETRIES_BYTES) 0 else attempt + 1
             }
         }
 
@@ -122,7 +127,7 @@ internal class MediaTransferEngineImpl @Inject constructor(
 
         val request = okRequest(url, headers) { addHeader("Range", rangeHeader) }
 
-        client.newCall(request).execute().use { response ->
+        transferClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 throw IOException("Chunk request failed: ${response.code}")
             }
@@ -194,6 +199,7 @@ internal class MediaTransferEngineImpl @Inject constructor(
 
     companion object {
         private const val MAX_CHUNK_RETRIES = 3
+        private const val MIN_PROGRESS_TO_RESET_RETRIES_BYTES = 256L * 1024
         private const val TRANSFER_BUFFER_BYTES = 16 * 1024
         private const val HTTP_OK = 200
     }
